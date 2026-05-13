@@ -1,4 +1,14 @@
-export default function VerifyPage() {
+import { SessionPoll } from "@/features/auth/ui/SessionPoll";
+
+interface Props {
+  searchParams: Promise<{ callbackUrl?: string; email?: string }>;
+}
+
+export default async function VerifyPage({ searchParams }: Props) {
+  const { callbackUrl, email } = await searchParams;
+  const safeCallback =
+    callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/";
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm space-y-4 rounded-xl bg-white px-8 py-10 shadow text-center">
@@ -19,15 +29,27 @@ export default function VerifyPage() {
         </div>
         <h1 className="text-xl font-bold">이메일을 확인하세요</h1>
         <p className="text-sm text-gray-500">
-          입력하신 이메일로 로그인 링크를 보냈습니다.
+          {email ? (
+            <>
+              <strong className="font-semibold text-gray-700">{email}</strong>
+              으로 로그인 링크를 보냈습니다.
+            </>
+          ) : (
+            "입력하신 이메일로 로그인 링크를 보냈습니다."
+          )}
           <br />
-          링크를 클릭하면 자동으로 로그인됩니다.
+          링크를 클릭하면 이 페이지에서 자동으로 로그인됩니다.
         </p>
         <p className="text-xs text-gray-400">
           이메일이 오지 않으면 스팸함을 확인해 주세요.
         </p>
+        <SessionPoll callbackUrl={safeCallback} email={email} />
         <a
-          href="/login"
+          href={
+            email
+              ? `/login?callbackUrl=${encodeURIComponent(safeCallback)}`
+              : "/login"
+          }
           className="block text-sm text-blue-600 hover:underline"
         >
           다시 시도하기

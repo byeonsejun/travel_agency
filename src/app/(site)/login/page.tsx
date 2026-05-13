@@ -35,16 +35,25 @@ export default async function LoginPage({ searchParams }: Props) {
           action={async (formData: FormData) => {
             "use server";
             const email = formData.get("email") as string;
+            const safeCallback = callbackUrl.startsWith("/") ? callbackUrl : "/";
+            const successUrl = `/login/success?callbackUrl=${encodeURIComponent(safeCallback)}`;
             try {
-              await signIn("resend", { email, redirectTo: callbackUrl });
+              await signIn("resend", {
+                email,
+                redirect: false,
+                redirectTo: successUrl,
+              });
             } catch (e) {
               if (e instanceof AuthError) {
                 redirect(
-                  `/login?error=${encodeURIComponent(e.type)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
+                  `/login?error=${encodeURIComponent(e.type)}&callbackUrl=${encodeURIComponent(safeCallback)}`
                 );
               }
               throw e;
             }
+            redirect(
+              `/login/verify?callbackUrl=${encodeURIComponent(safeCallback)}&email=${encodeURIComponent(email)}`
+            );
           }}
           className="space-y-4"
         >

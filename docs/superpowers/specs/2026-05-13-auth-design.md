@@ -70,23 +70,48 @@ Account, Session, VerificationToken은 NextAuth 표준 그대로 유지. PrismaA
 
 ## 3. 인증 흐름
 
-### 3.1 매직링크
+### 3.1 매직링크 (원본 탭 폴링 + 새 탭 분리)
+
+UX 원칙: 사용자가 매직링크를 클릭한 후 **원본 탭이 자동으로 인증을 감지**하여 원래 가려던 페이지로 이동한다. 새 탭은 메인 앱을 렌더링하지 않고 "창을 닫으세요" 안내만 표시한다.
+
 ```
-[Client] /login → 이메일 입력 → submit
-   ↓ (form action — server action)
-[Server] signIn("resend", { email, redirectTo })
+[원본 탭] /login?callbackUrl=/foo → 이메일 입력 → submit
+   ↓ (server action)
+[Server] signIn("resend", {
+           email,
+           redirect: false,
+           redirectTo: "/login/success?callbackUrl=/foo",
+         })
    ↓
 [NextAuth] Resend.sendVerificationRequest 호출
-   - 운영: Resend API → 사용자 메일함
-   - 로컬: 콘솔 폴백 (RESEND_API_KEY 미설정 시)
+   - production: Resend API → 사용자 메일함
+   - dev/test: 콘솔 폴백 (NODE_ENV !== "production")
    ↓
-[Client] /login/verify 페이지로 리다이렉트
-[User] 이메일 또는 콘솔에서 링크 클릭
-   ↓
-[NextAuth] /api/auth/callback/resend?token=... → User 조회/생성 + Session 발급
-   ↓
-[Client] redirectTo 경로(또는 "/")
+[Server] redirect("/login/verify?callbackUrl=/foo&email=...")
+[원본 탭] /login/verify 렌더 + <SessionPoll /> 활성화
+   - 2.5초마다 /api/auth/session GET
+   - 응답에 user 있으면 router.replace(callbackUrl) + router.refresh()
+
+[사용자] 메일/콘솔의 매직링크 클릭 → 새 탭 열림
+
+[새 탭] /api/auth/callback/resend?token=... 도착
+   ↓ (NextAuth)
+[새 탭] User 조회/생성 + Session 발급 (cookie set, 동일 출처라 원본 탭과 공유)
+   ↓ (NextAuth redirectTo)
+[새 탭] /login/success?callbackUrl=/foo 렌더
+   - 0.6초 후 window.close() 시도
+   - 차단 시 "창을 직접 닫으세요" + /foo로 가는 링크 노출
+
+[원본 탭] 다음 폴링에서 세션 감지 → /foo로 자동 이동
 ```
+
+**보안**: `callbackUrl`은 항상 `/`로 시작하는지 검사하여 open redirect를 차단(외부 URL이면 `/`로 폴백). 검증은 RSC에서 한 번 수행하고 props로 전달.
+
+**컴포넌트 위치 (FSD)**:
+- `features/auth/ui/SessionPoll.tsx` (`'use client'`) — 폴링 로직
+- `features/auth/ui/AuthSuccessClient.tsx` (`'use client'`) — `window.close()` + 폴백 UI
+- `app/(site)/login/verify/page.tsx` (RSC) — `SessionPoll` 컴포지션
+- `app/(site)/login/success/page.tsx` (RSC) — `AuthSuccessClient` 컴포지션
 
 ### 3.2 Kakao
 ```
