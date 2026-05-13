@@ -4,14 +4,28 @@ import Resend from "next-auth/providers/resend";
 import Kakao from "next-auth/providers/kakao";
 import { db } from "@/shared/lib/db";
 import { env } from "@/shared/lib/env";
+import { logger } from "@/shared/lib/logger";
 import type { UserRole } from "@prisma/client";
+
+const useDevConsoleFallback =
+  env.NODE_ENV !== "production" && !env.RESEND_API_KEY;
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
   providers: [
     Resend({
-      apiKey: env.RESEND_API_KEY ?? "",
+      apiKey: env.RESEND_API_KEY ?? "DEV_ONLY",
       from: env.RESEND_FROM_EMAIL ?? "Nextour <noreply@nextour.example>",
+      ...(useDevConsoleFallback
+        ? {
+            async sendVerificationRequest({ identifier, url }) {
+              logger.info("auth.magiclink.dev", { email: identifier, url });
+              console.log(
+                `\n📧 [DEV] Magic link for ${identifier}:\n${url}\n`,
+              );
+            },
+          }
+        : {}),
     }),
     ...(env.AUTH_KAKAO_ID && env.AUTH_KAKAO_SECRET
       ? [
