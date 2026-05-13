@@ -18,3 +18,5 @@ export type {
   PassportProfileInput,
   UpdateProfileInput,
 } from "./model/schema";
+
+export { getCurrentUser, getUserById } from "./api/queries";
