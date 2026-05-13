@@ -16,3 +16,11 @@ export type DepartureCalendarItem = Pick<
 > & {
   availableSeats: number;
 };
+
+// 상품 카드·목록·PDP 추천 등에서 사용하는 출발일 요약
+export type DepartureSummary = Pick<
+  Departure,
+  "id" | "departureDate" | "returnDate" | "priceAdult" | "priceChild" | "capacity" | "bookedSeats" | "minPax" | "status"
+> & {
+  remainingSeats: number;
+};
