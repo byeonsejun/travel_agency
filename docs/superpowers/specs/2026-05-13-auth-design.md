@@ -1,257 +1,153 @@
 # 인증 모듈 설계 (M-AUTH)
 
-> **버전**: v1.0
+> **버전**: v2.0 (Revised — 기존 구현 반영)
 > **작성일**: 2026-05-13
-> **상위 문서**: [Phase 2 Roadmap](./2026-05-13-phase2-roadmap.md), [ARCHITECTURE](../../technical/ARCHITECTURE.md)
+> **상위 문서**: [Phase 2 Roadmap](./2026-05-13-phase2-roadmap.md)
 > **마일스톤**: M1 (Phase 2의 첫 번째 모듈)
 > **적용 스킬**: `enforce-fsd`, `clean-code-react`
 
 ## 0. 범위 및 비범위
 
 ### 범위 (이 spec)
-- 이메일+비밀번호 회원가입·로그인·로그아웃
-- NextAuth.js v5(Auth.js) + Prisma Adapter + Credentials Provider
-- 세션 전략: **데이터베이스 세션**(JWT 미사용)
-- `/login`, `/signup`, `/forgot-password`, `/reset-password` 페이지
-- RSC용 `getCurrentUser()` 헬퍼
-- 미들웨어 기반 보호 라우트 패턴 (`/account/*`, `/bookings/*` 등 향후 확장 지점)
-- 비밀번호 재설정(토큰 발급 — 이메일 발송은 **콘솔 로그로 대체**)
-- 회원가입·로그인 폼 zod 검증 + 에러 표시
-- `entities/user` slice 신설 (model/api/ui)
+- **기존 구현 통합·정비**: NextAuth.js v5 + Resend 매직링크 + Kakao OAuth(옵셔널) + Prisma Adapter
+- **세션 전략**: 데이터베이스 세션(`session.strategy = "database"`) — 이미 결정됨
+- 로컬 개발 환경용 **이메일 콘솔 폴백**(RESEND_API_KEY 미설정 시 매직링크를 콘솔에 출력)
+- `entities/user/api/queries.ts` 신설 — `getCurrentUser()`, `getUserById()` 등 RSC 헬퍼
+- `app/(site)/login/error/page.tsx` 신설 — auth 설정에서 참조하나 미구현
+- `middleware.ts` 신설 — `/account/*`, `/bookings/*` 보호 라우트 사전 정의
+- 헤더 영역 인증 상태 표시 + 로그아웃 (간단 UI)
+- `.env.example` 작성 + 필수 env 정의
+- 시드 사용자 2명 추가 (`prisma/seed.ts` 확장)
 
 ### 비범위 (별도 작업)
-- 소셜 로그인(카카오·구글) — Phase 3
-- 이메일 발송 인프라(SendGrid/SES) — Phase 3 (M-AUTH MVP는 콘솔 로그)
-- 2FA / 패스키 / 매직링크 — Phase 3
-- 이메일 인증(`emailVerified` 채우기) — 가입 즉시 활성, 인증 메일은 Phase 3
-- 게스트 예약 — Phase 2 비범위 확정
-- 어드민 UI / 권한 분리(`UserRole.ADMIN`) — 어드민 spec
-- `PassportProfile` CRUD — booking 모듈에서 다룸
-- rate limiting / brute-force 방어 인프라 — M-OBS·인프라 spec
+- 이메일+비밀번호 Credentials 인증 — 본 spec v1.0에서 다뤘으나 매직링크 채택으로 폐기
+- 카카오 외 소셜 로그인(구글·애플) — Phase 3
+- 이메일 인증(`emailVerified` 명시적 검증 플로우) — 매직링크 클릭이 곧 인증
+- 2FA / 패스키 — Phase 3
+- `PassportProfile` CRUD — booking 모듈
+- 어드민 UI / `UserRole.ADMIN` 권한 분리 — 어드민 spec
+- rate limiting / brute-force 방어 — M-OBS / 인프라 spec
+- 회원가입 폼 — 매직링크는 첫 로그인 시 자동 가입(NextAuth 기본 동작), 별도 가입 UI 불필요
 
-## 1. 아키텍처 & 라우팅
+## 1. 현재 구현 인벤토리
 
-### 라우트
+### 이미 작성된 파일 (유지)
+| 파일 | 상태 |
+|------|------|
+| `src/features/auth/server/auth.ts` | ✅ NextAuth 인스턴스 (Resend + Kakao) |
+| `src/app/api/auth/[...nextauth]/route.ts` | ✅ NextAuth 핸들러 |
+| `src/app/(site)/login/page.tsx` | ✅ 로그인 폼 (Resend + Kakao 버튼) |
+| `src/app/(site)/login/verify/page.tsx` | ✅ "이메일 확인" 안내 페이지 |
+| `src/entities/user/model/types.ts` | ✅ `SafeUser`, `UserWithProfile` |
+| `src/entities/user/model/schema.ts` | ✅ `passportProfileSchema`, `updateProfileSchema` |
+| `src/entities/user/model/constants.ts` | ✅ `USER_ROLE_LABEL`, `GENDER_LABEL` |
+| `src/entities/user/index.ts` | ✅ barrel |
+| `src/shared/lib/db.ts` | ✅ Prisma client |
+| `src/shared/lib/env.ts` | ✅ env 파서 (가정 — 확인 후 보완) |
+
+### 신규 작성 또는 보완 (이 spec 범위)
+| 파일 | 역할 |
+|------|------|
+| `src/entities/user/api/queries.ts` | `getCurrentUser()`, `getUserById()` (RSC 전용) |
+| `src/entities/user/api/__tests__/queries.test.ts` | 모킹 기반 단위 테스트 |
+| `src/entities/user/index.ts` (수정) | 신규 query 함수 re-export |
+| `src/features/auth/server/auth.ts` (수정) | Resend `sendVerificationRequest` override — 콘솔 폴백 |
+| `src/shared/lib/logger.ts` | 구조화 로그 헬퍼 (M-OBS 전조) |
+| `src/shared/lib/env.ts` (보강) | `AUTH_SECRET`, `AUTH_URL`, `RESEND_API_KEY` 필수성 정의 |
+| `src/app/(site)/login/error/page.tsx` | 인증 에러 페이지 |
+| `src/widgets/site-header/ui/UserMenu.tsx` | (선택) 헤더 우상단 로그인 상태 표시·로그아웃 |
+| `src/middleware.ts` | 보호 라우트 매처 + auth 검사 |
+| `.env.example` | 환경변수 템플릿 |
+| `prisma/seed.ts` (수정) | 검증용 User 2명 추가 |
+
+> ⚠️ `entities/user/api/queries.ts` 신설은 FSD 관점에서 중요. 현재 `auth()`를 직접 호출하는 코드가 흩어질 위험이 있으므로, 모든 RSC는 `entities/user`의 헬퍼만 사용하도록 강제.
+
+## 2. 데이터 모델
+
+User 모델은 기존 그대로(`passwordHash` 추가 **불필요** — 매직링크). 변경 없음.
+
+Account, Session, VerificationToken은 NextAuth 표준 그대로 유지. PrismaAdapter가 자동 관리.
+
+## 3. 인증 흐름
+
+### 3.1 매직링크
 ```
-src/app/
-├── (auth)/
-│   ├── layout.tsx              인증 페이지 공통 레이아웃 (좁은 폼 컨테이너)
-│   ├── login/page.tsx          /login
-│   ├── signup/page.tsx         /signup
-│   ├── forgot-password/page.tsx /forgot-password
-│   └── reset-password/page.tsx  /reset-password?token=...
-└── api/
-    └── auth/
-        └── [...nextauth]/route.ts   NextAuth.js v5 라우트 핸들러
-```
-
-기존 `(site)` 그룹과 동급의 **`(auth)` 라우트 그룹** 신설. 헤더/푸터 없는 좁은 폼 레이아웃 분리 목적.
-
-### FSD 매핑
-```
-app/(auth)/login/page.tsx         ← RSC. signIn은 child client form 위임
-app/(auth)/signup/page.tsx        ← RSC. signup form은 client
-app/(auth)/reset-password/page.tsx ← RSC. token 검증 후 client form 위임
-app/api/auth/[...nextauth]/route.ts ← NextAuth 핸들러
-
-features/auth/
-├── ui/LoginForm.tsx              ← 'use client'. react-hook-form + zod
-├── ui/SignupForm.tsx             ← 'use client'
-├── ui/ForgotPasswordForm.tsx     ← 'use client'
-├── ui/ResetPasswordForm.tsx      ← 'use client'
-├── api/actions.ts                ← Server Actions: signup, requestReset, resetPassword
-└── lib/authOptions.ts            ← NextAuth 설정 (providers, adapter, callbacks)
-
-entities/user/
-├── api/queries.ts                ← getCurrentUser, getUserByEmail
-├── api/mutations.ts              ← createUser (서버 전용, password hash)
-├── api/password.ts               ← hashPassword / verifyPassword (bcrypt 래핑)
-├── api/__tests__/password.test.ts ← 단위 테스트
-├── api/passwordPolicy.ts         ← 비밀번호 규칙 검증 (순수 함수)
-├── api/__tests__/passwordPolicy.test.ts
-├── model/types.ts                ← SessionUser 타입 (Pick<User, ...>)
-├── model/schemas.ts              ← zod: SignupSchema, LoginSchema, ResetSchema
-└── index.ts                      ← barrel
-
-shared/
-├── lib/auth.ts                   ← auth(), signIn, signOut re-export
-└── lib/logger.ts                 ← 이메일 발송 대체용 콘솔 로거 (M-OBS 전조)
-
-middleware.ts                     ← 보호 라우트 매처 (next-auth 통합)
-```
-
-## 2. 데이터 모델 변경
-
-### User 모델 (수정)
-기존 User 모델에 **`passwordHash`** 필드 한 줄만 추가. 다른 변경 없음.
-
-```prisma
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  emailVerified DateTime?
-  name          String?
-  phone         String?
-  image         String?
-  passwordHash  String?              // ← 신규: Credentials provider용. null이면 소셜만
-  role          UserRole  @default(CUSTOMER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  // ...관계 동일
-}
+[Client] /login → 이메일 입력 → submit
+   ↓ (form action — server action)
+[Server] signIn("resend", { email, redirectTo })
+   ↓
+[NextAuth] Resend.sendVerificationRequest 호출
+   - 운영: Resend API → 사용자 메일함
+   - 로컬: 콘솔 폴백 (RESEND_API_KEY 미설정 시)
+   ↓
+[Client] /login/verify 페이지로 리다이렉트
+[User] 이메일 또는 콘솔에서 링크 클릭
+   ↓
+[NextAuth] /api/auth/callback/resend?token=... → User 조회/생성 + Session 발급
+   ↓
+[Client] redirectTo 경로(또는 "/")
 ```
 
-**근거**: 별도 `Credential` 모델보다 단순함. 향후 소셜 로그인 추가 시 `passwordHash`는 null로 두면 됨. Account 모델은 NextAuth 표준 그대로 두어 소셜 추가 시 무수정 확장.
+### 3.2 Kakao
+```
+[Client] /login → "카카오로 로그인" → submit
+   ↓
+signIn("kakao", { redirectTo })
+   ↓
+[Kakao OAuth] 인가 → 콜백
+   ↓
+[NextAuth] User + Account 자동 생성 또는 매칭
+   ↓
+[Client] redirectTo
+```
 
-### VerificationToken 모델 (재사용)
-비밀번호 재설정 토큰은 기존 `VerificationToken` 테이블을 재사용. NextAuth가 정의한 스키마지만 `identifier` 컬럼에 이메일을 넣고 `expires`로 TTL 관리하는 패턴이 표준.
+> Kakao provider는 `AUTH_KAKAO_ID` + `AUTH_KAKAO_SECRET`이 env에 있을 때만 활성. 없으면 폼에 버튼이 노출되지 않음(`hasKakao` 분기).
 
-### Account 모델 (Phase 2에서 미사용)
-Credentials provider는 Account 행을 생성하지 않음. NextAuth.js v5의 Credentials는 의도적으로 Account/Session 모두 데이터베이스 strategy에서 우회한다. **세션은 직접 Session 테이블에 기록.**
+### 3.3 로그아웃
+- 헤더 우상단 `<UserMenu>` (client component) 또는 form action으로 `signOut({ redirectTo: "/" })`.
 
-> ⚠️ NextAuth.js v5 + Credentials는 `session.strategy = "database"`와 호환성 이슈가 있음 (공식적으로 JWT 권장). 본 spec은 **JWT 전략**으로 결정 변경 가능성 있음 — §3에서 다룸.
+## 4. 콘솔 폴백 (로컬 개발)
 
-## 3. NextAuth.js v5 설정 결정
+`RESEND_API_KEY`가 없거나 `NODE_ENV !== "production"`이고 `AUTH_DEV_CONSOLE_EMAIL=true`일 때, Resend Provider의 `sendVerificationRequest`를 override하여 콘솔에 로그 출력.
 
-### 3.1 세션 전략: **JWT (변경)**
-원래 §0에서 "데이터베이스 세션"으로 명시했으나, NextAuth.js v5의 Credentials Provider 공식 가이드는 **JWT 전략 권장**. 데이터베이스 세션과 Credentials는 공식 미지원.
-
-**최종 결정**: **JWT + httpOnly secure cookie**, `maxAge = 30일`. 향후 소셜 로그인 추가 시 동일 전략 유지.
-
-JWT 토큰에 포함:
-- `sub: User.id`
-- `email`
-- `role`
-- `iat`, `exp`
-
-JWT 시크릿: `AUTH_SECRET` env (배포 환경별 분리).
-
-### 3.2 Provider
 ```ts
-providers: [
-  Credentials({
-    credentials: {
-      email: { type: "email" },
-      password: { type: "password" },
-    },
-    async authorize(creds) {
-      // 1. zod 파싱
-      // 2. getUserByEmail
-      // 3. verifyPassword(creds.password, user.passwordHash)
-      // 4. null 또는 { id, email, role } 반환
-    },
-  }),
-],
+Resend({
+  apiKey: env.RESEND_API_KEY ?? "DEV_ONLY",
+  from: env.RESEND_FROM_EMAIL ?? "Nextour <noreply@nextour.test>",
+  async sendVerificationRequest({ identifier, url, provider }) {
+    if (env.NODE_ENV !== "production" && !env.RESEND_API_KEY) {
+      logger.info("auth.magiclink", { email: identifier, url });
+      console.log(`\n📧 [DEV] Magic link for ${identifier}:\n${url}\n`);
+      return;
+    }
+    // production 실제 발송 로직 (Resend SDK 직접 호출)
+    // ... 또는 NextAuth 기본 동작에 위임
+  },
+})
 ```
 
-### 3.3 Callbacks
-- `jwt`: 최초 로그인 시 `token.role = user.role` 주입
-- `session`: `session.user.id`, `session.user.role` 노출
+**로컬에서 사용자 흐름**:
+1. `/login`에서 이메일 입력 → submit
+2. `/login/verify`로 이동
+3. 터미널에서 매직링크 URL 복사 → 브라우저 새 탭에 붙여넣기
+4. 로그인 완료
 
-### 3.4 Pages
-NextAuth 기본 페이지 비활성, 자체 페이지 사용:
+## 5. RSC 헬퍼 (entities/user/api/queries.ts)
+
 ```ts
-pages: {
-  signIn: "/login",
-  error: "/login", // ?error= 쿼리로 에러 표시
-}
+// 모든 RSC 페이지는 이 함수만 호출. auth() 직접 호출 금지.
+export async function getCurrentUser(): Promise<SafeUser | null>;
+
+// 특정 사용자 조회 (booking 모듈 등에서 사용)
+export async function getUserById(id: string): Promise<SafeUser | null>;
 ```
 
-## 4. 인증 흐름
+`SafeUser` 타입은 이미 `entities/user/model/types.ts`에 정의됨 (`Pick<User, "id" | "name" | "email" | "image" | "role">`).
 
-### 4.1 회원가입
-```
-[Client] SignupForm submit (zod 1차 검증)
-   ↓
-[Server Action] features/auth/api/actions.ts → signup(data)
-   ↓
-   1. SignupSchema.parse (서버 재검증)
-   2. passwordPolicy 통과 확인
-   3. getUserByEmail → 중복 검사
-   4. hashPassword(plain) → bcrypt cost 12
-   5. createUser({ email, name, passwordHash, role: CUSTOMER })
-   ↓
-[Client] 성공 시 signIn("credentials", { email, password, redirect: false })
-   ↓
-[Client] 로그인 성공 → router.push("/")
-```
-
-### 4.2 로그인
-```
-[Client] LoginForm submit
-   ↓
-signIn("credentials", { email, password, redirect: false })
-   ↓
-[NextAuth] authorize() 호출
-   ↓
-   - 성공: JWT 발급 + 쿠키 set → client에서 redirect 처리
-   - 실패: { error: "CredentialsSignin" } 반환 → 폼 에러 표시
-```
-
-### 4.3 로그아웃
-- 헤더의 `<LogoutButton>` (client) → `signOut({ callbackUrl: "/" })`
-
-### 4.4 비밀번호 재설정
-```
-[Client] /forgot-password 폼 → 이메일 입력
-   ↓
-[Server Action] requestReset(email)
-   1. 이메일이 존재하는지와 관계없이 동일 응답(이메일 enumeration 방어)
-   2. 존재하면: 32-byte random token, VerificationToken 생성 (expires = now + 1h)
-   3. logger.info("[reset-mail] email=... token=...") — 콘솔 발송 대체
-   ↓
-[User] 콘솔에서 토큰 복사 → /reset-password?token=... 진입
-   ↓
-[Server Action] resetPassword(token, newPassword)
-   1. VerificationToken 조회 + expires 검사
-   2. 비밀번호 정책 검증
-   3. hashPassword → User.passwordHash 갱신
-   4. VerificationToken 삭제
-   ↓
-[Client] 성공 → /login 리다이렉트
-```
-
-## 5. 비밀번호 정책
-
-`entities/user/api/passwordPolicy.ts` — 순수 함수.
-
-규칙:
-- 최소 10자
-- 영문 대/소문자 + 숫자 + 특수문자 중 **3종 이상 포함**
-- 이메일 local-part와 동일 금지(`alice@x.com` → `alice` 포함 금지)
-- 공백 금지
-
-`validatePassword(password: string, email?: string): { ok: true } | { ok: false, reason: string }`.
-
-zod 스키마에서 `.refine(validatePassword)` 형태로 연결.
-
-## 6. RSC 사용 패턴
-
-`shared/lib/auth.ts`:
-```ts
-import NextAuth from "next-auth";
-import { authOptions } from "@/features/auth/lib/authOptions";
-
-export const { auth, handlers, signIn, signOut } = NextAuth(authOptions);
-```
-
-`entities/user/api/queries.ts`:
-```ts
-import { auth } from "@/shared/lib/auth";
-import { db } from "@/shared/db";
-
-export async function getCurrentUser() {
-  const session = await auth();
-  if (!session?.user?.id) return null;
-  return db.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, email: true, name: true, role: true },
-  });
-}
-```
-
-RSC에서:
+### 사용 예 (RSC):
 ```tsx
+import { getCurrentUser } from "@/entities/user";
+
 export default async function Page() {
   const user = await getCurrentUser();
   if (!user) return <GuestView />;
@@ -259,17 +155,16 @@ export default async function Page() {
 }
 ```
 
-## 7. 보호 라우트 (middleware)
+## 6. 보호 라우트 (middleware.ts)
 
-`middleware.ts`:
 ```ts
-import { auth } from "@/shared/lib/auth";
+import { auth } from "@/features/auth/server/auth";
 
 export default auth((req) => {
-  const isAuthed = !!req.auth;
-  const isProtected = req.nextUrl.pathname.startsWith("/account")
-    || req.nextUrl.pathname.startsWith("/bookings");
-  if (isProtected && !isAuthed) {
+  const isProtected =
+    req.nextUrl.pathname.startsWith("/account") ||
+    req.nextUrl.pathname.startsWith("/bookings");
+  if (isProtected && !req.auth) {
     const url = new URL("/login", req.url);
     url.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return Response.redirect(url);
@@ -281,94 +176,157 @@ export const config = {
 };
 ```
 
-> M-AUTH MVP에서는 `/account`·`/bookings`는 아직 없으나, matcher만 선제 정의해서 후속 모듈이 즉시 활용 가능.
+**근거**: `/account`·`/bookings`는 M-AUTH MVP에서 아직 없지만, matcher만 선제 정의해서 후속 모듈이 즉시 활용 가능.
 
-## 8. 페이지 UI 사양 (요약)
+## 7. 페이지 UI
 
-| 페이지 | RSC/Client | 핵심 요소 |
-|--------|-----------|----------|
-| `/login` | RSC + Client form | 이메일·비밀번호 입력, "회원가입" 링크, "비밀번호 찾기" 링크, `?error=`에 따른 에러 표시 |
-| `/signup` | RSC + Client form | 이메일·이름·비밀번호·비밀번호 확인. 약관 동의 체크박스(텍스트만, 외부 링크 없음 — 향후) |
-| `/forgot-password` | RSC + Client form | 이메일 입력 → "메일을 발송했습니다(존재 시)" 안내 (실제는 콘솔) |
-| `/reset-password` | RSC (token 검증) + Client form | token 유효성을 RSC에서 사전 검사, 유효시 폼 노출 |
+### 기존 페이지 (수정 없음 또는 미세 조정)
+- `/login` — 이미 RSC + server action 형태. 그대로 유지.
+- `/login/verify` — 그대로 유지.
 
-레이아웃: `(auth)/layout.tsx`에서 max-width 420px, 카드 스타일, 헤더 로고만.
+### 신규 페이지
+- `/login/error` — NextAuth 에러 코드(`Configuration`, `AccessDenied`, `Verification`, `Default`)별 메시지 매핑. "로그인으로 돌아가기" 링크.
+
+### 헤더 통합 (선택적)
+현재 헤더가 어디에 있는지 확인 필요. 만약 `app/(site)/layout.tsx`에 헤더가 있다면 `UserMenu` 위젯을 우상단에 추가. 없다면 본 spec에서는 보류하고 별도 widget spec으로 이연.
+
+## 8. 환경 변수
+
+`.env.example`:
+```
+# Auth
+AUTH_SECRET=                      # openssl rand -base64 32
+AUTH_URL=http://localhost:3000
+
+# Resend (이메일 매직링크)
+RESEND_API_KEY=                   # 비워두면 로컬에서 콘솔 폴백
+RESEND_FROM_EMAIL=Nextour <noreply@nextour.example>
+
+# Kakao OAuth (선택)
+AUTH_KAKAO_ID=
+AUTH_KAKAO_SECRET=
+
+# Database
+DATABASE_URL=
+DIRECT_URL=
+```
+
+`shared/lib/env.ts`:
+```ts
+// zod 기반 env 파서. 필수/선택 명시.
+const Env = z.object({
+  AUTH_SECRET: z.string().min(32),
+  AUTH_URL: z.string().url(),
+  DATABASE_URL: z.string().url(),
+  DIRECT_URL: z.string().url().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
+  AUTH_KAKAO_ID: z.string().optional(),
+  AUTH_KAKAO_SECRET: z.string().optional(),
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+});
+export const env = Env.parse(process.env);
+```
 
 ## 9. 에러 처리
 
 | 상황 | 동작 |
 |------|------|
-| 가입 시 이메일 중복 | 폼 인라인 에러: "이미 가입된 이메일입니다" |
-| 로그인 실패 | "이메일 또는 비밀번호가 일치하지 않습니다" (구체 사유 노출 금지) |
-| 비밀번호 정책 위반 | passwordPolicy 반환 reason을 한국어로 매핑하여 인라인 표시 |
-| reset token 만료/무효 | `/reset-password`에서 "링크가 만료되었습니다" + 재요청 링크 |
-| NextAuth 내부 에러 | `/login?error=Configuration` 등 → 통일 메시지 |
-| 서버 액션 예외 | `try/catch` → `{ ok: false, error }` 반환, client에서 toast/inline |
+| 매직링크 만료 (24h 기본) | `/login/error?error=Verification` → "링크가 만료되었습니다. 다시 시도해 주세요" |
+| Resend API 실패 | `/login/error?error=Default` → "메일 발송에 실패했습니다" |
+| Kakao 인증 거부 | `/login/error?error=AccessDenied` → "카카오 로그인이 취소되었습니다" |
+| OAuthAccountNotLinked | 이미 다른 방식으로 가입된 이메일 → 안내 메시지 |
+| 환경변수 누락 | env.ts 파싱 단계에서 즉시 throw → 서버 부팅 실패 |
 
 ## 10. 테스트 전략
 
 | 대상 | 종류 | 위치 |
 |------|------|------|
-| `passwordPolicy` | 단위 | `entities/user/api/__tests__/passwordPolicy.test.ts` — 케이스 8개+ |
-| `hashPassword/verifyPassword` | 단위 | `entities/user/api/__tests__/password.test.ts` — 라운드트립 + 잘못된 비번 |
-| `signup` 서버 액션 | 통합 | 별도 vitest 환경(테스트 DB) — Phase 2 후반에 정비. MVP에서는 수동 검증 + 타입 |
-| 페이지 렌더링 | E2E | 본 spec 범위 외(별도 Playwright spec) |
+| `getCurrentUser()` 모킹 | 단위 | `entities/user/api/__tests__/queries.test.ts` — auth() 모킹, session 유무 분기 |
+| `getUserById()` | 단위 | 동일 파일 — DB 모킹 |
+| 매직링크 흐름 | 수동 | 로컬에서 콘솔 출력 확인 + 클릭 → 세션 생성 |
+| Kakao 흐름 | 수동 | AUTH_KAKAO_* env 설정 시에만 |
+| middleware 보호 | 수동 | `/account/foo`(존재하지 않음) → /login 리다이렉트 확인 |
 
-**MVP는 순수 함수 단위 테스트만 자동화**, 서버 액션 통합 테스트는 후속 plan에서 다룸.
+순수 함수가 적어 자동화 테스트 비중 작음. 수동 검증 체크리스트가 중요.
 
-## 11. 마이그레이션
+## 11. 시드 데이터
 
-1. `prisma/schema.prisma` — User 모델에 `passwordHash String?` 추가
-2. `npx prisma migrate dev --name add_user_password_hash`
-3. seed.ts — 검증용 시드 사용자 1~2명 추가:
-   - `customer@nextour.test` / `Nextour!2026` (CUSTOMER)
-   - `admin@nextour.test` / `Nextour!2026` (ADMIN) — 추후 어드민 검증용
+`prisma/seed.ts`에 사용자 2명 추가 (FK 역순 삭제 목록에 `account`, `session`, `verificationToken`, `user` 추가):
 
-## 12. 환경 변수
+```ts
+await prisma.$transaction([
+  prisma.session.deleteMany(),
+  prisma.account.deleteMany(),
+  prisma.verificationToken.deleteMany(),
+  // ... 기존 삭제들
+  prisma.user.deleteMany(),
+]);
 
+const customer = await prisma.user.create({
+  data: {
+    email: "customer@nextour.test",
+    name: "테스트 고객",
+    role: "CUSTOMER",
+    emailVerified: new Date(),
+  },
+});
+const admin = await prisma.user.create({
+  data: {
+    email: "admin@nextour.test",
+    name: "테스트 관리자",
+    role: "ADMIN",
+    emailVerified: new Date(),
+  },
+});
 ```
-AUTH_SECRET=...           # openssl rand -base64 32
-AUTH_URL=http://localhost:3000   # 배포 시 도메인
-```
 
-`.env.example`에 위 두 줄 추가. 실제 값은 `.env.local`.
+> 매직링크 방식이라 비밀번호 시드 불필요. 로컬에서 위 이메일로 로그인 시도 → 콘솔에 매직링크 출력 → 클릭하면 즉시 로그인.
 
-## 13. 보안 체크리스트
+## 12. 보안 체크리스트
 
-- [x] 비밀번호 bcrypt cost 12 이상
-- [x] JWT secret env로 분리
-- [x] 이메일 enumeration 방어 (`/forgot-password` 동일 응답)
-- [x] 비밀번호 정책 최소 10자 + 3종 문자
-- [x] HTTPS 전제(쿠키 `secure: true` — production)
-- [x] CSRF — NextAuth.js v5 내장
-- [x] 로그인 실패 메시지 모호화
-- [ ] rate limiting — M-OBS / 인프라 spec으로 이연
+- [x] AUTH_SECRET 32바이트 이상 (zod로 강제)
+- [x] HTTPS 전제(쿠키 secure — NextAuth 기본)
+- [x] CSRF — NextAuth 내장
+- [x] 매직링크 TTL — NextAuth 기본 24시간
+- [x] 이메일 enumeration 방어 — Resend 발송 결과 노출하지 않음
+- [x] OAuthAccountNotLinked 명확 안내 (중복 이메일 우회 차단)
+- [ ] rate limiting — 인프라 / M-OBS spec
+- [ ] 콘솔 폴백이 production에서 비활성 — env.NODE_ENV 검사 필수
 
-## 14. 후속 plan 구성 (예상)
+## 13. 후속 plan 구성 (예상)
 
-본 spec → 단일 plan `plans/2026-05-13-auth.md`로 약 **15~18개 태스크** 예상:
+`plans/2026-05-13-auth.md`로 **약 12개 태스크**:
 
-1. Prisma 스키마 + 마이그레이션
-2. 비밀번호 정책 + 테스트 (TDD)
-3. bcrypt 래퍼 + 테스트 (TDD)
-4. zod 스키마 (Signup/Login/Reset)
-5. `entities/user/api/queries.ts` (getCurrentUser, getUserByEmail)
-6. `entities/user/api/mutations.ts` (createUser, updatePassword)
-7. NextAuth 설정 (`features/auth/lib/authOptions.ts`)
-8. `shared/lib/auth.ts` (auth/signIn/signOut export)
-9. `app/api/auth/[...nextauth]/route.ts` 핸들러
-10. Server Action (`features/auth/api/actions.ts`)
-11. LoginForm + SignupForm 클라이언트 컴포넌트
-12. ForgotPasswordForm + ResetPasswordForm
-13. `(auth)` 라우트 그룹 + 4개 페이지
-14. `middleware.ts`
-15. 시드 사용자 2명
-16. typecheck + test 통과
-17. 수동 검증 체크리스트
+1. `shared/lib/env.ts` 보강 + `.env.example`
+2. `shared/lib/logger.ts` 구조화 로거
+3. `auth.ts`에 `sendVerificationRequest` 콘솔 폴백 추가
+4. `entities/user/api/queries.ts` — `getCurrentUser`, `getUserById`
+5. `entities/user/api/__tests__/queries.test.ts` — 모킹 단위 테스트 (TDD)
+6. `entities/user/index.ts` 업데이트 — 신규 함수 export
+7. `app/(site)/login/error/page.tsx` 신설
+8. `middleware.ts` 신설
+9. `prisma/seed.ts` — User 2명 추가, 삭제 트랜잭션 보강
+10. (선택) `widgets/site-header/ui/UserMenu.tsx` — 헤더 영역 있을 때만
+11. typecheck + test 전체 통과
+12. 수동 검증 체크리스트 — 매직링크 콘솔 폴백, 보호 라우트 리다이렉트, 시드 사용자 로그인
 
-## 15. 미결정 / 가정
+## 14. 미결정 / 가정
 
-- **이메일 전송**: MVP는 콘솔 로그. Phase 3에서 Resend/SES 도입.
-- **약관·개인정보처리방침**: 텍스트만 표시, 실제 동의 저장은 후속.
-- **JWT vs DB 세션 재검토**: NextAuth.js v5의 Credentials + DB 세션 비공식 패턴이 안정화되면 전환 검토. 현 시점은 공식 권장 JWT 채택.
-- **로그인 후 redirect 정책**: `callbackUrl` 쿼리 우선, 없으면 `/`.
+- **헤더 통합**: 현재 헤더가 어디에 있는지 plan 시작 시 코드 탐색하여 결정. 없으면 본 모듈에서 보류.
+- **에러 페이지 디자인**: 기본 텍스트 + Tailwind 카드 스타일. 토스트 라이브러리 미도입.
+- **로그아웃 위치**: UserMenu 안에. 별도 페이지 없음.
+- **Resend 운영 발송**: 현재 NextAuth Resend provider 기본 동작에 위임. 커스텀 템플릿은 Phase 3.
+
+## 15. 수동 검증 체크리스트 (구현 완료 후)
+
+- [ ] `.env.local`에 `AUTH_SECRET` + `DATABASE_URL`만 설정한 상태에서 `npm run dev` 부팅 성공
+- [ ] `/login`에서 이메일 입력 → 콘솔에 매직링크 URL 출력 확인
+- [ ] 매직링크 클릭 → 자동 로그인 → 홈 리다이렉트
+- [ ] 시드 사용자 `customer@nextour.test`로 로그인 가능
+- [ ] `/account/foo` 또는 `/bookings/foo` 비로그인 접근 → `/login?callbackUrl=...`로 리다이렉트
+- [ ] 로그인 상태에서 `/account/foo` 접근 시 (해당 페이지 없으므로 404지만) middleware는 통과
+- [ ] `getCurrentUser()` 호출 결과 — 로그인 시 `SafeUser`, 비로그인 시 `null`
+- [ ] `RESEND_API_KEY` 설정 시 운영 발송 동작 (선택, 별도 환경에서)
+- [ ] `npm run typecheck` 통과
+- [ ] `npm run test` 통과

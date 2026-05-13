@@ -126,14 +126,18 @@ M-AUTH ──────────┐
 
 ### 5.1 M-AUTH MVP
 **범위**:
-- 이메일+비밀번호 회원가입(zod 검증, bcrypt 해시)
-- 로그인 → 세션 쿠키 (NextAuth.js v5 또는 iron-session)
-- `getCurrentUser()` 서버 헬퍼 (RSC에서 호출)
-- 로그아웃, 비밀번호 재설정(이메일 발송은 콘솔 로그로 대체)
+- NextAuth.js v5 + Resend 매직링크 + Kakao OAuth(env 있을 때만)
+- `session.strategy = "database"` (Prisma Adapter)
+- 로컬 개발용 콘솔 폴백 (`RESEND_API_KEY` 미설정 시 매직링크 URL을 콘솔에 출력)
+- `getCurrentUser()` 서버 헬퍼 (RSC에서 호출, `entities/user/api/`)
+- 보호 라우트 미들웨어(`/account/*`, `/bookings/*`)
+- 인증 에러 페이지(`/login/error`)
+- 시드 사용자 2명(CUSTOMER, ADMIN)
 
 **비범위**:
-- 소셜 로그인 (Phase 3)
-- 2FA, 이메일 인증 (Phase 3 — MVP는 가입 즉시 활성)
+- 이메일+비밀번호 Credentials 인증 (매직링크로 대체)
+- 카카오 외 소셜 로그인 (Phase 3)
+- 2FA, 패스키, 이메일 인증 메일 (매직링크 클릭이 곧 인증)
 - 게스트 예약: **불허**. 모든 예약은 로그인 필수.
   - 결정 근거: 게스트 예약 도입 시 booking ownership 모델이 복잡해지고(`userId | guestEmail` union), 환불·문의 동선이 분기됨. MVP 단순성 우선.
 
@@ -262,7 +266,7 @@ M-AUTH ──────────┐
 
 | 항목 | 선택 | 사유 |
 |------|------|------|
-| 인증 라이브러리 | **NextAuth.js v5 (Auth.js)** | Next.js 15 App Router 공식 지원, RSC 친화, 향후 소셜 로그인 확장 용이 |
+| 인증 라이브러리 | **NextAuth.js v5 (Auth.js)** + **Resend 매직링크** + **Kakao OAuth(옵셔널)** | Next.js 15 App Router 공식 지원, 비밀번호 관리 부담 회피, 기존 구현 보존 |
 | 토스페이먼츠 SDK | **v2** | 최신 안정 버전, App Router 친화 |
 | 임베딩 모델 | **OpenAI `text-embedding-3-small`** | 비용 효율($0.02/1M tokens), 품질 충분 |
 | 자연어 라우터 LLM | **Claude Haiku 4.5** | 빠르고 저렴, JSON 구조화 출력 우수 |
