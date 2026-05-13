@@ -29,3 +29,6 @@ export {
   getDistinctDestinations,
   PAGE_SIZE,
 } from "./api/queries";
+
+export { ProductImage } from "./ui/ProductImage";
+export { ProductCard as ProductCardComponent } from "./ui/ProductCard";
