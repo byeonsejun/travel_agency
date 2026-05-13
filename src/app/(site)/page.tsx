@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { getFeaturedProducts } from "@/entities/product";
-import { ProductCardList } from "@/widgets/product-card-list/ui/ProductCardList";
+import Link from 'next/link';
+import { getFeaturedProducts } from '@/entities/product';
+import { ProductCardList } from '@/widgets/product-card-list/ui/ProductCardList';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const featured = await getFeaturedProducts(6);
@@ -12,9 +12,7 @@ export default async function HomePage() {
       {/* 기존 헤더 유지 */}
       <section className="py-12 text-center">
         <h1 className="text-4xl font-bold">Nextour</h1>
-        <p className="mt-2 text-gray-600">
-          AI가 찾아주는 맞춤형 패키지 여행. (작업 진행 중)
-        </p>
+        <p className="mt-2 text-gray-600">AI가 찾아주는 맞춤형 패키지 여행. (작업 진행 중)</p>
       </section>
 
       {/* 추천 상품 섹션 */}
