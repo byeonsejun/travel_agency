@@ -9,6 +9,6 @@ export function pickLowestPrice(
     return null;
   }
 
-  return departures.sort((a, b) => a.priceAdult - b.priceAdult)[0]
+  return [...departures].sort((a, b) => a.priceAdult - b.priceAdult)[0]
     .priceAdult;
 }

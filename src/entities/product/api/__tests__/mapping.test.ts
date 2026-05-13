@@ -21,4 +21,11 @@ describe('pickLowestPrice', () => {
     const result = pickLowestPrice(departures);
     expect(result).toBe(100000);
   });
+
+  it('does not mutate the input array', () => {
+    const arr = [{ priceAdult: 300000 }, { priceAdult: 100000 }];
+    const original = [...arr];
+    pickLowestPrice(arr);
+    expect(arr).toEqual(original);
+  });
 });
