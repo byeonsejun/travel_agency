@@ -1,0 +1,364 @@
+// Nextour Prisma schema
+// PRD v0.2 / ARCHITECTURE.md 기반
+// PostgreSQL + pgvector + Auth.js
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ─────────────────────────────────────────────────────────────
+// 1. 사용자 & 인증 (Auth.js v5 표준)
+// ─────────────────────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  phone         String?
+  image         String?
+  role          UserRole  @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  passportProfile PassportProfile?
+  bookings        Booking[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String  // "kakao", "email", ...
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// 여권정보는 민감하므로 별도 테이블 + 추후 컬럼 단위 암호화 적용 가능
+model PassportProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  lastNameEn   String
+  firstNameEn  String
+  gender       Gender
+  birthDate    DateTime @db.Date
+  passportNo   String
+  expireDate   DateTime @db.Date
+  nationality  String   @default("KR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+// ─────────────────────────────────────────────────────────────
+// 2. 상품 (Product)
+// ─────────────────────────────────────────────────────────────
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  title          String
+  summary        String        @db.Text
+  aiSummary      String?       @db.Text // PDP 상단 AI 3줄 요약, 저장 시 사전 생성
+  destination    String        // "오사카, 일본"
+  destinationCode String?      // 검색 필터용 ISO 등 (예: "JP-OSA")
+  durationNights Int
+  durationDays   Int
+  heroImageUrl   String?
+  status         ProductStatus @default(DRAFT)
+  basePriceAdult Int           // 노출용 시작가 (실가격은 Departure)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  tags         ProductTag[]
+  inclusions   Inclusion[]
+  itineraryDays ItineraryDay[]
+  departures   Departure[]
+  embedding    ProductEmbedding?
+
+  @@index([status, destinationCode])
+}
+
+model ProductTag {
+  id        String  @id @default(cuid())
+  productId String
+  tag       String  // "#노쇼핑", "#출발확정", "#가족", ...
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tag])
+  @@index([tag])
+}
+
+enum InclusionKind {
+  INCLUDED
+  EXCLUDED
+}
+
+model Inclusion {
+  id        String        @id @default(cuid())
+  productId String
+  kind      InclusionKind
+  label     String
+  note      String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, kind])
+}
+
+model ItineraryDay {
+  id            String  @id @default(cuid())
+  productId     String
+  dayNumber     Int
+  title         String
+  accommodation String?
+  meals         Json    // { breakfast: "호텔", lunch: "현지식", dinner: "X" }
+
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stops   ItineraryStop[]
+
+  @@unique([productId, dayNumber])
+}
+
+model ItineraryStop {
+  id             String  @id @default(cuid())
+  itineraryDayId String
+  order          Int
+  time           String? // "10:00" / "오전"
+  place          String
+  description    String? @db.Text
+
+  day ItineraryDay @relation(fields: [itineraryDayId], references: [id], onDelete: Cascade)
+
+  @@index([itineraryDayId, order])
+}
+
+// pgvector 임베딩
+// 주의: Prisma는 vector 타입을 네이티브 지원하지 않으므로 Unsupported로 표기.
+// 마이그레이션 후 별도 SQL로 ivfflat 인덱스 추가:
+//   CREATE INDEX product_embedding_vector_idx ON "ProductEmbedding"
+//     USING ivfflat (vector vector_cosine_ops) WITH (lists = 100);
+model ProductEmbedding {
+  productId    String   @id
+  vector       Unsupported("vector(1536)")
+  modelVersion String   // "claude-embed-v1" 등 — 모델 교체 시 일괄 재색인 키
+  updatedAt    DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────
+// 3. 출발 / 재고 (Departure)
+// ─────────────────────────────────────────────────────────────
+
+enum DepartureStatus {
+  SCHEDULED   // 모객 중
+  CONFIRMED   // 최소 인원 달성 → 출발 확정
+  CLOSED      // 마감
+  CANCELED    // 모객 실패 등으로 출발 취소
+}
+
+model Departure {
+  id             String          @id @default(cuid())
+  productId      String
+  departureDate  DateTime        @db.Date
+  returnDate     DateTime        @db.Date
+  priceAdult     Int
+  priceChild     Int
+  priceInfant    Int             @default(0)
+  capacity       Int             // 총 가능 좌석
+  bookedSeats    Int             @default(0) // 비관적 락으로 변경
+  minPax         Int             // 최소 출발 인원
+  status         DepartureStatus @default(SCHEDULED)
+  version        Int             @default(0) // 낙관적 락 보조용
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  product  Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@unique([productId, departureDate])
+  @@index([departureDate, status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// 4. 예약 & 결제
+// ─────────────────────────────────────────────────────────────
+
+enum BookingStatus {
+  RECEIVED              // 예약 접수, 무결제 대기
+  AWAITING_GROUP        // 최소 인원 미달, 모객 대기
+  DEPARTURE_CONFIRMED   // 출발 확정 → 결제 요청
+  PAID                  // 결제 완료
+  READY                 // E-ticket 발급 완료
+  COMPLETED             // 여행 완료
+  CANCELED_BY_USER
+  CANCELED_BY_AGENCY
+}
+
+model Booking {
+  id           String        @id @default(cuid())
+  userId       String
+  departureId  String
+  adultCount   Int           @default(0)
+  childCount   Int           @default(0)
+  infantCount  Int           @default(0)
+  totalPrice   Int           // 결제 시점에 서버에서 재계산해 검증
+  status       BookingStatus @default(RECEIVED)
+  notes        String?       @db.Text
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  canceledAt   DateTime?
+  cancelReason String?
+
+  user      User           @relation(fields: [userId], references: [id])
+  departure Departure      @relation(fields: [departureId], references: [id])
+  travelers Traveler[]
+  terms     BookingTerms[]
+  payments  Payment[]
+  events    BookingEvent[]
+
+  @@index([userId, status])
+  @@index([departureId, status])
+}
+
+enum TravelerRole {
+  BOOKER     // 예약자 (결제자) — 본인이 함께 가지 않을 수도 있음
+  TRAVELER   // 실제 탑승자
+}
+
+model Traveler {
+  id          String       @id @default(cuid())
+  bookingId   String
+  role        TravelerRole
+  lastNameEn  String
+  firstNameEn String
+  gender      Gender
+  birthDate   DateTime     @db.Date
+  passportNo  String?
+  expireDate  DateTime?    @db.Date
+  phone       String?
+  email       String?
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+model BookingTerms {
+  id          String   @id @default(cuid())
+  bookingId   String
+  termKey     String   // "standard_overseas_v1", "special_v3"
+  termVersion String
+  agreedAt    DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, termKey])
+}
+
+// 상태 전이 감사 로그
+model BookingEvent {
+  id        String        @id @default(cuid())
+  bookingId String
+  fromState BookingStatus?
+  toState   BookingStatus
+  actor     String        // "user:{id}" | "admin:{id}" | "system:cron"
+  reason    String?
+  createdAt DateTime      @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+}
+
+enum PaymentMethod {
+  CARD
+  VIRTUAL_ACCOUNT
+  TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELED
+  FAILED
+}
+
+model Payment {
+  id              String         @id @default(cuid())
+  bookingId       String
+  method          PaymentMethod
+  amount          Int
+  status          PaymentStatus  @default(PENDING)
+  tossOrderId     String         @unique  // 멱등성 키
+  tossPaymentKey  String?        @unique  // 토스 확정 후 발급
+  receiptUrl      String?
+  failureCode     String?
+  failureMessage  String?
+  paidAt          DateTime?
+  canceledAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId, status])
+}
