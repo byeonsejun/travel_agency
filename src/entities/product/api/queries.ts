@@ -31,13 +31,14 @@ export async function getDistinctDestinations(): Promise<
 export async function getFeaturedProducts(
   limit: number
 ): Promise<ProductCard[]> {
+  const safeLimit = Math.min(limit, 50); // clamp to reasonable maximum
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const products = await db.product.findMany({
     where: { status: "PUBLISHED" },
     orderBy: { createdAt: "desc" },
-    take: limit,
+    take: safeLimit,
     include: {
       tags: { select: { tag: true } },
       departures: {
@@ -203,8 +204,8 @@ export async function getProductList(
 
   // Restore original sort order from raw SQL
   const ordered = ids
-    .map((id) => products.find((p) => p.id === id)!)
-    .filter(Boolean);
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => p != null);
 
   return { items: ordered.map(toProductCard), total };
 }
