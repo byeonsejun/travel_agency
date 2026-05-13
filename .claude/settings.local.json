@@ -12,7 +12,17 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('scripts',{}\\), indent=2\\)\\)\")",
       "Bash(npm run *)",
       "Bash(npx vitest *)",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "Bash(git push *)",
+      "Bash(mkdir -p ~/.claude/plugins)",
+      "Bash(git clone *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(node /Users/apple/.claude/plugins/claude-dashboard/dist/index.js)",
+      "Bash(node dist/index.js --debug)",
+      "Bash(node dist/index.js verbose)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({'version': d.get\\('version'\\), 'description': d.get\\('description'\\)}, indent=2\\)\\)\")",
+      "Bash(md5 *)",
+      "Bash(node /Users/apple/.claude/plugins/cache/claude-dashboard/claude-dashboard/1.26.1/dist/index.js)"
     ]
   },
   "enabledPlugins": {
