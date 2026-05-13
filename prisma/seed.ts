@@ -1,4 +1,4 @@
-import { PrismaClient, ProductStatus, DepartureStatus, InclusionKind } from "@prisma/client";
+import { PrismaClient, ProductStatus, DepartureStatus, InclusionKind, UserRole } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -63,13 +63,43 @@ async function main() {
 
   // Cleanup in FK reverse order
   await prisma.$transaction([
+    prisma.payment.deleteMany(),
+    prisma.bookingEvent.deleteMany(),
+    prisma.bookingTerms.deleteMany(),
+    prisma.traveler.deleteMany(),
+    prisma.booking.deleteMany(),
     prisma.itineraryStop.deleteMany(),
     prisma.itineraryDay.deleteMany(),
     prisma.inclusion.deleteMany(),
     prisma.productTag.deleteMany(),
+    prisma.productEmbedding.deleteMany(),
     prisma.departure.deleteMany(),
     prisma.product.deleteMany(),
+    prisma.session.deleteMany(),
+    prisma.account.deleteMany(),
+    prisma.verificationToken.deleteMany(),
+    prisma.passportProfile.deleteMany(),
+    prisma.user.deleteMany(),
   ]);
+
+  // ─── Users (M-AUTH 검증용) ───────────────────────────────────
+  await prisma.user.createMany({
+    data: [
+      {
+        email: "customer@nextour.test",
+        name: "테스트 고객",
+        role: UserRole.CUSTOMER,
+        emailVerified: today,
+      },
+      {
+        email: "admin@nextour.test",
+        name: "테스트 관리자",
+        role: UserRole.ADMIN,
+        emailVerified: today,
+      },
+    ],
+  });
+  console.log("Seed users: customer@nextour.test, admin@nextour.test");
 
   // ─── Product 1: 오사카·교토 3박4일 ───────────────────────────
   await prisma.product.create({
