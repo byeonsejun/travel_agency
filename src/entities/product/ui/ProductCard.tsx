@@ -1,9 +1,9 @@
 import Link from "next/link";
-import type { ProductCard as ProductCardType } from "../model/types";
+import type { ProductCard } from "../model/types";
 import { ProductImage } from "./ProductImage";
 
 type ProductCardProps = {
-  product: ProductCardType;
+  product: ProductCard;
 };
 
 export function ProductCard({ product }: ProductCardProps) {

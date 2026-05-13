@@ -1,5 +1,5 @@
 export type {
-  ProductCard,
+  ProductCard as ProductCardType,
   ProductDetail,
   SearchResultCard,
   ProductStatus,
@@ -31,4 +31,4 @@ export {
 } from "./api/queries";
 
 export { ProductImage } from "./ui/ProductImage";
-export { ProductCard as ProductCardComponent } from "./ui/ProductCard";
+export { ProductCard } from "./ui/ProductCard";
