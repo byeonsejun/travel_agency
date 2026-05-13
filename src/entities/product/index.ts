@@ -32,3 +32,5 @@ export {
 
 export { ProductImage } from "./ui/ProductImage";
 export { ProductCard } from "./ui/ProductCard";
+export { InclusionList } from "./ui/InclusionList";
+export { ItineraryTimeline } from "./ui/ItineraryTimeline";
