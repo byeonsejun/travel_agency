@@ -7,8 +7,10 @@ import { env } from "@/shared/lib/env";
 import { logger } from "@/shared/lib/logger";
 import type { UserRole } from "@prisma/client";
 
-const useDevConsoleFallback =
-  env.NODE_ENV !== "production" && !env.RESEND_API_KEY;
+// dev/test 환경에서는 RESEND_API_KEY 존재 여부와 무관하게 항상 콘솔 폴백.
+// production에서만 실제 Resend API 호출. 로컬에서 실수로 테스트 키가
+// 설정되어 있어도 외부 발송이 일어나지 않도록 보장한다.
+const useDevConsoleFallback = env.NODE_ENV !== "production";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),

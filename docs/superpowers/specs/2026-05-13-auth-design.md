@@ -108,23 +108,28 @@ signIn("kakao", { redirectTo })
 
 ## 4. 콘솔 폴백 (로컬 개발)
 
-`RESEND_API_KEY`가 없거나 `NODE_ENV !== "production"`이고 `AUTH_DEV_CONSOLE_EMAIL=true`일 때, Resend Provider의 `sendVerificationRequest`를 override하여 콘솔에 로그 출력.
+**조건**: `env.NODE_ENV !== "production"` (즉 development/test). API 키 존재 여부와 무관하게 콘솔 폴백을 우선 적용한다.
+
+**근거**: 개발자가 실수로 production 테스트용 Resend API 키를 `.env.local`에 넣어두면 dev 서버에서 외부 발송이 발생하고, 테스트 키 제한에 걸려 403 오류가 난다. 로컬 환경의 외부 부작용을 0으로 만들기 위해 `NODE_ENV`만 기준으로 분기한다.
 
 ```ts
+const useDevConsoleFallback = env.NODE_ENV !== "production";
+
 Resend({
   apiKey: env.RESEND_API_KEY ?? "DEV_ONLY",
-  from: env.RESEND_FROM_EMAIL ?? "Nextour <noreply@nextour.test>",
-  async sendVerificationRequest({ identifier, url, provider }) {
-    if (env.NODE_ENV !== "production" && !env.RESEND_API_KEY) {
-      logger.info("auth.magiclink", { email: identifier, url });
-      console.log(`\n📧 [DEV] Magic link for ${identifier}:\n${url}\n`);
-      return;
-    }
-    // production 실제 발송 로직 (Resend SDK 직접 호출)
-    // ... 또는 NextAuth 기본 동작에 위임
-  },
+  from: env.RESEND_FROM_EMAIL ?? "Nextour <noreply@nextour.example>",
+  ...(useDevConsoleFallback
+    ? {
+        async sendVerificationRequest({ identifier, url }) {
+          logger.info("auth.magiclink.dev", { email: identifier, url });
+          console.log(`\n📧 [DEV] Magic link for ${identifier}:\n${url}\n`);
+        },
+      }
+    : {}),
 })
 ```
+
+`production`에서는 spread가 빈 객체가 되어 NextAuth Resend provider의 기본 동작(api.resend.com 호출)이 그대로 적용된다.
 
 **로컬에서 사용자 흐름**:
 1. `/login`에서 이메일 입력 → submit
