@@ -18,7 +18,16 @@ export function SessionPoll({ callbackUrl, email }: Props) {
   const router = useRouter();
 
   useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | undefined;
     let cancelled = false;
+
+    function stop() {
+      cancelled = true;
+      if (intervalId !== undefined) {
+        clearInterval(intervalId);
+        intervalId = undefined;
+      }
+    }
 
     async function check() {
       if (cancelled) return;
@@ -29,8 +38,9 @@ export function SessionPoll({ callbackUrl, email }: Props) {
         });
         if (!res.ok) return;
         const data: SessionResponse | null = await res.json();
+        if (cancelled) return;
         if (data?.user) {
-          cancelled = true;
+          stop();
           router.replace(callbackUrl);
         }
       } catch {
@@ -38,12 +48,9 @@ export function SessionPoll({ callbackUrl, email }: Props) {
       }
     }
 
-    const intervalId = setInterval(check, POLL_INTERVAL_MS);
+    intervalId = setInterval(check, POLL_INTERVAL_MS);
 
-    return () => {
-      cancelled = true;
-      clearInterval(intervalId);
-    };
+    return stop;
   }, [callbackUrl, router]);
 
   return (
