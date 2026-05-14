@@ -25,7 +25,6 @@ vi.mock("@/shared/lib/toss", () => ({ tossClient: mocks.tossClient }));
 vi.mock("@/entities/booking", () => ({ transitionStatus: mocks.transitionStatus }));
 
 import { confirmPayment } from "../confirm";
-import { PaymentError } from "../errors";
 
 // ── 공통 픽스처 ────────────────────────────────────────────────
 const BOOKING_ID = "booking_cltestid123456789";

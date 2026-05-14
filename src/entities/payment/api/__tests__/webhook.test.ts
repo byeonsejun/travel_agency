@@ -38,7 +38,7 @@ vi.mock("@/entities/booking", () => ({
 }));
 
 import { handleTossWebhook } from "../webhook";
-import { InvalidSignatureError, PaymentError } from "../errors";
+import { InvalidSignatureError } from "../errors";
 
 // ── 공통 픽스처 ────────────────────────────────────────────────
 const BOOKING_ID = "booking_webhook_testid123";
