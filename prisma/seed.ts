@@ -1,4 +1,5 @@
 import { PrismaClient, ProductStatus, DepartureStatus, InclusionKind, UserRole } from "@prisma/client";
+import { createBooking } from "../src/entities/booking/api/mutations";
 
 const prisma = new PrismaClient();
 
@@ -1107,6 +1108,45 @@ async function main() {
   });
 
   console.log("✅ Seed complete: 10 products created");
+
+  // ─── Booking 시드 (검증용) ────────────────────────────────────
+  const customer = await prisma.user.findUniqueOrThrow({
+    where: { email: "customer@nextour.test" },
+  });
+  const firstDep = await prisma.departure.findFirst({
+    where: { status: { in: [DepartureStatus.SCHEDULED, DepartureStatus.CONFIRMED] } },
+    orderBy: { departureDate: "asc" },
+  });
+
+  if (firstDep) {
+    const expectedTotal = firstDep.priceAdult * 1 + firstDep.priceChild * 1;
+    const booking = await createBooking({
+      departureId: firstDep.id,
+      userId: customer.id,
+      adultCount: 1,
+      childCount: 1,
+      infantCount: 0,
+      expectedTotalPrice: expectedTotal,
+      travelers: [
+        {
+          lastNameEn: "KIM",
+          firstNameEn: "JIHOON",
+          gender: "MALE",
+          birthDate: new Date("1990-01-01"),
+          role: "TRAVELER",
+        },
+        {
+          lastNameEn: "KIM",
+          firstNameEn: "JISOO",
+          gender: "FEMALE",
+          birthDate: new Date("2018-05-10"),
+          role: "TRAVELER",
+        },
+      ],
+      termKeys: ["standard_overseas_v1"],
+    });
+    console.log(`✅ Booking seed: id=${booking.id} status=${booking.status} totalPrice=${booking.totalPrice}`);
+  }
 }
 
 main()
