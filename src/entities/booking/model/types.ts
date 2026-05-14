@@ -17,20 +17,38 @@ export type {
   PaymentMethod,
 };
 
-// 마이페이지에서 사용하는 전체 예약 정보
-export type BookingWithDetails = Booking & {
+// 민감정보(travelers 등) 제외한 Booking 기본 필드
+export type SafeBooking = Pick<
+  Booking,
+  | "id"
+  | "userId"
+  | "departureId"
+  | "adultCount"
+  | "childCount"
+  | "infantCount"
+  | "totalPrice"
+  | "status"
+  | "notes"
+  | "createdAt"
+  | "updatedAt"
+  | "canceledAt"
+  | "cancelReason"
+>;
+
+// 마이페이지 상세: traveler·payments·events 포함
+export type BookingDetail = Booking & {
   travelers: Traveler[];
   terms: BookingTerms[];
   payments: Payment[];
   events: BookingEvent[];
+  departure: { departureDate: Date; returnDate: Date; product: { title: string } };
 };
 
-// 어드민 예약 목록용
+// 마이페이지 목록: 출발 정보(제목·출발일) 포함
 export type BookingListItem = Pick<
   Booking,
-  "id" | "adultCount" | "childCount" | "infantCount" | "totalPrice" | "status" | "createdAt"
+  "id" | "status" | "totalPrice" | "adultCount" | "childCount" | "infantCount" | "createdAt" | "canceledAt"
 > & {
-  user: { name: string | null; email: string };
   departure: { departureDate: Date; product: { title: string } };
 };
 

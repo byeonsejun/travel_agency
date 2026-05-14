@@ -34,3 +34,12 @@ export const TERM_KEYS = {
   STANDARD_OVERSEAS: "standard_overseas_v1",
   SPECIAL_CANCELLATION: "special_cancellation_v1",
 } as const;
+
+// 사용자 자가 취소 사유 프리셋
+export const CANCEL_REASON_PRESETS = [
+  "일정 변경으로 인한 취소",
+  "개인 사정으로 인한 취소",
+  "건강상의 이유로 인한 취소",
+  "다른 여행 상품으로 변경",
+  "기타 사유",
+] as const;
