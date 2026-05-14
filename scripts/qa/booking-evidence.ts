@@ -168,19 +168,18 @@ async function runCancelAuth() {
 }
 
 async function main() {
+  const s = scenario as string;
   try {
-    if (scenario === "createBooking" || scenario === "all") {
+    if (s === "createBooking" || s === "all") {
       const booking = await runCreateBooking();
-      if (booking && (scenario === "transitionStatus" || scenario === "all")) {
+      if (booking && s === "all") {
         await runTransitionStatus(booking.id);
       }
-    }
-    if (scenario === "transitionStatus") {
-      // transitionStatus만 단독 실행 시 booking 먼저 생성
+    } else if (s === "transitionStatus") {
       const booking = await runCreateBooking();
       if (booking) await runTransitionStatus(booking.id);
     }
-    if (scenario === "cancelAuth" || scenario === "all") {
+    if (s === "cancelAuth" || s === "all") {
       await runCancelAuth();
     }
   } finally {
