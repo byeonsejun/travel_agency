@@ -254,29 +254,33 @@ enum BookingStatus {
 }
 
 model Booking {
-  id           String        @id @default(cuid())
-  userId       String
-  departureId  String
-  adultCount   Int           @default(0)
-  childCount   Int           @default(0)
-  infantCount  Int           @default(0)
-  totalPrice   Int           // 결제 시점에 서버에서 재계산해 검증
-  status       BookingStatus @default(RECEIVED)
-  notes        String?       @db.Text
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  canceledAt   DateTime?
-  cancelReason String?
+  id             String        @id @default(cuid())
+  userId         String
+  departureId    String
+  adultCount     Int           @default(0)
+  childCount     Int           @default(0)
+  infantCount    Int           @default(0)
+  totalPrice     Int           // 결제 시점에 서버에서 재계산해 검증
+  status         BookingStatus @default(RECEIVED)
+  notes          String?       @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  canceledAt     DateTime?
+  cancelReason   String?
+  paymentDueAt   DateTime?     // DEPARTURE_CONFIRMED 진입 시 set (결제 만료 cron용)
 
-  user      User           @relation(fields: [userId], references: [id])
-  departure Departure      @relation(fields: [departureId], references: [id])
-  travelers Traveler[]
-  terms     BookingTerms[]
-  payments  Payment[]
-  events    BookingEvent[]
+  user          User            @relation(fields: [userId], references: [id])
+  departure     Departure       @relation(fields: [departureId], references: [id])
+  travelers     Traveler[]
+  terms         BookingTerms[]
+  payments      Payment[]
+  events        BookingEvent[]
+  paymentEvents PaymentEvent[]
+  refundJobs    RefundJob[]
 
   @@index([userId, status])
   @@index([departureId, status])
+  @@index([status, paymentDueAt])
 }
 
 enum TravelerRole {
@@ -358,7 +362,65 @@ model Payment {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  booking Booking @relation(fields: [bookingId], references: [id])
+  booking       Booking        @relation(fields: [bookingId], references: [id])
+  paymentEvents PaymentEvent[]
+  refundJobs    RefundJob[]
 
   @@index([bookingId, status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// 5. 결제 이벤트 & 환불 (M-PAYMENT)
+// ─────────────────────────────────────────────────────────────
+
+enum PaymentEventResult {
+  PROCESSED  // 정상 반영
+  SKIPPED    // 중복(idempotent no-op)
+  IGNORED    // 알 수 없는 type, 의도적 무시
+  FAILED     // 처리 중 예외 — 재시도 후보
+}
+
+model PaymentEvent {
+  id              String              @id @default(cuid())
+  providerEventId String              @unique  // 멱등 키 (Toss eventId 또는 confirm:${paymentKey} 등)
+  bookingId       String?
+  paymentId       String?
+  type            String              // "CONFIRM_REQUEST" | "WEBHOOK:PAYMENT_DONE" | "REFUND_REQUEST" | ...
+  payload         Json                // 원본 페이로드 보존 (감사용)
+  result          PaymentEventResult
+  errorMessage    String?
+  createdAt       DateTime            @default(now())
+
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId, createdAt])
+  @@index([paymentId, createdAt])
+  @@index([type, createdAt])
+}
+
+enum RefundJobStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+}
+
+model RefundJob {
+  id          String          @id @default(cuid())
+  bookingId   String
+  paymentId   String
+  amount      Int                               // 원 단위 정수 (전액 환불)
+  reason      String?
+  status      RefundJobStatus @default(PENDING)
+  attempts    Int             @default(0)
+  lastError   String?
+  nextRunAt   DateTime        @default(now())   // exponential backoff
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@index([status, nextRunAt])
 }
