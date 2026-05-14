@@ -10,7 +10,7 @@
 
 ### 범위 (이 spec)
 - **기존 구현 통합·정비**: NextAuth.js v5 + Resend 매직링크 + Kakao OAuth(옵셔널) + Prisma Adapter
-- **세션 전략**: 데이터베이스 세션(`session.strategy = "database"`) — 이미 결정됨
+- **세션 전략**: **JWT** (`session.strategy = "jwt"`) — Next.js 15 middleware는 Edge runtime에서 동작하며 PrismaAdapter는 Edge 비호환. database 세션은 middleware에서 인식되지 않아 보호 라우트 무한 리다이렉트를 유발. JWT가 NextAuth v5 + middleware 표준 패턴. User/Account/VerificationToken 저장은 PrismaAdapter가 그대로 담당.
 - 로컬 개발 환경용 **이메일 콘솔 폴백**(RESEND_API_KEY 미설정 시 매직링크를 콘솔에 출력)
 - `entities/user/api/queries.ts` 신설 — `getCurrentUser()`, `getUserById()` 등 RSC 헬퍼
 - `app/(site)/login/error/page.tsx` 신설 — auth 설정에서 참조하나 미구현

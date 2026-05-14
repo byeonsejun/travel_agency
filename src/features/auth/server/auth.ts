@@ -38,11 +38,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         ]
       : []),
   ],
-  session: { strategy: "database" },
+  // Next.js middleware는 Edge runtime에서 실행되며, PrismaAdapter는
+  // Edge에서 동작하지 않는다. database 전략은 middleware에서 세션을
+  // 인식하지 못해 보호 라우트 무한 리다이렉트를 유발한다.
+  // JWT 전략 + PrismaAdapter(User/Account/VerificationToken 저장용) 조합이
+  // NextAuth v5의 표준 패턴이며 매직링크·Kakao 모두 호환된다.
+  session: { strategy: "jwt" },
   callbacks: {
-    session({ session, user }) {
-      session.user.id = user.id;
-      session.user.role = (user as unknown as { role: UserRole }).role;
+    async jwt({ token, user }) {
+      // 첫 로그인 시 user 객체가 들어옴. 이후엔 token만.
+      if (user) {
+        token.id = user.id;
+        token.role = (user as unknown as { role: UserRole }).role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token) {
+        if (typeof token.id === "string") session.user.id = token.id;
+        if (token.role) session.user.role = token.role as UserRole;
+      }
       return session;
     },
   },
