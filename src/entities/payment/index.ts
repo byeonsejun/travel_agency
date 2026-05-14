@@ -1,0 +1,41 @@
+/**
+ * entities/payment 공개 API (barrel) — spec §6.3, architect R2
+ *
+ * 외부 레이어(features/checkout, app/api/payments, widgets)는
+ * 반드시 이 파일을 통해서만 payment 슬라이스에 접근한다.
+ *
+ * 규칙:
+ *  - export * 금지 (architect R2)
+ *  - 내부 헬퍼(compensateCancel, parseBookingIdFromOrderId, assertAmountMatches, backoff)는 미노출
+ *  - buildOrderId는 M-CHECKOUT 결제창 orderId 생성에 필요하므로 예외적으로 노출 (spec §6.3 note)
+ */
+
+// ── Zod 스키마 ───────────────────────────────────────────────────
+export {
+  ConfirmPaymentRequestSchema,
+  TossWebhookEventSchema,
+  RefundRequestSchema,
+} from "./model/schemas";
+
+// ── 도메인 타입 ──────────────────────────────────────────────────
+export type {
+  ConfirmPaymentRequest,
+  TossWebhookEvent,
+  RefundRequest,
+} from "./model/schemas";
+
+export type { PaymentSafe, PaymentDetail } from "./model/types";
+
+// ── API 함수 ────────────────────────────────────────────────────
+export { confirmPayment } from "./api/confirm";
+export type { ConfirmResult } from "./api/confirm";
+
+export { handleTossWebhook } from "./api/webhook";
+
+export { refundBooking } from "./api/refund";
+
+export { buildOrderId } from "./api/orderId";
+
+// ── 에러 클래스 ─────────────────────────────────────────────────
+export { PaymentError, InvalidSignatureError } from "./api/errors";
+export type { PaymentErrorCode } from "./api/errors";
