@@ -170,7 +170,36 @@ describe("holdSeats", () => {
 - 기대: ...
 ```
 
-### R8. 거짓 양성·이론 검증 금지
+### R8. Plan 체크박스 파일 반영 검증 (File-Written Gate)
+
+QA Engineer는 증거(Evidence) 수집만으로 검증을 통과시킬 수 없다. **현재 진행 중인 Plan 파일의 체크박스가 실제로 파일에 `- [x]`로 쓰였는지(File-written)**까지 확인해야 Task 검증을 완료로 판정한다.
+
+**검증 절차:**
+
+```bash
+# 1. 현재 Plan 파일에 미완료 체크박스가 없는지 확인
+grep -n "\- \[ \]" docs/superpowers/plans/<current-plan>.md
+# 기대: 출력 없음 (0건). 출력이 있으면 Task 미완료 → 체크박스 먼저 처리.
+
+# 2. Plan 파일 변경이 git에 반영됐는지 확인
+git diff --name-only | grep "docs/superpowers/plans/"
+# 또는 커밋 후: git show --name-only HEAD | grep plans/
+```
+
+**판정 기준:**
+
+| 상태 | 판정 |
+|------|------|
+| `- [x]` 파일에 기록됨 + Evidence 수집 완료 | ✅ Task 완료 |
+| `- [ ]` 파일에 잔존 (코드만 작성됨) | ❌ Task 미완료 — 체크박스 먼저 처리 |
+| Evidence 없이 체크박스만 `- [x]` | ❌ 검증 누락 — Evidence 먼저 수집 |
+
+**보고 형식에 추가:**
+```
+✅ Plan 체크박스 파일 반영 확인 — docs/superpowers/plans/xxx.md 미완료 항목 0건
+```
+
+### R9. 거짓 양성·이론 검증 금지
 
 다음은 검증이 아니다:
 - "코드를 읽어보니 동작할 것이다"
@@ -180,7 +209,7 @@ describe("holdSeats", () => {
 
 증거는 반드시 **실행된 명령의 출력**.
 
-### R9. 검증 중 발견된 회귀
+### R10. 검증 중 발견된 회귀
 
 검증 중 무관한 코드의 회귀(regression)를 발견하면:
 1. 즉시 기록 (skip하지 말 것)

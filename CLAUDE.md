@@ -104,6 +104,25 @@ prisma/       # schema.prisma, seed.ts
 
 ---
 
+## 4.1 Plan Execution — 체크박스 갱신 절대 규칙
+
+> **이 규칙은 Non-negotiable이다. 위반 시 즉시 자가 중단 후 체크박스를 먼저 처리한다.**
+
+`docs/superpowers/plans/` 아래의 플랜 파일(`*.md`)을 기반으로 작업할 때:
+
+- **각 Task의 구현·검증이 완료되는 즉시**, 해당 Task의 모든 `- [ ]` 항목을 `- [x]`로 **파일에 직접 Write**한 뒤 다음 Task로 넘어간다.
+- "머릿속에 기억해두고 나중에 한꺼번에 처리"는 금지. Task 단위로 그 자리에서 즉시 처리.
+- QA 자동 증거를 수집하는 시점이 곧 체크박스를 갱신하는 시점이다 — 두 작업은 동시에 이루어진다.
+- 커밋 전 `git diff docs/superpowers/plans/` 로 체크박스가 실제로 파일에 반영됐는지 확인 후 커밋.
+
+**위반 탐지 방법** (QA Engineer가 자동 점검):
+```bash
+# 완료된 태스크에 미체크 항목이 남아있으면 즉시 중단
+grep -n "\- \[ \]" docs/superpowers/plans/<current-plan>.md
+```
+
+---
+
 ## 5. 절대 규칙 (Non-negotiable)
 
 위반 시 즉시 작업 중단하고 사용자 확인 요청.
