@@ -13,6 +13,7 @@ import { db } from "@/shared/lib/db";
 import { tossClient } from "@/shared/lib/toss";
 import type { TossConfirmResponse } from "@/shared/lib/toss";
 import { transitionStatus } from "@/entities/booking";
+import { logger, metrics, captureException } from "@/shared/lib/observability";
 import { parseBookingIdFromOrderId } from "./orderId";
 import { assertAmountMatches } from "./crossCheck";
 import { PaymentError } from "./errors";
@@ -67,12 +68,9 @@ async function compensateCancel({
     ]);
   } catch (cancelErr) {
     // PG cancel 실패 — 재시도 큐에 적재 (R7)
-    console.error("[compensateCancel] CRITICAL: PG cancel failed, enqueueing RefundJob", {
-      paymentKey,
-      bookingId,
-      reason,
-      error: String(cancelErr),
-    });
+    logger.error("payment.compensate_cancel.pg_failed", cancelErr, { paymentKey, bookingId, reason });
+    metrics.incr("payment.compensate_cancel.pg_failed");
+    captureException(cancelErr, { bookingId, paymentId });
     try {
       await db.refundJob.create({
         data: {
@@ -84,11 +82,9 @@ async function compensateCancel({
         },
       });
     } catch (dbErr) {
-      console.error("[compensateCancel] CRITICAL: RefundJob enqueue also failed", {
-        paymentKey,
-        bookingId,
-        error: String(dbErr),
-      });
+      logger.error("payment.compensate_cancel.enqueue_failed", dbErr, { paymentKey, bookingId });
+      metrics.incr("payment.compensate_cancel.enqueue_failed");
+      captureException(dbErr, { bookingId, paymentId });
     }
   }
 }

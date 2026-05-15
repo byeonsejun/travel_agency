@@ -39,3 +39,6 @@ export { buildOrderId } from "./api/orderId";
 // ── 에러 클래스 ─────────────────────────────────────────────────
 export { PaymentError, InvalidSignatureError } from "./api/errors";
 export type { PaymentErrorCode } from "./api/errors";
+
+// ── 운영 관측 쿼리 (read-only) ──────────────────────────────────
+export { listRecentPaymentEvents, summarizeRefundJobs } from "./api/observability";

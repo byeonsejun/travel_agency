@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getCurrentUser } from "@/entities/user";
+import { logger } from "@/shared/lib/observability";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,12 +13,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 진단 로그: getCurrentUser()가 RSC에서 정상 동작함을 매 요청마다 dev 콘솔에
-  // 출력하여 세션 인식 여부를 사용자가 직접 확인할 수 있게 한다.
-  // production 빌드에서는 출력 안 됨.
   if (process.env.NODE_ENV !== "production") {
     const user = await getCurrentUser();
-    console.log("[RootLayout] getCurrentUser →", user);
+    logger.debug("layout.root.user_resolved", { userId: user?.id ?? null });
   }
   return (
     <html lang="ko">

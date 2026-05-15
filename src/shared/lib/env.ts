@@ -24,6 +24,17 @@ const envSchema = z
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    // M-OBS: 관측성 환경 변수.
+    // SENTRY_DSN이 비어있으면 errorTracker는 logger fanout만 수행한다 (no-op SDK 경로).
+    // 빈 문자열("")은 미설정으로 간주 (preprocess로 undefined 변환).
+    SENTRY_DSN: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.string().url().optional()
+    ),
+    OBSERVABILITY_LOG_LEVEL: z
+      .enum(["debug", "info", "warn", "error"])
+      .default("info"),
+    APP_VERSION: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === "production") {

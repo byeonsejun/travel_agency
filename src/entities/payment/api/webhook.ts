@@ -13,6 +13,7 @@ import { db } from "@/shared/lib/db";
 import { verifyTossSignature } from "@/shared/lib/toss";
 import { env } from "@/shared/lib/env";
 import { transitionStatus, InvalidTransitionError } from "@/entities/booking";
+import { logger, metrics } from "@/shared/lib/observability";
 import { TossWebhookEventSchema } from "../model/schemas";
 import type { TossWebhookEvent } from "../model/schemas";
 import { PaymentError, InvalidSignatureError } from "./errors";
@@ -82,16 +83,19 @@ export async function handleTossWebhook({
 }): Promise<void> {
   // ── R9: 서명 검증 ─────────────────────────────────────────────
   if (!signature) {
+    metrics.incr("payment.webhook.toss.invalid_sig");
     throw new InvalidSignatureError();
   }
 
   const secret = env.TOSS_WEBHOOK_SECRET;
   if (secret !== undefined) {
     if (!verifyTossSignature(rawBody, signature, secret)) {
+      metrics.incr("payment.webhook.toss.invalid_sig");
       throw new InvalidSignatureError();
     }
   } else if (env.NODE_ENV === "production") {
     // prod에서 secret 미설정 — env superRefine으로 이미 부팅 거부했어야 하지만 방어
+    metrics.incr("payment.webhook.toss.invalid_sig");
     throw new InvalidSignatureError("TOSS_WEBHOOK_SECRET not configured in production");
   }
   // dev/test: secret 미설정 시 경고 없이 통과 (로컬 테스트 편의)
@@ -109,7 +113,11 @@ export async function handleTossWebhook({
     const existing = await tx.paymentEvent.findUnique({
       where: { providerEventId: idemKey },
     });
-    if (existing) return;
+    if (existing) {
+      metrics.incr("payment.webhook.toss.duplicate");
+      logger.info("payment.webhook.duplicate", { providerEventId: idemKey });
+      return;
+    }
 
     // (2) Payment 조회 — 없으면 IGNORED
     const payment = await tx.payment.findUnique({
@@ -121,6 +129,8 @@ export async function handleTossWebhook({
 
     if (!payment) {
       await recordEvent(tx as unknown as TxClient, idemKey, event, null, "IGNORED", "Unknown orderId");
+      metrics.incr("payment.webhook.toss.ignored");
+      logger.warn("payment.webhook.ignored", { providerEventId: idemKey, orderId: event.orderId });
       return;
     }
 
@@ -150,6 +160,7 @@ export async function handleTossWebhook({
         });
         await recordEvent(tx as unknown as TxClient, idemKey, event, payment, "PROCESSED");
         processedBookingId = payment.bookingId;
+        metrics.incr("payment.webhook.toss.processed", { type: event.type });
         break;
       }
 
@@ -168,6 +179,7 @@ export async function handleTossWebhook({
           },
         });
         await recordEvent(tx as unknown as TxClient, idemKey, event, payment, "PROCESSED");
+        metrics.incr("payment.webhook.toss.processed", { type: event.type });
         break;
       }
 
@@ -184,6 +196,7 @@ export async function handleTossWebhook({
           },
         });
         await recordEvent(tx as unknown as TxClient, idemKey, event, payment, "PROCESSED");
+        metrics.incr("payment.webhook.toss.processed", { type: event.type });
         break;
       }
 
@@ -196,6 +209,8 @@ export async function handleTossWebhook({
           "IGNORED",
           `Unknown type: ${event.type}`
         );
+        metrics.incr("payment.webhook.toss.ignored");
+        logger.warn("payment.webhook.ignored", { providerEventId: idemKey, type: event.type });
         return;
       }
     }

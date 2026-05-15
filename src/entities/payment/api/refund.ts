@@ -15,6 +15,7 @@ import type { BookingStatus, Prisma } from "@prisma/client";
 import { db } from "@/shared/lib/db";
 import { tossClient } from "@/shared/lib/toss";
 import { transitionStatus } from "@/entities/booking";
+import { logger, metrics, captureException } from "@/shared/lib/observability";
 import { PaymentError } from "./errors";
 
 interface RefundInput {
@@ -48,6 +49,7 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
 
   if (!booking) throw new PaymentError("BOOKING_NOT_FOUND");
   if (!REFUNDABLE_STATUSES.includes(booking.status)) {
+    metrics.incr("payment.refund.rejected", { reason: "BOOKING_NOT_REFUNDABLE" });
     throw new PaymentError("BOOKING_NOT_REFUNDABLE", { current: booking.status });
   }
 
@@ -59,6 +61,7 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
 
   // tossPaymentKey 미설정 = PAID가 아니거나 데이터 이상 — 환불 불가
   if (!paidPayment?.tossPaymentKey) {
+    metrics.incr("payment.refund.rejected", { reason: "PAID_PAYMENT_NOT_FOUND" });
     throw new PaymentError("PAID_PAYMENT_NOT_FOUND");
   }
 
@@ -74,6 +77,7 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
     });
 
     if (existingJob) {
+      metrics.incr("payment.refund.rejected", { reason: "REFUND_ALREADY_REQUESTED" });
       throw new PaymentError("REFUND_ALREADY_REQUESTED", {
         existingStatus: existingJob.status,
       });
@@ -110,6 +114,9 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
         lastError: String(cancelErr),
       },
     });
+    logger.error("payment.refund.pg_cancel_failed", cancelErr, { bookingId, refundJobId: refundJob.id });
+    metrics.incr("payment.refund.deferred");
+    captureException(cancelErr, { bookingId });
     throw new PaymentError("REFUND_DEFERRED", { cause: String(cancelErr) });
   }
 
@@ -140,6 +147,8 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
       },
     });
   });
+
+  metrics.incr("payment.refund.success");
 
   // ── booking 상태 전이 (좌석 환원은 shouldReturnSeats 자동 처리) ─
   const targetStatus: BookingStatus = actor.startsWith("user:")

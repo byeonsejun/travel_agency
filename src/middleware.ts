@@ -2,6 +2,11 @@ import { auth } from "@/features/auth/server/auth";
 import { NextResponse } from "next/server";
 
 export default auth((req) => {
+  // Edge runtime — ALS/Prisma import 금지. crypto.randomUUID()만 사용.
+  const traceId =
+    req.headers.get("x-trace-id") ??
+    crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+
   const { pathname } = req.nextUrl;
   const isAuthenticated = !!req.auth;
   const role = req.auth?.user?.role;
@@ -10,7 +15,9 @@ export default auth((req) => {
     if (!isAuthenticated || role !== "ADMIN") {
       const url = new URL("/login", req.url);
       url.searchParams.set("callbackUrl", req.nextUrl.href);
-      return NextResponse.redirect(url);
+      const res = NextResponse.redirect(url);
+      res.headers.set("x-trace-id", traceId);
+      return res;
     }
   }
 
@@ -19,11 +26,19 @@ export default auth((req) => {
     if (!isAuthenticated) {
       const url = new URL("/login", req.url);
       url.searchParams.set("callbackUrl", req.nextUrl.href);
-      return NextResponse.redirect(url);
+      const res = NextResponse.redirect(url);
+      res.headers.set("x-trace-id", traceId);
+      return res;
     }
   }
 
-  return NextResponse.next();
+  // 다운스트림 route handler로 x-trace-id 전파
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-trace-id", traceId);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("x-trace-id", traceId);
+  return response;
 });
 
 export const config = {
