@@ -50,3 +50,9 @@ export {
 } from "./api/seatLock";
 
 export { ForbiddenError, PriceMismatchError } from "./api/errors";
+
+export { computeTotalPrice } from "./api/pricing";
+
+export { BookingStatusBadge } from "./ui/BookingStatusBadge";
+export { BookingSummaryCard } from "./ui/BookingSummaryCard";
+export { BookingEventTimeline } from "./ui/BookingEventTimeline";
