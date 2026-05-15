@@ -1,6 +1,30 @@
 import { db } from "@/shared/lib/db";
 import { computeRemainingSeats } from "./remainingSeats";
-import type { DepartureSummary } from "../model/types";
+import type { DepartureSummary, DepartureCheckoutInfo } from "../model/types";
+
+export async function getDepartureById(
+  id: string
+): Promise<DepartureCheckoutInfo | null> {
+  const dep = await db.departure.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      departureDate: true,
+      returnDate: true,
+      priceAdult: true,
+      priceChild: true,
+      priceInfant: true,
+      status: true,
+      capacity: true,
+      bookedSeats: true,
+    },
+  });
+  if (!dep) return null;
+  return {
+    ...dep,
+    remainingSeats: computeRemainingSeats(dep.capacity, dep.bookedSeats),
+  };
+}
 
 export async function getDeparturesByProduct(
   productId: string
