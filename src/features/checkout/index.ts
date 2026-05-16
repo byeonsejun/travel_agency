@@ -10,3 +10,4 @@ export type {
 
 export { CheckoutForm } from "./ui/CheckoutForm";
 export { PaymentWidget } from "./ui/PaymentWidget";
+export { ConfirmPayment } from "./ui/ConfirmPayment";
