@@ -152,6 +152,14 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 
 위반 시 즉시 작업 중단하고 사용자 확인 요청.
 
+**🛑 NO-REAL-MONEY (프로젝트 최상위 제약 — 모든 규칙에 우선)**
+- 이 서비스는 **실제 돈이 빠져나가는 단계(라이브 실거래)까지 절대 구현·활성화하지 않는다.** 사용자의 영구 결정사항.
+- ❌ `live_ck_`/`live_sk_` 등 토스 **운영(live) 키** 도입·요청·문서화.
+- ❌ 실거래를 유발하는 설정(운영 키 + 실제 `api.tosspayments.com` 결제) 으로의 전환 작업.
+- ❌ "프로덕션 실결제", "라이브 배포 후 소액 결제", 실 카드 과금을 전제로 한 코드·계획·태스크 생성.
+- ✅ 허용 상한: **Mock(localhost:4242) 및 토스 샌드박스 테스트 키(`test_`) 까지만.** 결제 검증은 이 범위 내에서만 수행.
+- 사용자가 명시적으로 이 제약을 철회하기 전까지 유효. 관련 요청을 받으면 즉시 중단하고 이 규칙을 인용해 확인 요청.
+
 **🏛️ Architect**
 - ❌ `entities/`, `widgets/`, `features/`, `shared/`의 깊은 경로 import (`@/entities/product/ui/...`).
 - ❌ `entities/**/ui/*.tsx`에 `'use client'` 추가.
@@ -176,6 +184,7 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 - ❌ booking status 직접 할당 (반드시 `assertTransition` 통과 후 update).
 - ❌ 단일 DB 트랜잭션에 외부 PG 호출 포함.
 - ❌ 좌석 hold에 TTL(`holdExpiresAt`) 부재.
+- ❌ 라이브 실거래 경로 구현·활성화 (상단 🛑 NO-REAL-MONEY 참조 — 샌드박스/Mock이 상한).
 
 **🔬 QA Engineer**
 - ❌ `typecheck`/`test` 실패한 채로 "구현 완료" 보고.
@@ -216,6 +225,7 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 
 ## 8. 기억해야 할 컨텍스트
 
+- 🛑 **이 서비스는 라이브 실거래(실제 과금)를 구현하지 않는다.** 결제는 영구히 Mock/샌드박스(`test_` 키)까지만. §5 NO-REAL-MONEY 참조.
 - 현재 Phase 1(Product 표시 모듈) 완료. Phase 2(예약/결제 + AI 검색) 진입 예정.
 - 모든 페이지가 `force-dynamic` 상태 — Phase 2 후반에 도메인별 캐시 튜닝 PR로 분리.
 - 시드 데이터는 `prisma/seed.ts`. 검증용 10개 상품(JP/VN/TH/EU/ID/PH).
