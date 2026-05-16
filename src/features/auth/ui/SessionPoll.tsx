@@ -46,6 +46,10 @@ export function SessionPoll({ callbackUrl, email }: Props) {
         if (data?.user) {
           stop();
           router.replace(callbackUrl);
+          // 공유 레이아웃((site)/layout.tsx)의 auth()는 Router Cache에
+          // 묶여 클라이언트 네비게이션만으로 재실행되지 않는다. refresh로
+          // RSC 페이로드를 무효화해 헤더가 즉시 로그인 상태로 갱신되게 한다.
+          router.refresh();
         }
       } catch {
         // 일시적 네트워크 오류는 다음 폴링에서 재시도
