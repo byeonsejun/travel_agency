@@ -84,15 +84,18 @@ async function main() {
   ]);
 
   // ─── Users (M-AUTH 검증용) ───────────────────────────────────
+  // 고정 ID 사용: 재시드 후에도 JWT의 userId가 무효화되지 않도록 안정적 식별자 보장
   await prisma.user.createMany({
     data: [
       {
+        id: "cseedcustomer0000000000001",
         email: "customer@nextour.test",
         name: "테스트 고객",
         role: UserRole.CUSTOMER,
         emailVerified: today,
       },
       {
+        id: "cseedadmin00000000000000001",
         email: "admin@nextour.test",
         name: "테스트 관리자",
         role: UserRole.ADMIN,
