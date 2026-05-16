@@ -1,9 +1,11 @@
+import Link from "next/link";
 import type { DepartureSummary } from "../model/types";
 import { DEPARTURE_BADGE_THRESHOLD } from "../model/constants";
 import { EmptyState } from "@/shared/ui/EmptyState";
 
 type DepartureListProps = {
   departures: DepartureSummary[];
+  productId?: string; // 제공 시 각 출발일에 체크아웃 링크 노출
 };
 
 /**
@@ -55,7 +57,12 @@ function getSubText(dep: DepartureSummary): string | null {
   return null;
 }
 
-export function DepartureList({ departures }: DepartureListProps) {
+// 예약 가능 여부: 매진·마감·취소 출발일은 링크 미노출
+function isBookable(dep: DepartureSummary): boolean {
+  return dep.remainingSeats > 0 && dep.status !== "CLOSED" && dep.status !== "CANCELED";
+}
+
+export function DepartureList({ departures, productId }: DepartureListProps) {
   if (departures.length === 0) {
     return <EmptyState title="현재 모객 중인 출발일이 없습니다." />;
   }
@@ -90,6 +97,11 @@ export function DepartureList({ departures }: DepartureListProps) {
                   <th className="px-4 py-3 text-center font-medium text-gray-700">
                     상태
                   </th>
+                  {productId && (
+                    <th className="px-4 py-3 text-center font-medium text-gray-700">
+                      예약
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -134,6 +146,20 @@ export function DepartureList({ departures }: DepartureListProps) {
                           </span>
                         )}
                       </td>
+                      {productId && (
+                        <td className="px-4 py-3 text-center">
+                          {isBookable(dep) ? (
+                            <Link
+                              href={`/products/${productId}/checkout?departureId=${dep.id}`}
+                              className="inline-block rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+                            >
+                              예약하기
+                            </Link>
+                          ) : (
+                            <span className="text-xs text-gray-400">불가</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

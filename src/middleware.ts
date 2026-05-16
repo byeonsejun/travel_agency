@@ -21,7 +21,8 @@ export default auth((req) => {
     }
   }
 
-  const authRequired = ["/mypage", "/booking"];
+  // /bookings 추가 (기존 /booking 단수 경로 + 복수 경로 동시 보호)
+  const authRequired = ["/mypage", "/booking", "/bookings"];
   if (authRequired.some((p) => pathname.startsWith(p))) {
     if (!isAuthenticated) {
       const url = new URL("/login", req.url);
@@ -42,5 +43,11 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/admin/:path*", "/mypage/:path*", "/booking/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/mypage/:path*",
+    "/booking/:path*",
+    "/bookings/:path*",        // 예약 상세·성공·실패 페이지 보호
+    "/products/:id/checkout",  // 체크아웃 이중 방어 (page auth() 가드와 병행)
+  ],
 };

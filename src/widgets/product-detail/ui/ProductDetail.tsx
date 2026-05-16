@@ -86,7 +86,7 @@ export function ProductDetail({
       {/* 5. 출발일 섹션 */}
       <div className="space-y-4 px-4 md:px-0">
         <h2 className="text-2xl font-bold text-gray-900">출발일 일정</h2>
-        <DepartureList departures={isClosed ? [] : departures} />
+        <DepartureList departures={isClosed ? [] : departures} productId={product.id} />
       </div>
 
       {/* 6. 포함/불포함 섹션 */}
