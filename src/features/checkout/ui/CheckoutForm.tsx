@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { createCheckoutBooking } from "../server/actions";
 import { TERM_KEYS } from "@/entities/booking";
 import { PaymentWidget } from "./PaymentWidget";
@@ -100,20 +100,22 @@ export function CheckoutForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    dispatch({
-      departureId,
-      adultCount,
-      childCount,
-      infantCount,
-      travelers: travelers.map((t, i) => ({
-        lastNameEn: t.lastNameEn,
-        firstNameEn: t.firstNameEn,
-        gender: t.gender as "MALE" | "FEMALE",
-        birthDate: new Date(t.birthDate),
-        role: i === 0 ? ("BOOKER" as const) : ("TRAVELER" as const),
-      })),
-      termKeys: [...checkedTerms],
-      notes: notes || undefined,
+    startTransition(() => {
+      dispatch({
+        departureId,
+        adultCount,
+        childCount,
+        infantCount,
+        travelers: travelers.map((t, i) => ({
+          lastNameEn: t.lastNameEn,
+          firstNameEn: t.firstNameEn,
+          gender: t.gender as "MALE" | "FEMALE",
+          birthDate: new Date(t.birthDate),
+          role: i === 0 ? ("BOOKER" as const) : ("TRAVELER" as const),
+        })),
+        termKeys: [...checkedTerms],
+        notes: notes || undefined,
+      });
     });
   }
 
