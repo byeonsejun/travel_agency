@@ -50,6 +50,20 @@ export async function listMyBookings(
   });
 }
 
+export async function getBookingForRetry(
+  id: string,
+  userId: string
+): Promise<{ id: string; departureId: string; departure: { productId: string } } | null> {
+  return db.booking.findUnique({
+    where: { id, userId },
+    select: {
+      id: true,
+      departureId: true,
+      departure: { select: { productId: true } },
+    },
+  });
+}
+
 export async function getBookingDetail(
   id: string,
   userId: string
