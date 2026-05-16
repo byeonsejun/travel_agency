@@ -16,6 +16,7 @@ type Props = {
   priceInfant: number;
   remainingSeats: number;
   clientKey: string;
+  devFallback: boolean;
 };
 
 // ── 여행자 폼 상태 타입 (서버 Zod 검증 전 로컬 상태) ────────────
@@ -46,6 +47,7 @@ export function CheckoutForm({
   priceInfant,
   remainingSeats,
   clientKey,
+  devFallback,
 }: Props) {
   const [state, dispatch, isPending] = useActionState(createCheckoutBooking, null);
 
@@ -129,6 +131,7 @@ export function CheckoutForm({
         customerName={state.customerName}
         customerEmail={state.customerEmail}
         clientKey={clientKey}
+        devFallback={devFallback}
       />
     );
   }

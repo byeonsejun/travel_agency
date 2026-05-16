@@ -10,6 +10,7 @@ type Props = {
   customerName: string;
   customerEmail: string | null;
   clientKey: string;
+  devFallback: boolean;
 };
 
 export function PaymentWidget({
@@ -19,6 +20,7 @@ export function PaymentWidget({
   customerName,
   customerEmail,
   clientKey,
+  devFallback,
 }: Props) {
   const [isPaying, setIsPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,22 @@ export function PaymentWidget({
     if (isPaying) return;
     setIsPaying(true);
     setError(null);
+
+    // 비-프로덕션: 실제 토스 샌드박스 결제창을 건너뛰고 success redirect를
+    // 직접 시뮬레이션. 토스가 successUrl로 넘겨주는 것과 동일한 파라미터
+    // 형태(paymentKey/orderId/amount)로 이동 → /success → ConfirmPayment
+    // → /api/payments/confirm → localhost Mock 승인까지 엔드투엔드 검증.
+    if (devFallback) {
+      const params = new URLSearchParams({
+        paymentKey: `dev_mock_${Date.now()}`,
+        orderId,
+        amount: String(amount),
+      });
+      window.location.assign(
+        `/bookings/${bookingId}/success?${params.toString()}`,
+      );
+      return;
+    }
 
     try {
       const tossPayments = await loadTossPayments(clientKey);
@@ -91,6 +109,12 @@ export function PaymentWidget({
       >
         {isPaying ? "결제창 열기 중..." : `${amount.toLocaleString("ko-KR")}원 결제하기`}
       </button>
+
+      {devFallback && (
+        <p className="text-center text-xs text-amber-600">
+          개발 모드: 실제 토스 결제창 없이 결제 성공을 시뮬레이션합니다.
+        </p>
+      )}
     </div>
   );
 }
