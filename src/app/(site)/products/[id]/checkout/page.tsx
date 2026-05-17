@@ -44,7 +44,10 @@ export default async function CheckoutPage({ params, searchParams }: PageProps) 
   // 비-프로덕션: 실제 토스 결제창(샌드박스) 대신 success redirect를 직접
   // 시뮬레이션. 서버 측 confirm이 이미 localhost Mock으로 격리된 것과
   // 일관되게 클라이언트도 외부 부작용 0으로 맞춘다 (feedback_dev_external_io).
-  const devFallback = env.NODE_ENV !== "production";
+  // PAYMENT_FORCE_REAL=1 이면 1단계(샌드박스 실거래 테스트)로 전환 —
+  // Mock 폴백을 끄고 실제 토스 결제창을 띄운다 (test_ 키 한정, 과금 0).
+  const devFallback =
+    env.NODE_ENV !== "production" && !env.PAYMENT_FORCE_REAL;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
