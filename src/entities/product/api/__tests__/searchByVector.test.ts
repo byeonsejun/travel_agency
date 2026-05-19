@@ -91,6 +91,31 @@ describe("searchProductsByVector — 벡터 경로", () => {
       )
     ).toBe(true);
   });
+
+  it("themeTags는 WHERE 하드배제가 아닌 SELECT 점수 가산항(soft boost)", async () => {
+    mockDb.$queryRaw
+      .mockResolvedValueOnce([{ one: 1 }])
+      .mockResolvedValueOnce([{ id: "p1", score: 0.6 }]);
+    mockDb.product.findMany.mockResolvedValueOnce([fakeProduct("p1")]);
+
+    await searchProductsByVector(
+      qVec,
+      { themeTags: ["휴양"] },
+      MODEL,
+      "동남아 휴양",
+      ["발리", "다낭", "세부"]
+    );
+
+    const text = mockDb.$queryRaw.mock.calls[1][0].sql as string;
+    const mainWhereIdx = text.indexOf("WHERE p.status");
+    const orderIdx = text.indexOf("ORDER BY");
+    const whereClause = text.slice(mainWhereIdx, orderIdx);
+
+    // 메인 WHERE에는 ProductTag 배제가 없어야 한다(soft 전환의 핵심)
+    expect(whereClause).not.toContain("ProductTag");
+    // ProductTag 매칭은 SELECT 점수식(가산항)에 존재해야 한다
+    expect(text.slice(0, mainWhereIdx)).toContain("ProductTag");
+  });
 });
 
 describe("searchProductsByVector — geo 하이브리드 (방안 A)", () => {

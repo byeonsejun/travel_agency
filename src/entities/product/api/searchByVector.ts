@@ -33,9 +33,14 @@ const RESULT_LIMIT = 20;
 //  - KEYWORD_WEIGHT: 명시적 단어 일치(title/destination/summary) 부스트
 //  - GEO_WEIGHT    : gazetteer 확장 지리어가 destination에 적중한 부스트
 //                    (권역어 "동남아" → 다낭/발리/세부… 정밀 가산)
-const VECTOR_WEIGHT = 0.6;
+//  - THEME_WEIGHT  : 자연어에서 추출된 테마 태그(#휴양 등) soft 가산점.
+//                    WHERE 배제(hard filter)였으나, "동남아 휴양"이 발리
+//                    1건만 반환되던 결함 → 권역 전체 노출 + 테마 상품
+//                    최상단으로 끌어올리는 가산점으로 전환.
+const VECTOR_WEIGHT = 0.5;
 const KEYWORD_WEIGHT = 0.2;
 const GEO_WEIGHT = 0.2;
+const THEME_WEIGHT = 0.1;
 
 // 부팅 1회 가용성 캐시 (spec §5.1). null = 미확인.
 let pgvectorAvailable: boolean | null = null;
@@ -72,14 +77,8 @@ function buildFilterClauses(filters: VectorSearchFilters): Prisma.Sql[] {
     // ±1박 허용 — "3박" 단독 쿼리가 4박 상품도 매칭하도록 완화.
     clauses.push(Prisma.sql`AND p."durationNights" <= ${d.max + 1}`);
   }
-  if (filters.themeTags && filters.themeTags.length > 0) {
-    const tags = filters.themeTags.map((t) =>
-      t.startsWith("#") ? t : `#${t}`
-    );
-    clauses.push(
-      Prisma.sql`AND EXISTS (SELECT 1 FROM "ProductTag" t WHERE t."productId" = p.id AND t.tag = ANY(${tags}))`
-    );
-  }
+  // themeTags는 더 이상 WHERE 하드필터가 아니다 — buildThemeScore의
+  // 점수 가산항으로 이동(soft boost). price/duration만 하드 제약 유지.
   return clauses;
 }
 
@@ -93,6 +92,21 @@ function buildGeoScore(geoTerms: string[]): Prisma.Sql {
   const patterns = geoTerms.map((t) => `%${t}%`);
   return Prisma.sql`(CASE WHEN p.destination ILIKE ANY(${patterns}::text[])
                           THEN ${GEO_WEIGHT} ELSE 0 END)`;
+}
+
+/** themeTags를 ProductTag.tag 표기('#' 접두)로 정규화. */
+function normalizeThemeTags(themeTags: string[] | undefined): string[] {
+  if (!themeTags || themeTags.length === 0) return [];
+  return themeTags.map((t) => (t.startsWith("#") ? t : `#${t}`));
+}
+
+/** 테마 태그 적중 → 점수 가산 조각(soft boost, 없으면 0). */
+function buildThemeScore(tags: string[]): Prisma.Sql {
+  if (tags.length === 0) return Prisma.sql`0`;
+  return Prisma.sql`(CASE WHEN EXISTS (
+                            SELECT 1 FROM "ProductTag" pt
+                            WHERE pt."productId" = p.id AND pt.tag = ANY(${tags})
+                          ) THEN ${THEME_WEIGHT} ELSE 0 END)`;
 }
 
 type ScoredRow = { id: string; score: number };
@@ -157,14 +171,28 @@ async function keywordFallback(
           (t) => `%${t}%`
         )}::text[])`
       : Prisma.empty;
+  // themeTags도 recall OR에 포함 — 강등 경로에서도 테마 쿼리가
+  // 0건이 되지 않도록(soft 정신 유지). 정렬은 테마 적중 우선.
+  const themeTags = normalizeThemeTags(filters.themeTags);
+  const themePredicate =
+    themeTags.length > 0
+      ? Prisma.sql`OR EXISTS (SELECT 1 FROM "ProductTag" pt
+                              WHERE pt."productId" = p.id AND pt.tag = ANY(${themeTags}))`
+      : Prisma.empty;
+  const themeOrder =
+    themeTags.length > 0
+      ? Prisma.sql`(CASE WHEN EXISTS (SELECT 1 FROM "ProductTag" pt
+                         WHERE pt."productId" = p.id AND pt.tag = ANY(${themeTags}))
+                    THEN 0 ELSE 1 END),`
+      : Prisma.empty;
   const rows = await db.$queryRaw<ScoredRow[]>(Prisma.sql`
     SELECT p.id AS id, 0::float AS score
     FROM "Product" p
     WHERE p.status = 'PUBLISHED'
       AND (p.title ILIKE ${like} OR p.destination ILIKE ${like}
-           OR p.summary ILIKE ${like} ${geoPredicate})
+           OR p.summary ILIKE ${like} ${geoPredicate} ${themePredicate})
       ${joinFilters(buildFilterClauses(filters))}
-    ORDER BY p."createdAt" DESC
+    ORDER BY ${themeOrder} p."createdAt" DESC
     LIMIT ${RESULT_LIMIT}
   `);
   return attachCards(rows);
@@ -190,9 +218,11 @@ export async function searchProductsByVector(
     const filterSql = joinFilters(buildFilterClauses(filters));
     const like = `%${keywordText.trim()}%`;
     const geoScore = buildGeoScore(geoTerms);
+    const themeScore = buildThemeScore(normalizeThemeTags(filters.themeTags));
 
-    // 하이브리드 점수 = 코사인*0.6 + 키워드 일치*0.2 + geo 적중*0.2.
-    // 전 구간 바인딩 파라미터(::vector 캐스트 포함) → 인젝션 차단 (R6).
+    // 하이브리드 점수 = 코사인*0.5 + 키워드*0.2 + geo*0.2 + 테마*0.1.
+    // themeTags는 WHERE 배제가 아닌 가산항(soft) — 권역 전체 노출 +
+    // 테마 상품 최상단. 전 구간 바인딩 파라미터 → 인젝션 차단 (R6).
     const rows = await db.$queryRaw<ScoredRow[]>(Prisma.sql`
       SELECT p.id AS id,
         (1 - (e.vector <=> ${vecLiteral}::vector)) * ${VECTOR_WEIGHT}
@@ -200,7 +230,8 @@ export async function searchProductsByVector(
                   OR p.destination ILIKE ${like}
                   OR p.summary ILIKE ${like}
                 THEN ${KEYWORD_WEIGHT} ELSE 0 END)
-        + ${geoScore} AS score
+        + ${geoScore}
+        + ${themeScore} AS score
       FROM "Product" p
       JOIN "ProductEmbedding" e ON e."productId" = p.id
       WHERE p.status = 'PUBLISHED'
