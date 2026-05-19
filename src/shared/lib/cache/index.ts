@@ -1,2 +1,5 @@
-export { createTtlCache } from "./ttlCache";
-export type { TtlCache } from "./ttlCache";
+export {
+  cacheGet,
+  cacheSet,
+  __resetRedisClientForTest,
+} from "./redis";

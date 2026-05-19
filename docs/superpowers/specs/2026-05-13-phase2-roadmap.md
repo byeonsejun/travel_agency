@@ -120,6 +120,21 @@ M-AUTH ──────────┐
 - 결제 실패율·hold 만료율 대시보드(외부 도구로 충분)
 **완료 기준**: 평균 페이지 응답시간 측정 가능 + 결제 실패 발생 시 추적 가능.
 
+#### ✅ M-CACHE 완료 기록 (2026-05-20) — ADR
+
+- **결정**: 인메모리 `Map`(인스턴스 고립·서버리스 휘발) → **Upstash Redis**
+  분산 캐시. `searchProducts`에 `search:v1:{q}` 키 / **TTL 3600s** 적용.
+- **Graceful Degradation 전략**: 캐시는 성능 최적화일 뿐 정합성 의존이
+  아니다. `shared/lib/cache/redis.ts`가 미설정→no-op, 네트워크/Redis
+  예외→`cacheGet=null`·`cacheSet` 무동작으로 흡수 → **항상 원본
+  파이프라인으로 자연 폴백**(NODE_ENV 분기 불필요, dev 무중단).
+- **실증**: cache HIT 1636ms→46ms(~35×), 토큰 손상 강제 장애 시 throw
+  없이 원본 9건 반환. 단위 35 files/355 GREEN. `ttlCache.ts` 死문서 제거.
+- **스코프 메모**: 본 M-CACHE는 **검색 쿼리 분산 캐시**를 인도. M4
+  산출물의 페이지 레벨 `force-dynamic 해제 → ISR/revalidateTag`는
+  프론트 렌더링 결합 사안으로 **Phase 3 초입에서 처리**(아래 §종료 참조).
+- **운영 부채**: Upstash 자격증명 로테이션·키 스킴(`search:v1:`) 버전 관리.
+
 ---
 
 ## 5. MVP 스코프 (모듈별)

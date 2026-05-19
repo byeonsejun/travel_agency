@@ -19,6 +19,10 @@ const envSchema = z
       (v) => v === "1" || v === "true",
       z.boolean()
     ),
+    // M-CACHE: Upstash Redis 분산 캐시 (REST). 둘 다 미설정이면
+    // 캐시 레이어는 no-op으로 강등(매 요청 원본 파이프라인 — dev 무중단).
+    UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
     TOSS_CLIENT_KEY: z.string().optional(),
     TOSS_SECRET_KEY: z.string().optional(),
     TOSS_WEBHOOK_SECRET: z.string().optional(),
