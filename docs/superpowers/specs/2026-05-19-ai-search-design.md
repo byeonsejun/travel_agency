@@ -2,6 +2,12 @@
 
 > Phase 2 마지막 핵심. 자연어 쿼리(`/search?q=...`)를 **구조화 필터 + pgvector 코사인 유사도**로 라우팅하는 시맨틱 상품 검색.
 > 근거: `specs/2026-05-13-phase2-roadmap.md` §5.5 / 로드맵 산출물 7·8.
+>
+> ⚠️ **구현 분기 고지 (2026-05-19):** 이 spec의 §3~§5는 *최초 설계*다. 수동
+> E2E에서 순수 코사인의 한계(dev 가짜 벡터 무의미·"일본" 전상품 동률)가
+> 드러나 **하이브리드 4분할 스코어링·실 OpenAI 연동·gazetteer geo-taxonomy·
+> themeTags soft boost**로 확장되었다. **현 구현의 권위 있는 기준은
+> §7(D8~D11) + §10 ADR**이다. §3~§5는 진화의 출발점으로 읽을 것.
 
 ---
 
@@ -162,6 +168,10 @@ q ──▶ routeQuery(q) ──▶ {filters, cleanedQuery}
 | D5 | pgvector 불가 시 키워드 폴백(500 금지) | 로드맵 R6, DB 확장 권한 불확실성 흡수 |
 | D6 | 동일 `q` 1h 캐시 | 로드맵 R5 LLM/임베딩 비용 폭주 방어 |
 | D7 | 라우터 LLM 출력은 Zod parse + `.catch` 무필터 폴백 | LLM 비결정성·악성 입력 방어, 항상 검색 가능 |
+| **D8** | **하이브리드 4분할 스코어**: `cosine*0.5 + keyword*0.2 + geo*0.2 + theme*0.1` | 순수 코사인은 명시 단어("일본") 정밀도 부족·dev 가짜벡터 무의미. 키워드/geo/theme 가산으로 보강 (§10 ADR-1) |
+| **D9** | **실 임베딩 + `USE_REAL_EMBEDDING` 스위치** (OpenAI `text-embedding-3-small`) | dev 결정론 폴백은 의미 검색 불가. opt-in 스위치로 NODE_ENV 무관 실연동(기본 false → [[feedback-dev-external-io]] 정신 유지) (§10 ADR-2) |
+| **D10** | **gazetteer geo-taxonomy**: `entities/product/model/geo.ts` 권역→국가→도시 사전 + `expandGeoTerms` | "동남아"가 destination에 없어 키워드/벡터로 권역 검색 불가. 정적 사전으로 DB 마이그레이션 없이 해결 (§10 ADR-3) |
+| **D11** | **themeTags = soft boost** (WHERE 배제 → 점수 가산항) | hard filter는 "동남아 휴양"을 발리 1건으로 축소. 가산으로 전환 → 권역 recall + 테마 precision 양립 (§10 ADR-4) |
 
 ---
 
@@ -183,4 +193,57 @@ q ──▶ routeQuery(q) ──▶ {filters, cleanedQuery}
 - **단위(TDD 우선)**: `routeQuery` 규칙 추출기(금액/기간/테마 파싱), `DeterministicDevProvider`(결정론·차원 1536·정규화), `ttlCache`(TTL 만료), `RoutedQuerySchema` 파싱·폴백.
 - **통합**: 마이그레이션 적용 후 백필 → `searchProducts("부모님 온천 3박")` → 관련 상품 상위 노출 + `score` 범위 검증(curl/tsx 증거).
 - **degradation**: vector 확장 비활성 가정 경로 키워드 폴백 동작.
-- 자동: `typecheck`/`test`/`lint`. 런타임 증거는 `scripts/qa/`.
+- 자동: `typecheck`/`test`/`lint`. 런타임 증거는 `scripts/qa/ai-search-evidence.ts`
+  (M3 DoD 쿼리 "가족이랑 갈만한 동남아 휴양지 5박" + 매트릭스 + degradation).
+
+---
+
+## 10. ADR — E2E 발견 기반 설계 진화 (2026-05-19)
+
+> §3~§5(최초 설계) 대비 실제 구현의 분기를 기록한다. 각 ADR은
+> Context(왜 바뀌었나) / Decision(무엇으로) / Consequence(대가)로 정리.
+> plan `2026-05-19-ai-search.md`의 `[E2E 확장]` Task 8A~8D와 1:1 대응.
+
+### ADR-1 — 순수 코사인 → 하이브리드 4분할 (D8)
+- **Context:** dev `DeterministicDevProvider`는 해시 의사난수라 코사인
+  유사도가 노이즈(±0.05). "일본" 검색에 전 상품이 동률 반환. 운영
+  실 임베딩에서도 명시적 단어 일치가 약하게 묻힘.
+- **Decision:** `searchByVector`를 `(1-cosine)*VECTOR_WEIGHT
+  + keyword ILIKE*KEYWORD_WEIGHT + geo*GEO_WEIGHT + theme*THEME_WEIGHT`
+  로 재작성. 가중치 상수화 `0.5/0.2/0.2/0.1`. `ORDER BY score DESC`.
+- **Consequence:** 순수 의미검색 절대값은 소폭↓(VECTOR 0.7→0.5)이나
+  랭킹 정밀도·권역 recall 대폭↑. 가중치 4개가 튜닝 표면(회귀 위험)
+  → evidence 스크립트 before/after 대조로 방어.
+
+### ADR-2 — 실 OpenAI 임베딩 + opt-in 스위치 (D9)
+- **Context:** 가짜 벡터로는 시맨틱 검색 검증 불가. 그러나
+  [[feedback-dev-external-io]]는 dev 외부호출을 NODE_ENV로만 분기.
+- **Decision:** `OpenAIEmbeddingProvider`(text-embedding-3-small,
+  1536, 10s 타임아웃, 차원 단언). 분기 = `NODE_ENV==="production"
+  || env.USE_REAL_EMBEDDING`. 스위치 기본 false → 기존 규칙 정신 유지,
+  사용자 명시 opt-in일 때만 dev 실연동.
+- **Consequence:** 토글 시 `modelVersion` 게이트(D4)로 구벡터 전량
+  제외 → **백필 재실행 필수**(운영 함정, 가드 미구현은 미해결 부채).
+  현재 `.env` `USE_REAL_EMBEDDING="1"`.
+
+### ADR-3 — gazetteer geo-taxonomy (D10)
+- **Context:** `destination`은 "다낭, 베트남" 자유텍스트. "동남아"
+  글자가 없어 키워드/벡터 어느 쪽도 권역 검색 불가(사용자 의도
+  비대칭: 일본=국가우선, 동남아=권역우선).
+- **Decision:** `entities/product/model/geo.ts`에 권역→국가→도시
+  정적 트리 + `expandGeoTerms`(권역어→하위 전체/국가어→자기+도시/
+  도시어→자기). 라우터가 결정론 추출(LLM 환각 배제), `searchByVector`가
+  `destination ILIKE ANY(geoPatterns)` 가산.
+- **Consequence:** DB 마이그레이션 0으로 권역 검색 해결. 대가 = 사전
+  수동 유지보수 → 카탈로그 확장 시 DB 택소노미(방안 B) 전환 트리거
+  필요(미해결 부채로 plan에 명시).
+
+### ADR-4 — themeTags hard filter → soft boost (D11)
+- **Context:** themeTags가 `WHERE EXISTS(ProductTag)` 하드배제라
+  "동남아 휴양"이 #휴양 단일 상품(발리)만 반환 — 권역 recall 파괴.
+- **Decision:** `buildFilterClauses`에서 제거 → `buildThemeScore`
+  4번째 가산항. price/duration만 하드 제약 유지. 키워드 폴백도
+  theme recall OR + 정렬 우선 결합.
+- **Consequence:** "동남아 휴양" → SEA 4건 노출 + #휴양(발리) 최상단.
+  price/duration은 의도적으로 hard 유지(예: "5박" 명시 시 4박 제외가
+  올바름) — DoD 쿼리가 2건만 반환된 것은 이 정상 동작의 결과.
