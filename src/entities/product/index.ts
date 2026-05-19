@@ -30,6 +30,9 @@ export {
   PAGE_SIZE,
 } from "./api/queries";
 
+export { searchProductsByVector } from "./api/searchByVector";
+export type { VectorSearchFilters } from "./api/searchByVector";
+
 export { ProductImage } from "./ui/ProductImage";
 export { ProductCard } from "./ui/ProductCard";
 export { InclusionList } from "./ui/InclusionList";
