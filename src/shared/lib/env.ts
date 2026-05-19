@@ -10,6 +10,15 @@ const envSchema = z
     RESEND_API_KEY: z.string().optional(),
     RESEND_FROM_EMAIL: z.string().optional(),
     ANTHROPIC_API_KEY: z.string().optional(),
+    // M-AI-SEARCH 하이브리드 검색: 실 임베딩 provider 키 (OpenAI).
+    OPENAI_API_KEY: z.string().optional(),
+    // 비-프로덕션에서도 실 임베딩 API를 켜는 opt-in 스위치.
+    // "1"/"true"면 NODE_ENV와 무관하게 OpenAIEmbeddingProvider 사용.
+    // 기본 false → dev는 DeterministicDevProvider 유지(외부 비용 0).
+    USE_REAL_EMBEDDING: z.preprocess(
+      (v) => v === "1" || v === "true",
+      z.boolean()
+    ),
     TOSS_CLIENT_KEY: z.string().optional(),
     TOSS_SECRET_KEY: z.string().optional(),
     TOSS_WEBHOOK_SECRET: z.string().optional(),

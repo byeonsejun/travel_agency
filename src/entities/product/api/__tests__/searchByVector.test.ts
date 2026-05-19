@@ -93,6 +93,41 @@ describe("searchProductsByVector — 벡터 경로", () => {
   });
 });
 
+describe("searchProductsByVector — geo 하이브리드 (방안 A)", () => {
+  it("geoTerms가 ILIKE ANY 바인딩 배열로 전달된다", async () => {
+    mockDb.$queryRaw
+      .mockResolvedValueOnce([{ one: 1 }])
+      .mockResolvedValueOnce([{ id: "p1", score: 0.8 }]);
+    mockDb.product.findMany.mockResolvedValueOnce([fakeProduct("p1")]);
+
+    await searchProductsByVector(qVec, {}, MODEL, "동남아", [
+      "태국",
+      "발리",
+    ]);
+
+    const searchSql = mockDb.$queryRaw.mock.calls[1][0];
+    // 패턴 배열이 바인딩 파라미터로(인젝션 안전) 전달됨
+    expect(
+      searchSql.values.some(
+        (v: unknown) =>
+          Array.isArray(v) && v.includes("%태국%") && v.includes("%발리%")
+      )
+    ).toBe(true);
+  });
+
+  it("geoTerms 비었으면 geo 절을 추가하지 않는다 (graceful)", async () => {
+    mockDb.$queryRaw
+      .mockResolvedValueOnce([{ one: 1 }])
+      .mockResolvedValueOnce([{ id: "p1", score: 0.5 }]);
+    mockDb.product.findMany.mockResolvedValueOnce([fakeProduct("p1")]);
+
+    await searchProductsByVector(qVec, {}, MODEL, "온천", []);
+
+    const sqlText = mockDb.$queryRaw.mock.calls[1][0].sql as string;
+    expect(sqlText).not.toContain("ILIKE ANY");
+  });
+});
+
 describe("searchProductsByVector — graceful degradation (D5)", () => {
   it("pgvector 불가 시 키워드 폴백으로 결과를 반환한다 (throw 없음)", async () => {
     mockDb.$queryRaw

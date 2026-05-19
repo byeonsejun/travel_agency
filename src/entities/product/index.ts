@@ -12,6 +12,8 @@ export {
 } from "./model/constants";
 export type { SearchChip } from "./model/constants";
 
+export { GEO_TAXONOMY, expandGeoTerms } from "./model/geo";
+
 export {
   productSchema,
   itineraryDaySchema,

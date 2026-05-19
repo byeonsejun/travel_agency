@@ -10,6 +10,7 @@
  */
 
 import { env } from "@/shared/lib/env";
+import { expandGeoTerms } from "@/entities/product";
 import {
   parseRoutedQuery,
   type RoutedQuery,
@@ -79,7 +80,10 @@ export function ruleBasedRoute(q: string): RoutedQuery {
     .trim();
   const cleanedQuery = stripped.length > 0 ? stripped : query;
 
-  return { priceMax, durationNights, themeTags, cleanedQuery };
+  const geo = expandGeoTerms(query);
+  const geoTerms = geo.length > 0 ? geo : undefined;
+
+  return { priceMax, durationNights, themeTags, geoTerms, cleanedQuery };
 }
 
 const LLM_SYSTEM_PROMPT =
@@ -125,5 +129,8 @@ async function llmRoute(q: string): Promise<RoutedQuery> {
 
 export async function routeQuery(q: string): Promise<RoutedQuery> {
   if (env.NODE_ENV !== "production") return ruleBasedRoute(q);
-  return llmRoute(q);
+  // geo는 결정론적 사전 지식 — LLM 환각에 맡기지 않고 항상 덮어쓴다.
+  const routed = await llmRoute(q);
+  const geo = expandGeoTerms(q);
+  return { ...routed, geoTerms: geo.length > 0 ? geo : undefined };
 }

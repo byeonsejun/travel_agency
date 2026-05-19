@@ -96,6 +96,27 @@ describe("ruleBasedRoute — cleanedQuery", () => {
   });
 });
 
+describe("ruleBasedRoute — geoTerms (gazetteer 확장)", () => {
+  it("권역어 '동남아'를 하위 국가·도시로 확장한다", () => {
+    const r = ruleBasedRoute("동남아 가성비 휴양");
+    expect(r.geoTerms).toEqual(
+      expect.arrayContaining(["태국", "베트남", "발리", "다낭", "세부"])
+    );
+  });
+
+  it("'일본'은 일본 도시로 확장, 동남아는 섞이지 않는다", () => {
+    const r = ruleBasedRoute("일본 온천");
+    expect(r.geoTerms).toEqual(
+      expect.arrayContaining(["오사카", "도쿄", "하코네"])
+    );
+    expect(r.geoTerms).not.toContain("방콕");
+  });
+
+  it("지리 신호가 없으면 geoTerms는 undefined", () => {
+    expect(ruleBasedRoute("따뜻한 효도 여행").geoTerms).toBeUndefined();
+  });
+});
+
 describe("routeQuery — NODE_ENV 분기", () => {
   it("비-프로덕션(test)은 규칙 추출기 결과를 반환한다", async () => {
     const r = await routeQuery("20만원 이하 온천");

@@ -29,6 +29,9 @@ export const RoutedQuerySchema = z.object({
     .optional()
     .catch(undefined),
   themeTags: z.array(z.string().min(1)).optional().catch(undefined),
+  // 지리어를 destination 매칭용 하위 토큰으로 펼친 집합(gazetteer 확장).
+  // 손상 시 무필터 강등(.catch) — geo 부스트만 비활성, 검색은 계속.
+  geoTerms: z.array(z.string().min(1)).optional().catch(undefined),
   cleanedQuery: z.string().trim().min(1),
 });
 export type RoutedQuery = z.infer<typeof RoutedQuerySchema>;
