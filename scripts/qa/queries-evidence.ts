@@ -10,8 +10,8 @@ async function main() {
   }
   console.log("customer:", customer.email);
 
-  const list = await listMyBookings(customer.id);
-  console.log("listMyBookings count:", list.length);
+  const { items: list, total } = await listMyBookings(customer.id);
+  console.log("listMyBookings count:", list.length, "/ total:", total);
   if (list.length > 0) {
     console.log("첫 번째 항목:", JSON.stringify(list[0], null, 2));
 

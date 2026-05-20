@@ -19,4 +19,4 @@ export type {
   UpdateProfileInput,
 } from "./model/schema";
 
-export { getCurrentUser, getUserById } from "./api/queries";
+export { getCurrentUser, getUserById, getPassportProfile } from "./api/queries";

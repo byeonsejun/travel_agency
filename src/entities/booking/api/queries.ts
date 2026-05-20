@@ -26,29 +26,41 @@ export async function getBookingById(
 }
 
 export async function listMyBookings(
-  userId: string
-): Promise<BookingListItem[]> {
-  return db.booking.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      status: true,
-      totalPrice: true,
-      adultCount: true,
-      childCount: true,
-      infantCount: true,
-      createdAt: true,
-      canceledAt: true,
-      departure: {
-        select: {
-          departureDate: true,
-          returnDate: true,
-          product: { select: { id: true, title: true } },
+  userId: string,
+  opts?: { page?: number; pageSize?: number }
+): Promise<{ items: BookingListItem[]; total: number }> {
+  const pageSize = opts?.pageSize ?? 5;
+  const page = Math.max(1, opts?.page ?? 1);
+  const skip = (page - 1) * pageSize;
+
+  const [items, total] = await Promise.all([
+    db.booking.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: pageSize,
+      skip,
+      select: {
+        id: true,
+        status: true,
+        totalPrice: true,
+        adultCount: true,
+        childCount: true,
+        infantCount: true,
+        createdAt: true,
+        canceledAt: true,
+        departure: {
+          select: {
+            departureDate: true,
+            returnDate: true,
+            product: { select: { id: true, title: true } },
+          },
         },
       },
-    },
-  });
+    }),
+    db.booking.count({ where: { userId } }),
+  ]);
+
+  return { items, total };
 }
 
 export async function getBookingForRetry(

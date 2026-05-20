@@ -1,25 +1,33 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/features/auth/server/auth";
-import { getCurrentUser } from "@/entities/user";
+import { getCurrentUser, getPassportProfile } from "@/entities/user";
 import { listMyBookings } from "@/entities/booking";
-import { BookingHistoryList } from "@/widgets/booking-list";
+import { BookingHistoryList, BookingPaginator } from "@/widgets/booking-list";
+import { PassportProfileForm } from "@/features/passport-profile";
 
 export const dynamic = "force-dynamic";
 
-export default async function MyPage() {
-  // 1차 가드(미들웨어가 먼저 막지만 RSC 자체 가드도 belt-and-suspenders).
+const PAGE_SIZE = 5;
+
+type PageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+export default async function MyPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/login?callbackUrl=/mypage");
   }
 
-  // 프로필·예약내역 병렬 패칭 — 독립 쿼리, 직렬 비용 회피 (CLAUDE.md §6).
-  const [user, bookings] = await Promise.all([
+  const { page: rawPage } = await searchParams;
+  const page = Math.max(1, parseInt(rawPage ?? "1", 10) || 1);
+
+  const [user, passport, { items: bookings, total }] = await Promise.all([
     getCurrentUser(),
-    listMyBookings(session.user.id),
+    getPassportProfile(session.user.id),
+    listMyBookings(session.user.id, { page, pageSize: PAGE_SIZE }),
   ]);
 
-  // 세션 직후 사용자 레코드가 사라지는 매우 드문 케이스의 안전망.
   if (!user) {
     redirect("/login?callbackUrl=/mypage");
   }
@@ -56,6 +64,32 @@ export default async function MyPage() {
         </div>
       </section>
 
+      {/* 여권 정보 섹션 */}
+      <section
+        aria-labelledby="passport-heading"
+        className="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+      >
+        <div className="mb-5 flex items-baseline justify-between">
+          <h2
+            id="passport-heading"
+            className="text-lg font-semibold text-gray-900"
+          >
+            여권 정보
+          </h2>
+          {passport && (
+            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+              등록됨
+            </span>
+          )}
+          {!passport && (
+            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+              미등록
+            </span>
+          )}
+        </div>
+        <PassportProfileForm initial={passport} />
+      </section>
+
       {/* 예약 내역 섹션 */}
       <section aria-labelledby="bookings-heading" className="mt-10">
         <div className="mb-4 flex items-baseline justify-between">
@@ -66,10 +100,16 @@ export default async function MyPage() {
             예약 내역
           </h2>
           <span className="text-xs text-gray-400">
-            총 {bookings.length}건 · 최신순
+            총 {total}건 · 최신순
           </span>
         </div>
         <BookingHistoryList bookings={bookings} />
+        <BookingPaginator
+          page={page}
+          total={total}
+          pageSize={PAGE_SIZE}
+          basePath="/mypage"
+        />
       </section>
     </div>
   );
