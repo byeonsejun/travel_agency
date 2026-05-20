@@ -4,6 +4,7 @@ export type {
   DepartureStatus,
   DepartureSummary,
   DepartureCheckoutInfo,
+  DepartureLiveSeat,
 } from "./model/types";
 
 export {
@@ -18,6 +19,7 @@ export type { DepartureFormData } from "./model/schema";
 export {
   getDeparturesByProduct,
   getDepartureById,
+  listDepartureSeats,
   tagDeparturesByProduct,
 } from "./api/queries";
 export { computeRemainingSeats } from "./api/remainingSeats";

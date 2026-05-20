@@ -1,7 +1,7 @@
 import { ProductImage, InclusionList, ItineraryTimeline } from "@/entities/product";
-import { DepartureList } from "@/entities/departure";
 import type { ProductDetail } from "@/entities/product/model/types";
 import type { DepartureSummary } from "@/entities/departure/model/types";
+import { LiveDepartureList } from "@/features/live-seat";
 
 type ProductDetailProps = {
   product: ProductDetail;
@@ -83,10 +83,13 @@ export function ProductDetail({
         </p>
       </div>
 
-      {/* 5. 출발일 섹션 */}
+      {/* 5. 출발일 섹션 — 클라이언트 폴링(20s)으로 잔여 좌석 신선도 보장 + low-stock 강조 */}
       <div className="space-y-4 px-4 md:px-0">
         <h2 className="text-2xl font-bold text-gray-900">출발일 일정</h2>
-        <DepartureList departures={isClosed ? [] : departures} productId={product.id} />
+        <LiveDepartureList
+          productId={product.id}
+          initialDepartures={isClosed ? [] : departures}
+        />
       </div>
 
       {/* 6. 포함/불포함 섹션 */}

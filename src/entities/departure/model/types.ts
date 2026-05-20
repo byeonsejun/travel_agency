@@ -38,3 +38,12 @@ export type DepartureSummary = Pick<
 > & {
   remainingSeats: number;
 };
+
+// 폴링용 lightweight payload — 동적으로 변하는 필드만(좌석/상태).
+// PDP를 열어둔 클라이언트가 15-20초 주기로 fetch해 매진 race 직전을 감지.
+export type DepartureLiveSeat = {
+  id: string;
+  status: DepartureStatus;
+  remainingSeats: number;
+  capacity: number;
+};
