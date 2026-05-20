@@ -206,6 +206,35 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 
 ---
 
+## 6.1 ADR (Architecture Decision Records)
+
+> 코드와 commit log에는 *무엇을* 했는지 남지만, **왜 그렇게 했는지** — 특히 *고려했지만 거부한 대안* — 는 휘발된다. ADR이 그것을 박제한다.
+
+**언제 발행** (다음 중 하나라도 해당):
+- 여러 대안을 고민하고 한 쪽을 채택한 경우 (가장 흔한 트리거)
+- 도메인 invariant·보안 경계·데이터 무결성에 영향을 주는 결정
+- 차선책(workaround) 채택 — 상위 옵션이 제약 때문에 막혔을 때
+- 기존 결정을 *뒤집을* 때 (이전 ADR을 `Superseded by ADR-XXXX` 로 마킹)
+
+**언제 ADR 없이도 OK**:
+- 단순 버그 수정 / 리팩토링 / 의존성 업그레이드 / 코드 스타일 변경
+- 명확한 baseline path (대안 검토가 의미 없는 경우)
+
+**위치 및 양식**:
+- `docs/superpowers/adr/NNNN-kebab-case-title.md` (4자리 번호, 다음 번호 사용)
+- `docs/superpowers/adr/template.md` 복사 후 채움 — 4섹션 고정(Context / Decision / Consequences / Alternatives Considered)
+- `docs/superpowers/adr/README.md` 인덱스에 한 줄 추가
+- ⭐ **Alternatives Considered**가 가장 가치 있는 칸 — 6개월 뒤 누군가 같은 옵션을 다시 고민하지 않도록 거부 이유까지 박제
+
+**에이전트 행동 (Claude/Cursor 등)**:
+- 작업 중 "옵션 A vs B" 를 사용자에게 묻고 한 쪽을 택했거나, 차선책을 채택한 경우 → 작업 완료 보고 직전 **ADR 작성 제안**을 한 줄 띄울 것 (예: "이 결정은 ADR-NNNN으로 박제할 가치가 있어 보입니다 — 추가할까요?")
+- 사용자가 ADR 작성을 명시적으로 요청하지 않은 경우, 임의 발행 금지 (스팸 방지). 단 ADR 후보로 인지된 결정은 보고서 말미에 짧게 기록할 것.
+- 기존 결정과 충돌하는 변경을 하기 전에는 관련 ADR을 먼저 읽고, 위반 시 *왜 뒤집는지*를 새 ADR로 명시.
+
+**커밋 메시지 컨벤션**: `docs(adr): NNNN <짧은 제목>` (Conventional Commits 형식).
+
+---
+
 ## 7. 커뮤니케이션
 
 - **사용자 응답 언어**: 한국어 (기본).
@@ -238,4 +267,5 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 - 페르소나: `docs/superpowers/skills/{architect,frontend-expert,backend-expert,qa-engineer,domain-booking}.md`
 - 계획: `docs/superpowers/plans/`
 - 설계: `docs/superpowers/specs/`
+- **ADR**: `docs/superpowers/adr/` (인덱스: `README.md`, 양식: `template.md`)
 - Prisma: `prisma/schema.prisma`, `prisma/seed.ts`
