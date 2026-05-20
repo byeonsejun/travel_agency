@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-const envSchema = z
+// envSchema는 테스트에서 다양한 시나리오(NO-REAL-MONEY invariant 등)를
+// safeParse로 검증하기 위해 export한다. 실제 부팅값은 `env` 한 곳에서만 사용.
+export const envSchema = z
   .object({
     DATABASE_URL: z.string().url(),
     DIRECT_URL: z.string().url(),
@@ -86,10 +88,15 @@ const envSchema = z
       }
     }
 
-    // 🛑 NO-REAL-MONEY 런타임 강제 (CLAUDE.md §5).
-    // 라이브 키(live_)는 어떤 환경에서도 부팅 자체를 막는다 — 문서 규칙을
-    // 코드로 못박아, 실수로라도 실거래 경로가 활성화되지 않게 한다.
-    for (const key of ["TOSS_CLIENT_KEY", "TOSS_SECRET_KEY"] as const) {
+    // 🛑 NO-REAL-MONEY 런타임 강제 (CLAUDE.md §5, ADR-0009).
+    // (1) 라이브 키(live_)는 어떤 환경에서도 부팅 자체를 막는다 — 문서 규칙을
+    //     코드 invariant로 못박아 실수로라도 실거래 경로가 활성화되지 않게 한다.
+    //     client/secret/webhook 3종 모두 대칭적으로 차단.
+    for (const key of [
+      "TOSS_CLIENT_KEY",
+      "TOSS_SECRET_KEY",
+      "TOSS_WEBHOOK_SECRET",
+    ] as const) {
       const val = env[key];
       if (val && val.startsWith("live_")) {
         ctx.addIssue({
@@ -98,6 +105,31 @@ const envSchema = z
           message:
             `${key}: live(실거래) 키는 금지됩니다 (NO-REAL-MONEY). ` +
             `test_ 샌드박스 키만 허용.`,
+        });
+      }
+    }
+
+    // (2) 테스트 환경(NODE_ENV=test)에서는 외부 결제 IO 자체를 차단한다.
+    //     feedback_dev_external_io 원칙 — 테스트는 항상 Mock(localhost),
+    //     PAYMENT_FORCE_REAL이나 운영 토스 도메인 호출은 테스트 신뢰성을 깨뜨림.
+    //     dev 환경은 토스 샌드박스 실거래 검증 용도로 두 옵션 모두 허용.
+    if (env.NODE_ENV === "test") {
+      if (env.PAYMENT_FORCE_REAL) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["PAYMENT_FORCE_REAL"],
+          message:
+            "PAYMENT_FORCE_REAL: NODE_ENV=test에서는 활성화 불가 " +
+            "(테스트는 Mock 폴백만 허용 — NO-REAL-MONEY).",
+        });
+      }
+      if (/(^|\/\/)([^/]+\.)?tosspayments\.com($|\/)/i.test(env.TOSS_API_BASE_URL)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["TOSS_API_BASE_URL"],
+          message:
+            "TOSS_API_BASE_URL: NODE_ENV=test에서는 운영 토스 도메인 호출 금지 " +
+            "(localhost Mock만 허용).",
         });
       }
     }

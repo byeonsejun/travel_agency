@@ -1,0 +1,154 @@
+import { describe, expect, it } from "vitest";
+
+import { envSchema } from "@/shared/lib/env";
+
+// 모든 env 시나리오 테스트의 공통 베이스라인.
+// invariant 차단 여부만 검증하므로 production-required 키는 NODE_ENV=test로 회피.
+const validBase = {
+  DATABASE_URL: "postgresql://localhost:5432/test",
+  DIRECT_URL: "postgresql://localhost:5432/test",
+  AUTH_SECRET: "x".repeat(32),
+  USE_REAL_EMBEDDING: "0",
+  PAYMENT_FORCE_REAL: "0",
+  // NODE_ENV=test에서 default(api.tosspayments.com)는 ADR-0009 invariant에 걸린다.
+  // localhost Mock으로 명시 — 테스트는 항상 Mock 원칙과 일관.
+  TOSS_API_BASE_URL: "http://localhost:4242",
+  NODE_ENV: "test",
+} as const;
+
+describe("envSchema — NO-REAL-MONEY invariant (ADR-0009)", () => {
+  describe("live_ 키 부팅 차단 (모든 환경)", () => {
+    it("TOSS_CLIENT_KEY=live_… 이면 parse 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        TOSS_CLIENT_KEY: "live_ck_abc",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path[0] === "TOSS_CLIENT_KEY")).toBe(true);
+      }
+    });
+
+    it("TOSS_SECRET_KEY=live_… 이면 parse 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        TOSS_SECRET_KEY: "live_sk_abc",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path[0] === "TOSS_SECRET_KEY")).toBe(true);
+      }
+    });
+
+    // 신규 invariant: webhook secret도 대칭적으로 live_ 차단.
+    it("TOSS_WEBHOOK_SECRET=live_… 이면 parse 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        TOSS_WEBHOOK_SECRET: "live_webhook_abc",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path[0] === "TOSS_WEBHOOK_SECRET")).toBe(true);
+      }
+    });
+
+    it("production 환경에서도 live_ 키 차단", () => {
+      // production에서는 다른 required 키들도 필요하지만, live_ 차단 이슈가 포함되는지만 확인.
+      const result = envSchema.safeParse({
+        ...validBase,
+        NODE_ENV: "production",
+        TOSS_CLIENT_KEY: "live_ck_abc",
+        TOSS_SECRET_KEY: "live_sk_abc",
+        TOSS_WEBHOOK_SECRET: "live_webhook_abc",
+        CRON_SECRET: "y".repeat(32),
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const liveIssues = result.error.issues.filter((i) =>
+          /live\(실거래\)/.test(i.message)
+        );
+        expect(liveIssues.length).toBeGreaterThanOrEqual(3);
+      }
+    });
+
+    it("test_ 샌드박스 키는 정상 통과", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        TOSS_CLIENT_KEY: "test_ck_abc",
+        TOSS_SECRET_KEY: "test_sk_abc",
+        TOSS_WEBHOOK_SECRET: "test_webhook_abc",
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("test 환경에서 외부 결제 IO 차단", () => {
+    // 신규 invariant: 테스트는 항상 Mock — feedback_dev_external_io와 일관.
+    it("NODE_ENV=test + PAYMENT_FORCE_REAL=true 조합 차단", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        NODE_ENV: "test",
+        PAYMENT_FORCE_REAL: "1",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((i) => i.path[0] === "PAYMENT_FORCE_REAL")
+        ).toBe(true);
+      }
+    });
+
+    // 신규 invariant: 테스트 환경에서 운영 토스 도메인을 가리키면 차단.
+    it("NODE_ENV=test + TOSS_API_BASE_URL=api.tosspayments.com 차단", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        NODE_ENV: "test",
+        TOSS_API_BASE_URL: "https://api.tosspayments.com",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((i) => i.path[0] === "TOSS_API_BASE_URL")
+        ).toBe(true);
+      }
+    });
+
+    it("NODE_ENV=test + TOSS_API_BASE_URL=localhost(Mock) 정상 통과", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        NODE_ENV: "test",
+        TOSS_API_BASE_URL: "http://localhost:4242",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    // dev 환경은 PAYMENT_FORCE_REAL=true 허용 (토스 샌드박스 실거래 테스트 용도).
+    it("NODE_ENV=development + PAYMENT_FORCE_REAL=true 정상 통과", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        NODE_ENV: "development",
+        PAYMENT_FORCE_REAL: "1",
+        TOSS_CLIENT_KEY: "test_ck_abc",
+        TOSS_SECRET_KEY: "test_sk_abc",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    // dev 환경에서 운영 도메인은 허용 (샌드박스 test_ 키와 조합 시 토스 샌드박스가 응답).
+    it("NODE_ENV=development + TOSS_API_BASE_URL=api.tosspayments.com 정상 통과", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        NODE_ENV: "development",
+        TOSS_API_BASE_URL: "https://api.tosspayments.com",
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("baseline sanity", () => {
+    it("validBase만으로 정상 통과", () => {
+      const result = envSchema.safeParse(validBase);
+      expect(result.success).toBe(true);
+    });
+  });
+});
