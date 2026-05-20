@@ -45,9 +45,12 @@ export function CancelBookingButton({ bookingId }: Props) {
     });
   }
 
-  // 성공 시: 다이얼로그 닫고 RSC 재검증 결과를 가져오기 위해 router.refresh
+  // 성공/지연 시: 다이얼로그 닫고 RSC 재검증 결과를 가져오기 위해 router.refresh
   // (revalidatePath는 캐시 무효화만, 현재 페이지 트리는 router.refresh로 다시 그림).
-  if (state?.type === "success" && open) {
+  // - success: booking 전이 + Payment CANCELED 모두 완료 → UI 즉시 동기
+  // - deferred: PG cancel 지연 → RefundJob PENDING 상태로 적재, booking은
+  //   아직 PAID. 사용자에겐 토스트성 안내, 페이지 재검증으로 RefundJob 상태 반영.
+  if ((state?.type === "success" || state?.type === "deferred") && open) {
     setOpen(false);
     router.refresh();
   }
@@ -142,6 +145,14 @@ export function CancelBookingButton({ bookingId }: Props) {
                 <p
                   role="alert"
                   className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+                >
+                  {state.message}
+                </p>
+              )}
+              {state?.type === "deferred" && (
+                <p
+                  role="status"
+                  className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800"
                 >
                   {state.message}
                 </p>

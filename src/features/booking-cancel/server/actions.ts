@@ -7,29 +7,36 @@ import {
   ForbiddenError,
   InvalidTransitionError,
 } from "@/entities/booking";
+import { refundBooking, PaymentError } from "@/entities/payment";
+import { db } from "@/shared/lib/db";
 import { CancelBookingSchema } from "../model/schemas";
 import type { CancelBookingInput } from "../model/schemas";
 
 export type CancelBookingState =
   | { type: "success"; bookingId: string }
+  | { type: "deferred"; bookingId: string; message: string }
   | { type: "error"; message: string };
 
 /**
  * 사용자 자가 예약 취소 Server Action.
  *
  * 보안 책임 (CLAUDE.md §5 — Backend/Domain Booking):
- *   1) 세션 인증 — 미로그인은 즉시 거부.
+ *   1) 세션 인증 — 미로그인 거부.
  *   2) Zod 입력 검증 — 클라 신뢰 금지.
- *   3) 소유권/상태 검증은 cancelBookingByUser 내부에서 수행
- *      (DB findUnique + userId 비교 + assertTransition 화이트리스트).
- *   4) 좌석 환원·BookingEvent append는 transitionStatus의 단일 트랜잭션
- *      에서 보장. UI 레이어는 도메인 invariants에 손대지 않는다.
+ *   3) 소유권 사전 가드 + 도메인 함수 내부 재검증(defense in depth).
  *
- * TODO(payment-refund): 결제 상태가 PAID였던 경우 PG사 결제 취소 호출
- * (TossPayments cancel API)을 별도 모듈로 후속 트리거해야 한다. 현재
- * 단계는 booking 상태머신만 다루며, refund 도메인은 별 PR로 분리.
- * 연동 포인트: 성공 분기 이후 `payment` 엔티티의 refund mutation을 호출,
- * webhook 멱등성 키와 정합화 (idempotency by bookingId + cancelEventId).
+ * Dispatch 로직 (PAID payment 존재 여부로 분기):
+ *   - PAID 있음 → refundBooking: PG 취소 + Payment CANCELED + booking
+ *     전이를 RefundJob 멱등성 키로 보호. PG 실패는 RefundJob PENDING
+ *     으로 적재되어 cron worker가 재시도(self-healing).
+ *   - PAID 없음(RECEIVED / DEPARTURE_CONFIRMED) → cancelBookingByUser:
+ *     좌석 환원 + 상태 전이만 수행. refund 호출 0회.
+ *
+ * 트랜잭션 격리 (Domain R3):
+ *   refundBooking은 외부 PG IO를 단일 DB Tx 안에 포함하지 않는다.
+ *   PG 호출이 실패해도 Payment / Booking 상태는 변하지 않으며
+ *   RefundJob만 PENDING으로 남아 backoff 재시도된다. 즉, 사용자가
+ *   "취소했다"는 의도와 DB 상태가 절대 어긋나지 않는다.
  */
 export async function cancelBookingAction(
   _prev: CancelBookingState | null,
@@ -40,6 +47,7 @@ export async function cancelBookingAction(
   if (!session?.user?.id) {
     return { type: "error", message: "로그인이 필요합니다" };
   }
+  const userId = session.user.id;
 
   // 2. Zod 검증
   const parsed = CancelBookingSchema.safeParse(input);
@@ -47,23 +55,76 @@ export async function cancelBookingAction(
     const first = parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요";
     return { type: "error", message: first };
   }
+  const { bookingId, reason } = parsed.data;
 
-  // 3. 도메인 위임 — 소유권/상태머신 검증은 내부에서
+  // 3. 소유권 사전 가드 + PAID payment 동시 조회 (단일 round-trip).
+  //    refundBooking은 actor 문자열만 받으므로 ownership을 별도로 강제해야 한다.
+  //    cancelBookingByUser 역시 내부에서 ownership을 재검증한다(defense in depth).
+  const owned = await db.booking.findUnique({
+    where: { id: bookingId, userId },
+    select: {
+      id: true,
+      payments: {
+        where: { status: "PAID" },
+        select: { id: true },
+        take: 1,
+      },
+    },
+  });
+  if (!owned) {
+    return { type: "error", message: "본인의 예약만 취소할 수 있습니다" };
+  }
+  const hasPaidPayment = owned.payments.length > 0;
+
+  // 4. 도메인 위임 — dispatch
   try {
-    await cancelBookingByUser({
-      bookingId: parsed.data.bookingId,
-      userId: session.user.id,
-      reason: parsed.data.reason,
-    });
+    if (hasPaidPayment) {
+      // refund 경로: PG 취소 + Payment CANCELED + booking 전이 일괄 처리
+      await refundBooking({
+        bookingId,
+        actor: `user:${userId}`,
+        reason,
+      });
+    } else {
+      // 결제 전 취소: 단순 booking 전이 (좌석 환원은 transitionStatus 내부에서)
+      await cancelBookingByUser({ bookingId, userId, reason });
+    }
   } catch (err) {
     if (err instanceof ForbiddenError) {
       return { type: "error", message: "본인의 예약만 취소할 수 있습니다" };
     }
     if (err instanceof InvalidTransitionError) {
-      return {
-        type: "error",
-        message: "현재 상태에서는 취소할 수 없습니다",
-      };
+      return { type: "error", message: "현재 상태에서는 취소할 수 없습니다" };
+    }
+    if (err instanceof PaymentError) {
+      // PG 통신 실패 → RefundJob에 PENDING으로 적재됨(자가 치유 큐).
+      // booking은 아직 PAID 상태 유지 — 데이터 정합성 보존.
+      if (err.code === "REFUND_DEFERRED") {
+        // 캐시 재검증은 그래도 실행(RefundJob 상태 변화가 detail에 반영될 수 있음).
+        revalidatePath(`/bookings/${bookingId}`);
+        return {
+          type: "deferred",
+          bookingId,
+          message:
+            "환불 처리가 지연되고 있습니다. 잠시 후 자동으로 재시도되며, 결과는 마이페이지에서 확인할 수 있습니다.",
+        };
+      }
+      if (err.code === "REFUND_ALREADY_REQUESTED") {
+        return {
+          type: "error",
+          message: "이미 환불 요청이 진행 중입니다. 잠시 후 다시 확인해 주세요",
+        };
+      }
+      if (err.code === "BOOKING_NOT_REFUNDABLE") {
+        return { type: "error", message: "현재 상태에서는 환불할 수 없습니다" };
+      }
+      if (err.code === "PAID_PAYMENT_NOT_FOUND") {
+        return {
+          type: "error",
+          message: "결제 정보가 확인되지 않아 환불을 진행할 수 없습니다",
+        };
+      }
+      // 그 외 PaymentError는 일반 메시지 (도메인 details 누설 차단)
     }
     return {
       type: "error",
@@ -71,11 +132,9 @@ export async function cancelBookingAction(
     };
   }
 
-  // 4. 캐시 무효화 — 마이페이지 리스트 + 상세 페이지 둘 다 즉시 재검증.
-  //    page-level dynamic=force-dynamic이라 ISR 캐시는 없지만, fetch
-  //    캐시·Server Action 호출 후 router refresh를 강제하기 위해 호출.
+  // 5. 캐시 무효화 — 마이페이지 리스트 + 상세 페이지 둘 다 즉시 재검증.
   revalidatePath("/mypage");
-  revalidatePath(`/bookings/${parsed.data.bookingId}`);
+  revalidatePath(`/bookings/${bookingId}`);
 
-  return { type: "success", bookingId: parsed.data.bookingId };
+  return { type: "success", bookingId };
 }
