@@ -47,8 +47,9 @@ export {
   listRecentPaymentEvents,
   summarizeRefundJobs,
   findActiveRefundJob,
+  listRefundJobs,
 } from "./api/observability";
-export type { ActiveRefundJob } from "./api/observability";
+export type { ActiveRefundJob, RefundJobRow } from "./api/observability";
 
 // ── UI ──────────────────────────────────────────────────────────
 export { PaymentStatusBadge, PAYMENT_STATUS_LABEL } from "./ui/PaymentStatusBadge";

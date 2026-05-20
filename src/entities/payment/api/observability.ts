@@ -87,3 +87,49 @@ export async function findActiveRefundJob(bookingId: string) {
 export type ActiveRefundJob = NonNullable<
   Awaited<ReturnType<typeof findActiveRefundJob>>
 >;
+
+type RefundJobStatusFilter = "PENDING" | "IN_PROGRESS" | "SUCCEEDED" | "FAILED";
+
+interface ListRefundJobsOptions {
+  status?: RefundJobStatusFilter;
+  limit?: number;
+}
+
+/**
+ * 관리자 환불 모니터링 대시보드용 — RefundJob 목록 조회.
+ * 상태 필터·limit 지원. booking.user 정보와 함께 반환.
+ */
+export async function listRefundJobs({
+  status,
+  limit = 50,
+}: ListRefundJobsOptions = {}) {
+  return db.refundJob.findMany({
+    where: status !== undefined ? { status } : undefined,
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      bookingId: true,
+      amount: true,
+      reason: true,
+      actor: true,
+      status: true,
+      attempts: true,
+      lastError: true,
+      nextRunAt: true,
+      createdAt: true,
+      booking: {
+        select: {
+          user: { select: { name: true, email: true } },
+          departure: {
+            select: {
+              product: { select: { title: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+export type RefundJobRow = Awaited<ReturnType<typeof listRefundJobs>>[number];

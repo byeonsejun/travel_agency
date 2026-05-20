@@ -36,6 +36,12 @@ export default async function AdminLayout({
               >
                 예약 관리
               </Link>
+              <Link
+                href="/admin/refund-jobs"
+                className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
+              >
+                환불 모니터링
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">
