@@ -6,9 +6,14 @@ import {
 } from "@/entities/booking";
 import type { BookingDetail } from "@/entities/booking";
 import { PaymentStatusBadge } from "@/entities/payment";
+import type { ActiveRefundJob } from "@/entities/payment";
 import { CancelBookingButton } from "@/features/booking-cancel";
 
-type Props = { booking: BookingDetail };
+type Props = {
+  booking: BookingDetail;
+  /** 활성 RefundJob — 존재하면 cancel 버튼 hide + "환불 처리 중" 배지 표시. */
+  activeRefundJob?: ActiveRefundJob | null;
+};
 
 function formatPrice(amount: number): string {
   return amount.toLocaleString("ko-KR") + "원";
@@ -24,7 +29,7 @@ function formatDateTime(d: Date): string {
   });
 }
 
-export function BookingDetailView({ booking }: Props) {
+export function BookingDetailView({ booking, activeRefundJob }: Props) {
   // 영수증은 가장 최근 PAID(혹은 환불 전이라도 receiptUrl이 있는) 결제에서만.
   const receipt = booking.payments.find(
     (p) => p.status === "PAID" && p.receiptUrl
@@ -35,7 +40,10 @@ export function BookingDetailView({ booking }: Props) {
     (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)
   );
 
-  const cancelable = isCancelableByUser(booking.status);
+  // 활성 RefundJob 존재 시 cancel 버튼을 숨긴다. 같은 사용자가 동일 booking에
+  // 재시도하지 못하게 막아 REFUND_ALREADY_REQUESTED 에러 노출을 사전 차단.
+  const refundInFlight = !!activeRefundJob;
+  const cancelable = isCancelableByUser(booking.status) && !refundInFlight;
 
   return (
     <div className="space-y-8">
@@ -54,6 +62,48 @@ export function BookingDetailView({ booking }: Props) {
           >
             영수증 보기
           </Link>
+        </div>
+      )}
+
+      {/* 활성 RefundJob 안내 — PG 취소가 한 번 실패해 backoff 재시도 큐에 적재된
+          상태. cancel 버튼은 자동 hide되어 사용자가 이중 요청을 못 보내게 한다. */}
+      {activeRefundJob && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-amber-900">
+                환불 처리 중 — 자동 재시도
+              </p>
+              <p className="mt-1 text-xs text-amber-800">
+                {activeRefundJob.attempts > 0
+                  ? `이전 시도가 일시적으로 실패하여 자동으로 재시도되고 있습니다 (시도 횟수: ${activeRefundJob.attempts}).`
+                  : "결제 시스템과 환불 처리를 진행하고 있습니다."}
+                {activeRefundJob.nextRunAt && (
+                  <>
+                    {" "}
+                    다음 재시도: {" "}
+                    <time
+                      dateTime={activeRefundJob.nextRunAt.toISOString()}
+                      className="font-medium"
+                    >
+                      {new Date(activeRefundJob.nextRunAt).toLocaleString(
+                        "ko-KR",
+                        {
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
+                    </time>
+                  </>
+                )}
+              </p>
+            </div>
+            <span className="inline-flex shrink-0 items-center rounded-full bg-amber-200 px-3 py-1 text-xs font-medium text-amber-900">
+              처리 중
+            </span>
+          </div>
         </div>
       )}
 

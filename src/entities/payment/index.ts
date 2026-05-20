@@ -41,7 +41,12 @@ export { PaymentError, InvalidSignatureError } from "./api/errors";
 export type { PaymentErrorCode } from "./api/errors";
 
 // ── 운영 관측 쿼리 (read-only) ──────────────────────────────────
-export { listRecentPaymentEvents, summarizeRefundJobs } from "./api/observability";
+export {
+  listRecentPaymentEvents,
+  summarizeRefundJobs,
+  findActiveRefundJob,
+} from "./api/observability";
+export type { ActiveRefundJob } from "./api/observability";
 
 // ── UI ──────────────────────────────────────────────────────────
 export { PaymentStatusBadge, PAYMENT_STATUS_LABEL } from "./ui/PaymentStatusBadge";

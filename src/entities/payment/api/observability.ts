@@ -63,3 +63,27 @@ export async function summarizeRefundJobs() {
 
   return { statusCounts, oldestPending };
 }
+
+/**
+ * booking 단건의 활성(PENDING/IN_PROGRESS) RefundJob 조회.
+ * BookingDetail UI 게이트용 — 활성 RefundJob이 있으면 cancel 버튼을 숨기고
+ * "환불 처리 중 — 자동 재시도" 안내를 노출하기 위함.
+ * SUCCEEDED/FAILED는 종료 상태라 게이트에 포함하지 않는다.
+ */
+export async function findActiveRefundJob(bookingId: string) {
+  return db.refundJob.findFirst({
+    where: { bookingId, status: { in: ["PENDING", "IN_PROGRESS"] } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      status: true,
+      attempts: true,
+      nextRunAt: true,
+      lastError: true,
+    },
+  });
+}
+
+export type ActiveRefundJob = NonNullable<
+  Awaited<ReturnType<typeof findActiveRefundJob>>
+>;
