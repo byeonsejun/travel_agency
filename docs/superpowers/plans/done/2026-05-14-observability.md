@@ -126,7 +126,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 형식으로 보고
-- [ ] `git commit -m "feat(obs): scaffold observability slice with env + types"`
+- [x] `git commit -m "feat(obs): scaffold observability slice with env + types"`
 
 ---
 
@@ -157,7 +157,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "feat(obs): add PII masking utility (maskPii)"`
+- [x] `git commit -m "feat(obs): add PII masking utility (maskPii)"`
 
 ---
 
@@ -185,7 +185,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "feat(obs): add AsyncLocalStorage request context"`
+- [x] `git commit -m "feat(obs): add AsyncLocalStorage request context"`
 
 ---
 
@@ -219,7 +219,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "feat(obs): structured logger v2 with trace context and PII redaction"`
+- [x] `git commit -m "feat(obs): structured logger v2 with trace context and PII redaction"`
 
 ---
 
@@ -246,7 +246,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "feat(obs): error tracker adapter (logger fanout, sentry-ready)"`
+- [x] `git commit -m "feat(obs): error tracker adapter (logger fanout, sentry-ready)"`
 
 ---
 
@@ -274,7 +274,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "feat(obs): in-memory metrics counter with snapshot/flush"`
+- [x] `git commit -m "feat(obs): in-memory metrics counter with snapshot/flush"`
 
 ---
 
@@ -304,7 +304,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "feat(obs): withObservedRoute wrapper + middleware trace-id header"`
+- [x] `git commit -m "feat(obs): withObservedRoute wrapper + middleware trace-id header"`
 
 ---
 
@@ -342,7 +342,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "refactor(obs): migrate payment core from console to structured logger + metrics"`
+- [x] `git commit -m "refactor(obs): migrate payment core from console to structured logger + metrics"`
 
 ---
 
@@ -366,7 +366,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "feat(obs): wrap payment routes with withObservedRoute"`
+- [x] `git commit -m "feat(obs): wrap payment routes with withObservedRoute"`
 
 ---
 
@@ -393,7 +393,7 @@
 
 #### ✅ 통과 보고
 - [x] Evidence-first 보고
-- [ ] `git commit -m "feat(obs): add /api/health readiness endpoint"`
+- [x] `git commit -m "feat(obs): add /api/health readiness endpoint"`
 
 ---
 
@@ -431,7 +431,7 @@
 
 #### ✅ 통과 보고
 - [x] M-OBS 페이즈 종합 보고 — `🏗️ Core Architecture` / `♻️ Boilerplate` / `🧠 Concept Insight` 3단 양식
-- [ ] `git commit -m "feat(obs): payment event/refund job queries + qa evidence + design spec"`
+- [x] `git commit -m "feat(obs): payment event/refund job queries + qa evidence + design spec"`
 
 ---
 
