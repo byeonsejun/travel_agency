@@ -38,7 +38,7 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
   if (params.sort) paginationSearchParams.sort = params.sort;
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-6 py-12">
       <h1 className="mb-8 text-3xl font-bold">여행 상품</h1>
 
       <ProductFilterBar
@@ -82,6 +82,6 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }

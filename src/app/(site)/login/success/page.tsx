@@ -10,8 +10,8 @@ export default async function LoginSuccessPage({ searchParams }: Props) {
     callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
       <AuthSuccessClient callbackUrl={safeCallback} />
-    </main>
+    </div>
   );
 }

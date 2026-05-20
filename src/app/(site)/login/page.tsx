@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: Props) {
   const hasKakao = !!(process.env.AUTH_KAKAO_ID && process.env.AUTH_KAKAO_SECRET);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white px-8 py-10 shadow">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">로그인</h1>
@@ -109,6 +109,6 @@ export default async function LoginPage({ searchParams }: Props) {
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }

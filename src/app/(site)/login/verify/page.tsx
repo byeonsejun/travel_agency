@@ -10,7 +10,7 @@ export default async function VerifyPage({ searchParams }: Props) {
     callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm space-y-4 rounded-xl bg-white px-8 py-10 shadow text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
           <svg
@@ -55,6 +55,6 @@ export default async function VerifyPage({ searchParams }: Props) {
           다시 시도하기
         </a>
       </div>
-    </main>
+    </div>
   );
 }

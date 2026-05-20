@@ -32,7 +32,7 @@ export default async function LoginErrorPage({ searchParams }: Props) {
   const message = ERROR_MESSAGES[error ?? "Default"] ?? ERROR_MESSAGES.Default;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white px-8 py-10 shadow text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
           <svg
@@ -60,6 +60,6 @@ export default async function LoginErrorPage({ searchParams }: Props) {
           로그인으로 돌아가기
         </Link>
       </div>
-    </main>
+    </div>
   );
 }
