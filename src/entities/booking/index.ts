@@ -25,6 +25,7 @@ export {
   ALLOWED_TRANSITIONS,
   assertTransition,
   shouldReturnSeats,
+  isCancelableByUser,
   InvalidTransitionError,
 } from "./model/transitions";
 

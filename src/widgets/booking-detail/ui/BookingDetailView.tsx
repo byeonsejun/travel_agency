@@ -2,8 +2,10 @@ import Link from "next/link";
 import {
   BookingSummaryCard,
   BookingEventTimeline,
+  isCancelableByUser,
 } from "@/entities/booking";
 import type { BookingDetail } from "@/entities/booking";
+import { CancelBookingButton } from "@/features/booking-cancel";
 
 type Props = { booking: BookingDetail };
 
@@ -12,6 +14,8 @@ export function BookingDetailView({ booking }: Props) {
   const receipt = booking.payments.find(
     (p) => p.status === "PAID" && p.receiptUrl
   );
+
+  const cancelable = isCancelableByUser(booking.status);
 
   return (
     <div className="space-y-8">
@@ -38,6 +42,15 @@ export function BookingDetailView({ booking }: Props) {
         <h2 className="mb-4 text-base font-semibold text-gray-900">예약 이력</h2>
         <BookingEventTimeline events={booking.events} />
       </section>
+
+      {/* 사용자 자가 취소 — ALLOWED_TRANSITIONS 화이트리스트로 게이트.
+          취소 완료 후 revalidatePath로 RSC 재렌더, 화이트리스트에서 빠지며
+          버튼 자동 hide(상태머신이 한 번의 단일 source of truth). */}
+      {cancelable && (
+        <section className="flex justify-end border-t border-gray-100 pt-6">
+          <CancelBookingButton bookingId={booking.id} />
+        </section>
+      )}
     </div>
   );
 }

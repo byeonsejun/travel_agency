@@ -45,3 +45,13 @@ const SEAT_HELD_STATES: BookingStatus[] = [
 export function shouldReturnSeats(from: BookingStatus, to: BookingStatus): boolean {
   return SEAT_HELD_STATES.includes(from) && CANCEL_STATES.includes(to);
 }
+
+/**
+ * 사용자 자가 취소가 가능한 상태인가? — UI 노출 게이트.
+ * ALLOWED_TRANSITIONS의 화이트리스트를 단일 진실 원천으로 사용해 추후
+ * 도메인 룰 변경 시 UI가 자동 동기화되게 한다 (CancelableBookingStatus
+ * 리터럴 타입을 따로 들지 않는 이유).
+ */
+export function isCancelableByUser(status: BookingStatus): boolean {
+  return ALLOWED_TRANSITIONS[status].includes("CANCELED_BY_USER");
+}
