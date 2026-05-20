@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { SEARCH_CHIPS, ProductCard } from "@/entities/product";
+import { ProductCard } from "@/entities/product";
 import type { SearchResultCard } from "@/entities/product";
-import { searchProducts, SearchBox } from "@/features/search";
+import { searchProducts, SearchBox, SearchChips } from "@/features/search";
 import { EmptyState } from "@/shared/ui/EmptyState";
 
 export const dynamic = "force-dynamic";
@@ -35,8 +35,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
 
+  // 외곽 div — <main> landmark는 layout.tsx 단일 제공(중첩 방지).
   return (
-    <main className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-6 py-12">
       <section className="mb-8">
         <h1 className="mb-6 text-3xl font-bold text-gray-900">여행 검색</h1>
         <SearchBox defaultValue={query} />
@@ -57,20 +58,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <h2 className="mb-4 text-lg font-semibold text-gray-700">
             이런 여행은 어떠세요?
           </h2>
-          <div className="flex flex-wrap gap-3">
-            {SEARCH_CHIPS.map((chip) => (
-              <a
-                key={chip}
-                href={`/search?q=${encodeURIComponent(chip)}`}
-                className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-100"
-              >
-                {chip}
-              </a>
-            ))}
-          </div>
+          <SearchChips />
         </section>
       )}
-    </main>
+    </div>
   );
 }
 
