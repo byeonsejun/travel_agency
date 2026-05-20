@@ -36,6 +36,7 @@ export {
   createBooking,
   transitionStatus,
   cancelBookingByUser,
+  cancelBookingByAgency,
 } from "./api/mutations";
 
 export {
@@ -43,7 +44,10 @@ export {
   listMyBookings,
   getBookingDetail,
   getBookingForRetry,
+  listAllBookings,
+  getAdminBookingDetail,
 } from "./api/queries";
+export type { AdminBookingListItem } from "./api/queries";
 
 export {
   InsufficientCapacityError,

@@ -86,3 +86,68 @@ export async function getBookingDetail(
     },
   });
 }
+
+// ─── Admin-scope queries ──────────────────────────────────────────
+// userId 필터 없이 전체 booking을 조회. 권한 검증은 호출 측(admin 페이지)이
+// session.user.role === "ADMIN" 게이트로 보장 (middleware /admin/* 보호 + 페이지 가드).
+
+export type AdminBookingListItem = BookingListItem & {
+  user: { id: string; name: string | null; email: string | null };
+};
+
+export async function listAllBookings(opts?: {
+  limit?: number;
+  skip?: number;
+}): Promise<{ items: AdminBookingListItem[]; total: number }> {
+  const limit = Math.min(opts?.limit ?? 50, 200);
+  const skip = opts?.skip ?? 0;
+  const [items, total] = await Promise.all([
+    db.booking.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip,
+      select: {
+        id: true,
+        status: true,
+        totalPrice: true,
+        adultCount: true,
+        childCount: true,
+        infantCount: true,
+        createdAt: true,
+        canceledAt: true,
+        departure: {
+          select: {
+            departureDate: true,
+            returnDate: true,
+            product: { select: { id: true, title: true } },
+          },
+        },
+        user: { select: { id: true, name: true, email: true } },
+      },
+    }),
+    db.booking.count(),
+  ]);
+  return { items, total };
+}
+
+export async function getAdminBookingDetail(
+  id: string
+): Promise<(BookingDetail & { user: { id: string; name: string | null; email: string | null } }) | null> {
+  return db.booking.findUnique({
+    where: { id },
+    include: {
+      travelers: true,
+      terms: true,
+      payments: true,
+      events: { orderBy: { createdAt: "asc" } },
+      departure: {
+        select: {
+          departureDate: true,
+          returnDate: true,
+          product: { select: { title: true } },
+        },
+      },
+      user: { select: { id: true, name: true, email: true } },
+    },
+  });
+}

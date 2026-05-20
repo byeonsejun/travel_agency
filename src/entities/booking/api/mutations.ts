@@ -167,3 +167,30 @@ export async function cancelBookingByUser({
     reason,
   });
 }
+
+interface AgencyCancelInput {
+  bookingId: string;
+  adminId: string; // 권한 검증은 features 레이어에서 이미 수행됨(R3-3) — actor 기록용
+  reason?: string;
+}
+
+/**
+ * 관리자 직권 예약 취소.
+ *
+ * 권한 게이트(ADMIN role) 검증은 호출 측(features/admin-booking-cancel)이
+ * auth() 직후 수행한다. 이 함수는 검증 통과를 전제로 booking을
+ * CANCELED_BY_AGENCY로 전이하고 BookingEvent를 append한다.
+ * 좌석 환원은 transitionStatus 내 shouldReturnSeats가 자동 처리.
+ */
+export async function cancelBookingByAgency({
+  bookingId,
+  adminId,
+  reason,
+}: AgencyCancelInput): Promise<Booking> {
+  return transitionStatus({
+    bookingId,
+    to: "CANCELED_BY_AGENCY",
+    actor: `admin:${adminId}`,
+    reason,
+  });
+}
