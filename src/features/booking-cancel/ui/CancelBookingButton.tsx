@@ -1,6 +1,11 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { CANCEL_REASON_PRESETS } from "@/entities/booking";
 import { cancelBookingAction } from "../server/actions";
@@ -45,15 +50,19 @@ export function CancelBookingButton({ bookingId }: Props) {
     });
   }
 
-  // 성공/지연 시: 다이얼로그 닫고 RSC 재검증 결과를 가져오기 위해 router.refresh
-  // (revalidatePath는 캐시 무효화만, 현재 페이지 트리는 router.refresh로 다시 그림).
+  // 성공/지연 시: 다이얼로그 닫고 RSC 재검증 결과를 가져오기 위해 router.refresh.
+  // useEffect로 분리 — 렌더 단계에서 router.refresh를 부르면 Router 컴포넌트의
+  // setState가 다른 컴포넌트 렌더 중 실행되어 React가 거부한다("Cannot update a
+  // component while rendering a different component"). commit 이후로 미룬다.
+  // setOpen(false) 후 open=false가 되어 deps 재실행 시 가드로 막힘(무한 루프 X).
   // - success: booking 전이 + Payment CANCELED 모두 완료 → UI 즉시 동기
-  // - deferred: PG cancel 지연 → RefundJob PENDING 상태로 적재, booking은
-  //   아직 PAID. 사용자에겐 토스트성 안내, 페이지 재검증으로 RefundJob 상태 반영.
-  if ((state?.type === "success" || state?.type === "deferred") && open) {
-    setOpen(false);
-    router.refresh();
-  }
+  // - deferred: PG cancel 지연 → RefundJob PENDING 적재, booking은 아직 PAID.
+  useEffect(() => {
+    if ((state?.type === "success" || state?.type === "deferred") && open) {
+      setOpen(false);
+      router.refresh();
+    }
+  }, [state, open, router]);
 
   return (
     <>
