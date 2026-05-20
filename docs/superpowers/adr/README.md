@@ -53,12 +53,13 @@
 | 0003  | [Refund Saga 3-phase 격리 (외부 IO를 DB Tx 바깥)](./0003-refund-saga-3-phase.md) | Accepted | 2026-05-14   |
 | 0004  | [캐시 2-layer: 페이지 hint + unstable_cache + revalidateTag](./0004-cache-2-layer-strategy.md) | Accepted | 2026-05-20   |
 | 0005  | [Cron Worker 3중 멱등성: CAS Claim / Short-circuit / Silent transition](./0005-cron-worker-3-layer-idempotency.md) | Accepted | 2026-05-20   |
+| 0009  | [NO-REAL-MONEY 경계의 코드 강제 — env Zod superRefine](./0009-no-real-money-env-invariant.md) | Accepted | 2026-05-20   |
 
 ## 향후 후보 (작성 대기)
 
 - 0006: layout PPR-ready 구조 — Suspense + UserNav 분리
 - 0007: 폴링 20s vs SSE/SeatHold — flash sale 대응의 비용-효과 절충
 - 0008: `listDepartureSeats` 의도적 uncached — 폴링 채널 분리 원칙
-- 0009: NO-REAL-MONEY 경계의 코드 강제 — env.ts superRefine
 - 0010: `isCancelableByUser` = `ALLOWED_TRANSITIONS` 단일 source of truth
 - 0011: dev_mock 키 reconcile 스크립트 — backoff 무한 실패 잔재 처리
+- 0012(가칭): production 환경에서도 `test_` 키만 허용 — 운영 배포 시점 검토
