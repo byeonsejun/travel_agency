@@ -1,9 +1,18 @@
 import { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import { db } from "@/shared/lib/db";
 import { pickLowestPrice } from "./mapping";
 import type { ProductCard, ProductDetail } from "../model/types";
 
 export const PAGE_SIZE = 12;
+
+// 캐시 태그 컨벤션 — features 레이어가 revalidateTag로 무효화할 때 사용.
+//   products:featured       → 홈 추천 상품(공통)
+//   product:${id}           → PDP 단건 상세
+//   product:${id}:departures → 좌석/일정 (booking 생성·취소로 즉시 무효화)
+const TAG_PRODUCTS_FEATURED = "products:featured";
+export const tagProductDetail = (id: string) => `product:${id}`;
+export const tagProductDepartures = (id: string) => `product:${id}:departures`;
 
 // ─── 1. Distinct Destinations ─────────────────────────────────────────────────
 
@@ -28,69 +37,80 @@ export async function getDistinctDestinations(): Promise<
 
 // ─── 2. Featured Products ─────────────────────────────────────────────────────
 
-export async function getFeaturedProducts(
-  limit: number
-): Promise<ProductCard[]> {
-  const safeLimit = Math.min(limit, 50); // clamp to reasonable maximum
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+// unstable_cache: 5분 TTL + 추천상품 공통 태그. dynamic 페이지에서도 DB hit 압축.
+export const getFeaturedProducts = unstable_cache(
+  async (limit: number): Promise<ProductCard[]> => {
+    const safeLimit = Math.min(limit, 50); // clamp to reasonable maximum
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  const products = await db.product.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: { createdAt: "desc" },
-    take: safeLimit,
-    include: {
-      tags: { select: { tag: true } },
-      departures: {
-        where: {
-          departureDate: { gte: today },
-          status: { not: "CANCELED" },
+    const products = await db.product.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { createdAt: "desc" },
+      take: safeLimit,
+      include: {
+        tags: { select: { tag: true } },
+        departures: {
+          where: {
+            departureDate: { gte: today },
+            status: { not: "CANCELED" },
+          },
+          orderBy: { priceAdult: "asc" },
+          take: 1,
+          select: { priceAdult: true },
         },
-        orderBy: { priceAdult: "asc" },
-        take: 1,
-        select: { priceAdult: true },
       },
-    },
-  });
+    });
 
-  return products.map((product) => ({
-    id: product.id,
-    title: product.title,
-    destination: product.destination,
-    durationNights: product.durationNights,
-    durationDays: product.durationDays,
-    heroImageUrl: product.heroImageUrl,
-    basePriceAdult: product.basePriceAdult,
-    aiSummary: product.aiSummary,
-    tags: product.tags,
-    lowestPrice: pickLowestPrice(product.departures) ?? undefined,
-  }));
-}
+    return products.map((product) => ({
+      id: product.id,
+      title: product.title,
+      destination: product.destination,
+      durationNights: product.durationNights,
+      durationDays: product.durationDays,
+      heroImageUrl: product.heroImageUrl,
+      basePriceAdult: product.basePriceAdult,
+      aiSummary: product.aiSummary,
+      tags: product.tags,
+      lowestPrice: pickLowestPrice(product.departures) ?? undefined,
+    }));
+  },
+  ["featured-products"],
+  { revalidate: 300, tags: [TAG_PRODUCTS_FEATURED] }
+);
 
 // ─── 3. Product By ID ─────────────────────────────────────────────────────────
 
+// unstable_cache + per-id 태그: 1시간 TTL. 상품 정보 변경 시 admin 모듈이
+// revalidateTag(tagProductDetail(id))로 명시적 무효화. 좌석은 별도 태그로 격리.
 export async function getProductById(
   id: string
 ): Promise<ProductDetail | null> {
-  const product = await db.product.findUnique({
-    where: { id },
-    include: {
-      tags: true,
-      inclusions: true,
-      itineraryDays: {
+  return unstable_cache(
+    async (productId: string): Promise<ProductDetail | null> => {
+      const product = await db.product.findUnique({
+        where: { id: productId },
         include: {
-          stops: { orderBy: { order: "asc" } },
+          tags: true,
+          inclusions: true,
+          itineraryDays: {
+            include: {
+              stops: { orderBy: { order: "asc" } },
+            },
+            orderBy: { dayNumber: "asc" },
+          },
         },
-        orderBy: { dayNumber: "asc" },
-      },
+      });
+
+      if (!product || product.status === "DRAFT") {
+        return null;
+      }
+
+      return product;
     },
-  });
-
-  if (!product || product.status === "DRAFT") {
-    return null;
-  }
-
-  return product;
+    ["product-detail"],
+    { revalidate: 3600, tags: [tagProductDetail(id)] }
+  )(id);
 }
 
 // ─── 4. Product List ──────────────────────────────────────────────────────────

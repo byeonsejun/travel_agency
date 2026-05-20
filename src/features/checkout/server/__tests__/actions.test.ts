@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   transitionStatus: vi.fn(),
   computeTotalPrice: vi.fn(),
   buildOrderId: vi.fn(),
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
   db: {
     departure: { findUniqueOrThrow: vi.fn() },
     payment: { count: vi.fn() },
@@ -31,6 +33,11 @@ vi.mock("@/entities/payment", async (importOriginal) => {
 vi.mock("@/shared/lib/db", () => ({ db: mocks.db }));
 vi.mock("@/shared/lib/env", () => ({
   env: { NODE_ENV: "test", TOSS_CLIENT_KEY: "test_ck_xxx" },
+}));
+vi.mock("next/cache", () => ({
+  revalidatePath: mocks.revalidatePath,
+  revalidateTag: mocks.revalidateTag,
+  unstable_cache: <T extends (...a: never[]) => unknown>(fn: T) => fn,
 }));
 
 import { createCheckoutBooking } from "../actions";
@@ -70,10 +77,12 @@ const mockBooking = {
   infantCount: 0,
 };
 
+const PRODUCT_ID = "clproduct000000000000001";
 const mockDeparturePrices = {
   priceAdult: TOTAL_PRICE,
   priceChild: 0,
   priceInfant: 0,
+  productId: PRODUCT_ID,
 };
 
 describe("createCheckoutBooking", () => {
@@ -171,6 +180,14 @@ describe("createCheckoutBooking", () => {
       expect(result.customerName).toContain("KIM");
       expect(result.customerEmail).toBe("chulsoo@example.com");
     }
+  });
+
+  // ── 시나리오 6b: 좌석 차감으로 인한 PDP ISR 캐시 무효화 ─────────
+  it("success: revalidatePath('/products/${productId}') 호출 (PDP 캐시 무효화)", async () => {
+    await createCheckoutBooking(null, validInput);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(
+      `/products/${PRODUCT_ID}`
+    );
   });
 
   // ── 시나리오 7: createBooking 실패 → error 반환 ──────────────

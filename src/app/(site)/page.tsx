@@ -3,7 +3,11 @@ import { getFeaturedProducts } from "@/entities/product";
 import { SearchBox, SearchChips } from "@/features/search";
 import { ProductCardList } from "@/widgets/product-card-list/ui/ProductCardList";
 
-export const dynamic = "force-dynamic";
+// ISR: 추천 상품은 변동 빈도가 낮아 5분 캐시. 새 상품 등록/대표상품 변경 시
+// 별도 onDemand revalidatePath('/')가 필요해지면 admin 모듈에서 호출한다.
+// layout이 auth()로 dynamic이라 페이지 자체는 ƒ로 잡히지만, getFeaturedProducts
+// 가 unstable_cache로 래핑되어 동일 TTL 동안 DB hit이 압축된다.
+export const revalidate = 300;
 
 export default async function HomePage() {
   const featured = await getFeaturedProducts(6);

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import {
   createBooking,
@@ -7,6 +8,7 @@ import {
   computeTotalPrice,
 } from "@/entities/booking";
 import { buildOrderId } from "@/entities/payment";
+import { tagDeparturesByProduct } from "@/entities/departure";
 import { db } from "@/shared/lib/db";
 import { CheckoutFormSchema } from "../model/schemas";
 import type { CheckoutFormInput } from "../model/schemas";
@@ -54,10 +56,16 @@ export async function createCheckoutBooking(
   }
   const data = parsed.data;
 
-  // Step 3: 가격 서버 재계산 — 클라이언트 입력 금액 절대 미신뢰 (Domain R6)
+  // Step 3: 가격 서버 재계산 — 클라이언트 입력 금액 절대 미신뢰 (Domain R6).
+  //         productId는 booking 생성 후 PDP 캐시(ISR 3600s) 무효화에 사용.
   const departure = await db.departure.findUniqueOrThrow({
     where: { id: data.departureId },
-    select: { priceAdult: true, priceChild: true, priceInfant: true },
+    select: {
+      priceAdult: true,
+      priceChild: true,
+      priceInfant: true,
+      productId: true,
+    },
   });
   const expectedTotalPrice = computeTotalPrice({
     priceAdult: departure.priceAdult,
@@ -114,6 +122,15 @@ export async function createCheckoutBooking(
     data.travelers.find((t) => t.role === "BOOKER") ?? data.travelers[0]!;
   const customerName = `${booker.firstNameEn} ${booker.lastNameEn}`;
   const customerEmail = booker.email ?? null;
+
+  // Step 8: 좌석이 차감되었으므로 캐시를 즉시 무효화한다.
+  //   - revalidateTag(`product:${productId}:departures`)
+  //       → getDeparturesByProduct unstable_cache 엔트리 무효화 (PDP의 좌석 표)
+  //   - revalidatePath(`/products/${productId}`)
+  //       → 페이지 자체 ISR 캐시 무효화 (force-dynamic 해제 후 의미를 가짐)
+  //   타 사용자가 stale 좌석 수를 보고 매진 직전 예약을 시도하는 회귀를 차단.
+  revalidateTag(tagDeparturesByProduct(departure.productId));
+  revalidatePath(`/products/${departure.productId}`);
 
   return {
     type: "success",

@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   cancelBookingByUser: vi.fn(),
   refundBooking: vi.fn(),
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
   db: {
     booking: { findUnique: vi.fn() },
   },
@@ -26,7 +27,12 @@ vi.mock("@/entities/payment", async (importOriginal) => {
   };
 });
 vi.mock("@/shared/lib/db", () => ({ db: mocks.db }));
-vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
+vi.mock("next/cache", () => ({
+  revalidatePath: mocks.revalidatePath,
+  revalidateTag: mocks.revalidateTag,
+  // entities/departure가 unstable_cache를 사용하므로 테스트에선 wrap 없이 통과.
+  unstable_cache: <T extends (...a: never[]) => unknown>(fn: T) => fn,
+}));
 // @/entities/payment 배럴이 refund.ts → tossClient → env로 연쇄 import 되므로
 // 테스트 컨텍스트에서 env 검증을 우회. PaymentError class는 importOriginal에서 그대로.
 vi.mock("@/shared/lib/env", () => ({
@@ -45,6 +51,7 @@ import { PaymentError } from "@/entities/payment";
 const USER_ID = "cluser0000000000000000001";
 const BOOKING_ID = "clbooking000000000000001";
 const PAYMENT_ID = "clpayment00000000000001";
+const PRODUCT_ID = "clproduct00000000000001";
 
 // ── 헬퍼: 소유권 가드 결과 모킹 ─────────────────────────────────────
 function mockOwned(opts: { paid: boolean; ownedByUser?: boolean }) {
@@ -54,6 +61,7 @@ function mockOwned(opts: { paid: boolean; ownedByUser?: boolean }) {
   }
   mocks.db.booking.findUnique.mockResolvedValueOnce({
     id: BOOKING_ID,
+    departure: { productId: PRODUCT_ID },
     payments: opts.paid ? [{ id: PAYMENT_ID }] : [],
   });
 }
@@ -129,6 +137,8 @@ describe("cancelBookingAction", () => {
     expect(mocks.refundBooking).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/mypage");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(`/bookings/${BOOKING_ID}`);
+    // 좌석이 복원되므로 PDP 캐시도 동시에 무효화되어야 한다
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/products/${PRODUCT_ID}`);
   });
 
   // ── Dispatch: PAID 있음 → refundBooking ──────────────────────────
@@ -148,6 +158,7 @@ describe("cancelBookingAction", () => {
     expect(mocks.cancelBookingByUser).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/mypage");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(`/bookings/${BOOKING_ID}`);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/products/${PRODUCT_ID}`);
   });
 
   // ── refund 분기의 에러 매핑 ──────────────────────────────────────

@@ -11,8 +11,8 @@ import { Pagination } from "@/widgets/product-card-list/ui/Pagination";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
-
+// searchParams 사용 페이지 — Next 15가 자동으로 dynamic으로 분류. force-dynamic을
+// 명시할 필요 없음(향후 sub-fetch 캐시 옵트인을 막지 않도록 제거).
 // Next.js 15: searchParams is a Promise
 type SearchParamsProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

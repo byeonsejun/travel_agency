@@ -4,8 +4,8 @@ import type { SearchResultCard } from "@/entities/product";
 import { searchProducts, SearchBox, SearchChips } from "@/features/search";
 import { EmptyState } from "@/shared/ui/EmptyState";
 
-export const dynamic = "force-dynamic";
-
+// searchParams로 분기되므로 Next 15가 자동으로 dynamic으로 분류. searchProducts
+// 자체는 Upstash Redis 캐시(M-CACHE)로 동일 q에 대한 반복 비용을 흡수한다.
 type SearchPageProps = {
   searchParams: Promise<{ q?: string }>;
 };

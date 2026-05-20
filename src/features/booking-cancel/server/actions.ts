@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import {
   cancelBookingByUser,
@@ -8,6 +8,7 @@ import {
   InvalidTransitionError,
 } from "@/entities/booking";
 import { refundBooking, PaymentError } from "@/entities/payment";
+import { tagDeparturesByProduct } from "@/entities/departure";
 import { db } from "@/shared/lib/db";
 import { CancelBookingSchema } from "../model/schemas";
 import type { CancelBookingInput } from "../model/schemas";
@@ -57,13 +58,15 @@ export async function cancelBookingAction(
   }
   const { bookingId, reason } = parsed.data;
 
-  // 3. 소유권 사전 가드 + PAID payment 동시 조회 (단일 round-trip).
+  // 3. 소유권 사전 가드 + PAID payment + productId 동시 조회 (단일 round-trip).
   //    refundBooking은 actor 문자열만 받으므로 ownership을 별도로 강제해야 한다.
   //    cancelBookingByUser 역시 내부에서 ownership을 재검증한다(defense in depth).
+  //    productId는 좌석 복원 후 해당 PDP ISR 캐시를 무효화하는 데 사용.
   const owned = await db.booking.findUnique({
     where: { id: bookingId, userId },
     select: {
       id: true,
+      departure: { select: { productId: true } },
       payments: {
         where: { status: "PAID" },
         select: { id: true },
@@ -75,6 +78,7 @@ export async function cancelBookingAction(
     return { type: "error", message: "본인의 예약만 취소할 수 있습니다" };
   }
   const hasPaidPayment = owned.payments.length > 0;
+  const productId = owned.departure.productId;
 
   // 4. 도메인 위임 — dispatch
   try {
@@ -132,9 +136,15 @@ export async function cancelBookingAction(
     };
   }
 
-  // 5. 캐시 무효화 — 마이페이지 리스트 + 상세 페이지 둘 다 즉시 재검증.
+  // 5. 캐시 무효화 — 좌석이 복원되었으므로 데이터 캐시 + 페이지 캐시 모두 invalidate.
+  //   - revalidateTag(product:[id]:departures): unstable_cache로 메모이즈된
+  //     getDeparturesByProduct 결과를 직접 무효화 → 다음 PDP 요청은 신선한 좌석 수.
+  //   - revalidatePath: 페이지 단위 ISR 캐시 무효화(현재는 layout dynamic으로 효과 제한적이나
+  //     향후 PPR 도입 시 즉시 효과).
+  revalidateTag(tagDeparturesByProduct(productId));
   revalidatePath("/mypage");
   revalidatePath(`/bookings/${bookingId}`);
+  revalidatePath(`/products/${productId}`);
 
   return { type: "success", bookingId };
 }

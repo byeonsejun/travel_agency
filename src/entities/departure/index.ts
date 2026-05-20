@@ -15,7 +15,11 @@ export {
 export { departureSchema } from "./model/schema";
 export type { DepartureFormData } from "./model/schema";
 
-export { getDeparturesByProduct, getDepartureById } from "./api/queries";
+export {
+  getDeparturesByProduct,
+  getDepartureById,
+  tagDeparturesByProduct,
+} from "./api/queries";
 export { computeRemainingSeats } from "./api/remainingSeats";
 
 export { DepartureList } from "./ui/DepartureList";
