@@ -44,12 +44,17 @@ export type BookingDetail = Booking & {
   departure: { departureDate: Date; returnDate: Date; product: { title: string } };
 };
 
-// 마이페이지 목록: 출발 정보(제목·출발일) 포함
+// 마이페이지 목록: 출발 정보(제목·출발일·귀국일·productId) 포함.
+// productId는 상세 페이지로 갈 필요 없이 카드에서 PDP로 되돌아가는 경로용.
 export type BookingListItem = Pick<
   Booking,
   "id" | "status" | "totalPrice" | "adultCount" | "childCount" | "infantCount" | "createdAt" | "canceledAt"
 > & {
-  departure: { departureDate: Date; product: { title: string } };
+  departure: {
+    departureDate: Date;
+    returnDate: Date;
+    product: { id: string; title: string };
+  };
 };
 
 // 취소 가능한 상태 타입

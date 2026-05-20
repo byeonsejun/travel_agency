@@ -43,7 +43,8 @@ export async function listMyBookings(
       departure: {
         select: {
           departureDate: true,
-          product: { select: { title: true } },
+          returnDate: true,
+          product: { select: { id: true, title: true } },
         },
       },
     },

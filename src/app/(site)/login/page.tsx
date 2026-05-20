@@ -1,6 +1,7 @@
 import { signIn } from "@/features/auth/server/auth";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
+import { env } from "@/shared/lib/env";
 
 interface Props {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
@@ -13,7 +14,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export default async function LoginPage({ searchParams }: Props) {
   const { callbackUrl = "/", error } = await searchParams;
-  const hasKakao = !!(process.env.AUTH_KAKAO_ID && process.env.AUTH_KAKAO_SECRET);
+  const hasKakao = !!(env.AUTH_KAKAO_ID && env.AUTH_KAKAO_SECRET);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
