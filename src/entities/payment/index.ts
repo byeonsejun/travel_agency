@@ -33,6 +33,8 @@ export type { ConfirmResult } from "./api/confirm";
 export { handleTossWebhook } from "./api/webhook";
 
 export { refundBooking } from "./api/refund";
+export { listDueRefundJobs, retryRefundJob } from "./api/refundRetry";
+export type { RetryRefundResult } from "./api/refundRetry";
 
 export { buildOrderId } from "./api/orderId";
 

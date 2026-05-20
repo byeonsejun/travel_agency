@@ -89,6 +89,8 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
         paymentId: paidPayment.id,
         amount: paidPayment.amount,
         reason: reason ?? null,
+        // actor를 보존해서 worker가 booking 전이 시 user/agency를 정확히 분기.
+        actor,
         status: "IN_PROGRESS",
       },
       select: { id: true, attempts: true },

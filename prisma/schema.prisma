@@ -412,6 +412,10 @@ model RefundJob {
   paymentId   String
   amount      Int                               // 원 단위 정수 (전액 환불)
   reason      String?
+  // 환불을 트리거한 주체. worker가 재시도 시 booking transition(user vs agency)을
+  // 정확히 분기하기 위해 필요. ex) "user:cluser...", "admin:...", "system:webhook"
+  // nullable: 기존 row 호환. 신규 enqueue부터 채움.
+  actor       String?
   status      RefundJobStatus @default(PENDING)
   attempts    Int             @default(0)
   lastError   String?

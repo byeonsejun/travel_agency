@@ -56,13 +56,25 @@ const envSchema = z
       .enum(["debug", "info", "warn", "error"])
       .default("info"),
     APP_VERSION: z.string().optional(),
+    // Cron worker 인증용 비밀키. /api/cron/* 라우트가 Authorization: Bearer
+    // 헤더로 이 값을 검증한다. production에선 superRefine으로 required.
+    // dev/test에선 optional이지만 설정되어 있으면 동일 검증을 거친다.
+    CRON_SECRET: z.string().min(32).optional(),
   })
   .superRefine((env, ctx) => {
-    if (env.NODE_ENV === "production") {
+    // 빌드 phase(NEXT_PHASE=phase-production-build)는 실 runtime이 아니다.
+    // 운영자는 CI에서 빌드, Vercel/배포 환경에 시크릿 주입하는 패턴이 일반적이므로
+    // 빌드 단계엔 required env가 부재해도 통과시키고, 실제 production runtime에서만
+    // 강제한다. NO-REAL-MONEY 강제(live_ 키 차단)는 빌드/runtime 모두 적용.
+    const isBuildPhase =
+      process.env.NEXT_PHASE === "phase-production-build";
+
+    if (env.NODE_ENV === "production" && !isBuildPhase) {
       for (const key of [
         "TOSS_CLIENT_KEY",
         "TOSS_SECRET_KEY",
         "TOSS_WEBHOOK_SECRET",
+        "CRON_SECRET",
       ] as const) {
         if (!env[key]) {
           ctx.addIssue({
