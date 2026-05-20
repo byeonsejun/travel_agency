@@ -11,10 +11,15 @@ export default auth((req) => {
   const isAuthenticated = !!req.auth;
   const role = req.auth?.user?.role;
 
+  // 상대 경로로 callbackUrl을 전달 — login 페이지의 startsWith("/") 검증과
+  // 정합화. href(절대 URL)를 넘기면 open-redirect 가드에서 거부되어 사용자가
+  // 홈으로 떨어지는 데이터 연속성 누수가 발생한다 (Phase 3 골든패스 회귀 방지).
+  const callbackTarget = `${pathname}${req.nextUrl.search}`;
+
   if (pathname.startsWith("/admin")) {
     if (!isAuthenticated || role !== "ADMIN") {
       const url = new URL("/login", req.url);
-      url.searchParams.set("callbackUrl", req.nextUrl.href);
+      url.searchParams.set("callbackUrl", callbackTarget);
       const res = NextResponse.redirect(url);
       res.headers.set("x-trace-id", traceId);
       return res;
@@ -26,7 +31,7 @@ export default auth((req) => {
   if (authRequired.some((p) => pathname.startsWith(p))) {
     if (!isAuthenticated) {
       const url = new URL("/login", req.url);
-      url.searchParams.set("callbackUrl", req.nextUrl.href);
+      url.searchParams.set("callbackUrl", callbackTarget);
       const res = NextResponse.redirect(url);
       res.headers.set("x-trace-id", traceId);
       return res;
