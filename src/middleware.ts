@@ -16,6 +16,13 @@ export default auth((req) => {
   // 홈으로 떨어지는 데이터 연속성 누수가 발생한다 (Phase 3 골든패스 회귀 방지).
   const callbackTarget = `${pathname}${req.nextUrl.search}`;
 
+  // 이미 인증된 사용자가 /login 접근 시 홈으로 리다이렉트
+  if (pathname.startsWith("/login") && isAuthenticated) {
+    const res = NextResponse.redirect(new URL("/", req.url));
+    res.headers.set("x-trace-id", traceId);
+    return res;
+  }
+
   if (pathname.startsWith("/admin")) {
     if (!isAuthenticated || role !== "ADMIN") {
       const url = new URL("/login", req.url);
@@ -49,6 +56,7 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
+    "/login/:path*",           // 인증된 사용자 /login 접근 차단
     "/admin/:path*",
     "/mypage/:path*",
     "/booking/:path*",
