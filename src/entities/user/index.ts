@@ -1,9 +1,12 @@
 export type {
   UserWithProfile,
   SafeUser,
+  SafePassportProfile,
   UserRole,
   Gender,
 } from "./model/types";
+
+export { maskPassportNo } from "./model/mask";
 
 export {
   USER_ROLE_LABEL,

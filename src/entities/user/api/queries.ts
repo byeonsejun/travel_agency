@@ -1,7 +1,7 @@
 import { auth } from "@/features/auth/server/auth";
 import { db } from "@/shared/lib/db";
-import type { SafeUser } from "../model/types";
-import type { PassportProfile } from "@prisma/client";
+import type { SafeUser, SafePassportProfile } from "../model/types";
+import { maskPassportNo } from "../model/mask";
 
 const SAFE_USER_SELECT = {
   id: true,
@@ -30,6 +30,8 @@ export async function getUserById(id: string): Promise<SafeUser | null> {
 
 export async function getPassportProfile(
   userId: string
-): Promise<PassportProfile | null> {
-  return db.passportProfile.findUnique({ where: { userId } });
+): Promise<SafePassportProfile | null> {
+  const row = await db.passportProfile.findUnique({ where: { userId } });
+  if (!row) return null;
+  return { ...row, passportNo: maskPassportNo(row.passportNo) };
 }

@@ -3,10 +3,10 @@
 import { useActionState } from "react";
 import { updatePassportProfile } from "../server/actions";
 import type { PassportActionState } from "../server/actions";
-import type { PassportProfile } from "@prisma/client";
+import type { SafePassportProfile } from "@/entities/user";
 
 type Props = {
-  initial: PassportProfile | null;
+  initial: SafePassportProfile | null;
 };
 
 function Field({
@@ -54,12 +54,6 @@ function toDateInput(d: Date | null | undefined): string {
   return new Date(d).toISOString().slice(0, 10);
 }
 
-// passportNo 마스킹: 앞 2자리 + *** + 마지막 2자리
-function maskPassportNo(no: string): string {
-  if (no.length <= 4) return no;
-  return `${no.slice(0, 2)}${"*".repeat(no.length - 4)}${no.slice(-2)}`;
-}
-
 export function PassportProfileForm({ initial }: Props) {
   const [state, dispatch, isPending] = useActionState<PassportActionState, FormData>(
     updatePassportProfile,
@@ -85,7 +79,7 @@ export function PassportProfileForm({ initial }: Props) {
         <p className="rounded-lg bg-gray-50 px-4 py-2.5 text-xs text-gray-500">
           현재 저장된 여권번호:{" "}
           <span className="font-mono font-medium text-gray-700">
-            {maskPassportNo(initial.passportNo)}
+            {initial.passportNo}
           </span>
         </p>
       )}
@@ -160,7 +154,6 @@ export function PassportProfileForm({ initial }: Props) {
       <Field
         label="여권 번호"
         name="passportNo"
-        defaultValue={initial?.passportNo}
         placeholder="M12345678"
         required
         hint="영문 1~2자리 + 숫자 7~9자리"
