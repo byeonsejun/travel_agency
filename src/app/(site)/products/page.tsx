@@ -10,6 +10,8 @@ import { ProductCardList } from "@/widgets/product-card-list/ui/ProductCardList"
 import { Pagination } from "@/widgets/product-card-list/ui/Pagination";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import Link from "next/link";
+import { auth } from "@/features/auth/server/auth";
+import { getMyWishlistProductIds } from "@/entities/wishlist";
 
 // searchParams 사용 페이지 — Next 15가 자동으로 dynamic으로 분류. force-dynamic을
 // 명시할 필요 없음(향후 sub-fetch 캐시 옵트인을 막지 않도록 제거).
@@ -21,8 +23,9 @@ type SearchParamsProps = {
 export default async function ProductsPage({ searchParams }: SearchParamsProps) {
   const rawParams = await searchParams;
   const params = parseProductListParams(rawParams);
+  const session = await auth();
 
-  const [{ items, total }, destinations] = await Promise.all([
+  const [{ items, total }, destinations, wishlistIds] = await Promise.all([
     getProductList({
       filter: params.destination ? { destinationCode: params.destination } : undefined,
       sort: params.sort,
@@ -30,12 +33,21 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
       pageSize: PAGE_SIZE,
     }),
     getDistinctDestinations(),
+    session?.user?.id ? getMyWishlistProductIds(session.user.id) : Promise.resolve(undefined),
   ]);
 
   // Pagination용 searchParams (page 제외)
   const paginationSearchParams: Record<string, string> = {};
   if (params.destination) paginationSearchParams.destination = params.destination;
   if (params.sort) paginationSearchParams.sort = params.sort;
+
+  // 하트 클릭 후 같은 페이지로 돌아오기 위한 returnTo (현재 쿼리 보존).
+  const wishlistReturnTo = (() => {
+    const qs = new URLSearchParams(paginationSearchParams);
+    if (params.page > 1) qs.set("page", String(params.page));
+    const tail = qs.toString();
+    return tail ? `/products?${tail}` : "/products";
+  })();
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -70,7 +82,11 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
           />
         ) : (
           <>
-            <ProductCardList items={items} />
+            <ProductCardList
+              items={items}
+              wishlistIds={wishlistIds}
+              wishlistReturnTo={wishlistReturnTo}
+            />
             <div className="mt-8">
               <Pagination
                 total={total}

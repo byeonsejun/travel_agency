@@ -2,17 +2,24 @@ import { ProductImage, InclusionList, ItineraryTimeline } from "@/entities/produ
 import type { ProductDetail } from "@/entities/product/model/types";
 import type { DepartureSummary } from "@/entities/departure/model/types";
 import { LiveDepartureList } from "@/features/live-seat";
+import { WishlistHeartButton } from "@/features/wishlist";
 
 type ProductDetailProps = {
   product: ProductDetail;
   departures: DepartureSummary[];
+  // 로그인 시 사전 계산된 inWishlist. 비로그인이면 undefined → 하트 미노출하거나
+  // 기본 false 로 노출(클릭 시 /login 우회 흐름)을 선택. 여기선 명시적 props 만
+  // 전달된 경우에만 렌더.
+  inWishlist?: boolean;
 };
 
 export function ProductDetail({
   product,
   departures,
+  inWishlist,
 }: ProductDetailProps) {
   const isClosed = product.status === "CLOSED";
+  const showHeart = inWishlist !== undefined;
 
   return (
     <div className="space-y-8">
@@ -25,6 +32,17 @@ export function ProductDetail({
             className="h-full w-full"
           />
         </div>
+
+        {showHeart && (
+          <div className="absolute right-4 top-4 z-10">
+            <WishlistHeartButton
+              productId={product.id}
+              inWishlist={inWishlist}
+              returnTo={`/products/${product.id}`}
+              size="md"
+            />
+          </div>
+        )}
 
         {/* CLOSED 오버레이 */}
         {isClosed && (

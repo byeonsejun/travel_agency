@@ -2,8 +2,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/features/auth/server/auth";
 import { getCurrentUser, getPassportProfile } from "@/entities/user";
 import { listMyBookings } from "@/entities/booking";
+import { listMyWishlist } from "@/entities/wishlist";
 import { BookingHistoryList, BookingPaginator } from "@/widgets/booking-list";
 import { PassportProfileForm } from "@/features/passport-profile";
+import { WishlistGrid } from "@/widgets/wishlist-list";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +24,11 @@ export default async function MyPage({ searchParams }: PageProps) {
   const { page: rawPage } = await searchParams;
   const page = Math.max(1, parseInt(rawPage ?? "1", 10) || 1);
 
-  const [user, passport, { items: bookings, total }] = await Promise.all([
+  const [user, passport, { items: bookings, total }, wishlistItems] = await Promise.all([
     getCurrentUser(),
     getPassportProfile(session.user.id),
     listMyBookings(session.user.id, { page, pageSize: PAGE_SIZE }),
+    listMyWishlist(session.user.id),
   ]);
 
   if (!user) {
@@ -88,6 +91,22 @@ export default async function MyPage({ searchParams }: PageProps) {
           )}
         </div>
         <PassportProfileForm initial={passport} />
+      </section>
+
+      {/* 찜한 상품 섹션 (PRD §4.2 위시리스트) */}
+      <section aria-labelledby="wishlist-heading" className="mt-10">
+        <div className="mb-4 flex items-baseline justify-between">
+          <h2
+            id="wishlist-heading"
+            className="text-lg font-semibold text-gray-900"
+          >
+            찜한 상품
+          </h2>
+          <span className="text-xs text-gray-400">
+            총 {wishlistItems.length}건 · 최신순
+          </span>
+        </div>
+        <WishlistGrid items={wishlistItems} />
       </section>
 
       {/* 예약 내역 섹션 */}
