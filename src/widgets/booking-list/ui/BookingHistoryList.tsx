@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   BookingStatusBadge,
+  BookingProgressBar,
   type BookingListItem,
 } from "@/entities/booking";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -68,7 +69,10 @@ export function BookingHistoryList({ bookings }: Props) {
                 <BookingStatusBadge status={booking.status} />
               </div>
 
-              <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-4">
+              {/* 예약 진행 상태 바 (PRD §4.1D) */}
+              <BookingProgressBar status={booking.status} className="mt-5" />
+
+              <div className="mt-5 flex items-end justify-between border-t border-gray-100 pt-4">
                 <span className="text-xs text-gray-400">
                   {booking.createdAt.toLocaleDateString("ko-KR")} 예약
                 </span>

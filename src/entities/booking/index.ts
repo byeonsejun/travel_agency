@@ -62,3 +62,11 @@ export { computeTotalPrice } from "./api/pricing";
 export { BookingStatusBadge } from "./ui/BookingStatusBadge";
 export { BookingSummaryCard } from "./ui/BookingSummaryCard";
 export { BookingEventTimeline } from "./ui/BookingEventTimeline";
+export { BookingProgressBar } from "./ui/BookingProgressBar";
+
+export { getBookingProgress } from "./model/progress";
+export type {
+  BookingProgress,
+  BookingProgressStepState,
+  BookingProgressStepView,
+} from "./model/progress";

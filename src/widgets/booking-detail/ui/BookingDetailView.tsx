@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BookingSummaryCard,
   BookingEventTimeline,
+  BookingProgressBar,
   isCancelableByUser,
 } from "@/entities/booking";
 import type { BookingDetail } from "@/entities/booking";
@@ -47,6 +48,9 @@ export function BookingDetailView({ booking, activeRefundJob }: Props) {
 
   return (
     <div className="space-y-8">
+      {/* 예약 진행 상태 바 (PRD §4.1D) — 상세 최상단 배치 */}
+      <BookingProgressBar status={booking.status} />
+
       {/* 예약 요약 카드 — 상태 배지 포함 */}
       <BookingSummaryCard booking={booking} departure={booking.departure} />
 
