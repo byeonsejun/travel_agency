@@ -27,6 +27,7 @@ export type { ProductListParams } from "./api/parseListParams";
 export {
   getProductList,
   getProductById,
+  getProductsByIds,
   getFeaturedProducts,
   getDistinctDestinations,
   tagProductDetail,

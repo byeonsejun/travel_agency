@@ -11,9 +11,14 @@ type ProductCardProps = {
   // vitest 의 router.test 등 무관 테스트의 module resolution 을 깬다.
   // 의존성 역전으로 부모(widgets/페이지)가 인스턴스를 주입.
   heart?: ReactNode;
+  // 가격 라인 옆 액션 슬롯 (보통 CompareToggleButton). 같은 이유로 슬롯만 노출.
+  compareButton?: ReactNode;
+  // 카드 Link 에 보존할 쿼리스트링 (예: "compareIds=a,b"). 다음 페이지로
+  // 이동해도 URL state(비교함)가 따라가도록 페이지가 합성해 넘김.
+  linkQueryString?: string;
 };
 
-export function ProductCard({ product, heart }: ProductCardProps) {
+export function ProductCard({ product, heart, compareButton, linkQueryString }: ProductCardProps) {
   const { id, title, destination, durationNights, durationDays, heroImageUrl, basePriceAdult, tags, lowestPrice } = product;
 
   // 가격 정보 결정
@@ -27,7 +32,10 @@ export function ProductCard({ product, heart }: ProductCardProps) {
     // <a> 내부에 <button>/<form> 중첩은 HTML 위반이므로 카드 컨테이너는 article,
     // 네비게이션은 콘텐츠 영역의 Link로 한정. Heart 는 형제 absolute.
     <article className="group relative overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
-      <Link href={`/products/${id}`} className="block">
+      <Link
+        href={linkQueryString ? `/products/${id}?${linkQueryString}` : `/products/${id}`}
+        className="block"
+      >
         {/* 이미지 영역 */}
         <div className="relative h-48 w-full bg-gray-100">
           <ProductImage
@@ -79,6 +87,11 @@ export function ProductCard({ product, heart }: ProductCardProps) {
       </Link>
 
       {heart && <div className="absolute right-2 top-2 z-10">{heart}</div>}
+
+      {/* 가격 영역 우측에 absolute 배치 — Link 외부라 클릭 이벤트 분리 */}
+      {compareButton && (
+        <div className="absolute bottom-3 right-3 z-10">{compareButton}</div>
+      )}
     </article>
   );
 }

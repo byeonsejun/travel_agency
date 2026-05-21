@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import {
   getProductList,
+  getProductsByIds,
   getDistinctDestinations,
   parseProductListParams,
   PAGE_SIZE,
@@ -12,6 +13,10 @@ import { EmptyState } from "@/shared/ui/EmptyState";
 import Link from "next/link";
 import { auth } from "@/features/auth/server/auth";
 import { getMyWishlistProductIds } from "@/entities/wishlist";
+import {
+  parseCompareIds,
+  FloatingCompareCart,
+} from "@/features/product-compare";
 
 // searchParams 사용 페이지 — Next 15가 자동으로 dynamic으로 분류. force-dynamic을
 // 명시할 필요 없음(향후 sub-fetch 캐시 옵트인을 막지 않도록 제거).
@@ -25,7 +30,9 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
   const params = parseProductListParams(rawParams);
   const session = await auth();
 
-  const [{ items, total }, destinations, wishlistIds] = await Promise.all([
+  const compareIds = parseCompareIds(rawParams.compareIds);
+
+  const [{ items, total }, destinations, wishlistIds, compareProducts] = await Promise.all([
     getProductList({
       filter: params.destination ? { destinationCode: params.destination } : undefined,
       sort: params.sort,
@@ -34,6 +41,7 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
     }),
     getDistinctDestinations(),
     session?.user?.id ? getMyWishlistProductIds(session.user.id) : Promise.resolve(undefined),
+    getProductsByIds(compareIds),
   ]);
 
   // Pagination용 searchParams (page 제외)
@@ -86,6 +94,7 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
               items={items}
               wishlistIds={wishlistIds}
               wishlistReturnTo={wishlistReturnTo}
+              currentCompareIds={compareIds}
             />
             <div className="mt-8">
               <Pagination
@@ -98,6 +107,14 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
           </>
         )}
       </div>
+
+      <FloatingCompareCart
+        products={compareProducts.map((p) => ({
+          id: p.id,
+          title: p.title,
+          heroImageUrl: p.heroImageUrl,
+        }))}
+      />
     </div>
   );
 }

@@ -11,12 +11,16 @@ type ProductDetailProps = {
   // 기본 false 로 노출(클릭 시 /login 우회 흐름)을 선택. 여기선 명시적 props 만
   // 전달된 경우에만 렌더.
   inWishlist?: boolean;
+  // 비교 모드 토글 슬롯 — features/product-compare 를 직접 import 하지 않도록
+  // 의존성 역전 유지 (ProductCard 와 동일 패턴).
+  compareButton?: import("react").ReactNode;
 };
 
 export function ProductDetail({
   product,
   departures,
   inWishlist,
+  compareButton,
 }: ProductDetailProps) {
   const isClosed = product.status === "CLOSED";
   const showHeart = inWishlist !== undefined;
@@ -56,11 +60,16 @@ export function ProductDetail({
 
       {/* 2. 헤더 정보 */}
       <div className="space-y-2 px-4 md:px-0">
-        <p className="text-sm text-gray-600">{product.destination}</p>
-        <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
-        <p className="text-gray-700">
-          {product.durationNights}박 {product.durationDays}일
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-gray-600">{product.destination}</p>
+            <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
+            <p className="text-gray-700">
+              {product.durationNights}박 {product.durationDays}일
+            </p>
+          </div>
+          {compareButton && <div className="shrink-0">{compareButton}</div>}
+        </div>
 
         {/* 태그 배지들 */}
         {product.tags.length > 0 && (

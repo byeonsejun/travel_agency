@@ -229,3 +229,28 @@ export async function getProductList(
 
   return { items: ordered.map(toProductCard), total };
 }
+
+// ─── 5. Compare — getProductsByIds ────────────────────────────────────────────
+
+// 비교 페이지 (/compare) 용. ids 배열로 PUBLISHED 상품을 한 번에 조회 +
+// 입력 순서 보존. status=PUBLISHED 가드로 DRAFT/CLOSED 비교 차단.
+// 비교 표는 가격·기간·태그·포함/불포함이 모두 필요해 inclusions 까지 join.
+export async function getProductsByIds(
+  ids: string[]
+): Promise<ProductDetail[]> {
+  if (ids.length === 0) return [];
+
+  const products = await db.product.findMany({
+    where: { id: { in: ids }, status: "PUBLISHED" },
+    include: {
+      tags: true,
+      inclusions: true,
+      itineraryDays: { include: { stops: true } },
+    },
+  });
+
+  // 입력 순서 보존 — find/filter 조합으로 자연스럽게 정렬.
+  return ids
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => p != null);
+}

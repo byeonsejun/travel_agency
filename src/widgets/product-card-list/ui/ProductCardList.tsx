@@ -1,6 +1,7 @@
 import { ProductCard } from "@/entities/product";
 import type { ProductCardType } from "@/entities/product";
 import { WishlistHeartButton } from "@/features/wishlist";
+import { CompareToggleButton, serializeCompareIds } from "@/features/product-compare";
 
 type ProductCardListProps = {
   items: ProductCardType[];
@@ -8,9 +9,23 @@ type ProductCardListProps = {
   // 비로그인이면 undefined → 하트 미노출.
   wishlistIds?: Set<string>;
   wishlistReturnTo?: string;
+  // 비교 모드: URL state 보존 + 토글 버튼 노출.
+  currentCompareIds?: string[];
+  showCompareButton?: boolean;
 };
 
-export function ProductCardList({ items, wishlistIds, wishlistReturnTo }: ProductCardListProps) {
+export function ProductCardList({
+  items,
+  wishlistIds,
+  wishlistReturnTo,
+  currentCompareIds,
+  showCompareButton = true,
+}: ProductCardListProps) {
+  const compareQs =
+    currentCompareIds && currentCompareIds.length > 0
+      ? `compareIds=${serializeCompareIds(currentCompareIds)}`
+      : undefined;
+
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => {
@@ -24,7 +39,18 @@ export function ProductCardList({ items, wishlistIds, wishlistReturnTo }: Produc
               size="sm"
             />
           ) : undefined;
-        return <ProductCard key={item.id} product={item} heart={heart} />;
+        const compareButton = showCompareButton ? (
+          <CompareToggleButton productId={item.id} size="sm" />
+        ) : undefined;
+        return (
+          <ProductCard
+            key={item.id}
+            product={item}
+            heart={heart}
+            compareButton={compareButton}
+            linkQueryString={compareQs}
+          />
+        );
       })}
     </div>
   );
