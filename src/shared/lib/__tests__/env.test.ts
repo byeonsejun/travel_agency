@@ -152,3 +152,99 @@ describe("envSchema — NO-REAL-MONEY invariant (ADR-0009)", () => {
     });
   });
 });
+
+describe("envSchema — OAuth provider 페어/포맷 가드", () => {
+  describe("Kakao 페어 검증", () => {
+    it("AUTH_KAKAO_ID만 있고 SECRET이 없으면 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        AUTH_KAKAO_ID: "kakao_id_xyz",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((i) => /KAKAO/.test(i.message)),
+        ).toBe(true);
+      }
+    });
+
+    it("AUTH_KAKAO_SECRET만 있고 ID가 없으면 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        AUTH_KAKAO_SECRET: "kakao_secret_xyz",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((i) => /KAKAO/.test(i.message)),
+        ).toBe(true);
+      }
+    });
+
+    it("둘 다 설정되면 통과", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        AUTH_KAKAO_ID: "kakao_id_xyz",
+        AUTH_KAKAO_SECRET: "kakao_secret_xyz",
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("Google 페어 + 포맷 검증", () => {
+    it("AUTH_GOOGLE_ID만 있고 SECRET이 없으면 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        AUTH_GOOGLE_ID: "abc.apps.googleusercontent.com",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((i) => /GOOGLE/.test(i.message)),
+        ).toBe(true);
+      }
+    });
+
+    it("AUTH_GOOGLE_SECRET만 있고 ID가 없으면 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        AUTH_GOOGLE_SECRET: "google_secret_xyz",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("AUTH_GOOGLE_ID 포맷이 .apps.googleusercontent.com 으로 끝나지 않으면 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        AUTH_GOOGLE_ID: "not-a-google-id",
+        AUTH_GOOGLE_SECRET: "google_secret_xyz",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some(
+            (i) =>
+              i.path[0] === "AUTH_GOOGLE_ID" &&
+              /googleusercontent\.com/.test(i.message),
+          ),
+        ).toBe(true);
+      }
+    });
+
+    it("페어 모두 설정 + Google 표준 포맷 → 통과", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        AUTH_GOOGLE_ID: "123456789.apps.googleusercontent.com",
+        AUTH_GOOGLE_SECRET: "GOCSPX-google_secret_xyz",
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("default 상태 — 둘 다 미설정", () => {
+    it("Kakao/Google 모두 미설정이면 통과 (provider 비활성 경로)", () => {
+      const result = envSchema.safeParse(validBase);
+      expect(result.success).toBe(true);
+    });
+  });
+});

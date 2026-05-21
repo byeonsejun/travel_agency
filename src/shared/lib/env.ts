@@ -9,6 +9,9 @@ export const envSchema = z
     AUTH_SECRET: z.string().min(32),
     AUTH_KAKAO_ID: z.string().optional(),
     AUTH_KAKAO_SECRET: z.string().optional(),
+    // Google OAuth (PRD §4.2 — 소셜 로그인). 페어 검증 + 포맷 가드는 superRefine.
+    AUTH_GOOGLE_ID: z.string().optional(),
+    AUTH_GOOGLE_SECRET: z.string().optional(),
     RESEND_API_KEY: z.string().optional(),
     RESEND_FROM_EMAIL: z.string().optional(),
     ANTHROPIC_API_KEY: z.string().optional(),
@@ -107,6 +110,36 @@ export const envSchema = z
             `test_ 샌드박스 키만 허용.`,
         });
       }
+    }
+
+    // (3) OAuth provider 페어/포맷 검증 (PRD §4.2 — Social Login).
+    //     ID/SECRET 중 한쪽만 설정되면 NextAuth 부팅 시 의미 없는(half-configured)
+    //     provider가 노출되거나 콜백 시 cryptic 에러를 던지므로 부팅에서 차단.
+    //     Google ID는 표준 포맷(*.apps.googleusercontent.com)을 강제해 placeholder/
+    //     잘못된 키 혼입을 즉시 잡는다.
+    const oauthPairs = [
+      { name: "KAKAO", id: env.AUTH_KAKAO_ID, secret: env.AUTH_KAKAO_SECRET },
+      { name: "GOOGLE", id: env.AUTH_GOOGLE_ID, secret: env.AUTH_GOOGLE_SECRET },
+    ] as const;
+    for (const { name, id, secret } of oauthPairs) {
+      if (!!id !== !!secret) {
+        ctx.addIssue({
+          code: "custom",
+          path: [id ? `AUTH_${name}_SECRET` : `AUTH_${name}_ID`],
+          message:
+            `AUTH_${name}_ID 와 AUTH_${name}_SECRET 은 항상 함께 설정되어야 합니다 ` +
+            `(현재 한쪽만 설정됨 — provider half-config 차단).`,
+        });
+      }
+    }
+    if (env.AUTH_GOOGLE_ID && !env.AUTH_GOOGLE_ID.endsWith(".apps.googleusercontent.com")) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["AUTH_GOOGLE_ID"],
+        message:
+          "AUTH_GOOGLE_ID: Google OAuth 표준 포맷(*.apps.googleusercontent.com)이 아닙니다. " +
+          "Google Cloud Console에서 발급된 client ID 전체를 사용하세요.",
+      });
     }
 
     // (2) 테스트 환경(NODE_ENV=test)에서는 외부 결제 IO 자체를 차단한다.

@@ -1,20 +1,24 @@
-import { signIn } from "@/features/auth/server/auth";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
-import { env } from "@/shared/lib/env";
+import { signIn, OAuthLoginButtons } from "@/features/auth";
 
 interface Props {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
+  // allowDangerousEmailAccountLinking 로 일반적으로는 발생하지 않지만,
+  // IdP가 이메일을 제공하지 않는 예외 케이스를 대비한 잔존 안전망.
   OAuthAccountNotLinked: "이미 다른 방식으로 가입된 이메일입니다.",
+  InvalidProvider: "지원하지 않는 로그인 방식입니다.",
   Default: "로그인에 실패했습니다. 다시 시도해 주세요.",
 };
 
 export default async function LoginPage({ searchParams }: Props) {
   const { callbackUrl = "/", error } = await searchParams;
-  const hasKakao = !!(env.AUTH_KAKAO_ID && env.AUTH_KAKAO_SECRET);
+  const safeCallback = callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+    ? callbackUrl
+    : "/";
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
@@ -36,7 +40,6 @@ export default async function LoginPage({ searchParams }: Props) {
           action={async (formData: FormData) => {
             "use server";
             const email = formData.get("email") as string;
-            const safeCallback = callbackUrl.startsWith("/") ? callbackUrl : "/";
             const successUrl = `/login/success?callbackUrl=${encodeURIComponent(safeCallback)}`;
             try {
               await signIn("resend", {
@@ -83,32 +86,7 @@ export default async function LoginPage({ searchParams }: Props) {
           </button>
         </form>
 
-        {hasKakao && (
-          <>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs text-gray-400">
-                <span className="bg-white px-2">또는</span>
-              </div>
-            </div>
-
-            <form
-              action={async () => {
-                "use server";
-                await signIn("kakao", { redirectTo: callbackUrl });
-              }}
-            >
-              <button
-                type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#FEE500] px-4 py-2.5 text-sm font-semibold text-[#3C1E1E] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
-              >
-                카카오로 로그인
-              </button>
-            </form>
-          </>
-        )}
+        <OAuthLoginButtons callbackUrl={safeCallback} />
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Resend from "next-auth/providers/resend";
 import Kakao from "next-auth/providers/kakao";
+import Google from "next-auth/providers/google";
 import { db } from "@/shared/lib/db";
 import { env } from "@/shared/lib/env";
 import { logger } from "@/shared/lib/logger";
@@ -29,11 +30,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         : {}),
     }),
+    // OAuth providers — 매직링크와 동일 이메일로 가입한 사용자는 자동 병합.
+    // `allowDangerousEmailAccountLinking`: Kakao/Google은 자체적으로 이메일을
+    // 검증하는 신뢰 IdP이므로 verified email 기반 자동 link가 안전하다.
+    // 이 플래그명에 "Dangerous" 가 붙은 이유는 이메일을 검증하지 않는 IdP에서
+    // spoof 위험이 있어서 — 두 provider 모두 해당 위험에서 배제된다.
     ...(env.AUTH_KAKAO_ID && env.AUTH_KAKAO_SECRET
       ? [
           Kakao({
             clientId: env.AUTH_KAKAO_ID,
             clientSecret: env.AUTH_KAKAO_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
+    ...(env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET
+      ? [
+          Google({
+            clientId: env.AUTH_GOOGLE_ID,
+            clientSecret: env.AUTH_GOOGLE_SECRET,
+            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
