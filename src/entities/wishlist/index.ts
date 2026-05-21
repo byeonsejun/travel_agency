@@ -5,4 +5,5 @@ export {
   listMyWishlist,
   getMyWishlistProductIds,
   isInWishlist,
+  countMyWishlist,
 } from "./api/queries";

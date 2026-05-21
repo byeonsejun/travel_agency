@@ -37,9 +37,21 @@ export default async function MyPage({ searchParams }: PageProps) {
 
   const displayName = user.name ?? user.email ?? "고객";
 
+  const wishlistCount = wishlistItems.length;
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold text-gray-900">마이페이지</h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">마이페이지</h1>
+        {wishlistCount > 0 && (
+          <span
+            aria-label={`찜한 상품 ${wishlistCount}개`}
+            className="inline-flex h-6 min-w-[24px] items-center justify-center rounded-full bg-rose-500 px-2 text-xs font-semibold leading-none text-white"
+          >
+            ♥ {wishlistCount}
+          </span>
+        )}
+      </div>
 
       {/* 프로필 섹션 */}
       <section

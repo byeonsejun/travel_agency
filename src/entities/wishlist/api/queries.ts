@@ -57,3 +57,10 @@ export async function isInWishlist(
   });
   return row !== null;
 }
+
+// 헤더 뱃지용 카운트. UserNav 가 Suspense 안에서 dynamic 으로 렌더되므로
+// 매 요청 fresh. toggleWishlistAction 의 revalidatePath(returnTo) 가 같은
+// 경로의 layout 도 함께 revalidate 하기 때문에 별도 캐시 태깅 불필요.
+export async function countMyWishlist(userId: string): Promise<number> {
+  return db.wishlist.count({ where: { userId } });
+}
