@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import { getProductById, getProductsByIds } from "@/entities/product";
 import { getDeparturesByProduct } from "@/entities/departure";
+import {
+  getProductReviewStats,
+  listReviewsByProduct,
+} from "@/entities/review";
 import { ProductDetail } from "@/widgets/product-detail/ui/ProductDetail";
+import { ReviewList, ReviewStatsBar } from "@/widgets/review-list";
 import { auth } from "@/features/auth/server/auth";
 import { isInWishlist } from "@/entities/wishlist";
 import {
@@ -26,12 +31,15 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
   const session = await auth();
   const compareIds = parseCompareIds(sp.compareIds);
 
-  const [product, departures, inWishlist, compareProducts] = await Promise.all([
-    getProductById(id),
-    getDeparturesByProduct(id),
-    session?.user?.id ? isInWishlist(session.user.id, id) : Promise.resolve(undefined),
-    getProductsByIds(compareIds),
-  ]);
+  const [product, departures, inWishlist, compareProducts, reviewStats, reviewPage] =
+    await Promise.all([
+      getProductById(id),
+      getDeparturesByProduct(id),
+      session?.user?.id ? isInWishlist(session.user.id, id) : Promise.resolve(undefined),
+      getProductsByIds(compareIds),
+      getProductReviewStats(id),
+      listReviewsByProduct(id, { limit: 10 }),
+    ]);
 
   if (product === null) {
     notFound();
@@ -44,6 +52,12 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
         departures={departures}
         inWishlist={inWishlist}
         compareButton={<CompareToggleButton productId={id} size="md" />}
+        reviewsSection={
+          <div className="space-y-4">
+            <ReviewStatsBar avg={reviewStats.avg} count={reviewStats.count} />
+            <ReviewList reviews={reviewPage.items} />
+          </div>
+        }
       />
       <FloatingCompareCart
         products={compareProducts.map((p) => ({

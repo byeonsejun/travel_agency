@@ -34,6 +34,8 @@
 
 ## 인프라
 
-- [ ] **Supabase Storage 버킷 생성** (상품 이미지 업로드 기능 구현 전)
+- [x] **Supabase Storage 버킷 생성** (완료: 2026-05-21, 담당: qustpwns93@gmail.com)
   - 버킷명: `product-images` (public read)
   - 환경 변수: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+  - 향후 리뷰 사진 후기(A2) 도입 시 같은 인프라 위에 `review-photos` 등 별도
+    버킷 또는 path prefix 분리 검토 필요

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/features/auth/server/auth";
 import { getCurrentUser, getPassportProfile } from "@/entities/user";
 import { listMyBookings } from "@/entities/booking";
+import { getReviewedBookingIds } from "@/entities/review";
 import { listMyWishlist } from "@/entities/wishlist";
 import { BookingHistoryList, BookingPaginator } from "@/widgets/booking-list";
 import { PassportProfileForm } from "@/features/passport-profile";
@@ -34,6 +35,13 @@ export default async function MyPage({ searchParams }: PageProps) {
   if (!user) {
     redirect("/login?callbackUrl=/mypage");
   }
+
+  // 예약 카드의 "후기 작성/보기" 분기를 N+1 없이 결정하기 위한 사전 계산.
+  // COMPLETED booking 만 후보 — 그 외 상태는 CTA 자체가 노출되지 않으므로 쿼리 제외.
+  const completedBookingIds = bookings
+    .filter((b) => b.status === "COMPLETED")
+    .map((b) => b.id);
+  const bookingIdsWithReview = await getReviewedBookingIds(completedBookingIds);
 
   const displayName = user.name ?? user.email ?? "고객";
 
@@ -134,7 +142,10 @@ export default async function MyPage({ searchParams }: PageProps) {
             총 {total}건 · 최신순
           </span>
         </div>
-        <BookingHistoryList bookings={bookings} />
+        <BookingHistoryList
+          bookings={bookings}
+          bookingIdsWithReview={bookingIdsWithReview}
+        />
         <BookingPaginator
           page={page}
           total={total}

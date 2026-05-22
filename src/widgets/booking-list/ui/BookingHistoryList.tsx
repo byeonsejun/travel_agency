@@ -8,6 +8,9 @@ import { EmptyState } from "@/shared/ui/EmptyState";
 
 type Props = {
   bookings: BookingListItem[];
+  // 페이지에서 단일 IN 쿼리로 사전 계산한 "후기가 작성된 booking id" Set.
+  // 카드별 분기(작성하기 vs 내 후기 보기)를 N+1 없이 결정.
+  bookingIdsWithReview?: Set<string>;
 };
 
 function formatDate(d: Date): string {
@@ -22,7 +25,7 @@ function totalPax(b: BookingListItem): number {
   return b.adultCount + b.childCount + b.infantCount;
 }
 
-export function BookingHistoryList({ bookings }: Props) {
+export function BookingHistoryList({ bookings, bookingIdsWithReview }: Props) {
   if (bookings.length === 0) {
     return (
       <EmptyState
@@ -45,6 +48,9 @@ export function BookingHistoryList({ bookings }: Props) {
       {bookings.map((booking) => {
         const { departure } = booking;
         const period = `${formatDate(departure.departureDate)} ~ ${formatDate(departure.returnDate)}`;
+        const showReviewCTA = booking.status === "COMPLETED";
+        const hasReview =
+          showReviewCTA && (bookingIdsWithReview?.has(booking.id) ?? false);
 
         return (
           <li
@@ -81,6 +87,27 @@ export function BookingHistoryList({ bookings }: Props) {
                 </span>
               </div>
             </Link>
+
+            {/* 후기 CTA — Link 중첩 회피를 위해 메인 Link 밖 별도 영역에 배치. */}
+            {showReviewCTA && (
+              <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
+                {hasReview ? (
+                  <Link
+                    href={`/products/${departure.product.id}`}
+                    className="inline-flex items-center text-sm font-medium text-indigo-700 hover:text-indigo-900"
+                  >
+                    내 후기 보기 →
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/reviews/new?bookingId=${booking.id}`}
+                    className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                  >
+                    후기 작성하기
+                  </Link>
+                )}
+              </div>
+            )}
           </li>
         );
       })}

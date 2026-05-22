@@ -14,6 +14,9 @@ type ProductDetailProps = {
   // 비교 모드 토글 슬롯 — features/product-compare 를 직접 import 하지 않도록
   // 의존성 역전 유지 (ProductCard 와 동일 패턴).
   compareButton?: import("react").ReactNode;
+  // 리뷰 섹션 슬롯 — widgets/review-list 를 직접 import 하지 않아 PDP 위젯이
+  // 리뷰 도메인을 모르도록 유지. 페이지에서 stats/list 인스턴스를 주입.
+  reviewsSection?: import("react").ReactNode;
 };
 
 export function ProductDetail({
@@ -21,6 +24,7 @@ export function ProductDetail({
   departures,
   inWishlist,
   compareButton,
+  reviewsSection,
 }: ProductDetailProps) {
   const isClosed = product.status === "CLOSED";
   const showHeart = inWishlist !== undefined;
@@ -130,6 +134,14 @@ export function ProductDetail({
         <h2 className="text-2xl font-bold text-gray-900">여행 일정</h2>
         <ItineraryTimeline days={product.itineraryDays} />
       </div>
+
+      {/* 8. 후기 섹션 (페이지에서 주입) */}
+      {reviewsSection && (
+        <div className="space-y-4 px-4 md:px-0">
+          <h2 className="text-2xl font-bold text-gray-900">여행자 후기</h2>
+          {reviewsSection}
+        </div>
+      )}
     </div>
   );
 }
