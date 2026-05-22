@@ -6,15 +6,18 @@ export type ReviewWithPhotos = Prisma.ReviewGetPayload<{
   include: { photos: true };
 }>;
 
-// PDP·마이페이지 카드 뷰가 필요로 하는 최소 표면. 작성자 정보(displayName·avatar)
-// 는 안전상 minimum subset 만 노출. user.email·user.role 등은 절대 포함하지 않는다.
+// PDP·마이페이지 카드 뷰가 필요로 하는 최소 표면.
+// **보안 invariant**: 작성자의 raw email·raw name 은 본 타입에 절대 포함하지
+// 않는다. query 레이어에서 `maskAuthorDisplayName` 으로 즉시 마스킹된
+// `displayName` 만 노출 — 미래 어떤 컴포넌트가 이 prop 을 받아도 raw PII
+// 누설 경로 자체가 type 으로 봉쇄된다.
 export type ReviewListItem = {
   id: string;
   rating: number;
   content: string;
   createdAt: Date;
   user: {
-    name: string | null;
+    displayName: string;
     image: string | null;
   };
   photos: Array<{

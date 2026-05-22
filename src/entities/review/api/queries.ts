@@ -1,5 +1,6 @@
 import { db } from "@/shared/lib/db";
 
+import { maskAuthorDisplayName } from "../model/displayName";
 import type {
   ReviewListPage,
   ReviewStats,
@@ -27,7 +28,10 @@ export async function listReviewsByProduct(
       rating: true,
       content: true,
       createdAt: true,
-      user: { select: { name: true, image: true } },
+      // email 은 마스킹 입력으로만 사용 — 본 함수 로컬 범위를 벗어나지 않는다.
+      // 반환 타입(`ReviewListItem`)에는 displayName 만 포함되므로 raw email 이
+      // 호출부(RSC/widget/client) 로 전달될 경로 자체가 봉쇄된다.
+      user: { select: { name: true, email: true, image: true } },
       photos: {
         orderBy: { order: "asc" },
         select: {
@@ -42,7 +46,25 @@ export async function listReviewsByProduct(
   });
 
   const hasMore = rows.length > limit;
-  const items = hasMore ? rows.slice(0, limit) : rows;
+  const sliced = hasMore ? rows.slice(0, limit) : rows;
+
+  // raw email 을 query 함수 밖으로 절대 흘려보내지 않기 위해, 여기서 즉시
+  // 마스킹 + ReviewListItem 모양으로 좁힌다. 이후 페이로드/DOM 어느 단계에도
+  // raw email 은 존재하지 않는다.
+  const items = sliced.map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    content: r.content,
+    createdAt: r.createdAt,
+    user: {
+      displayName: maskAuthorDisplayName({
+        email: r.user.email,
+        name: r.user.name,
+      }),
+      image: r.user.image,
+    },
+    photos: r.photos,
+  }));
 
   return {
     items,

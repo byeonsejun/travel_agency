@@ -35,11 +35,9 @@ function formatDate(d: Date): string {
   });
 }
 
-function maskDisplayName(name: string | null): string {
-  if (!name || name.length === 0) return "익명";
-  // 작성자 보호: 첫 글자 + ** 마스킹. 예: "홍길동" → "홍**"
-  return `${name.charAt(0)}**`;
-}
+// 작성자 표시 이름은 entities/review query 레이어에서 사전 마스킹되어 내려옴
+// (`ReviewListItem.user.displayName`). 본 widget 은 raw email/name 을 절대
+// 받지 않는다 — type 으로 봉쇄.
 
 export function ReviewList({ reviews }: Props) {
   if (reviews.length === 0) {
@@ -56,7 +54,7 @@ export function ReviewList({ reviews }: Props) {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-gray-900">
-                {maskDisplayName(r.user.name)}
+                {r.user.displayName}
               </p>
               <div className="mt-1 flex items-center gap-2">
                 <Stars value={r.rating} />
