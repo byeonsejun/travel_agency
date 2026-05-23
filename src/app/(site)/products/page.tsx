@@ -1,7 +1,5 @@
-import { Suspense } from "react";
 import {
   getProductList,
-  getProductsByIds,
   getDistinctDestinations,
   parseProductListParams,
   PAGE_SIZE,
@@ -32,7 +30,10 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
 
   const compareIds = parseCompareIds(rawParams.compareIds);
 
-  const [{ items, total }, destinations, wishlistIds, compareProducts] = await Promise.all([
+  // compareIds 자체는 ProductCardList 의 카드별 비교 토글 상태(`currentCompareIds`)
+  // 에 여전히 필요하지만, FloatingCompareCart 의 카트 콘텐츠는 hydration 후
+  // client-fetch 로 옮겼으므로 `getProductsByIds(compareIds)` prefetch 는 제거 (A4).
+  const [{ items, total }, destinations, wishlistIds] = await Promise.all([
     getProductList({
       filter: params.destination ? { destinationCode: params.destination } : undefined,
       sort: params.sort,
@@ -41,7 +42,6 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
     }),
     getDistinctDestinations(),
     session?.user?.id ? getMyWishlistProductIds(session.user.id) : Promise.resolve(undefined),
-    getProductsByIds(compareIds),
   ]);
 
   // Pagination용 searchParams (page 제외)
@@ -108,13 +108,7 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
         )}
       </div>
 
-      <FloatingCompareCart
-        products={compareProducts.map((p) => ({
-          id: p.id,
-          title: p.title,
-          heroImageUrl: p.heroImageUrl,
-        }))}
-      />
+      <FloatingCompareCart />
     </div>
   );
 }

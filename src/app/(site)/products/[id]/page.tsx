@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProductById, getProductsByIds } from "@/entities/product";
+import { getProductById } from "@/entities/product";
 import { getDeparturesByProduct } from "@/entities/departure";
 import {
   getProductReviewStats,
@@ -10,33 +10,32 @@ import { ReviewList, ReviewStatsBar } from "@/widgets/review-list";
 import { auth } from "@/features/auth/server/auth";
 import { isInWishlist } from "@/entities/wishlist";
 import {
-  parseCompareIds,
   CompareToggleButton,
   FloatingCompareCart,
 } from "@/features/product-compare";
 
-// PDP 는 본래 1시간 ISR(revalidate=3600) 대상이지만, searchParams.compareIds
-// 의존이 생기면서 자연스럽게 dynamic. unstable_cache+tag(product:[id]) 가
-// 여전히 DB hit 을 압축하므로 응답 비용 증가는 제한적.
-// (compareIds 가 없을 때만 정적 prerender 하도록 매개변수화는 별도 plan.)
+// PDP 1시간 ISR. compareIds 의존 UI(FloatingCompareCart) 는 client-fetch 패턴으로
+// 분리되어 본 페이지는 product/departures/review 만 RSC 로 prefetch.
+//
+// ⚠️ 잔여 dynamic 트리거: `auth()` + `isInWishlist` 는 cookies 의존이라 Next 가
+// 본 페이지를 여전히 dynamic 으로 분류한다. 본 `revalidate=3600` 은 wishlist 도
+// island 로 분리(별도 plan)되는 시점에 ISR 활성화 신호로 작동하는 *데이터 캐시
+// TTL 힌트*. 본 PR 의 직접 효과는 `searchParams.compareIds` 의존 제거.
+export const revalidate = 3600;
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function ProductDetailPage({ params, searchParams }: PageProps) {
+export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const sp = await searchParams;
   const session = await auth();
-  const compareIds = parseCompareIds(sp.compareIds);
 
-  const [product, departures, inWishlist, compareProducts, reviewStats, reviewPage] =
+  const [product, departures, inWishlist, reviewStats, reviewPage] =
     await Promise.all([
       getProductById(id),
       getDeparturesByProduct(id),
       session?.user?.id ? isInWishlist(session.user.id, id) : Promise.resolve(undefined),
-      getProductsByIds(compareIds),
       getProductReviewStats(id),
       listReviewsByProduct(id, { limit: 10 }),
     ]);
@@ -59,13 +58,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
           </div>
         }
       />
-      <FloatingCompareCart
-        products={compareProducts.map((p) => ({
-          id: p.id,
-          title: p.title,
-          heroImageUrl: p.heroImageUrl,
-        }))}
-      />
+      <FloatingCompareCart />
     </>
   );
 }
