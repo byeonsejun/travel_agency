@@ -59,7 +59,9 @@
 | 0009  | [NO-REAL-MONEY 경계의 코드 강제 — env Zod superRefine](./0009-no-real-money-env-invariant.md) | Accepted | 2026-05-20   |
 | 0010  | [`isCancelableByUser` = `ALLOWED_TRANSITIONS` SSOT](./0010-iscancelablebyuser-allowed-transitions-ssot.md) | Accepted | 2026-05-20   |
 | 0011  | [dev_mock 키 reconcile 스크립트 — backoff 무한 실패 잔재 처리](./0011-dev-mock-reconcile-script.md) | Accepted | 2026-05-20   |
+| 0012  | [PDP — `searchParams` 의존 client-fetch hoist 로 ISR 복귀 준비](./0012-pdp-searchparams-client-fetch-isr-return.md) | Accepted | 2026-05-23   |
 
 ## 향후 후보 (작성 대기)
 
-- 0012(가칭): production 환경에서도 `test_` 키만 허용 — 운영 배포 시점 검토
+- 0013(가칭): production 환경에서도 `test_` 키만 허용 — 운영 배포 시점 검토
+- 0014(가칭): wishlist island 분리로 PDP 완전한 정적 ISR 활성화 — ADR-0012 후속
