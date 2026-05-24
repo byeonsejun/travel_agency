@@ -82,23 +82,36 @@ export async function handleTossWebhook({
   signature: string | null;
 }): Promise<void> {
   // ── R9: 서명 검증 ─────────────────────────────────────────────
+  //
+  // ⚠️ TEMPORARY (TODO: webhook v2024-06-01 마이그레이션 — 별도 plan):
+  // 토스 v2024-06-01 webhook 은 HMAC `toss-signature` 헤더를 *발송하지 않는다.*
+  // 대신 body 의 `data.secret`(결제 건별 secret) + `Tosspayments-Webhook-
+  // Transmission-Id` 기반 verification 메커니즘을 사용한다. 본 코드는 구버전
+  // HMAC 기준이라 신버전 페이로드가 항상 401 로 거부된다.
+  // **`development` 환경에서만** signature 부재 시 skip — 다음 게이트(schema/
+  // 멱등/Tx)의 e2e 검증을 진행하기 위한 임시 우회. production·test 는 여전히
+  // throw 하므로 NO-REAL-MONEY/실거래 안전성 + 단위 테스트 invariant 무영향.
   if (!signature) {
-    metrics.incr("payment.webhook.toss.invalid_sig");
-    throw new InvalidSignatureError();
-  }
-
-  const secret = env.TOSS_WEBHOOK_SECRET;
-  if (secret !== undefined) {
-    if (!verifyTossSignature(rawBody, signature, secret)) {
+    if (env.NODE_ENV !== "development") {
       metrics.incr("payment.webhook.toss.invalid_sig");
       throw new InvalidSignatureError();
     }
-  } else if (env.NODE_ENV === "production") {
-    // prod에서 secret 미설정 — env superRefine으로 이미 부팅 거부했어야 하지만 방어
-    metrics.incr("payment.webhook.toss.invalid_sig");
-    throw new InvalidSignatureError("TOSS_WEBHOOK_SECRET not configured in production");
+    // development: 신버전 webhook 마이그레이션 전까지 임시 통과.
+    metrics.incr("payment.webhook.toss.dev_signature_skipped");
+  } else {
+    const secret = env.TOSS_WEBHOOK_SECRET;
+    if (secret !== undefined) {
+      if (!verifyTossSignature(rawBody, signature, secret)) {
+        metrics.incr("payment.webhook.toss.invalid_sig");
+        throw new InvalidSignatureError();
+      }
+    } else if (env.NODE_ENV === "production") {
+      // prod에서 secret 미설정 — env superRefine으로 이미 부팅 거부했어야 하지만 방어
+      metrics.incr("payment.webhook.toss.invalid_sig");
+      throw new InvalidSignatureError("TOSS_WEBHOOK_SECRET not configured in production");
+    }
+    // dev/test: secret 미설정 시 경고 없이 통과 (로컬 테스트 편의)
   }
-  // dev/test: secret 미설정 시 경고 없이 통과 (로컬 테스트 편의)
 
   // ── 파싱 + 스키마 검증 ─────────────────────────────────────────
   const json = JSON.parse(rawBody) as unknown;

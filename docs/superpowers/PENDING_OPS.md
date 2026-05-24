@@ -26,9 +26,11 @@
 ## 결제
 
 - [ ] **토스페이먼츠 샌드박스 웹훅 등록** (결제 기능 QA 전 필수)
-  - 토스 개발자 콘솔 → 샌드박스 → 웹훅 URL 등록: `https://<dev-domain>/api/payment/webhook`
+  - 토스 개발자 콘솔 → 샌드박스 → 웹훅 URL 등록: `https://<dev-domain>/api/payments/webhook/toss`
   - 환경 변수: `TOSS_WEBHOOK_SECRET`
   - ⚠️ 운영 키(`live_`) 사용 금지 — NO-REAL-MONEY 원칙 (CLAUDE.md §5)
+  - ⚠️ **경로 주의**: 코드 컨벤션은 `payments`(복수) + provider 분리(`webhook/toss/`).
+    단수형(`/api/payment/webhook`)으로 등록 시 Next 가 핸들러를 못 찾아 404 반환.
 
 ---
 
