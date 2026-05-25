@@ -104,16 +104,28 @@ const pgDoneResponse = {
   receipt: { url: "https://mock.tosspayments.com/receipt/obs-test" },
 };
 
-const validWebhookBody = (overrides: Record<string, unknown> = {}) =>
+// v2 envelope + data.* 중첩 (가이드 v2024-06-01).
+const validWebhookBody = (overrides: { orderId?: string; status?: string; totalAmount?: number } = {}) =>
   JSON.stringify({
-    eventId: EVENT_ID,
-    orderId: ORDER_ID,
-    type: "PAYMENT_DONE",
-    paymentKey: PAYMENT_KEY,
-    totalAmount: AMOUNT,
-    approvedAt: new Date().toISOString(),
-    ...overrides,
+    eventType: "PAYMENT_STATUS_CHANGED",
+    createdAt: new Date().toISOString(),
+    data: {
+      paymentKey: PAYMENT_KEY,
+      orderId: overrides.orderId ?? ORDER_ID,
+      status: overrides.status ?? "DONE",
+      totalAmount: overrides.totalAmount ?? AMOUNT,
+      approvedAt: new Date().toISOString(),
+    },
   });
+
+const unknownEventBody = (eventType: string) =>
+  JSON.stringify({
+    eventType,
+    createdAt: new Date().toISOString(),
+    data: { foo: "bar" },
+  });
+
+const TRANSMISSION_ID = `whtrans_obs_${EVENT_ID}`;
 
 function setupDefaultTransaction(): void {
   mocks.db.$transaction.mockImplementation(
@@ -232,7 +244,7 @@ describe("webhook.ts — 관측성 훅", () => {
 
   it("null signature → metrics.incr('payment.webhook.toss.invalid_sig')", async () => {
     await expect(
-      handleTossWebhook({ rawBody: validWebhookBody(), signature: null })
+      handleTossWebhook({ rawBody: validWebhookBody(), signature: null, transmissionId: TRANSMISSION_ID })
     ).rejects.toThrow();
 
     expect(metrics.snapshot().counters["payment.webhook.toss.invalid_sig"]).toBe(1);
@@ -242,19 +254,27 @@ describe("webhook.ts — 관측성 훅", () => {
     mocks.verifyTossSignature.mockReturnValue(false);
 
     await expect(
-      handleTossWebhook({ rawBody: validWebhookBody(), signature: "forged" })
+      handleTossWebhook({ rawBody: validWebhookBody(), signature: "forged", transmissionId: TRANSMISSION_ID })
     ).rejects.toThrow();
 
     expect(metrics.snapshot().counters["payment.webhook.toss.invalid_sig"]).toBe(1);
   });
 
-  it("중복 eventId → metrics.incr('payment.webhook.toss.duplicate') + logger.info('payment.webhook.duplicate')", async () => {
+  it("transmissionId 부재 → metrics.incr('payment.webhook.toss.missing_transmission_id') + throw", async () => {
+    await expect(
+      handleTossWebhook({ rawBody: validWebhookBody(), signature: "sig", transmissionId: null })
+    ).rejects.toThrow();
+
+    expect(metrics.snapshot().counters["payment.webhook.toss.missing_transmission_id"]).toBe(1);
+  });
+
+  it("중복 transmissionId → metrics.incr('payment.webhook.toss.duplicate') + logger.info('payment.webhook.duplicate')", async () => {
     mocks.tx.paymentEvent.findUnique.mockResolvedValue({
       id: "pevt_existing",
-      providerEventId: `webhook:${EVENT_ID}`,
+      providerEventId: `webhook:${TRANSMISSION_ID}`,
     });
 
-    await handleTossWebhook({ rawBody: validWebhookBody(), signature: "sig" });
+    await handleTossWebhook({ rawBody: validWebhookBody(), signature: "sig", transmissionId: TRANSMISSION_ID });
 
     expect(metrics.snapshot().counters["payment.webhook.toss.duplicate"]).toBe(1);
     const infoCall = infoSpy.mock.calls.find((c) => c[0] === "payment.webhook.duplicate");
@@ -264,24 +284,29 @@ describe("webhook.ts — 관측성 훅", () => {
   it("알 수 없는 orderId → metrics.incr('payment.webhook.toss.ignored') + logger.warn", async () => {
     mocks.tx.payment.findUnique.mockResolvedValue(null);
 
-    await handleTossWebhook({ rawBody: validWebhookBody({ orderId: "unknown_oid" }), signature: "sig" });
+    await handleTossWebhook({
+      rawBody: validWebhookBody({ orderId: "unknown_oid" }),
+      signature: "sig",
+      transmissionId: TRANSMISSION_ID,
+    });
 
     expect(metrics.snapshot().counters["payment.webhook.toss.ignored"]).toBe(1);
     const warnCall = warnSpy.mock.calls.find((c) => c[0] === "payment.webhook.ignored");
     expect(warnCall).toBeDefined();
   });
 
-  it("PAYMENT_DONE 성공 → metrics.incr('payment.webhook.toss.processed', { type })", async () => {
-    await handleTossWebhook({ rawBody: validWebhookBody(), signature: "sig" });
+  it("PAYMENT_STATUS_CHANGED DONE 성공 → metrics.incr('payment.webhook.toss.processed', { eventType, status })", async () => {
+    await handleTossWebhook({ rawBody: validWebhookBody(), signature: "sig", transmissionId: TRANSMISSION_ID });
 
-    const key = "payment.webhook.toss.processed|type=PAYMENT_DONE";
+    const key = "payment.webhook.toss.processed|eventType=PAYMENT_STATUS_CHANGED,status=DONE";
     expect(metrics.snapshot().counters[key]).toBe(1);
   });
 
-  it("미지원 event type → metrics.incr('payment.webhook.toss.ignored') + logger.warn", async () => {
+  it("미지원 eventType (METHOD_UPDATED) → metrics.incr('payment.webhook.toss.ignored') + logger.warn", async () => {
     await handleTossWebhook({
-      rawBody: validWebhookBody({ type: "UNKNOWN_TYPE_XYZ", totalAmount: undefined, approvedAt: undefined }),
+      rawBody: unknownEventBody("METHOD_UPDATED"),
       signature: "sig",
+      transmissionId: TRANSMISSION_ID,
     });
 
     expect(metrics.snapshot().counters["payment.webhook.toss.ignored"]).toBe(1);

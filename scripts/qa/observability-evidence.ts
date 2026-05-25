@@ -83,9 +83,10 @@ async function main() {
   metrics.resetForTest();
   metrics.incr("payment.confirm.attempt");
   metrics.incr("payment.confirm.attempt");
-  metrics.incr("payment.webhook.toss.processed", { type: "PAYMENT_DONE" });
-  metrics.incr("payment.webhook.toss.processed", { type: "PAYMENT_DONE" });
-  metrics.incr("payment.webhook.toss.processed", { type: "PAYMENT_DONE" });
+  // v2024-06-01 마이그레이션 후 tags: { eventType, status } (plan 2026-05-24-toss-webhook-v2)
+  metrics.incr("payment.webhook.toss.processed", { eventType: "PAYMENT_STATUS_CHANGED", status: "DONE" });
+  metrics.incr("payment.webhook.toss.processed", { eventType: "PAYMENT_STATUS_CHANGED", status: "DONE" });
+  metrics.incr("payment.webhook.toss.processed", { eventType: "PAYMENT_STATUS_CHANGED", status: "DONE" });
   metrics.incr("health.ok");
   metrics.observe("payment.confirm.duration_ms", 120);
   metrics.observe("payment.confirm.duration_ms", 95);
@@ -103,7 +104,7 @@ async function main() {
 
   const expectedConfirm = snap.counters["payment.confirm.attempt"] === 2;
   const expectedWebhook =
-    snap.counters["payment.webhook.toss.processed|type=PAYMENT_DONE"] === 3;
+    snap.counters["payment.webhook.toss.processed|eventType=PAYMENT_STATUS_CHANGED,status=DONE"] === 3;
   console.log(`카운터 검증: ${expectedConfirm && expectedWebhook ? "PASS ✓" : "FAIL ✗"}`);
 
   // ── §3: DB 관측 쿼리 ─────────────────────────────────────────

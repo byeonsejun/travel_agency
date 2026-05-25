@@ -6,13 +6,17 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export const POST = withObservedRoute('payments.webhook.toss', async (req: NextRequest): Promise<NextResponse> => {
-  // rawBody 보존 — JSON.parse 전에 HMAC 서명 검증에 필요 (domain-booking R9)
+  // rawBody 보존 — JSON.parse 전에 서명 검증에 필요 (domain-booking R9)
   const rawBody = await req.text();
   const signature = req.headers.get('toss-signature');
+  // v2 멱등 키 — 토스가 모든 webhook 에 동봉. 같은 transmission 재전송 시 동일 id.
+  // (HTTP 헤더 이름은 case-insensitive — Next 는 lowercase 정규화하여 저장)
+  const transmissionId = req.headers.get('tosspayments-webhook-transmission-id');
 
   try {
-    await handleTossWebhook({ rawBody, signature });
-    // 200 빠른 응답 — Toss 재시도 폭주 방지. 멱등성은 handleTossWebhook 내부에서 보장.
+    await handleTossWebhook({ rawBody, signature, transmissionId });
+    // 200 빠른 응답 — Toss 재시도 폭주 방지(가이드 §4: 10초 SLA).
+    // 멱등성은 handleTossWebhook 내부에서 보장.
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof InvalidSignatureError) {

@@ -154,7 +154,7 @@ handleTossWebhook({ rawBody, signature, transmissionId })
 **Files:**
 - Modify: `src/entities/payment/api/__tests__/webhook.test.ts`
 
-- [ ] **Step 1: 픽스처 헬퍼 v2 포맷으로 작성** — top-level `eventType` + `data.*` 중첩
+- [x] **Step 1: 픽스처 헬퍼 v2 포맷으로 작성** — top-level `eventType` + `data.*` 중첩
 
 ```ts
 function v2PaymentDoneEvent(overrides?: { orderId?: string; totalAmount?: number; paymentKey?: string }) {
@@ -179,7 +179,7 @@ function validRawBody(overrides?: Parameters<typeof v2PaymentDoneEvent>[0]) {
 const VALID_TRANSMISSION_ID = "whtrans_test001";
 ```
 
-- [ ] **Step 2: `handleTossWebhook` 호출에 `transmissionId` 추가** — 기존 테스트 시그니처 전부 업데이트
+- [x] **Step 2: `handleTossWebhook` 호출에 `transmissionId` 추가** — 기존 테스트 시그니처 전부 업데이트
 
 ```ts
 await handleTossWebhook({
@@ -189,7 +189,7 @@ await handleTossWebhook({
 });
 ```
 
-- [ ] **Step 3: 신규 케이스 — `IGNORED` no-op 검증 (unknown eventType / status)**
+- [x] **Step 3: 신규 케이스 — `IGNORED` no-op 검증 (unknown eventType / status)**
 
 ```ts
 it("미지원 eventType: IGNORED no-op, schema parse 실패 없음", async () => {
@@ -210,7 +210,7 @@ it("PAYMENT_STATUS_CHANGED + status=READY: IGNORED no-op (PAID 외 status)", asy
 });
 ```
 
-- [ ] **Step 4: `npx vitest run src/entities/payment/api/__tests__/webhook.test.ts`** → 실패 확인 (구 schema/dispatch 와 mismatch)
+- [x] **Step 4: `npx vitest run src/entities/payment/api/__tests__/webhook.test.ts`** → 실패 확인 (구 schema/dispatch 와 mismatch) — 10 fail (RED ✓)
 
 ---
 
@@ -219,7 +219,7 @@ it("PAYMENT_STATUS_CHANGED + status=READY: IGNORED no-op (PAID 외 status)", asy
 **Files:**
 - Modify: `src/entities/payment/model/schemas.ts`
 
-- [ ] **Step 1: v2 envelope + PaymentStatusChangedData 정의**
+- [x] **Step 1: v2 envelope + PaymentStatusChangedData 정의**
 
 ```ts
 // PAYMENT_STATUS_CHANGED 의 data.* 필드 (가이드 §1 표 참조).
@@ -266,7 +266,7 @@ export function parsePaymentStatusChangedData(data: unknown): TossPaymentStatusC
 }
 ```
 
-- [ ] **Step 2: 기존 `TossWebhookEventSchema` (v1) 는 *제거*** — `webhook.ts` 가 더 이상 사용 안 함. 호출처 grep 확인:
+- [x] **Step 2: 기존 `TossWebhookEventSchema` (v1) 는 *제거*** — `webhook.ts` 가 더 이상 사용 안 함. 호출처 grep 확인:
 
 ```bash
 grep -rn "TossWebhookEventSchema\b" src/ | grep -v __tests__
@@ -275,7 +275,7 @@ grep -rn "TossWebhookEventSchema\b" src/ | grep -v __tests__
 
 남아 있으면 마이그레이션 미완료. typecheck 가 잡아낼 것.
 
-- [ ] **Step 3: type alias 정리** — `TossWebhookEvent` (v1) → `TossWebhookV2Event` 로 교체. export 도 업데이트.
+- [x] **Step 3: type alias 정리** — `TossWebhookEvent` (v1) → `TossWebhookV2Event` 로 교체. export 도 업데이트.
 
 ---
 
@@ -284,7 +284,7 @@ grep -rn "TossWebhookEventSchema\b" src/ | grep -v __tests__
 **Files:**
 - Modify: `src/entities/payment/api/webhook.ts`
 
-- [ ] **Step 1: 시그니처 변경 — `transmissionId` 인자 추가**
+- [x] **Step 1: 시그니처 변경 — `transmissionId` 인자 추가**
 
 ```ts
 export async function handleTossWebhook({
@@ -316,7 +316,7 @@ export async function handleTossWebhook({
 }
 ```
 
-- [ ] **Step 2: dispatch 로직 — `eventType` + `data.status` 분기**
+- [x] **Step 2: dispatch 로직 — `eventType` + `data.status` 분기**
 
 ```ts
 await db.$transaction(async (tx) => {
@@ -449,7 +449,7 @@ if (processedBookingId !== null) {
 }
 ```
 
-- [ ] **Step 3: `maybeApplyBookingTransition` 헬퍼 갱신** — v1 의 `event.type` 의존 제거. transmissionId 기반:
+- [x] **Step 3: `maybeApplyBookingTransition` 헬퍼 갱신** — v1 의 `event.type` 의존 제거. transmissionId 기반:
 
 ```ts
 async function maybeApplyBookingTransitionV2(
@@ -472,7 +472,7 @@ async function maybeApplyBookingTransitionV2(
 
 기존 `maybeApplyBookingTransition` 는 제거(또는 v2 헬퍼로 rename).
 
-- [ ] **Step 4: `recordEvent` 헬퍼 정리** — v1 의 `event: TossWebhookEvent` 시그니처 의존 제거. payload 와 type 문자열 인자만 받도록 단순화하거나 inline.
+- [x] **Step 4: `recordEvent` 헬퍼 정리** — v1 의 `event: TossWebhookEvent` 시그니처 의존 제거. payload 와 type 문자열 인자만 받도록 단순화하거나 inline.
 
 ---
 
@@ -481,7 +481,7 @@ async function maybeApplyBookingTransitionV2(
 **Files:**
 - Modify: `src/app/api/payments/webhook/toss/route.ts`
 
-- [ ] **Step 1: `Tosspayments-Webhook-Transmission-Id` 헤더 추출 + handler 전달**
+- [x] **Step 1: `Tosspayments-Webhook-Transmission-Id` 헤더 추출 + handler 전달**
 
 ```ts
 export const POST = withObservedRoute('payments.webhook.toss', async (req: NextRequest): Promise<NextResponse> => {
@@ -502,7 +502,7 @@ export const POST = withObservedRoute('payments.webhook.toss', async (req: NextR
 });
 ```
 
-- [ ] **Step 2: 변경 외 로직 그대로 유지** — logger.error, dev signature skip 모두 그대로.
+- [x] **Step 2: 변경 외 로직 그대로 유지** — logger.error, dev signature skip 모두 그대로.
 
 ---
 
@@ -512,11 +512,11 @@ export const POST = withObservedRoute('payments.webhook.toss', async (req: NextR
 - Modify: `src/entities/payment/api/__tests__/webhook.test.ts`
 - Modify: `src/entities/payment/api/__tests__/observability-hooks.test.ts`
 
-- [ ] **Step 1: webhook.test.ts 의 모든 v1 픽스처 → v2 envelope+data 로 교체** (Task 1 의 helper 사용)
+- [x] **Step 1: webhook.test.ts 의 모든 v1 픽스처 → v2 envelope+data 로 교체** (Task 1 의 helper 사용)
 
-- [ ] **Step 2: 모든 `handleTossWebhook(...)` 호출에 `transmissionId` 인자 추가** — 누락 시 typecheck 가 잡아냄
+- [x] **Step 2: 모든 `handleTossWebhook(...)` 호출에 `transmissionId` 인자 추가** — 누락 시 typecheck 가 잡아냄
 
-- [ ] **Step 3: 시나리오 보존 — 기존 invariant 동일하게 검증** (각 시나리오 핵심만 picking)
+- [x] **Step 3: 시나리오 보존 — 기존 invariant 동일하게 검증** (각 시나리오 핵심만 picking)
   - null signature → InvalidSignatureError (production·test 환경, dev skip 분기는 별도 케이스)
   - 위조 서명 → InvalidSignatureError
   - 중복 transmissionId → SKIPPED (멱등성)
@@ -524,23 +524,23 @@ export const POST = withObservedRoute('payments.webhook.toss', async (req: NextR
   - DONE 정상 → Payment PAID + booking transition
   - Unknown orderId → IGNORED
 
-- [ ] **Step 4: 신규 시나리오 추가**
+- [x] **Step 4: 신규 시나리오 추가**
   - 미지원 eventType (`METHOD_UPDATED` 등) → schema parse 성공 + IGNORED 기록 + payment.update 0회
   - `PAYMENT_STATUS_CHANGED` + status `READY` → IGNORED (DONE 외 status 는 본 plan phase 1 범위 외)
   - transmissionId null → 400/InvalidSignatureError throw (Step 1 of Task 3 의 가드)
 
-- [ ] **Step 5: observability-hooks.test.ts 도 동일 마이그레이션** — metrics 키 `payment.webhook.toss.processed` 의 tags `{ eventType, status }` 로 변경된 점 반영
+- [x] **Step 5: observability-hooks.test.ts 도 동일 마이그레이션** — metrics 키 `payment.webhook.toss.processed` 의 tags `{ eventType, status }` 로 변경된 점 반영
 
-- [ ] **Step 6: `npx vitest run src/entities/payment`** → 전 케이스 GREEN
+- [x] **Step 6: `npx vitest run src/entities/payment`** → 전 케이스 GREEN
 
 ---
 
 ### Task 6 — 정적 검증
 
-- [ ] **Step 1:** `npm run typecheck` → exit 0
-- [ ] **Step 2:** `npm run test` → 전체 GREEN, 회귀 0
-- [ ] **Step 3:** `npx next lint --file src/entities/payment --file src/app/api/payments/webhook` → 0 warning
-- [ ] **Step 4:** 잔여 v1 참조 grep:
+- [x] **Step 1:** `npm run typecheck` → exit 0
+- [x] **Step 2:** `npm run test` → 전체 GREEN, 회귀 0
+- [x] **Step 3:** `npx next lint --file src/entities/payment --file src/app/api/payments/webhook` → 0 warning
+- [x] **Step 4:** 잔여 v1 참조 grep:
 
 ```bash
 grep -rn "PAYMENT_DONE\|PAYMENT_CONFIRMED\|PAYMENT_ABORTED\|PAYMENT_FAILED\|TossWebhookEventSchema\b" src/ | grep -v __tests__ | grep -v ".test."
@@ -551,35 +551,35 @@ grep -rn "PAYMENT_DONE\|PAYMENT_CONFIRMED\|PAYMENT_ABORTED\|PAYMENT_FAILED\|Toss
 
 ### Task 7 — Dev e2e 검증
 
-- [ ] **Step 1:** `npm run dev`
-- [ ] **Step 2:** 토스 콘솔에서 "다시 시도" 또는 새 결제 1건 (시드 100원 QA 상품)
-- [ ] **Step 3:** 다음 모두 확인
+- [x] **Step 1:** `npm run dev`
+- [x] **Step 2:** 토스 콘솔에서 "다시 시도" 또는 새 결제 1건 (시드 100원 QA 상품)
+- [x] **Step 3:** 다음 모두 확인
   - ngrok 응답: `200 OK` (이전 500 → 200)
   - dev 터미널: `route.end status: 200` + `payment.webhook.toss.processed` event log
   - DB: 동일 booking 의 `PaymentEvent` row 추가 (`type: "WEBHOOK:PAYMENT_STATUS_CHANGED:DONE", result: "PROCESSED"`)
   - DB: booking status 이미 PAID (confirm 흐름이 먼저 처리해 SKIPPED 일 수도 있음 — 그것도 정상)
-- [ ] **Step 4:** 같은 webhook 재전송 (콘솔 "다시 시도") → 두 번째는 SKIPPED 응답 + DB row 추가 없음 (멱등성)
-- [ ] **Step 5:** ngrok 헤더에 `Tosspayments-Webhook-Transmission-Id` 확인 + dev log 의 `idemKey` 가 그것 기반인지 확인
+- [x] **Step 4:** 같은 webhook 재전송 (콘솔 "다시 시도") → 두 번째는 SKIPPED 응답 + DB row 추가 없음 (멱등성)
+- [x] **Step 5:** ngrok 헤더에 `Tosspayments-Webhook-Transmission-Id` 확인 + dev log 의 `idemKey` 가 그것 기반인지 확인
 
 ---
 
 ### Task 8 — 완료 처리
 
-- [ ] **Step 1:** 본 plan 의 모든 `- [ ]` 를 작업 직후 `- [x]` 로 갱신
-- [ ] **Step 2:** PENDING_OPS.md 의 토스 webhook 항목을 `[x]` + 완료일 마킹 (200 OK 확인 시점)
-- [ ] **Step 3:** 보고 양식 §7.1 준수 (🏗️ / ♻️ / 🧠) + `※ recap:` 한국어 한 줄
-- [ ] **Step 4:** ADR-0013 후보 (v1 → v2 마이그레이션 의사결정 박제) 제안 — 옵션 A/B/C 분석 + Out of Scope 항목(verification, 그 외 eventType) 명시
+- [x] **Step 1:** 본 plan 의 모든 `- [ ]` 를 작업 직후 `- [x]` 로 갱신
+- [x] **Step 2:** PENDING_OPS.md 의 토스 webhook 항목을 `[x]` + 완료일 마킹 (200 OK 확인 시점)
+- [x] **Step 3:** 보고 양식 §7.1 준수 (🏗️ / ♻️ / 🧠) + `※ recap:` 한국어 한 줄
+- [x] **Step 4:** ADR-0013 후보 (v1 → v2 마이그레이션 의사결정 박제) 제안 — 옵션 A/B/C 분석 + Out of Scope 항목(verification, 그 외 eventType) 명시
 
 ---
 
 ## Verification Checklist (최종)
 
-- [ ] Schema: `TossWebhookV2EventSchema` envelope + `PaymentStatusChangedData` 분리, v1 schema 완전 제거
-- [ ] Dispatch: `PAYMENT_STATUS_CHANGED` + `status=DONE` 만 PAID 전이, 그 외 status·eventType 은 IGNORED no-op
-- [ ] 멱등: transmissionId 기반 — 동일 transmission 재시도 시 두 번째는 SKIPPED
-- [ ] dev e2e: ngrok 200 OK + PaymentEvent 기록 + booking PAID (이미 PAID 면 SKIPPED)
-- [ ] typecheck / test / lint 그린, 회귀 0건
-- [ ] dev signature skip 분기 (a1b425d) 그대로 유지 — verification plan 까지는 development 한정 통과 유지
+- [x] Schema: `TossWebhookV2EventSchema` envelope + `PaymentStatusChangedData` 분리, v1 schema 완전 제거
+- [x] Dispatch: `PAYMENT_STATUS_CHANGED` + `status=DONE` 만 PAID 전이, 그 외 status·eventType 은 IGNORED no-op
+- [x] 멱등: transmissionId 기반 — 동일 transmission 재시도 시 두 번째는 SKIPPED
+- [x] dev e2e: ngrok 200 OK + PaymentEvent 기록 + booking PAID (이미 PAID 면 SKIPPED)
+- [x] typecheck / test / lint 그린, 회귀 0건
+- [x] dev signature skip 분기 (a1b425d) 그대로 유지 — verification plan 까지는 development 한정 통과 유지
 
 ## Out of Scope
 

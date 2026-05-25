@@ -13,14 +13,16 @@
 // ── Zod 스키마 ───────────────────────────────────────────────────
 export {
   ConfirmPaymentRequestSchema,
-  TossWebhookEventSchema,
+  TossWebhookV2EventSchema,
+  PaymentStatusChangedDataSchema,
   RefundRequestSchema,
 } from "./model/schemas";
 
 // ── 도메인 타입 ──────────────────────────────────────────────────
 export type {
   ConfirmPaymentRequest,
-  TossWebhookEvent,
+  TossWebhookV2Event,
+  TossPaymentStatusChangedData,
   RefundRequest,
 } from "./model/schemas";
 

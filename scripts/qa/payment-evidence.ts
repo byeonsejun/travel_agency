@@ -240,22 +240,26 @@ async function scenarioConfirmPgNetworkError() {
 async function scenarioWebhookIdempotency() {
   const { bookingId } = await freshDepartureConfirmedBooking();
   // Payment 없이 웹훅만 전송하면 orderId 불인식 → IGNORED로 처리
-  // 시나리오를 명확히 하기 위해 PAYMENT_DONE 이벤트를 알 수 없는 orderId로 보내 IGNORED 2회를 검증
-  const eventId = `ev_idem_test_${Date.now()}`;
+  // v2 페이로드 + 동일 transmissionId 로 2회 전송하여 멱등 처리 검증
+  const transmissionId = `whtrans_qa_idem_${Date.now()}`;
   const payload = JSON.stringify({
-    eventId,
-    orderId: `unknown_order_${Date.now()}`,
-    type: "PAYMENT_DONE",
-    totalAmount: 10000,
+    eventType: "PAYMENT_STATUS_CHANGED",
+    createdAt: new Date().toISOString(),
+    data: {
+      paymentKey: `qa_pk_${Date.now()}`,
+      orderId: `unknown_order_${Date.now()}`,
+      status: "DONE",
+      totalAmount: 10000,
+    },
   });
   const signature = signBody(payload);
 
   const countBefore = await db.paymentEvent.count();
 
-  await handleTossWebhook({ rawBody: payload, signature });
+  await handleTossWebhook({ rawBody: payload, signature, transmissionId });
   const countAfterFirst = await db.paymentEvent.count();
 
-  await handleTossWebhook({ rawBody: payload, signature });
+  await handleTossWebhook({ rawBody: payload, signature, transmissionId });
   const countAfterSecond = await db.paymentEvent.count();
 
   log("webhook-idempotency.result", {
@@ -276,13 +280,22 @@ async function scenarioWebhookIdempotency() {
 /** webhook-bad-signature: 위조 서명 → InvalidSignatureError */
 async function scenarioWebhookBadSignature() {
   const payload = JSON.stringify({
-    eventId: `ev_bad_sig_${Date.now()}`,
-    orderId: "any_order",
-    type: "PAYMENT_DONE",
+    eventType: "PAYMENT_STATUS_CHANGED",
+    createdAt: new Date().toISOString(),
+    data: {
+      paymentKey: `qa_pk_bad_${Date.now()}`,
+      orderId: "any_order",
+      status: "DONE",
+      totalAmount: 10000,
+    },
   });
 
   try {
-    await handleTossWebhook({ rawBody: payload, signature: "forged_signature" });
+    await handleTossWebhook({
+      rawBody: payload,
+      signature: "forged_signature",
+      transmissionId: `whtrans_qa_bad_${Date.now()}`,
+    });
     log("webhook-bad-signature.result", { UNEXPECTED: "no error thrown" });
   } catch (err) {
     log("webhook-bad-signature.result", {
@@ -294,16 +307,21 @@ async function scenarioWebhookBadSignature() {
 
 /** webhook-unknown-order: 알 수 없는 orderId → PaymentEvent IGNORED */
 async function scenarioWebhookUnknownOrder() {
+  const transmissionId = `whtrans_qa_unknown_${Date.now()}`;
   const payload = JSON.stringify({
-    eventId: `ev_unknown_${Date.now()}`,
-    orderId: `nonexistent_order_${Date.now()}`,
-    type: "PAYMENT_DONE",
-    totalAmount: 10000,
+    eventType: "PAYMENT_STATUS_CHANGED",
+    createdAt: new Date().toISOString(),
+    data: {
+      paymentKey: `qa_pk_unknown_${Date.now()}`,
+      orderId: `nonexistent_order_${Date.now()}`,
+      status: "DONE",
+      totalAmount: 10000,
+    },
   });
   const signature = signBody(payload);
 
   const countBefore = await db.paymentEvent.count({ where: { result: "IGNORED" } });
-  await handleTossWebhook({ rawBody: payload, signature });
+  await handleTossWebhook({ rawBody: payload, signature, transmissionId });
   const countAfter = await db.paymentEvent.count({ where: { result: "IGNORED" } });
 
   log("webhook-unknown-order.result", {
@@ -333,17 +351,21 @@ async function scenarioWebhookSignedEndToEnd() {
 
   log("webhook-signed-end-to-end.before", await snapshot(bookingId));
 
+  const transmissionId = `whtrans_qa_e2e_${Date.now()}`;
   const payload = JSON.stringify({
-    eventId: `ev_e2e_${Date.now()}`,
-    orderId,
-    paymentKey,
-    type: "PAYMENT_DONE",
-    totalAmount: amount,
-    approvedAt: new Date().toISOString(),
+    eventType: "PAYMENT_STATUS_CHANGED",
+    createdAt: new Date().toISOString(),
+    data: {
+      paymentKey,
+      orderId,
+      status: "DONE",
+      totalAmount: amount,
+      approvedAt: new Date().toISOString(),
+    },
   });
   const signature = signBody(payload);
 
-  await handleTossWebhook({ rawBody: payload, signature });
+  await handleTossWebhook({ rawBody: payload, signature, transmissionId });
 
   log("webhook-signed-end-to-end.after", await snapshot(bookingId));
 

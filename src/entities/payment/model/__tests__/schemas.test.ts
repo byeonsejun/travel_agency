@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   ConfirmPaymentRequestSchema,
-  TossWebhookEventSchema,
+  TossWebhookV2EventSchema,
+  PaymentStatusChangedDataSchema,
   RefundRequestSchema,
 } from "../schemas";
 
@@ -51,56 +52,114 @@ describe("ConfirmPaymentRequestSchema", () => {
   });
 });
 
-// ── TossWebhookEventSchema ───────────────────────────────────────────────────
+// ── TossWebhookV2EventSchema (v2024-06-01 envelope) ──────────────────────────
 
-describe("TossWebhookEventSchema", () => {
+describe("TossWebhookV2EventSchema", () => {
   const valid = {
-    eventId: "evt_abc123",
-    orderId: "ord_abc__1",
-    type: "PAYMENT_DONE",
-    totalAmount: 10000,
+    eventType: "PAYMENT_STATUS_CHANGED",
+    createdAt: "2026-05-24T01:18:13.957Z",
+    data: { paymentKey: "pk", orderId: "ord__1", status: "DONE", totalAmount: 100 },
   };
 
   it("정상 케이스 통과", () => {
-    expect(TossWebhookEventSchema.safeParse(valid).success).toBe(true);
+    expect(TossWebhookV2EventSchema.safeParse(valid).success).toBe(true);
   });
 
-  it("eventId 누락 거부", () => {
-    const { eventId: _, ...rest } = valid;
-    expect(TossWebhookEventSchema.safeParse(rest).success).toBe(false);
+  it("eventType 누락 거부", () => {
+    const { eventType: _eventType, ...rest } = valid;
+    void _eventType;
+    expect(TossWebhookV2EventSchema.safeParse(rest).success).toBe(false);
   });
 
-  it("orderId 누락 거부", () => {
-    const { orderId: _, ...rest } = valid;
-    expect(TossWebhookEventSchema.safeParse(rest).success).toBe(false);
+  it("data 누락 거부", () => {
+    const { data: _data, ...rest } = valid;
+    void _data;
+    expect(TossWebhookV2EventSchema.safeParse(rest).success).toBe(false);
   });
 
-  it("type 누락 거부", () => {
-    const { type: _, ...rest } = valid;
-    expect(TossWebhookEventSchema.safeParse(rest).success).toBe(false);
-  });
-
-  it("미지원 type 값도 통과 (string이면 OK)", () => {
+  it("미지원 eventType 값도 통과 (안정성 우선 — dispatch 에서 IGNORED)", () => {
     expect(
-      TossWebhookEventSchema.safeParse({ ...valid, type: "FUTURE_UNKNOWN_EVENT" }).success
+      TossWebhookV2EventSchema.safeParse({ ...valid, eventType: "FUTURE_UNKNOWN_EVENT" })
+        .success,
     ).toBe(true);
   });
 
-  it("totalAmount 없어도 통과 (optional)", () => {
-    const { totalAmount: _, ...rest } = valid;
-    expect(TossWebhookEventSchema.safeParse(rest).success).toBe(true);
+  it("createdAt 없어도 통과 (optional)", () => {
+    const { createdAt: _createdAt, ...rest } = valid;
+    void _createdAt;
+    expect(TossWebhookV2EventSchema.safeParse(rest).success).toBe(true);
   });
 
-  it("totalAmount 소수이면 거부", () => {
+  it("data 가 빈 객체여도 envelope 단계에선 통과 (내부는 dispatch 에서 parse)", () => {
     expect(
-      TossWebhookEventSchema.safeParse({ ...valid, totalAmount: 10000.5 }).success
+      TossWebhookV2EventSchema.safeParse({ ...valid, data: {} }).success,
+    ).toBe(true);
+  });
+});
+
+// ── PaymentStatusChangedDataSchema (내부 정밀 검증) ─────────────────────────
+
+describe("PaymentStatusChangedDataSchema", () => {
+  const valid = {
+    paymentKey: "tviva_payment_key",
+    orderId: "ord__1",
+    status: "DONE" as const,
+    totalAmount: 100,
+    approvedAt: "2026-05-24T01:18:13+09:00",
+    receipt: { url: "https://dashboard-sandbox.tosspayments.com/receipt/x" },
+  };
+
+  it("정상 DONE 통과", () => {
+    expect(PaymentStatusChangedDataSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("paymentKey 빈 거부", () => {
+    expect(
+      PaymentStatusChangedDataSchema.safeParse({ ...valid, paymentKey: "" }).success,
     ).toBe(false);
   });
 
-  it("totalAmount 음수이면 거부", () => {
+  it("orderId 빈 거부", () => {
     expect(
-      TossWebhookEventSchema.safeParse({ ...valid, totalAmount: -1 }).success
+      PaymentStatusChangedDataSchema.safeParse({ ...valid, orderId: "" }).success,
     ).toBe(false);
+  });
+
+  it("status enum 외 값 거부", () => {
+    expect(
+      PaymentStatusChangedDataSchema.safeParse({ ...valid, status: "UNKNOWN" }).success,
+    ).toBe(false);
+  });
+
+  it.each(["READY", "IN_PROGRESS", "WAITING_FOR_DEPOSIT", "DONE", "CANCELED", "PARTIAL_CANCELED", "ABORTED", "EXPIRED"] as const)(
+    "status %s 통과",
+    (status) => {
+      expect(
+        PaymentStatusChangedDataSchema.safeParse({ ...valid, status }).success,
+      ).toBe(true);
+    },
+  );
+
+  it("totalAmount 소수 거부", () => {
+    expect(
+      PaymentStatusChangedDataSchema.safeParse({ ...valid, totalAmount: 100.5 }).success,
+    ).toBe(false);
+  });
+
+  it("totalAmount 음수 거부", () => {
+    expect(
+      PaymentStatusChangedDataSchema.safeParse({ ...valid, totalAmount: -1 }).success,
+    ).toBe(false);
+  });
+
+  it("approvedAt/receipt null 도 허용", () => {
+    expect(
+      PaymentStatusChangedDataSchema.safeParse({
+        ...valid,
+        approvedAt: null,
+        receipt: null,
+      }).success,
+    ).toBe(true);
   });
 });
 
