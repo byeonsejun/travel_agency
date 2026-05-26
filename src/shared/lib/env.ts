@@ -89,23 +89,25 @@ export const envSchema = z
       }
     }
 
-    // 🛑 NO-REAL-MONEY 런타임 강제 (CLAUDE.md §5, ADR-0009).
-    // (1) 라이브 키(live_)는 어떤 환경에서도 부팅 자체를 막는다 — 문서 규칙을
-    //     코드 invariant로 못박아 실수로라도 실거래 경로가 활성화되지 않게 한다.
-    //     client/secret 2종 모두 대칭적으로 차단. (webhook secret 은 ADR-0016
-    //     으로 cross-check 채택, env 자체가 제거되어 대상에서 제외.)
+    // 🛑 NO-REAL-MONEY 런타임 강제 (CLAUDE.md §5, ADR-0009 → ADR-0014로 격상).
+    // (1) 결제 키는 `test_` 화이트리스트만 허용한다 — 어떤 환경(production 포함)에서도
+    //     `test_` 가 아닌 prefix는 부팅 자체를 막는다. ADR-0009의 블랙리스트(live_만 거부)
+    //     를 화이트리스트로 격상해 운영 키·임의 prefix·placeholder 혼입을 모두 fail-fast.
+    //     client/secret 2종 모두 대칭. (webhook secret 은 ADR-0016 cross-check 채택으로
+    //     env 자체가 제거되어 대상에서 제외.)
     for (const key of [
       "TOSS_CLIENT_KEY",
       "TOSS_SECRET_KEY",
     ] as const) {
       const val = env[key];
-      if (val && val.startsWith("live_")) {
+      if (val && !val.startsWith("test_")) {
+        const prefixHint = val.startsWith("live_") ? "live(실거래) 키" : `'${val.slice(0, 8)}…'`;
         ctx.addIssue({
           code: "custom",
           path: [key],
           message:
-            `${key}: live(실거래) 키는 금지됩니다 (NO-REAL-MONEY). ` +
-            `test_ 샌드박스 키만 허용.`,
+            `${key}: test_ 샌드박스 키만 허용됩니다 (NO-REAL-MONEY, ADR-0014). ` +
+            `현재 ${prefixHint} — live_ 등 운영/임의 prefix는 부팅에서 차단됩니다.`,
         });
       }
     }

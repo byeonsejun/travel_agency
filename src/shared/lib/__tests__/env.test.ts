@@ -16,7 +16,54 @@ const validBase = {
   NODE_ENV: "test",
 } as const;
 
-describe("envSchema — NO-REAL-MONEY invariant (ADR-0009)", () => {
+describe("envSchema — NO-REAL-MONEY invariant (ADR-0009, ADR-0014)", () => {
+  // ADR-0014 화이트리스트 격상: `test_` 가 아닌 모든 prefix 거부.
+  // 블랙리스트(live_만 거부)에서 화이트리스트(test_만 허용)로 invariant 강화.
+  describe("test_ 화이트리스트 격상 (ADR-0014)", () => {
+    it("TOSS_CLIENT_KEY=prod_… (test_ 아님) 이면 parse 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        TOSS_CLIENT_KEY: "prod_ck_abc",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((i) => i.path[0] === "TOSS_CLIENT_KEY"),
+        ).toBe(true);
+      }
+    });
+
+    it("TOSS_SECRET_KEY=ck_abc (prefix 없음) 이면 parse 실패", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        TOSS_SECRET_KEY: "ck_abc",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((i) => i.path[0] === "TOSS_SECRET_KEY"),
+        ).toBe(true);
+      }
+    });
+
+    it("production 환경에서도 test_ 가 아니면 차단 (운영 배포 fail-fast)", () => {
+      const result = envSchema.safeParse({
+        ...validBase,
+        NODE_ENV: "production",
+        TOSS_CLIENT_KEY: "prod_ck_abc",
+        TOSS_SECRET_KEY: "prod_sk_abc",
+        CRON_SECRET: "y".repeat(32),
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const offending = result.error.issues.filter(
+          (i) => i.path[0] === "TOSS_CLIENT_KEY" || i.path[0] === "TOSS_SECRET_KEY",
+        );
+        expect(offending.length).toBeGreaterThanOrEqual(2);
+      }
+    });
+  });
+
   describe("live_ 키 부팅 차단 (모든 환경)", () => {
     it("TOSS_CLIENT_KEY=live_… 이면 parse 실패", () => {
       const result = envSchema.safeParse({
