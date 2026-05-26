@@ -647,7 +647,7 @@ grep -n "\- \[ \]" docs/superpowers/plans/2026-05-26-webhook-verification.md
 ```
 Expected: 0 hit (모든 Task 완료 후)
 
-- [ ] **Step 4: 보고 — 7.1 양식 (🏗️ Core / ♻️ Boilerplate / 🧠 Concept)**
+- [x] **Step 4: 보고 — 7.1 양식 (🏗️ Core / ♻️ Boilerplate / 🧠 Concept)** — 사용자 응답 메시지에 인라인 보고.
 
 CLAUDE.md §7.1 형식으로 사용자에게 보고:
 - 🏗️ Core: cross-check 진위 검증, 외부 IO tx 외부 배치, 멱등 키 transmission-id 보존
