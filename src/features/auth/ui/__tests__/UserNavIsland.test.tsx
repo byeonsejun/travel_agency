@@ -169,4 +169,100 @@ describe("<UserNavIsland />", () => {
     // dimensions class 검증 — 비로그인 버튼 폭과 동일
     expect(skeleton?.className).toMatch(/\bh-7\b/);
   });
+
+  // ── (g) wishlist-changed 이벤트 → /api/wishlist/count 재호출 → 뱃지 갱신 ─
+  it("(g) wishlist-changed 이벤트 발행 시 count 재호출 후 뱃지 숫자 갱신 (3 → 7)", async () => {
+    // 첫 fetch: count=3, 두 번째 fetch (재호출): count=7
+    const countSeq = [3, 7];
+    let countIdx = 0;
+    const fetchMock = vi.fn((url: string) => {
+      if (url === "/api/auth/session") {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({ user: { id: "u1", name: "Hong", email: "h@e.com" } }),
+        });
+      }
+      if (url === "/api/wishlist/count") {
+        const count = countSeq[countIdx++] ?? 0;
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ count }),
+        });
+      }
+      return Promise.reject(new Error(`unexpected: ${url}`));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<UserNavIsland />);
+    });
+
+    // 초기 fetch 후 뱃지 = 3
+    const badge1 = container.querySelector('[aria-label^="찜한 상품"]');
+    expect(badge1?.textContent).toBe("3");
+
+    // 이벤트 발행 → count 재호출 (idx 1, count=7)
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent("wishlist-changed"));
+    });
+    // 비동기 fetch + setState 정착을 위해 마이크로태스크 한 사이클 더
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // /api/wishlist/count 호출이 mount(1) + 이벤트(1) = 2회
+    const countCalls = fetchMock.mock.calls.filter(
+      (c) => c[0] === "/api/wishlist/count",
+    );
+    expect(countCalls.length).toBe(2);
+
+    const badge2 = container.querySelector('[aria-label^="찜한 상품"]');
+    expect(badge2?.textContent).toBe("7");
+  });
+
+  // ── (h) unmount 후 wishlist-changed 이벤트는 무시 (listener cleanup) ─
+  it("(h) unmount 후 wishlist-changed 이벤트는 fetch 재호출하지 않음", async () => {
+    const fetchMock = vi.fn((url: string) => {
+      if (url === "/api/auth/session") {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ user: { id: "u1", name: "H" } }),
+        });
+      }
+      if (url === "/api/wishlist/count") {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ count: 0 }),
+        });
+      }
+      return Promise.reject(new Error(`unexpected: ${url}`));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<UserNavIsland />);
+    });
+
+    // mount 후 호출 횟수
+    const before = fetchMock.mock.calls.filter(
+      (c) => c[0] === "/api/wishlist/count",
+    ).length;
+
+    await act(async () => {
+      root!.unmount();
+    });
+    root = null;
+
+    // unmount 후 이벤트 발행 → fetch 추가 호출 없음
+    window.dispatchEvent(new CustomEvent("wishlist-changed"));
+    await Promise.resolve();
+
+    const after = fetchMock.mock.calls.filter(
+      (c) => c[0] === "/api/wishlist/count",
+    ).length;
+    expect(after).toBe(before);
+  });
 });

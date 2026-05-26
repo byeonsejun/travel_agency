@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { subscribeWishlistChanged } from "@/entities/wishlist";
 import { LogoutButton } from "./LogoutButton";
 
 type SessionUser = {
@@ -21,6 +22,11 @@ type State =
 // /api/wishlist/count 를 단일 AbortController + Promise.all 로 묶어 fetch.
 // 결과: 부모 layout 이 cookies 의존 0 → 자식 페이지 (/products/[id] 등) 가
 // ISR `●` 표기로 승격 (ADR-0018).
+//
+// 헤더 카운트 뱃지 라이브 동기화: WishlistHeartButton/Island 가 토글 완료 후
+// dispatchWishlistChanged() 로 알리면, 본 island 가 listener 에서
+// /api/wishlist/count 만 재호출해 뱃지를 갱신. (layout 은 re-render 되지 않
+// 으므로 RSC refresh 로는 해결 불가.)
 //
 // CLS: skeleton 은 비로그인 "로그인" 버튼 dimensions (h-7 w-20 ≈ 28×80px) 와
 // 동일. 로그인 사용자만 hydration 후 width 확장 1회 발생 — ADR-0012/0017
@@ -54,6 +60,27 @@ export function UserNavIsland() {
       });
 
     return () => controller.abort();
+  }, []);
+
+  // 위시리스트 토글 알림 → count 만 재호출 (session 은 변하지 않음).
+  // loading 상태에서 들어온 알림은 무시 — 초기 fetch 가 곧 count 를 세팅.
+  useEffect(() => {
+    return subscribeWishlistChanged(() => {
+      void (async () => {
+        try {
+          const res = await fetch("/api/wishlist/count");
+          if (!res.ok) return;
+          const data = (await res.json()) as { count: number };
+          setState((prev) =>
+            prev.phase === "ready"
+              ? { ...prev, wishlistCount: data.count }
+              : prev,
+          );
+        } catch {
+          // 조용히 실패 — 다음 토글에 다시 시도
+        }
+      })();
+    });
   }, []);
 
   if (state.phase === "loading") {
