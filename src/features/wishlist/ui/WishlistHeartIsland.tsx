@@ -3,6 +3,7 @@
 import { useEffect, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toggleWishlistAction } from "../server/actions";
+import { LOGIN_PROMPT_MESSAGE, buildResumeCallbackUrl } from "../lib/loginPrompt";
 
 type Size = "sm" | "md";
 
@@ -17,9 +18,6 @@ const SIZE_CLASS: Record<Size, { btn: string; svg: string }> = {
   sm: { btn: "h-8 w-8", svg: "h-4 w-4" },
   md: { btn: "h-10 w-10", svg: "h-5 w-5" },
 };
-
-const LOGIN_PROMPT_MESSAGE =
-  "로그인 후 이용하실 수 있습니다.\n로그인하시겠습니까?";
 
 // PDP 전용 island. 부모 RSC(PDP)가 auth()/isInWishlist() 호출을 안 해도 되도록
 // mount 후 GET /api/wishlist/check 로 자기 상태(inWishlist + loggedIn) 를
@@ -72,7 +70,7 @@ export function WishlistHeartIsland({
           // 비로그인: confirm 후 분기. server action 호출하지 않음.
           const ok = window.confirm(LOGIN_PROMPT_MESSAGE);
           if (!ok) return;
-          const resumeUrl = `/api/wishlist/resume?productId=${encodeURIComponent(productId)}&returnTo=${encodeURIComponent(returnTo)}`;
+          const resumeUrl = buildResumeCallbackUrl(productId, returnTo);
           router.push(`/login?callbackUrl=${encodeURIComponent(resumeUrl)}`);
           return;
         }
