@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useOptimistic, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toggleWishlistAction } from "../server/actions";
 import { LOGIN_PROMPT_MESSAGE, buildResumeCallbackUrl } from "../lib/loginPrompt";
+import { dispatchWishlistChanged } from "@/entities/wishlist";
 
 type Size = "sm" | "md";
 
@@ -23,10 +24,19 @@ const SIZE_CLASS: Record<Size, { btn: string; svg: string }> = {
 // mount 후 GET /api/wishlist/check 로 자기 상태(inWishlist + loggedIn) 를
 // 자체 결정. PDP ISR 활성 (A6).
 //
+// 상태 모델: useState 만 사용 (useOptimistic 미사용).
+// 이유 — useOptimistic 은 transition 종료 시 base value 로 복귀하는데, PDP 의
+// inWishlist 는 자체 상태(prop 아님)이므로 base 가 stale 상태로 머물러
+// 깜빡임 발생. setInWishlist(next) 가 즉시 새 상태를 commit 하므로 깜빡임
+// 구조적 불가능.
+//
 // 비로그인 클릭 흐름:
 //   1. window.confirm 안내 → 사용자 동의
 //   2. 동의 시 /login?callbackUrl=/api/wishlist/resume?... 로 navigation
 //   3. 취소 시 아무 동작 없음 (이전엔 Server Action 이 무조건 redirect 했음)
+//
+// 로그인 토글 사이드 이펙트: 헤더의 UserNavIsland count 뱃지에
+// dispatchWishlistChanged() 로 알림.
 export function WishlistHeartIsland({
   productId,
   returnTo,
@@ -35,10 +45,6 @@ export function WishlistHeartIsland({
 }: Props) {
   const [inWishlist, setInWishlist] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [optimistic, applyOptimistic] = useOptimistic<boolean, boolean>(
-    inWishlist,
-    (_, next) => next,
-  );
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -60,7 +66,7 @@ export function WishlistHeartIsland({
   }, [productId]);
 
   const sz = SIZE_CLASS[size];
-  const active = optimistic;
+  const active = inWishlist;
 
   return (
     <form
@@ -75,9 +81,11 @@ export function WishlistHeartIsland({
           return;
         }
         const formData = new FormData(e.currentTarget);
+        const next = !inWishlist;
+        setInWishlist(next);
         startTransition(async () => {
-          applyOptimistic(!active);
           await toggleWishlistAction(formData);
+          dispatchWishlistChanged();
         });
       }}
       className={className}

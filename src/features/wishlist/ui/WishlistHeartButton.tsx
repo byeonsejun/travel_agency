@@ -1,9 +1,10 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toggleWishlistAction } from "../server/actions";
 import { LOGIN_PROMPT_MESSAGE, buildResumeCallbackUrl } from "../lib/loginPrompt";
+import { dispatchWishlistChanged } from "@/entities/wishlist";
 
 type Size = "sm" | "md";
 
@@ -24,7 +25,18 @@ const SIZE_CLASS: Record<Size, { btn: string; svg: string }> = {
 // SSR 주입형 하트 버튼. `inWishlist` · `loggedIn` 을 페이지 RSC 가 prop 으로 내려준다.
 // 비로그인 클릭 흐름은 PDP `WishlistHeartIsland` 와 동일하게 confirm 인터셉트 →
 // /login?callbackUrl=<resume URL> 로 navigation. Server Action 은 호출하지 않는다.
-// (Server Action 자체도 비로그인 시 redirect 하는 안전망을 그대로 유지.)
+//
+// 상태 모델: `useOptimistic` 대신 `useState` + prop sync (`useEffect`).
+// 이유 — `useOptimistic` 은 transition 종료 시 base prop 으로 즉시 복귀하지만
+// dynamic 페이지(`/products?…`)에서는 `revalidatePath` 가 의미 없고, 프로그램적
+// Server Action 호출은 자동 `router.refresh()` 를 트리거하지 않아 base prop 이
+// 변하지 않는다. → 클릭→optimistic→복귀(stale)→영원히 stale 의 깜빡임 발생.
+// manual useState 는 "revert by default" 가 아닌 "stay until prop changes" 이므로
+// 구조적으로 깜빡임이 불가능.
+//
+// 사이드 이펙트: 토글 완료 후 `dispatchWishlistChanged()` 로 헤더의
+// `UserNavIsland` count 뱃지에 알림. router.refresh() 도 호출해 같은 페이지의
+// 다른 하트 (e.g. /products 목록의 wishlistIds) 가 동기화되게 함.
 export function WishlistHeartButton({
   productId,
   inWishlist,
@@ -33,15 +45,18 @@ export function WishlistHeartButton({
   size = "sm",
   className = "",
 }: Props) {
-  const [optimistic, applyOptimistic] = useOptimistic<boolean, boolean>(
-    inWishlist,
-    (_, next) => next,
-  );
+  const [displayed, setDisplayed] = useState(inWishlist);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  // 부모 RSC 가 새로운 inWishlist prop 을 내려주면 동기화. 사용자 클릭으로
+  // setDisplayed 한 직후에도 prop 이 같으면 deps 변화 없어 no-op.
+  useEffect(() => {
+    setDisplayed(inWishlist);
+  }, [inWishlist]);
+
   const sz = SIZE_CLASS[size];
-  const active = optimistic;
+  const active = displayed;
 
   return (
     <form
@@ -55,9 +70,12 @@ export function WishlistHeartButton({
           return;
         }
         const formData = new FormData(e.currentTarget);
+        const next = !displayed;
+        setDisplayed(next);
         startTransition(async () => {
-          applyOptimistic(!active);
           await toggleWishlistAction(formData);
+          router.refresh();
+          dispatchWishlistChanged();
         });
       }}
       className={className}

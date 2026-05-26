@@ -7,6 +7,8 @@ import type { Root } from "react-dom/client";
 const mocks = vi.hoisted(() => ({
   toggleWishlistAction: vi.fn(),
   routerPush: vi.fn(),
+  routerRefresh: vi.fn(),
+  dispatchWishlistChanged: vi.fn(),
 }));
 
 vi.mock("@/features/wishlist/server/actions", () => ({
@@ -14,7 +16,14 @@ vi.mock("@/features/wishlist/server/actions", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mocks.routerPush }),
+  useRouter: () => ({
+    push: mocks.routerPush,
+    refresh: mocks.routerRefresh,
+  }),
+}));
+
+vi.mock("@/entities/wishlist", () => ({
+  dispatchWishlistChanged: mocks.dispatchWishlistChanged,
 }));
 
 import { WishlistHeartButton } from "../WishlistHeartButton";
@@ -31,7 +40,10 @@ describe("<WishlistHeartButton />", () => {
     document.body.appendChild(container);
     root = null;
     mocks.toggleWishlistAction.mockReset();
+    mocks.toggleWishlistAction.mockResolvedValue(undefined);
     mocks.routerPush.mockReset();
+    mocks.routerRefresh.mockReset();
+    mocks.dispatchWishlistChanged.mockReset();
   });
 
   afterEach(async () => {
@@ -134,5 +146,44 @@ describe("<WishlistHeartButton />", () => {
     await render({ loggedIn: true, inWishlist: false });
     const btn = container.querySelector("button");
     expect(btn?.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  // (g) 클릭 시 즉시 aria-pressed 가 토글되어야 함 (optimistic, no flicker)
+  it("(g) loggedIn=true 클릭 → aria-pressed 가 즉시 토글 (false→true), 액션 완료 후에도 유지", async () => {
+    await render({ loggedIn: true, inWishlist: false });
+    expect(container.querySelector("button")?.getAttribute("aria-pressed")).toBe("false");
+
+    await submitForm();
+    // optimistic 적용 후
+    expect(container.querySelector("button")?.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  // (h) 액션 완료 후 dispatchWishlistChanged + router.refresh 호출 (헤더 카운트 동기화)
+  it("(h) loggedIn=true 클릭 → 액션 await 후 router.refresh + dispatchWishlistChanged 호출", async () => {
+    await render({ loggedIn: true, inWishlist: false });
+    await submitForm();
+
+    expect(mocks.toggleWishlistAction).toHaveBeenCalledOnce();
+    expect(mocks.routerRefresh).toHaveBeenCalledOnce();
+    expect(mocks.dispatchWishlistChanged).toHaveBeenCalledOnce();
+  });
+
+  // (i) inWishlist prop 이 외부에서 변경되면 displayed 상태 동기화
+  it("(i) inWishlist prop 변경 시 aria-pressed 자동 동기화", async () => {
+    await render({ loggedIn: true, inWishlist: false });
+    expect(container.querySelector("button")?.getAttribute("aria-pressed")).toBe("false");
+
+    // prop 변경을 시뮬레이션: 같은 root 에 다시 render
+    await act(async () => {
+      root!.render(
+        <WishlistHeartButton
+          productId={PRODUCT_ID}
+          inWishlist={true}
+          loggedIn={true}
+          returnTo={RETURN_TO}
+        />,
+      );
+    });
+    expect(container.querySelector("button")?.getAttribute("aria-pressed")).toBe("true");
   });
 });

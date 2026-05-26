@@ -7,6 +7,7 @@ import type { Root } from "react-dom/client";
 const mocks = vi.hoisted(() => ({
   toggleWishlistAction: vi.fn(),
   routerPush: vi.fn(),
+  dispatchWishlistChanged: vi.fn(),
 }));
 
 vi.mock("@/features/wishlist/server/actions", () => ({
@@ -15,6 +16,10 @@ vi.mock("@/features/wishlist/server/actions", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mocks.routerPush }),
+}));
+
+vi.mock("@/entities/wishlist", () => ({
+  dispatchWishlistChanged: mocks.dispatchWishlistChanged,
 }));
 
 import { WishlistHeartIsland } from "../WishlistHeartIsland";
@@ -31,7 +36,9 @@ describe("<WishlistHeartIsland />", () => {
     document.body.appendChild(container);
     root = null;
     mocks.toggleWishlistAction.mockReset();
+    mocks.toggleWishlistAction.mockResolvedValue(undefined);
     mocks.routerPush.mockReset();
+    mocks.dispatchWishlistChanged.mockReset();
   });
 
   afterEach(async () => {
@@ -252,5 +259,55 @@ describe("<WishlistHeartIsland />", () => {
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(mocks.routerPush).not.toHaveBeenCalled();
     expect(mocks.toggleWishlistAction).toHaveBeenCalledOnce();
+  });
+
+  // ── (j) 로그인 클릭 → aria-pressed 즉시 토글 (optimistic, no flicker) ─
+  it("(j) 로그인 클릭 → aria-pressed 즉시 토글 (false→true), 액션 완료 후에도 유지", async () => {
+    vi.stubGlobal("fetch", makeFetch(false, true));
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        <WishlistHeartIsland productId={PRODUCT_ID} returnTo="/products/test" />,
+      );
+    });
+
+    expect(container.querySelector("button")?.getAttribute("aria-pressed")).toBe(
+      "false",
+    );
+
+    const form = container.querySelector("form")!;
+    await act(async () => {
+      form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+
+    // 액션 await 후 setInWishlist(next) 적용 → aria-pressed=true
+    expect(container.querySelector("button")?.getAttribute("aria-pressed")).toBe(
+      "true",
+    );
+  });
+
+  // ── (k) 액션 완료 후 dispatchWishlistChanged 호출 ────────────────────
+  it("(k) 로그인 클릭 → 액션 await 후 dispatchWishlistChanged 호출", async () => {
+    vi.stubGlobal("fetch", makeFetch(false, true));
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        <WishlistHeartIsland productId={PRODUCT_ID} returnTo="/products/test" />,
+      );
+    });
+
+    const form = container.querySelector("form")!;
+    await act(async () => {
+      form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+
+    expect(mocks.toggleWishlistAction).toHaveBeenCalledOnce();
+    expect(mocks.dispatchWishlistChanged).toHaveBeenCalledOnce();
   });
 });
