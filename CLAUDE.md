@@ -254,11 +254,15 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 
 ## 8. 기억해야 할 컨텍스트
 
-- 🛑 **이 서비스는 라이브 실거래(실제 과금)를 구현하지 않는다.** 결제는 영구히 Mock/샌드박스(`test_` 키)까지만. §5 NO-REAL-MONEY 참조.
-- 현재 Phase 1(Product 표시 모듈) 완료. Phase 2(예약/결제 + AI 검색) 진입 예정.
-- 모든 페이지가 `force-dynamic` 상태 — Phase 2 후반에 도메인별 캐시 튜닝 PR로 분리.
+- 🛑 **이 서비스는 라이브 실거래(실제 과금)를 구현하지 않는다.** 결제는 영구히 Mock/샌드박스(`test_` 키)까지만. §5 NO-REAL-MONEY 참조. ([ADR-0009], [ADR-0014])
+- **Phase 1 (Product 표시) 완료. Phase 2 (예약·결제·AI 검색) 거의 완료** — Toss 웹훅 v2 envelope-first 마이그레이션 + cross-check 진위 검증([ADR-0013]/[ADR-0016]), 환불 Saga 3-phase([ADR-0003]), Cron 멱등 워커([ADR-0005]), 위시리스트 island + PDP ISR 시리즈([ADR-0012]/[ADR-0015]/[ADR-0017]/[ADR-0018]/[ADR-0019]) 박제 완료.
+- **현재는 Phase 3 (캐시 튜닝 + 운영 준비) 초입** — `force-dynamic` 일괄 가정은 더 이상 유효하지 않다. PDP `/products/[id]` 는 `●` (SSG with 1h ISR), 홈 `/` 은 `○` (Static, 5m revalidate) 로 이미 승격됨. 새 페이지 추가 시 default 는 **RSC + 정적 prerender 자격을 갖추도록** 작성하고, 사용자별 데이터는 island 패턴(`useEffect` + `AbortController` + 분리 endpoint)을 따른다([ADR-0018] 가이드).
+- **다음 작업자의 혼란 방지 노트**:
+  - "왜 어떤 페이지는 force-dynamic, 어떤 페이지는 ISR 이지?" → 도메인별 캐시 정책 분리 진행 중. 결제·예약·웹훅 등 안정성 민감 도메인은 일부러 dynamic 유지(NO-REAL-MONEY + PPR 보류 정책, [ADR-0009]).
+  - "PPR opt-in 하면 더 깔끔하지 않나?" → 결정 시점에 experimental 이라 보류. [ADR-0012]/[ADR-0017]/[ADR-0018]/[ADR-0015] 모두 같은 이유로 거부. PPR stable 승격 시 시리즈 일괄 재논의.
+  - "wishlist hook 이 왜 `useOptimistic` 안 쓰지?" → [ADR-0019] 박제. Next dynamic 페이지의 `revalidatePath` no-op + transition 종료 시 base prop revert 의 조합으로 깜빡임 발생. manual `useState` + CustomEvent bus 가 채택.
 - 시드 데이터는 `prisma/seed.ts`. 검증용 10개 상품(JP/VN/TH/EU/ID/PH).
-- 자세한 진행 상황은 `docs/superpowers/plans/done/`의 완료된 plan 참조.
+- 자세한 진행 상황은 `docs/superpowers/plans/done/` 의 완료된 plan, 의사결정은 `docs/superpowers/adr/` 참조.
 
 ---
 

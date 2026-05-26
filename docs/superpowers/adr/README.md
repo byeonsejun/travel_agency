@@ -62,6 +62,7 @@
 | 0012  | [PDP — `searchParams` 의존 client-fetch hoist 로 ISR 복귀 준비](./0012-pdp-searchparams-client-fetch-isr-return.md) | Accepted | 2026-05-23   |
 | 0013  | [Toss Webhook v2024-06-01 마이그레이션 — envelope-first + transmission-id 멱등 + verification 분리](./0013-toss-webhook-v2-envelope-first.md) | Accepted | 2026-05-26   |
 | 0014  | [NO-REAL-MONEY env 강제 — `test_` 화이트리스트 격상 (블랙리스트 → 화이트리스트)](./0014-no-real-money-env-enforcement.md) | Accepted | 2026-05-26   |
+| 0015  | [PDP wishlist 의존을 client-fetch island 로 분리해 ISR 활성화 (A6)](./0015-wishlist-island-isr.md) | Accepted | 2026-05-26   |
 | 0016  | [Toss Webhook 진위 검증 — 결제 조회 API cross-check 채택 + HMAC 헬퍼 제거](./0016-toss-webhook-verification.md) | Accepted | 2026-05-26   |
 | 0017  | [`useSearchParams` 클라이언트 컴포넌트의 Suspense 박제(內) 패턴](./0017-usesearchparams-internal-suspense.md) | Accepted | 2026-05-26   |
 | 0018  | [`(site)/layout.tsx` 의 `auth()` 의존을 client island 로 격리 + PDP `generateStaticParams`](./0018-layout-auth-client-island.md) | Accepted | 2026-05-26   |
@@ -69,4 +70,4 @@
 
 ## 향후 후보 (작성 대기)
 
-- 0015(가칭): wishlist island 분리로 PDP 완전한 정적 ISR 활성화 — ADR-0012 후속 (A6 작업 완료, ADR 박제 대기)
+_(현재 대기 항목 없음 — A4-A6-0018-0019 PDP ISR 시리즈 박제 완료)_
