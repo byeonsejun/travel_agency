@@ -317,7 +317,7 @@ git commit -m "feat(product): getDistinctDestinations unstable_cache(1h, TAG_DES
 - 5min TTL 이라 자정 경계에서 최대 5min stale (예: 23:58 호출 결과가 00:03 까지 재사용) — 허용 범위.
 - `pageSize` 가 `undefined` vs `12` 로 cache key 분기되지 않도록 호출부에서 항상 명시 (현재 `src/app/(site)/products/page.tsx:42` 가 `pageSize: PAGE_SIZE` 명시 — 안전).
 
-- [ ] **Step 1: 호출부 안정성 사전 확인**
+- [x] **Step 1: 호출부 안정성 사전 확인**
 
 Run:
 ```bash
@@ -325,7 +325,7 @@ grep -rn "getProductList(" src/ 2>/dev/null
 ```
 Expected: `src/app/(site)/products/page.tsx` 가 유일 호출처. `pageSize: PAGE_SIZE` 명시 확인.
 
-- [ ] **Step 2: `getProductList` wrap (구현 + 검증 같은 step 으로 진행)**
+- [x] **Step 2: `getProductList` wrap (구현 + 검증 같은 step 으로 진행)**
 
 `getProductList` 는 unit test 가 별도로 존재하지 않고, unstable_cache wrap 은 mock 으로 우회되는 패턴 → 단위 테스트는 추가하지 않고 빌드/런타임 검증으로 대체(checkout/booking-cancel 의 기존 테스트 패턴 ([ADR-0017])과 동일 정책).
 
@@ -483,7 +483,7 @@ async function getProductListInner(
 
 (주의: `getProductListInner` 의 본문은 기존 함수 본문을 **그대로** 옮긴다 — `today` 변수, raw SQL, ordered map, 반환 형식 100% 보존. 위 패치에서 생략 없이 모두 명시.)
 
-- [ ] **Step 3: typecheck + 기존 e2e/integration 영향 확인**
+- [x] **Step 3: typecheck + 기존 e2e/integration 영향 확인**
 
 Run:
 ```bash
@@ -497,7 +497,7 @@ npx vitest run src/entities/product/api/__tests__/
 ```
 Expected: 기존 `mapping.test.ts`, `parseListParams.test.ts`, `searchByVector.test.ts`, 신규 `cache-tags.test.ts` 모두 PASS. `queries.ts` 의 변경은 시그니처 보존이므로 호출부 회귀 없음.
 
-- [ ] **Step 4: 호출부 런타임 sanity 검증**
+- [x] **Step 4: 호출부 런타임 sanity 검증**
 
 ```bash
 npm run dev &  # background
@@ -508,7 +508,7 @@ curl -s "http://localhost:3000/products?sort=departure_soon&page=2" -o /dev/null
 ```
 Expected: 모두 200. 3번 호출 후 dev server 로그에서 동일 params 재요청 시 Prisma 쿼리가 줄어드는지 (또는 unstable_cache HIT 로그가 보이는지) 확인.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/product/api/queries.ts

@@ -129,7 +129,41 @@ type ListParams = {
   pageSize?: number;
 };
 
+// unstable_cache: 5분 TTL + 리스팅 태그. 같은 (sort, page, destinationCode) 조합
+// 반복 요청 시 DB hit 압축. 미래 admin CMS 가 상품 status 변경·신규 등록 시
+// revalidateTag(TAG_PRODUCTS_LIST) 로 일괄 무효화.
+// outer wrapper 가 params 를 primitive args 로 정규화 → cache key 안정화.
 export async function getProductList(
+  params: ListParams
+): Promise<{ items: ProductCard[]; total: number }> {
+  // cache key 안정화: undefined 를 구체적 primitive 로 정규화.
+  const sort = params.sort ?? "latest";
+  const page = params.page ?? 1;
+  const pageSize = params.pageSize ?? PAGE_SIZE;
+  const destinationCode = params.filter?.destinationCode ?? null;
+
+  return unstable_cache(
+    async (
+      sortKey: NonNullable<ListParams["sort"]>,
+      pageKey: number,
+      pageSizeKey: number,
+      destinationKey: string | null
+    ): Promise<{ items: ProductCard[]; total: number }> => {
+      return getProductListInner({
+        sort: sortKey,
+        page: pageKey,
+        pageSize: pageSizeKey,
+        filter: destinationKey ? { destinationCode: destinationKey } : undefined,
+      });
+    },
+    ["product-list"],
+    { revalidate: 300, tags: [TAG_PRODUCTS_LIST] }
+  )(sort, page, pageSize, destinationCode);
+}
+
+// 기존 본문 100% 보존 — inner 함수로 분리 (file-private, non-export).
+// today 는 inner 에 위치: 캐시 미스 시마다 fresh today 를 계산하는 것이 의도.
+async function getProductListInner(
   params: ListParams
 ): Promise<{ items: ProductCard[]; total: number }> {
   const { filter, sort = "latest", page = 1, pageSize = PAGE_SIZE } = params;
