@@ -529,7 +529,7 @@ git commit -m "feat(product): getProductList unstable_cache(5min, TAG_PRODUCTS_L
 - `parseCompareIds` 가 호출부에서 cuid 검증·중복 제거·MAX_COMPARE clamp 적용 → cache key 폭발 위험 낮음 (실용 키 공간: 등록 상품 수의 3-permutation, MAX_COMPARE=3 가정).
 - per-id 태그를 모두 부여하므로, 어떤 단일 product 가 admin 에 의해 update 되면 그 id 를 포함하는 **모든** 비교 캐시 엔트리가 무효화 — fan-out 정합성.
 
-- [ ] **Step 1: `getProductsByIds` wrap**
+- [x] **Step 1: `getProductsByIds` wrap**
 
 Edit `src/entities/product/api/queries.ts`:
 ```ts
@@ -585,7 +585,7 @@ export async function getProductsByIds(
 }
 ```
 
-- [ ] **Step 2: typecheck**
+- [x] **Step 2: typecheck**
 
 Run:
 ```bash
@@ -593,7 +593,7 @@ npm run typecheck
 ```
 Expected: PASS.
 
-- [ ] **Step 3: 호출부 런타임 sanity 검증 — /api/compare/products + /compare**
+- [x] **Step 3: 호출부 런타임 sanity 검증 — /api/compare/products + /compare**
 
 ```bash
 # dev server 가 Task 3 step 4 에서 띄워져 있다고 가정. 아니면 새로 띄울 것.
@@ -612,7 +612,7 @@ curl -s "http://localhost:3000/compare?compareIds=$PRODUCT_IDS" -o /dev/null -w 
 ```
 Expected: 첫 응답에 `products: [...]` 2건. 두 번째 호출은 cache hit (dev 로그에서 Prisma 쿼리 부재 확인).
 
-- [ ] **Step 4: api/compare/products 주석 정합성 확인**
+- [x] **Step 4: api/compare/products 주석 정합성 확인**
 
 `src/app/api/compare/products/route.ts:16` 의 주석:
 > `getProductsByIds` 가 unstable_cache(1h TTL + per-id 태그) 로 메모이즈되어 있어 underlying DB hit 은 압축됨.
@@ -623,7 +623,7 @@ Read 후 이 주석이 **이제 사실** 인지 확인. 사실이면 수정 불�
 sed -n '14,22p' src/app/api/compare/products/route.ts
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/product/api/queries.ts

@@ -281,19 +281,29 @@ export async function getProductsByIds(
 ): Promise<ProductDetail[]> {
   if (ids.length === 0) return [];
 
-  const products = await db.product.findMany({
-    where: { id: { in: ids }, status: "PUBLISHED" },
-    include: {
-      tags: true,
-      inclusions: true,
-      itineraryDays: { include: { stops: true } },
-    },
-  });
+  // unstable_cache: 1h TTL + per-id 태그 fan-out.
+  // 비교 페이지 ids 가 [A,B,C] 이면 tags=[product:A, product:B, product:C].
+  // 어떤 id 가 admin 에서 update 되어 revalidateTag(tagProductDetail(id)) 가
+  // 호출되면, 그 id 를 포함하는 모든 비교 캐시 엔트리가 한 번에 무효화된다.
+  // cache key 폭발 방지: parseCompareIds 가 MAX_COMPARE=3 으로 clamp 함.
+  return unstable_cache(
+    async (idsKey: string[]): Promise<ProductDetail[]> => {
+      const products = await db.product.findMany({
+        where: { id: { in: idsKey }, status: "PUBLISHED" },
+        include: {
+          tags: true,
+          inclusions: true,
+          itineraryDays: { include: { stops: true } },
+        },
+      });
 
-  // 입력 순서 보존 — find/filter 조합으로 자연스럽게 정렬.
-  return ids
-    .map((id) => products.find((p) => p.id === id))
-    .filter((p): p is NonNullable<typeof p> => p != null);
+      return idsKey
+        .map((id) => products.find((p) => p.id === id))
+        .filter((p): p is NonNullable<typeof p> => p != null);
+    },
+    ["products-by-ids"],
+    { revalidate: 3600, tags: ids.map(tagProductDetail) }
+  )(ids);
 }
 
 // ─── 7. Static Params for ISR Prerender ───────────────────────────────────────
