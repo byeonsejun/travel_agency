@@ -9,6 +9,8 @@ type ProductCardListProps = {
   // 비로그인이면 undefined → 하트 미노출.
   wishlistIds?: Set<string>;
   wishlistReturnTo?: string;
+  // 비로그인 클릭 시 confirm 인터셉트를 위한 prop. heart 노출 시 필수.
+  loggedIn?: boolean;
   // 비교 모드: URL state 보존 + 토글 버튼 노출.
   currentCompareIds?: string[];
   showCompareButton?: boolean;
@@ -18,6 +20,7 @@ export function ProductCardList({
   items,
   wishlistIds,
   wishlistReturnTo,
+  loggedIn,
   currentCompareIds,
   showCompareButton = true,
 }: ProductCardListProps) {
@@ -31,10 +34,11 @@ export function ProductCardList({
       {items.map((item) => {
         const inList = wishlistIds?.has(item.id);
         const heart =
-          wishlistReturnTo !== undefined && inList !== undefined ? (
+          wishlistReturnTo !== undefined && inList !== undefined && loggedIn !== undefined ? (
             <WishlistHeartButton
               productId={item.id}
               inWishlist={inList}
+              loggedIn={loggedIn}
               returnTo={wishlistReturnTo}
               size="sm"
             />
