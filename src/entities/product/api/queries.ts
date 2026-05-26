@@ -254,3 +254,17 @@ export async function getProductsByIds(
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => p != null);
 }
+
+// ─── 7. Static Params for ISR Prerender ───────────────────────────────────────
+//
+// PDP(`/products/[id]`) 의 `generateStaticParams()` 가 build time 에 호출하는
+// helper. PUBLISHED 상품만 prerender 후보 — CLOSED 는 첫 요청 시 ISR-on-demand.
+// `dynamicParams = true` (Next default) 이므로 신규 등록 상품도 첫 요청 시 자동
+// prerender → 새 PR 마다 별도 작업 불필요.
+export async function getAllPublishedProductIds(): Promise<string[]> {
+  const rows = await db.product.findMany({
+    where: { status: "PUBLISHED" },
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
+}

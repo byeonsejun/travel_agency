@@ -30,6 +30,7 @@ export {
   getProductsByIds,
   getFeaturedProducts,
   getDistinctDestinations,
+  getAllPublishedProductIds,
   tagProductDetail,
   tagProductDepartures,
   PAGE_SIZE,

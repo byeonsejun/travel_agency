@@ -1,15 +1,14 @@
-import { Suspense } from "react";
 import Link from "next/link";
-import { UserNav, UserNavSkeleton } from "@/features/auth/ui/UserNav";
+import { UserNavIsland } from "@/features/auth";
 
 export default function SiteLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // 쿠키 의존 auth() 호출은 UserNav 안으로 격리. layout 본체는 정적이므로
-  // PPR opt-in 라우트에서 헤더 chrome·logo는 prerender, user-section만
-  // Suspense fallback(UserNavSkeleton)으로 시작해 실제 세션 결과로 swap된다.
+  // cookies 의존 auth() 호출은 UserNavIsland 의 client-fetch 로 격리 (ADR-0018).
+  // layout 본체는 cookies 의존 0 → 모든 자식 페이지 정적 prerender 자격 회복
+  // (특히 /products/[id] 가 ISR `●` 표기로 승격).
   return (
     <>
       <header className="border-b border-gray-200 bg-white">
@@ -22,9 +21,7 @@ export default function SiteLayout({
           </Link>
 
           <nav className="flex items-center gap-2">
-            <Suspense fallback={<UserNavSkeleton />}>
-              <UserNav />
-            </Suspense>
+            <UserNavIsland />
           </nav>
         </div>
       </header>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProductById } from "@/entities/product";
+import { getProductById, getAllPublishedProductIds } from "@/entities/product";
 import { getDeparturesByProduct } from "@/entities/departure";
 import {
   getProductReviewStats,
@@ -7,21 +7,21 @@ import {
 } from "@/entities/review";
 import { ProductDetail } from "@/widgets/product-detail/ui/ProductDetail";
 import { ReviewList, ReviewStatsBar } from "@/widgets/review-list";
-import { auth } from "@/features/auth/server/auth";
-import { isInWishlist } from "@/entities/wishlist";
 import {
   CompareToggleButton,
   FloatingCompareCart,
 } from "@/features/product-compare";
 
-// PDP 1시간 ISR. compareIds 의존 UI(FloatingCompareCart) 는 client-fetch 패턴으로
-// 분리되어 본 페이지는 product/departures/review 만 RSC 로 prefetch.
-//
-// ⚠️ 잔여 dynamic 트리거: `auth()` + `isInWishlist` 는 cookies 의존이라 Next 가
-// 본 페이지를 여전히 dynamic 으로 분류한다. 본 `revalidate=3600` 은 wishlist 도
-// island 로 분리(별도 plan)되는 시점에 ISR 활성화 신호로 작동하는 *데이터 캐시
-// TTL 힌트*. 본 PR 의 직접 효과는 `searchParams.compareIds` 의존 제거.
+// PDP 1시간 ISR 실제 활성 (A4 compareIds island + A6 wishlist island + 0018 layout
+// auth island 분리 완료). 사용자/쿠키 의존 0 → Next 가 페이지를 정적 prerender 로 승격.
 export const revalidate = 3600;
+
+// PUBLISHED 상품을 build time 에 prerender — 빌드 출력에서 `●` (ISR) 표기 활성화.
+// dynamicParams = true (default) 이므로 신규 등록 상품은 첫 요청 시 ISR-on-demand.
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  const ids = await getAllPublishedProductIds();
+  return ids.map((id) => ({ id }));
+}
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -29,16 +29,13 @@ type PageProps = {
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const session = await auth();
 
-  const [product, departures, inWishlist, reviewStats, reviewPage] =
-    await Promise.all([
-      getProductById(id),
-      getDeparturesByProduct(id),
-      session?.user?.id ? isInWishlist(session.user.id, id) : Promise.resolve(undefined),
-      getProductReviewStats(id),
-      listReviewsByProduct(id, { limit: 10 }),
-    ]);
+  const [product, departures, reviewStats, reviewPage] = await Promise.all([
+    getProductById(id),
+    getDeparturesByProduct(id),
+    getProductReviewStats(id),
+    listReviewsByProduct(id, { limit: 10 }),
+  ]);
 
   if (product === null) {
     notFound();
@@ -49,7 +46,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <ProductDetail
         product={product}
         departures={departures}
-        inWishlist={inWishlist}
         compareButton={<CompareToggleButton productId={id} size="md" />}
         reviewsSection={
           <div className="space-y-4">

@@ -2,7 +2,7 @@
 
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
-import { signIn } from "./auth";
+import { signIn, signOut } from "./auth";
 
 type OAuthProvider = "kakao" | "google";
 
@@ -47,4 +47,11 @@ export async function signInWithProvider(formData: FormData): Promise<void> {
     }
     throw e;
   }
+}
+
+// 로그아웃 Server Action. LogoutButton 이 client component(UserNavIsland) 안에서
+// import 되므로 inline "use server" 가 아닌 module-level Server Action 으로 정의.
+// React 19 form action 에 그대로 dispatch 가능.
+export async function signOutAction(): Promise<void> {
+  await signOut({ redirectTo: "/" });
 }
