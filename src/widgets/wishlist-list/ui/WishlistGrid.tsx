@@ -33,6 +33,7 @@ export function WishlistGrid({ items }: Props) {
             <WishlistHeartButton
               productId={item.productId}
               inWishlist={true}
+              loggedIn={true}
               returnTo="/mypage"
               size="sm"
             />
