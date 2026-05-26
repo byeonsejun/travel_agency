@@ -1,13 +1,16 @@
 "use client";
 
 import { useOptimistic, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toggleWishlistAction } from "../server/actions";
+import { LOGIN_PROMPT_MESSAGE, buildResumeCallbackUrl } from "../lib/loginPrompt";
 
 type Size = "sm" | "md";
 
 type Props = {
   productId: string;
   inWishlist: boolean;
+  loggedIn: boolean;
   returnTo: string;
   size?: Size;
   className?: string;
@@ -18,9 +21,14 @@ const SIZE_CLASS: Record<Size, { btn: string; svg: string }> = {
   md: { btn: "h-10 w-10", svg: "h-5 w-5" },
 };
 
+// SSR 주입형 하트 버튼. `inWishlist` · `loggedIn` 을 페이지 RSC 가 prop 으로 내려준다.
+// 비로그인 클릭 흐름은 PDP `WishlistHeartIsland` 와 동일하게 confirm 인터셉트 →
+// /login?callbackUrl=<resume URL> 로 navigation. Server Action 은 호출하지 않는다.
+// (Server Action 자체도 비로그인 시 redirect 하는 안전망을 그대로 유지.)
 export function WishlistHeartButton({
   productId,
   inWishlist,
+  loggedIn,
   returnTo,
   size = "sm",
   className = "",
@@ -30,17 +38,25 @@ export function WishlistHeartButton({
     (_, next) => next,
   );
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const sz = SIZE_CLASS[size];
   const active = optimistic;
 
   return (
     <form
-      action={(formData) => {
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!loggedIn) {
+          const ok = window.confirm(LOGIN_PROMPT_MESSAGE);
+          if (!ok) return;
+          const resumeUrl = buildResumeCallbackUrl(productId, returnTo);
+          router.push(`/login?callbackUrl=${encodeURIComponent(resumeUrl)}`);
+          return;
+        }
+        const formData = new FormData(e.currentTarget);
         startTransition(() => {
           applyOptimistic(!active);
-          // useOptimistic 는 transition 안에서만 호출 가능. server action
-          // dispatch 도 같은 transition 에 묶어 pending 상태가 일관되게 흐름.
           void toggleWishlistAction(formData);
         });
       }}
