@@ -181,7 +181,7 @@ git commit -m "refactor(product): remove dead tagProductDepartures export (SSOT�
 - Modify: `src/entities/product/index.ts` (re-export 추가)
 - Test: `src/entities/product/api/__tests__/cache-tags.test.ts` (create)
 
-- [ ] **Step 1: Failing test — TAG_DESTINATIONS_LIST 상수 존재**
+- [x] **Step 1: Failing test — TAG_DESTINATIONS_LIST 상수 존재**
 
 Create `src/entities/product/api/__tests__/cache-tags.test.ts`:
 ```ts
@@ -209,7 +209,7 @@ describe("cache tags — 무효화 컨트랙트", () => {
 });
 ```
 
-- [ ] **Step 2: Run test — FAIL 확인**
+- [x] **Step 2: Run test — FAIL 확인**
 
 Run:
 ```bash
@@ -217,7 +217,7 @@ npx vitest run src/entities/product/api/__tests__/cache-tags.test.ts
 ```
 Expected: FAIL — `TAG_DESTINATIONS_LIST is not exported`, `TAG_PRODUCTS_LIST is not exported`.
 
-- [ ] **Step 3: TAG_DESTINATIONS_LIST 추가 + getDistinctDestinations wrap**
+- [x] **Step 3: TAG_DESTINATIONS_LIST 추가 + getDistinctDestinations wrap**
 
 Edit `src/entities/product/api/queries.ts`. 태그 export 블록을 다음으로 교체:
 ```ts
@@ -269,7 +269,7 @@ export const getDistinctDestinations = unstable_cache(
 );
 ```
 
-- [ ] **Step 4: index.ts 재export 추가**
+- [x] **Step 4: index.ts 재export 추가**
 
 Edit `src/entities/product/index.ts`:
 ```ts
@@ -280,7 +280,7 @@ Edit `src/entities/product/index.ts`:
   PAGE_SIZE,
 ```
 
-- [ ] **Step 5: test 재실행 — PASS 확인**
+- [x] **Step 5: test 재실행 — PASS 확인**
 
 Run:
 ```bash
@@ -288,7 +288,7 @@ npx vitest run src/entities/product/api/__tests__/cache-tags.test.ts
 ```
 Expected: 3 tests PASS.
 
-- [ ] **Step 6: typecheck**
+- [x] **Step 6: typecheck**
 
 Run:
 ```bash
@@ -296,7 +296,7 @@ npm run typecheck
 ```
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/entities/product/api/queries.ts src/entities/product/index.ts src/entities/product/api/__tests__/cache-tags.test.ts

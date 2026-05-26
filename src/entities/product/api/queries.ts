@@ -7,34 +7,40 @@ import type { ProductCard, ProductDetail } from "../model/types";
 export const PAGE_SIZE = 12;
 
 // 캐시 태그 컨벤션 — features 레이어가 revalidateTag로 무효화할 때 사용.
-//   products:featured       → 홈 추천 상품(공통)
-//   product:${id}           → PDP 단건 상세
-//   product:${id}:departures → 좌석/일정 (booking 생성·취소로 즉시 무효화)
+//   products:featured       → 홈 추천 상품(공통)        (5min TTL fallback)
+//   products:list           → /products 리스팅 + filter (5min TTL fallback)
+//   products:destinations   → /products 필터 옵션 목록  (1h  TTL fallback)
+//   product:${id}           → PDP 단건 상세 + compare   (1h  TTL fallback)
 const TAG_PRODUCTS_FEATURED = "products:featured";
+export const TAG_PRODUCTS_LIST = "products:list";
+export const TAG_DESTINATIONS_LIST = "products:destinations";
 export const tagProductDetail = (id: string) => `product:${id}`;
-// 좌석/일정 캐시 태그는 entities/departure 의 tagDeparturesByProduct 가 단일 출처(SSOT).
-// product 모듈은 PDP 본문(getProductById) 만 관리.
 
 // ─── 1. Distinct Destinations ─────────────────────────────────────────────────
 
-export async function getDistinctDestinations(): Promise<
-  { code: string; label: string; count: number }[]
-> {
-  const rows = await db.product.groupBy({
-    by: ["destinationCode", "destination"],
-    where: { status: "PUBLISHED" },
-    _count: { id: true },
-    orderBy: { _count: { id: "desc" } },
-  });
+// unstable_cache: 1h TTL + 목적지 목록 태그. 목적지는 거의 변하지 않는 데이터.
+// 미래 admin product CRUD 가 상품 status 변경 시 revalidateTag(TAG_DESTINATIONS_LIST)
+// 로 명시 무효화.
+export const getDistinctDestinations = unstable_cache(
+  async (): Promise<{ code: string; label: string; count: number }[]> => {
+    const rows = await db.product.groupBy({
+      by: ["destinationCode", "destination"],
+      where: { status: "PUBLISHED" },
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+    });
 
-  return rows
-    .filter((item) => item.destinationCode !== null)
-    .map((item) => ({
-      code: item.destinationCode as string,
-      label: item.destination,
-      count: item._count.id,
-    }));
-}
+    return rows
+      .filter((item) => item.destinationCode !== null)
+      .map((item) => ({
+        code: item.destinationCode as string,
+        label: item.destination,
+        count: item._count.id,
+      }));
+  },
+  ["product-distinct-destinations"],
+  { revalidate: 3600, tags: [TAG_DESTINATIONS_LIST] }
+);
 
 // ─── 2. Featured Products ─────────────────────────────────────────────────────
 
