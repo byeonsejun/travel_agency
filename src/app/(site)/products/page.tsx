@@ -94,6 +94,7 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
               items={items}
               wishlistIds={wishlistIds}
               wishlistReturnTo={wishlistReturnTo}
+              loggedIn={!!session?.user?.id}
               currentCompareIds={compareIds}
             />
             <div className="mt-8">
