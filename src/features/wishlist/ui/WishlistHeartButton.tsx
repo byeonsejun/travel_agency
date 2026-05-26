@@ -55,9 +55,9 @@ export function WishlistHeartButton({
           return;
         }
         const formData = new FormData(e.currentTarget);
-        startTransition(() => {
+        startTransition(async () => {
           applyOptimistic(!active);
-          void toggleWishlistAction(formData);
+          await toggleWishlistAction(formData);
         });
       }}
       className={className}
