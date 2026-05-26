@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -24,7 +24,7 @@ type CartProduct = {
 //   - ids 변화 시 AbortController 로 이전 요청 취소 후 재요청
 //   - loading 상태에 ids.length 만큼 skeleton placeholder 렌더 → layout shift 0
 //   - cleanup 으로 unmount 시 in-flight 요청 abort (Frontend Expert critical rule)
-export function FloatingCompareCart() {
+function FloatingCompareCartInner() {
   const searchParams = useSearchParams();
   const ids = parseCompareIds(searchParams.get("compareIds") ?? undefined);
   const idsKey = ids.join(",");
@@ -135,5 +135,16 @@ export function FloatingCompareCart() {
         </Link>
       </div>
     </div>
+  );
+}
+
+// useSearchParams 의존을 정적 prerender 에서 격리 — Suspense 없으면 PDP(/products/[id])
+// 가 CSR 로 강제 fallback 되어 ISR 깨짐. 카트는 fixed-bottom 이라 fallback null 에도
+// CLS 0 (공간 예약 불필요).
+export function FloatingCompareCart() {
+  return (
+    <Suspense fallback={null}>
+      <FloatingCompareCartInner />
+    </Suspense>
   );
 }

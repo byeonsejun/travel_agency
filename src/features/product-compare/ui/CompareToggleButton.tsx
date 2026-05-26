@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useTransition } from "react";
+import { Suspense, useTransition } from "react";
 import {
   MAX_COMPARE,
   addCompareId,
@@ -24,7 +24,7 @@ const SIZE_CLASS: Record<Size, string> = {
   md: "px-3.5 py-1.5 text-sm",
 };
 
-export function CompareToggleButton({ productId, size = "sm", className = "" }: Props) {
+function CompareToggleButtonInner({ productId, size = "sm", className = "" }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -74,5 +74,47 @@ export function CompareToggleButton({ productId, size = "sm", className = "" }: 
     >
       {active ? "✓ 비교함" : "+ 비교"}
     </button>
+  );
+}
+
+// useSearchParams 는 정적 prerender 시점에 null 을 반환 → Suspense 없으면
+// 부모 페이지(/ , /products/[id]) 전체가 CSR 로 강제 fallback 되어 ISR 깨짐.
+// fallback 은 inactive 기본 상태로 고정 (URL 상태 미해석) — 활성 상품은 hydration
+// 후 "✓ 비교함" 으로 1회 전환되며 layout shift 0 (동일 dimensions).
+function CompareToggleButtonFallback({
+  size = "sm",
+  className = "",
+}: Pick<Props, "size" | "className">) {
+  return (
+    <button
+      type="button"
+      disabled
+      aria-pressed={false}
+      className={[
+        "inline-flex items-center gap-1 rounded-full font-medium transition",
+        SIZE_CLASS[size],
+        "bg-gray-100 text-gray-700 opacity-60 cursor-not-allowed",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      + 비교
+    </button>
+  );
+}
+
+export function CompareToggleButton(props: Props) {
+  return (
+    <Suspense
+      fallback={
+        <CompareToggleButtonFallback
+          size={props.size}
+          className={props.className}
+        />
+      }
+    >
+      <CompareToggleButtonInner {...props} />
+    </Suspense>
   );
 }
