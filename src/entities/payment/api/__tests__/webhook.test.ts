@@ -17,20 +17,15 @@ const mocks = vi.hoisted(() => {
   return {
     tx,
     db: { $transaction: vi.fn() },
-    verifyTossSignature: vi.fn(),
-    env: {
-      TOSS_WEBHOOK_SECRET: "test_webhook_secret_for_testing",
-      NODE_ENV: "test" as "development" | "test" | "production",
-    },
+    tossClient: { getPayment: vi.fn() },
     transitionStatus: vi.fn(),
     InvalidTransitionError: MockInvalidTransitionError,
   };
 });
 
 vi.mock("@/shared/lib/db", () => ({ db: mocks.db }));
-vi.mock("@/shared/lib/env", () => ({ env: mocks.env }));
 vi.mock("@/shared/lib/toss", () => ({
-  verifyTossSignature: mocks.verifyTossSignature,
+  tossClient: mocks.tossClient,
 }));
 vi.mock("@/entities/booking", () => ({
   transitionStatus: mocks.transitionStatus,
@@ -124,12 +119,25 @@ describe("handleTossWebhook (v2024-06-01)", () => {
     mocks.tx.payment.update.mockResolvedValue({});
     mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_1" });
 
-    mocks.verifyTossSignature.mockReturnValue(true);
+    // 기본 cross-check 성공 (ADR-0016)
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: ORDER_ID,
+      status: "DONE",
+      totalAmount: AMOUNT,
+    });
     mocks.transitionStatus.mockResolvedValue({});
   });
 
-  // ── 시나리오 1: null signature → InvalidSignatureError (test 환경) ──
-  it("null signature: InvalidSignatureError throw, DB 미접촉", async () => {
+  // ── 시나리오 1: cross-check orderId 불일치 → InvalidSignatureError ──
+  it("cross-check orderId 불일치: InvalidSignatureError throw, DB 미접촉", async () => {
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: "different_order_xyz",
+      status: "DONE",
+      totalAmount: AMOUNT,
+    });
+
     await expect(
       handleTossWebhook({
         rawBody: v2PaymentStatusChangedBody(),
@@ -141,14 +149,54 @@ describe("handleTossWebhook (v2024-06-01)", () => {
     expect(mocks.db.$transaction).not.toHaveBeenCalled();
   });
 
-  // ── 시나리오 2: 위조 서명 → InvalidSignatureError ───────────────
-  it("위조 서명: InvalidSignatureError throw, DB 미접촉", async () => {
-    mocks.verifyTossSignature.mockReturnValue(false);
+  // ── 시나리오 2a: cross-check totalAmount 불일치 → InvalidSignatureError ─
+  it("cross-check totalAmount 불일치: InvalidSignatureError throw, DB 미접촉", async () => {
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: ORDER_ID,
+      status: "DONE",
+      totalAmount: AMOUNT + 1,
+    });
 
     await expect(
       handleTossWebhook({
         rawBody: v2PaymentStatusChangedBody(),
-        signature: "forged_sig_abc",
+        signature: null,
+        transmissionId: TRANSMISSION_ID,
+      }),
+    ).rejects.toBeInstanceOf(InvalidSignatureError);
+
+    expect(mocks.db.$transaction).not.toHaveBeenCalled();
+  });
+
+  // ── 시나리오 2b: cross-check status 불일치 → InvalidSignatureError ───
+  it("cross-check status 불일치: InvalidSignatureError throw, DB 미접촉", async () => {
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: ORDER_ID,
+      status: "READY",
+      totalAmount: AMOUNT,
+    });
+
+    await expect(
+      handleTossWebhook({
+        rawBody: v2PaymentStatusChangedBody(),
+        signature: null,
+        transmissionId: TRANSMISSION_ID,
+      }),
+    ).rejects.toBeInstanceOf(InvalidSignatureError);
+
+    expect(mocks.db.$transaction).not.toHaveBeenCalled();
+  });
+
+  // ── 시나리오 2c: cross-check 토스 API 에러 → InvalidSignatureError ─────
+  it("cross-check 토스 API 404/네트워크: InvalidSignatureError throw (위조 paymentKey), DB 미접촉", async () => {
+    mocks.tossClient.getPayment.mockRejectedValue(new Error("PG_HTTP 404"));
+
+    await expect(
+      handleTossWebhook({
+        rawBody: v2PaymentStatusChangedBody(),
+        signature: null,
         transmissionId: TRANSMISSION_ID,
       }),
     ).rejects.toBeInstanceOf(InvalidSignatureError);
@@ -172,6 +220,13 @@ describe("handleTossWebhook (v2024-06-01)", () => {
   // ── 시나리오 4: 알 수 없는 orderId → IGNORED PaymentEvent ──────
   it("알 수 없는 orderId: result=IGNORED PaymentEvent 기록", async () => {
     mocks.tx.payment.findUnique.mockResolvedValue(null);
+    // cross-check 는 통과(토스 record 와 payload 가 일치) — 우리 DB 에 해당 orderId 가 없음
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: "unknown_oid_xyz",
+      status: "DONE",
+      totalAmount: AMOUNT,
+    });
 
     await handleTossWebhook({
       rawBody: v2PaymentStatusChangedBody({ orderId: "unknown_oid_xyz" }),
@@ -241,7 +296,14 @@ describe("handleTossWebhook (v2024-06-01)", () => {
   });
 
   // ── 시나리오 7: DONE 금액 불일치 → WEBHOOK_AMOUNT_MISMATCH ─────
+  // (토스 server 와 payload 의 totalAmount 는 일치하지만, *우리 DB* payment.amount 와 불일치하는 케이스)
   it("DONE 금액 불일치: FAILED PaymentEvent 기록, WEBHOOK_AMOUNT_MISMATCH throw", async () => {
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: ORDER_ID,
+      status: "DONE",
+      totalAmount: AMOUNT + 500,
+    });
     await expect(
       handleTossWebhook({
         rawBody: v2PaymentStatusChangedBody({ totalAmount: AMOUNT + 500 }),
@@ -314,6 +376,13 @@ describe("handleTossWebhook (v2024-06-01)", () => {
 
   // ── 시나리오 11: PAYMENT_STATUS_CHANGED + status≠DONE → IGNORED ─
   it("PAYMENT_STATUS_CHANGED status=READY: phase 1 범위 외 IGNORED no-op", async () => {
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: ORDER_ID,
+      status: "READY",
+      totalAmount: AMOUNT,
+    });
+
     await handleTossWebhook({
       rawBody: v2PaymentStatusChangedBody({ status: "READY" }),
       signature: "valid_sig",
@@ -330,6 +399,13 @@ describe("handleTossWebhook (v2024-06-01)", () => {
   });
 
   it("PAYMENT_STATUS_CHANGED status=ABORTED: phase 1 범위 외 IGNORED no-op", async () => {
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: ORDER_ID,
+      status: "ABORTED",
+      totalAmount: AMOUNT,
+    });
+
     await handleTossWebhook({
       rawBody: v2PaymentStatusChangedBody({ status: "ABORTED" }),
       signature: "valid_sig",

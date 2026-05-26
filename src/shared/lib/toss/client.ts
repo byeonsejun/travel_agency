@@ -1,6 +1,10 @@
 import { env } from "@/shared/lib/env";
 import { PaymentError } from "./errors";
-import type { TossConfirmResponse, TossCancelResponse } from "./types";
+import type {
+  TossConfirmResponse,
+  TossCancelResponse,
+  TossPaymentResponse,
+} from "./types";
 
 function basicAuthHeader(): string {
   return `Basic ${Buffer.from(`${env.TOSS_SECRET_KEY ?? ""}:`).toString("base64")}`;
@@ -27,6 +31,31 @@ async function tossRequest<T>(
         "Idempotency-Key": idempotencyKey,
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(8_000),
+    });
+  } catch (err) {
+    throw new PaymentError("PG_NETWORK_ERROR", { url, cause: String(err) });
+  }
+
+  if (!res.ok) {
+    let responseBody: unknown = null;
+    try {
+      responseBody = await res.json();
+    } catch {
+      /* ignore parse error */
+    }
+    throw new PaymentError("PG_HTTP", { status: res.status, body: responseBody });
+  }
+
+  return res.json() as Promise<T>;
+}
+
+async function tossGet<T>(url: string): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: basicAuthHeader() },
       signal: AbortSignal.timeout(8_000),
     });
   } catch (err) {
@@ -78,6 +107,14 @@ export const tossClient = {
       `${env.TOSS_API_BASE_URL}/v1/payments/${paymentKey}/cancel`,
       { cancelReason, cancelAmount },
       `cancel:${paymentKey}`
+    );
+  },
+
+  // GET /v1/payments/{paymentKey} — webhook cross-check 전용 (ADR-0016).
+  // read-only 라 Idempotency-Key 불필요. Basic auth 만으로 호출.
+  getPayment(paymentKey: string): Promise<TossPaymentResponse> {
+    return tossGet<TossPaymentResponse>(
+      `${env.TOSS_API_BASE_URL}/v1/payments/${encodeURIComponent(paymentKey)}`
     );
   },
 };

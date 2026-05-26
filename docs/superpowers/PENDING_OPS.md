@@ -27,13 +27,13 @@
 
 - [x] **토스페이먼츠 샌드박스 웹훅 등록** (완료: 2026-05-26, 담당: qustpwns93@gmail.com)
   - 토스 개발자 콘솔 → 샌드박스 → 웹훅 URL 등록: `https://<dev-domain>/api/payments/webhook/toss`
-  - 환경 변수: `TOSS_WEBHOOK_SECRET`
+  - 별도 webhook secret 발급 불필요 — Verification 은 결제 조회 API cross-check 로
+    정착 (ADR-0016). `TOSS_SECRET_KEY`(Basic auth) 만 있으면 충분.
   - ⚠️ 운영 키(`live_`) 사용 금지 — NO-REAL-MONEY 원칙 (CLAUDE.md §5)
   - ⚠️ **경로 주의**: 코드 컨벤션은 `payments`(복수) + provider 분리(`webhook/toss/`).
     단수형(`/api/payment/webhook`)으로 등록 시 Next 가 핸들러를 못 찾아 404 반환.
   - 검증: ngrok dev 환경에서 `PAYMENT_STATUS_CHANGED` v2 페이로드 → **200 OK** 확인 완료.
-    Verification(서명) 은 별도 plan 까지 dev signature skip 분기로 통과 (production 은
-    여전히 401 throw — 실거래 안전성).
+    cross-check 가 토스 결제 조회 API 와 일치하는지 확인하므로 dev/prod 동일 검증 경로.
 
 ---
 

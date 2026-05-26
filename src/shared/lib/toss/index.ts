@@ -1,5 +1,4 @@
 export { tossClient } from "./client";
-export { verifyTossSignature } from "./signature";
 export { PaymentError, InvalidSignatureError } from "./errors";
 export type {
   TossConfirmResponse,
@@ -7,6 +6,7 @@ export type {
   TossCancelResponse,
   TossCancelStatus,
   TossCancelEntry,
+  TossPaymentResponse,
   TossWebhookPayload,
   TossFailureInfo,
   TossReceiptInfo,

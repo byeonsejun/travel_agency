@@ -30,7 +30,6 @@ export const envSchema = z
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
     TOSS_CLIENT_KEY: z.string().optional(),
     TOSS_SECRET_KEY: z.string().optional(),
-    TOSS_WEBHOOK_SECRET: z.string().optional(),
     TOSS_API_BASE_URL: z
       .string()
       .url()
@@ -78,7 +77,6 @@ export const envSchema = z
       for (const key of [
         "TOSS_CLIENT_KEY",
         "TOSS_SECRET_KEY",
-        "TOSS_WEBHOOK_SECRET",
         "CRON_SECRET",
       ] as const) {
         if (!env[key]) {
@@ -94,11 +92,11 @@ export const envSchema = z
     // 🛑 NO-REAL-MONEY 런타임 강제 (CLAUDE.md §5, ADR-0009).
     // (1) 라이브 키(live_)는 어떤 환경에서도 부팅 자체를 막는다 — 문서 규칙을
     //     코드 invariant로 못박아 실수로라도 실거래 경로가 활성화되지 않게 한다.
-    //     client/secret/webhook 3종 모두 대칭적으로 차단.
+    //     client/secret 2종 모두 대칭적으로 차단. (webhook secret 은 ADR-0016
+    //     으로 cross-check 채택, env 자체가 제거되어 대상에서 제외.)
     for (const key of [
       "TOSS_CLIENT_KEY",
       "TOSS_SECRET_KEY",
-      "TOSS_WEBHOOK_SECRET",
     ] as const) {
       const val = env[key];
       if (val && val.startsWith("live_")) {

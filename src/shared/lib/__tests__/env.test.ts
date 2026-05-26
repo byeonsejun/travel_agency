@@ -40,18 +40,6 @@ describe("envSchema — NO-REAL-MONEY invariant (ADR-0009)", () => {
       }
     });
 
-    // 신규 invariant: webhook secret도 대칭적으로 live_ 차단.
-    it("TOSS_WEBHOOK_SECRET=live_… 이면 parse 실패", () => {
-      const result = envSchema.safeParse({
-        ...validBase,
-        TOSS_WEBHOOK_SECRET: "live_webhook_abc",
-      });
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues.some((i) => i.path[0] === "TOSS_WEBHOOK_SECRET")).toBe(true);
-      }
-    });
-
     it("production 환경에서도 live_ 키 차단", () => {
       // production에서는 다른 required 키들도 필요하지만, live_ 차단 이슈가 포함되는지만 확인.
       const result = envSchema.safeParse({
@@ -59,7 +47,6 @@ describe("envSchema — NO-REAL-MONEY invariant (ADR-0009)", () => {
         NODE_ENV: "production",
         TOSS_CLIENT_KEY: "live_ck_abc",
         TOSS_SECRET_KEY: "live_sk_abc",
-        TOSS_WEBHOOK_SECRET: "live_webhook_abc",
         CRON_SECRET: "y".repeat(32),
       });
       expect(result.success).toBe(false);
@@ -67,7 +54,7 @@ describe("envSchema — NO-REAL-MONEY invariant (ADR-0009)", () => {
         const liveIssues = result.error.issues.filter((i) =>
           /live\(실거래\)/.test(i.message)
         );
-        expect(liveIssues.length).toBeGreaterThanOrEqual(3);
+        expect(liveIssues.length).toBeGreaterThanOrEqual(2);
       }
     });
 
@@ -76,7 +63,6 @@ describe("envSchema — NO-REAL-MONEY invariant (ADR-0009)", () => {
         ...validBase,
         TOSS_CLIENT_KEY: "test_ck_abc",
         TOSS_SECRET_KEY: "test_sk_abc",
-        TOSS_WEBHOOK_SECRET: "test_webhook_abc",
       });
       expect(result.success).toBe(true);
     });

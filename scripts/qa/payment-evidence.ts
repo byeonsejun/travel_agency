@@ -11,18 +11,22 @@
  *   confirm-amount-mismatch      PG 금액 위조 → compensateCancel (mock amount-tamper 필요)
  *   confirm-double-call-idempotent 동일 paymentKey 2회 → 두 번째 no-op
  *   confirm-pg-network-error     네트워크 타임아웃 → Payment FAILED (mock network-error 필요)
- *   webhook-idempotency          동일 eventId × 2회 → PaymentEvent 1건 유지
- *   webhook-bad-signature        위조 서명 → InvalidSignatureError
+ *   webhook-idempotency          동일 transmissionId × 2회 → PaymentEvent 1건 유지
+ *   webhook-bad-signature        위조 paymentKey → cross-check 실패 → InvalidSignatureError (ADR-0016)
  *   webhook-unknown-order        알 수 없는 orderId → IGNORED
- *   webhook-signed-end-to-end    올바른 HMAC 서명 웹훅 → 200 + 상태 갱신
+ *   webhook-signed-end-to-end    실제 paymentKey cross-check 통과 → 200 + 상태 갱신
  *   refund-success               정상 환불 (mock success 필요)
  *   refund-pg-failure-enqueues-job PG cancel 실패 → RefundJob PENDING (mock fail 필요)
  *
  * 전제: mock-toss-server.ts가 TOSS_API_BASE_URL(기본 localhost:4242) 포트에서 실행 중이어야 함.
  * 출력: JSON.stringify 정형화 → jq로 파싱 가능.
+ *
+ * 주의 (ADR-0016): webhook 검증이 결제 조회 API cross-check 로 전환됨.
+ *   mock-toss-server.ts 의 `GET /v1/payments/{paymentKey}` 응답이 시나리오와 일치해야
+ *   `webhook-signed-end-to-end` / `webhook-unknown-order` / `webhook-idempotency` 가 통과.
+ *   `webhook-bad-signature` 는 mock 이 모르는 paymentKey 에 404 를 반환해야 통과.
  */
 
-import { createHmac } from "node:crypto";
 import { db } from "../../src/shared/lib/db";
 import { env } from "../../src/shared/lib/env";
 import {
@@ -94,11 +98,13 @@ async function freshDepartureConfirmedBooking() {
   return { userId: user.id, bookingId: booking.id, amount: booking.totalPrice };
 }
 
-/** HMAC-SHA256 서명 생성 (서버와 동일한 로직) */
-function signBody(body: string): string {
-  const secret = env.TOSS_WEBHOOK_SECRET ?? "test_webhook_dummy";
-  return createHmac("sha256", secret).update(body, "utf8").digest("base64");
-}
+/**
+ * webhook signature placeholder (ADR-0016).
+ *
+ * cross-check 도입 이후 signature 인자는 더 이상 검증되지 않으므로 placeholder.
+ * 실제 검증은 tossClient.getPayment 응답이 webhook payload 와 일치하는지로 결정된다.
+ */
+const WEBHOOK_SIGNATURE_PLACEHOLDER = "qa-evidence-no-signature-needed";
 
 /** DB 스냅샷: booking + payment + paymentEvents + refundJobs */
 async function snapshot(bookingId: string) {
@@ -252,7 +258,7 @@ async function scenarioWebhookIdempotency() {
       totalAmount: 10000,
     },
   });
-  const signature = signBody(payload);
+  const signature = WEBHOOK_SIGNATURE_PLACEHOLDER;
 
   const countBefore = await db.paymentEvent.count();
 
@@ -318,7 +324,7 @@ async function scenarioWebhookUnknownOrder() {
       totalAmount: 10000,
     },
   });
-  const signature = signBody(payload);
+  const signature = WEBHOOK_SIGNATURE_PLACEHOLDER;
 
   const countBefore = await db.paymentEvent.count({ where: { result: "IGNORED" } });
   await handleTossWebhook({ rawBody: payload, signature, transmissionId });
@@ -363,7 +369,7 @@ async function scenarioWebhookSignedEndToEnd() {
       approvedAt: new Date().toISOString(),
     },
   });
-  const signature = signBody(payload);
+  const signature = WEBHOOK_SIGNATURE_PLACEHOLDER;
 
   await handleTossWebhook({ rawBody: payload, signature, transmissionId });
 

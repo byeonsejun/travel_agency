@@ -1,29 +1,30 @@
 /**
- * 토스페이먼츠 웹훅 핸들러 v2024-06-01 (plan 2026-05-24-toss-webhook-v2).
+ * 토스페이먼츠 웹훅 핸들러 v2024-06-01 (ADR-0013) + 진위 검증 cross-check (ADR-0016).
  *
  * 책임:
- *  1. R9: HMAC-SHA256 서명 검증 — dev 한정 임시 우회 (commit a1b425d).
- *         Verification 정식 메커니즘은 별도 plan 에서 정착.
- *  2. R4: providerEventId(webhook:${Tosspayments-Webhook-Transmission-Id})
+ *  1. R4: providerEventId(webhook:${Tosspayments-Webhook-Transmission-Id})
  *         UNIQUE 멱등성 — 중복 전송 no-op.
+ *  2. R9: 진위 검증 — 결제 조회 API cross-check (ADR-0016).
+ *         payload paymentKey 로 GET /v1/payments/{paymentKey} 호출 후
+ *         orderId/totalAmount/status 일치 여부 검증. 불일치 → InvalidSignatureError.
  *  3. R8: 모든 이벤트 수신 내역을 PaymentEvent 에 append-only 기록.
  *  4.     트랜잭션 성공 후 maybeApplyBookingTransitionV2 — confirm-API 와
  *         레이스 시 InvalidTransitionError swallow.
  *
- * 1차 dispatch 범위 (plan §Design Decisions §2):
+ * 1차 dispatch 범위 (ADR-0013 §2):
  *  - PAYMENT_STATUS_CHANGED + data.status === "DONE" → Payment PAID 전이
  *  - 그 외 status·eventType → IGNORED no-op + PaymentEvent 기록
  */
 
 import type { Prisma } from "@prisma/client";
 import { db } from "@/shared/lib/db";
-import { verifyTossSignature } from "@/shared/lib/toss";
-import { env } from "@/shared/lib/env";
+import { tossClient } from "@/shared/lib/toss";
 import { transitionStatus, InvalidTransitionError } from "@/entities/booking";
 import { logger, metrics } from "@/shared/lib/observability";
 import {
   PaymentStatusChangedDataSchema,
   TossWebhookV2EventSchema,
+  type TossPaymentStatusChangedData,
 } from "../model/schemas";
 import { PaymentError, InvalidSignatureError } from "./errors";
 
@@ -45,12 +46,45 @@ async function maybeApplyBookingTransitionV2(
   }
 }
 
+/**
+ * 결제 조회 API cross-check 진위 검증 (ADR-0016).
+ *
+ * webhook payload 의 paymentKey 로 토스 서버를 직접 조회해 orderId/totalAmount/status
+ * 가 일치하는지 확인. 토스가 모르는 paymentKey(404) 또는 응답 불일치 → 위조 webhook
+ * 으로 간주하여 InvalidSignatureError throw. 합법 webhook 인데 토스 OUTAGE 면 토스
+ * 재전송(7회) 으로 자동 복구.
+ */
+async function crossCheckPayment(
+  data: TossPaymentStatusChangedData,
+): Promise<void> {
+  let fresh;
+  try {
+    fresh = await tossClient.getPayment(data.paymentKey);
+  } catch (err) {
+    metrics.incr("payment.webhook.toss.invalid_sig");
+    throw new InvalidSignatureError(
+      `Cross-check failed: tossClient.getPayment threw (${(err as Error).message})`,
+    );
+  }
+  if (
+    fresh.orderId !== data.orderId ||
+    fresh.totalAmount !== data.totalAmount ||
+    fresh.status !== data.status
+  ) {
+    metrics.incr("payment.webhook.toss.invalid_sig");
+    throw new InvalidSignatureError(
+      "Webhook payload mismatched Toss record (cross-check)",
+    );
+  }
+}
+
 export async function handleTossWebhook({
   rawBody,
-  signature,
+  signature: _signature,
   transmissionId,
 }: {
   rawBody: string;
+  /** ADR-0016 이후 미사용 — payout/seller webhook 도입 시 별도 재도입. */
   signature: string | null;
   transmissionId: string | null;
 }): Promise<void> {
@@ -63,38 +97,17 @@ export async function handleTossWebhook({
     );
   }
 
-  // ── R9: 서명 검증 ─────────────────────────────────────────────
-  //
-  // ⚠️ TEMPORARY (TODO: webhook v2024-06-01 verification 마이그레이션 — 별도 plan):
-  // 토스 v2024-06-01 webhook 은 HMAC `toss-signature` 헤더를 *발송하지 않는다.*
-  // 대신 body 의 `data.secret`(결제 건별 secret) + transmission-id 기반
-  // verification 메커니즘. 본 코드의 HMAC 분기는 구버전 호환용으로만 남고,
-  // `development` 환경에서만 signature 부재 시 통과한다 (dev e2e 진행 위해).
-  // production·test 는 여전히 throw → 실거래 안전성 + 단위 테스트 invariant 보존.
-  if (!signature) {
-    if (env.NODE_ENV !== "development") {
-      metrics.incr("payment.webhook.toss.invalid_sig");
-      throw new InvalidSignatureError();
-    }
-    metrics.incr("payment.webhook.toss.dev_signature_skipped");
-  } else {
-    const secret = env.TOSS_WEBHOOK_SECRET;
-    if (secret !== undefined) {
-      if (!verifyTossSignature(rawBody, signature, secret)) {
-        metrics.incr("payment.webhook.toss.invalid_sig");
-        throw new InvalidSignatureError();
-      }
-    } else if (env.NODE_ENV === "production") {
-      metrics.incr("payment.webhook.toss.invalid_sig");
-      throw new InvalidSignatureError(
-        "TOSS_WEBHOOK_SECRET not configured in production",
-      );
-    }
-  }
-
   // ── 파싱: v2 envelope ──────────────────────────────────────
   const json = JSON.parse(rawBody) as unknown;
   const envelope = TossWebhookV2EventSchema.parse(json);
+
+  // ── R9: 진위 검증 — 결제 조회 API cross-check (ADR-0016) ──
+  // PAYMENT_STATUS_CHANGED 만 cross-check 대상. 미지원 eventType 은 dispatch
+  // 에서 IGNORED 처리되며 paymentKey 가 없을 수 있으므로 cross-check 스킵.
+  if (envelope.eventType === "PAYMENT_STATUS_CHANGED") {
+    const data = PaymentStatusChangedDataSchema.parse(envelope.data);
+    await crossCheckPayment(data);
+  }
 
   const idemKey = `webhook:${transmissionId}`;
   let processedBookingId: string | null = null;

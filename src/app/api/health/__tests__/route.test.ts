@@ -18,7 +18,6 @@ const mocks = vi.hoisted(() => ({
     NODE_ENV: "test" as "development" | "test" | "production",
     TOSS_CLIENT_KEY: "test_ck",
     TOSS_SECRET_KEY: "test_sk",
-    TOSS_WEBHOOK_SECRET: undefined as string | undefined,
     OBSERVABILITY_LOG_LEVEL: "info" as const,
   },
 }));

@@ -20,7 +20,7 @@ const SENSITIVE_KEY_PATTERNS: RegExp[] = [
   /^authorization$/i,
   /^cookie$/i,
   /^secret$/i,
-  /secret$/i, // `*_SECRET` (TOSS_WEBHOOK_SECRET 등)
+  /secret$/i, // `*_SECRET` (AUTH_SECRET, CRON_SECRET 등)
   /^paymentkey$/i,
   /^tosspaymentkey$/i,
   /^apikey$/i,

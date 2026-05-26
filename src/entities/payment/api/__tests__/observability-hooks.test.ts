@@ -39,14 +39,9 @@ const mocks = vi.hoisted(() => {
       refundJob: { create: vi.fn(), update: vi.fn() },
       booking: { findUnique: vi.fn() },
     },
-    tossClient: { confirm: vi.fn(), cancel: vi.fn() },
-    verifyTossSignature: vi.fn().mockReturnValue(true),
+    tossClient: { confirm: vi.fn(), cancel: vi.fn(), getPayment: vi.fn() },
     transitionStatus: vi.fn(),
     InvalidTransitionError: MockInvalidTransitionError,
-    env: {
-      TOSS_WEBHOOK_SECRET: "test_wh_secret_for_obs_test",
-      NODE_ENV: "test" as "development" | "test" | "production",
-    },
     captureException: vi.fn(),
   };
 });
@@ -54,13 +49,11 @@ const mocks = vi.hoisted(() => {
 vi.mock("@/shared/lib/db", () => ({ db: mocks.db }));
 vi.mock("@/shared/lib/toss", () => ({
   tossClient: mocks.tossClient,
-  verifyTossSignature: mocks.verifyTossSignature,
 }));
 vi.mock("@/entities/booking", () => ({
   transitionStatus: mocks.transitionStatus,
   InvalidTransitionError: mocks.InvalidTransitionError,
 }));
-vi.mock("@/shared/lib/env", () => ({ env: mocks.env }));
 // captureException만 교체 — logger/metrics는 실제 구현 사용
 vi.mock("@/shared/lib/observability", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/shared/lib/observability")>();
@@ -234,7 +227,13 @@ describe("webhook.ts — 관측성 훅", () => {
     mocks.tx.payment.findUnique.mockResolvedValue(mockPaymentPending);
     mocks.tx.payment.update.mockResolvedValue({});
     mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_1" });
-    mocks.verifyTossSignature.mockReturnValue(true);
+    // 기본 cross-check 성공 (ADR-0016)
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: ORDER_ID,
+      status: "DONE",
+      totalAmount: AMOUNT,
+    });
     mocks.transitionStatus.mockResolvedValue({});
   });
 
@@ -242,7 +241,14 @@ describe("webhook.ts — 관측성 훅", () => {
     vi.restoreAllMocks();
   });
 
-  it("null signature → metrics.incr('payment.webhook.toss.invalid_sig')", async () => {
+  it("cross-check payload 불일치 → metrics.incr('payment.webhook.toss.invalid_sig')", async () => {
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: "wrong_order",
+      status: "DONE",
+      totalAmount: AMOUNT,
+    });
+
     await expect(
       handleTossWebhook({ rawBody: validWebhookBody(), signature: null, transmissionId: TRANSMISSION_ID })
     ).rejects.toThrow();
@@ -250,11 +256,11 @@ describe("webhook.ts — 관측성 훅", () => {
     expect(metrics.snapshot().counters["payment.webhook.toss.invalid_sig"]).toBe(1);
   });
 
-  it("위조 서명 → metrics.incr('payment.webhook.toss.invalid_sig')", async () => {
-    mocks.verifyTossSignature.mockReturnValue(false);
+  it("cross-check 토스 API 에러 → metrics.incr('payment.webhook.toss.invalid_sig')", async () => {
+    mocks.tossClient.getPayment.mockRejectedValue(new Error("network"));
 
     await expect(
-      handleTossWebhook({ rawBody: validWebhookBody(), signature: "forged", transmissionId: TRANSMISSION_ID })
+      handleTossWebhook({ rawBody: validWebhookBody(), signature: null, transmissionId: TRANSMISSION_ID })
     ).rejects.toThrow();
 
     expect(metrics.snapshot().counters["payment.webhook.toss.invalid_sig"]).toBe(1);
@@ -283,6 +289,13 @@ describe("webhook.ts — 관측성 훅", () => {
 
   it("알 수 없는 orderId → metrics.incr('payment.webhook.toss.ignored') + logger.warn", async () => {
     mocks.tx.payment.findUnique.mockResolvedValue(null);
+    // cross-check 통과(토스 record 와 payload 일치) — 우리 DB 에 해당 orderId 만 없음
+    mocks.tossClient.getPayment.mockResolvedValue({
+      paymentKey: PAYMENT_KEY,
+      orderId: "unknown_oid",
+      status: "DONE",
+      totalAmount: AMOUNT,
+    });
 
     await handleTossWebhook({
       rawBody: validWebhookBody({ orderId: "unknown_oid" }),

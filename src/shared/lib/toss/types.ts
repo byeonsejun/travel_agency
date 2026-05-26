@@ -53,6 +53,23 @@ export interface TossCancelResponse {
 }
 
 /**
+ * Toss 결제 조회 API (`GET /v1/payments/{paymentKey}`) 응답.
+ *
+ * webhook cross-check 용 (ADR-0016) — payload 의 paymentKey 로 조회해
+ * orderId/totalAmount/status 가 일치하는지 검증한다.
+ */
+export interface TossPaymentResponse {
+  paymentKey: string;
+  orderId: string;
+  status: TossConfirmStatus;
+  /** 원 단위 정수. */
+  totalAmount: number;
+  approvedAt?: string;
+  receipt?: TossReceiptInfo;
+  failure?: TossFailureInfo;
+}
+
+/**
  * Toss 웹훅 페이로드.
  *
  * `eventId`는 PG 측 고유 식별자로, `entities/payment`에서 `providerEventId` 멱등 키로 사용한다.

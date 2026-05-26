@@ -33,13 +33,11 @@ describe("maskPii — 민감 키 마스킹", () => {
       tossPaymentKey: "tps_xxxxxxxxxxxx",
       paymentKey: "pk_yyy",
       secret: "shh",
-      TOSS_WEBHOOK_SECRET: "whsec",
     });
     expect(out).toEqual({
       tossPaymentKey: "[REDACTED]",
       paymentKey: "[REDACTED]",
       secret: "[REDACTED]",
-      TOSS_WEBHOOK_SECRET: "[REDACTED]",
     });
   });
 
