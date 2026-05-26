@@ -12,7 +12,8 @@ export const PAGE_SIZE = 12;
 //   product:${id}:departures → 좌석/일정 (booking 생성·취소로 즉시 무효화)
 const TAG_PRODUCTS_FEATURED = "products:featured";
 export const tagProductDetail = (id: string) => `product:${id}`;
-export const tagProductDepartures = (id: string) => `product:${id}:departures`;
+// 좌석/일정 캐시 태그는 entities/departure 의 tagDeparturesByProduct 가 단일 출처(SSOT).
+// product 모듈은 PDP 본문(getProductById) 만 관리.
 
 // ─── 1. Distinct Destinations ─────────────────────────────────────────────────
 

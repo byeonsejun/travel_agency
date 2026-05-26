@@ -118,7 +118,7 @@
 - Modify: `src/entities/product/api/queries.ts:15` (delete)
 - Modify: `src/entities/product/index.ts:35` (delete from re-export)
 
-- [ ] **Step 1: 사용처 0 재확인**
+- [x] **Step 1: 사용처 0 재확인**
 
 Run:
 ```bash
@@ -126,7 +126,7 @@ grep -rn "tagProductDepartures" src/ docs/ 2>/dev/null
 ```
 Expected: `src/entities/product/api/queries.ts:15` (정의) + `src/entities/product/index.ts:35` (re-export) 두 라인만 출력. 다른 사용처 0건이면 안전 삭제 가능.
 
-- [ ] **Step 2: `queries.ts` 에서 정의 제거**
+- [x] **Step 2: `queries.ts` 에서 정의 제거**
 
 Edit `src/entities/product/api/queries.ts`:
 ```ts
@@ -142,7 +142,7 @@ export const tagProductDetail = (id: string) => `product:${id}`;
 // product 모듈은 PDP 본문(getProductById) 만 관리.
 ```
 
-- [ ] **Step 3: `index.ts` re-export 제거**
+- [x] **Step 3: `index.ts` re-export 제거**
 
 Edit `src/entities/product/index.ts`:
 ```ts
@@ -154,7 +154,7 @@ Edit `src/entities/product/index.ts`:
   tagProductDetail,
 ```
 
-- [ ] **Step 4: typecheck + 사용처 재검증**
+- [x] **Step 4: typecheck + 사용처 재검증**
 
 Run:
 ```bash
@@ -163,7 +163,7 @@ grep -rn "tagProductDepartures" src/ 2>/dev/null
 ```
 Expected: typecheck PASS, grep 출력 0건.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/product/api/queries.ts src/entities/product/index.ts

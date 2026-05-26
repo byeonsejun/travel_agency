@@ -32,7 +32,6 @@ export {
   getDistinctDestinations,
   getAllPublishedProductIds,
   tagProductDetail,
-  tagProductDepartures,
   PAGE_SIZE,
 } from "./api/queries";
 
