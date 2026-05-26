@@ -65,6 +65,7 @@
 | 0016  | [Toss Webhook 진위 검증 — 결제 조회 API cross-check 채택 + HMAC 헬퍼 제거](./0016-toss-webhook-verification.md) | Accepted | 2026-05-26   |
 | 0017  | [`useSearchParams` 클라이언트 컴포넌트의 Suspense 박제(內) 패턴](./0017-usesearchparams-internal-suspense.md) | Accepted | 2026-05-26   |
 | 0018  | [`(site)/layout.tsx` 의 `auth()` 의존을 client island 로 격리 + PDP `generateStaticParams`](./0018-layout-auth-client-island.md) | Accepted | 2026-05-26   |
+| 0019  | [Wishlist 토글 — `useOptimistic` 폐기 + CustomEvent 기반 cross-island 동기화](./0019-wishlist-toggle-no-flicker-event-bus.md) | Accepted | 2026-05-27   |
 
 ## 향후 후보 (작성 대기)
 
