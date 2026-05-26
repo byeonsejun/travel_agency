@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useOptimistic, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toggleWishlistAction } from "../server/actions";
 
 type Size = "sm" | "md";
@@ -17,9 +18,17 @@ const SIZE_CLASS: Record<Size, { btn: string; svg: string }> = {
   md: { btn: "h-10 w-10", svg: "h-5 w-5" },
 };
 
+const LOGIN_PROMPT_MESSAGE =
+  "로그인 후 이용하실 수 있습니다.\n로그인하시겠습니까?";
+
 // PDP 전용 island. 부모 RSC(PDP)가 auth()/isInWishlist() 호출을 안 해도 되도록
-// mount 후 GET /api/wishlist/check 로 자기 상태를 자체 결정 → PDP ISR 활성 (A6).
-// 초기값 false (빈 하트 outline) 로 hydration-safe.
+// mount 후 GET /api/wishlist/check 로 자기 상태(inWishlist + loggedIn) 를
+// 자체 결정. PDP ISR 활성 (A6).
+//
+// 비로그인 클릭 흐름:
+//   1. window.confirm 안내 → 사용자 동의
+//   2. 동의 시 /login?callbackUrl=/api/wishlist/resume?... 로 navigation
+//   3. 취소 시 아무 동작 없음 (이전엔 Server Action 이 무조건 redirect 했음)
 export function WishlistHeartIsland({
   productId,
   returnTo,
@@ -27,11 +36,13 @@ export function WishlistHeartIsland({
   className = "",
 }: Props) {
   const [inWishlist, setInWishlist] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const [optimistic, applyOptimistic] = useOptimistic<boolean, boolean>(
     inWishlist,
     (_, next) => next,
   );
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -39,7 +50,10 @@ export function WishlistHeartIsland({
       signal: controller.signal,
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
-      .then((d: { inWishlist: boolean }) => setInWishlist(d.inWishlist))
+      .then((d: { inWishlist: boolean; loggedIn: boolean }) => {
+        setInWishlist(d.inWishlist);
+        setLoggedIn(d.loggedIn);
+      })
       .catch((e: unknown) => {
         if (e instanceof DOMException && e.name === "AbortError") return;
         // 조용히 실패 — outline 유지, 토글 클릭은 Server Action 이 권위
@@ -52,7 +66,17 @@ export function WishlistHeartIsland({
 
   return (
     <form
-      action={(formData) => {
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!loggedIn) {
+          // 비로그인: confirm 후 분기. server action 호출하지 않음.
+          const ok = window.confirm(LOGIN_PROMPT_MESSAGE);
+          if (!ok) return;
+          const resumeUrl = `/api/wishlist/resume?productId=${encodeURIComponent(productId)}&returnTo=${encodeURIComponent(returnTo)}`;
+          router.push(`/login?callbackUrl=${encodeURIComponent(resumeUrl)}`);
+          return;
+        }
+        const formData = new FormData(e.currentTarget);
         startTransition(() => {
           applyOptimistic(!active);
           void toggleWishlistAction(formData);

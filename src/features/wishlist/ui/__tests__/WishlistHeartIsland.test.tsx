@@ -6,10 +6,15 @@ import type { Root } from "react-dom/client";
 // ── vi.hoisted: vi.mock factory 실행 전 mocks 객체 확보 ─────────────
 const mocks = vi.hoisted(() => ({
   toggleWishlistAction: vi.fn(),
+  routerPush: vi.fn(),
 }));
 
 vi.mock("@/features/wishlist/server/actions", () => ({
   toggleWishlistAction: mocks.toggleWishlistAction,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mocks.routerPush }),
 }));
 
 import { WishlistHeartIsland } from "../WishlistHeartIsland";
@@ -26,6 +31,7 @@ describe("<WishlistHeartIsland />", () => {
     document.body.appendChild(container);
     root = null;
     mocks.toggleWishlistAction.mockReset();
+    mocks.routerPush.mockReset();
   });
 
   afterEach(async () => {
@@ -39,10 +45,10 @@ describe("<WishlistHeartIsland />", () => {
     vi.unstubAllGlobals();
   });
 
-  function makeFetch(inWishlist: boolean) {
+  function makeFetch(inWishlist: boolean, loggedIn = true) {
     return vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ inWishlist }),
+      json: () => Promise.resolve({ inWishlist, loggedIn }),
     });
   }
 
@@ -145,5 +151,106 @@ describe("<WishlistHeartIsland />", () => {
       `/api/wishlist/check?productId=${PRODUCT_ID_2}`,
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
+  });
+
+  // ── (f) 비로그인 + 클릭 → window.confirm 호출 ────────────────────
+  it("(f) 비로그인 + 클릭 시 window.confirm 안내 노출", async () => {
+    vi.stubGlobal("fetch", makeFetch(false, false));
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        <WishlistHeartIsland productId={PRODUCT_ID} returnTo="/products/test" />,
+      );
+    });
+
+    const form = container.querySelector("form")!;
+    await act(async () => {
+      form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+
+    expect(confirmSpy).toHaveBeenCalledOnce();
+    expect(confirmSpy.mock.calls[0][0]).toContain("로그인");
+  });
+
+  // ── (g) 비로그인 + confirm 확인 → /login 으로 router.push ─────────
+  it("(g) 비로그인 + confirm 확인 시 /login?callbackUrl=resume URL 로 navigation", async () => {
+    vi.stubGlobal("fetch", makeFetch(false, false));
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        <WishlistHeartIsland productId={PRODUCT_ID} returnTo="/products/test" />,
+      );
+    });
+
+    const form = container.querySelector("form")!;
+    await act(async () => {
+      form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+
+    expect(mocks.routerPush).toHaveBeenCalledOnce();
+    const pushedUrl = mocks.routerPush.mock.calls[0][0] as string;
+    expect(pushedUrl).toMatch(/^\/login\?callbackUrl=/);
+    // callbackUrl 안에 resume endpoint + productId + returnTo 가 인코딩되어 있어야 함
+    const decoded = decodeURIComponent(pushedUrl.split("callbackUrl=")[1]);
+    expect(decoded).toContain("/api/wishlist/resume");
+    expect(decoded).toContain(`productId=${PRODUCT_ID}`);
+    expect(decoded).toContain("returnTo=%2Fproducts%2Ftest");
+    // server action 은 호출되지 않아야 함
+    expect(mocks.toggleWishlistAction).not.toHaveBeenCalled();
+  });
+
+  // ── (h) 비로그인 + confirm 취소 → 아무 navigation 없음 ──────────
+  it("(h) 비로그인 + confirm 취소 시 navigation + server action 모두 없음", async () => {
+    vi.stubGlobal("fetch", makeFetch(false, false));
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        <WishlistHeartIsland productId={PRODUCT_ID} returnTo="/products/test" />,
+      );
+    });
+
+    const form = container.querySelector("form")!;
+    await act(async () => {
+      form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+    expect(mocks.toggleWishlistAction).not.toHaveBeenCalled();
+  });
+
+  // ── (i) 로그인 + 클릭 → confirm 미호출 + server action 호출 ────────
+  it("(i) 로그인 상태 클릭 → confirm 미호출, toggleWishlistAction 호출", async () => {
+    vi.stubGlobal("fetch", makeFetch(false, true));
+    const confirmSpy = vi.spyOn(window, "confirm");
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        <WishlistHeartIsland productId={PRODUCT_ID} returnTo="/products/test" />,
+      );
+    });
+
+    const form = container.querySelector("form")!;
+    await act(async () => {
+      form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+    expect(mocks.toggleWishlistAction).toHaveBeenCalledOnce();
   });
 });

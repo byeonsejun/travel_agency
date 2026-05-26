@@ -50,57 +50,61 @@ describe("GET /api/wishlist/check", () => {
   });
 
   // ── (c) 비로그인 ─────────────────────────────────────────────────
-  it("비로그인(auth → null) → 200 + {inWishlist: false}, isInWishlist 미호출", async () => {
+  it("비로그인(auth → null) → 200 + {inWishlist:false, loggedIn:false}, isInWishlist 미호출", async () => {
     mocks.auth.mockResolvedValue(null);
 
     const req = new NextRequest(`${BASE_URL}?productId=${VALID_CUID}`);
     const res = await GET(req);
-    const body = (await res.json()) as { inWishlist: boolean };
+    const body = (await res.json()) as { inWishlist: boolean; loggedIn: boolean };
 
     expect(res.status).toBe(200);
     expect(body.inWishlist).toBe(false);
+    expect(body.loggedIn).toBe(false);
     expect(mocks.isInWishlist).not.toHaveBeenCalled();
   });
 
   // ── (c-2) 세션은 있지만 user.id 없는 경우도 비로그인 처리 ─────────
-  it("세션 user.id 없음 → 200 + {inWishlist: false}", async () => {
+  it("세션 user.id 없음 → 200 + {inWishlist:false, loggedIn:false}", async () => {
     mocks.auth.mockResolvedValue({ user: {} });
 
     const req = new NextRequest(`${BASE_URL}?productId=${VALID_CUID}`);
     const res = await GET(req);
-    const body = (await res.json()) as { inWishlist: boolean };
+    const body = (await res.json()) as { inWishlist: boolean; loggedIn: boolean };
 
     expect(res.status).toBe(200);
     expect(body.inWishlist).toBe(false);
+    expect(body.loggedIn).toBe(false);
     expect(mocks.isInWishlist).not.toHaveBeenCalled();
   });
 
   // ── (d) 로그인 + 찜 존재 ────────────────────────────────────────
-  it("로그인 + 찜 → 200 + {inWishlist: true}, isInWishlist(userId, productId) 호출", async () => {
+  it("로그인 + 찜 → 200 + {inWishlist:true, loggedIn:true}, isInWishlist(userId, productId) 호출", async () => {
     mocks.auth.mockResolvedValue({ user: { id: "user-abc" } });
     mocks.isInWishlist.mockResolvedValue(true);
 
     const req = new NextRequest(`${BASE_URL}?productId=${VALID_CUID}`);
     const res = await GET(req);
-    const body = (await res.json()) as { inWishlist: boolean };
+    const body = (await res.json()) as { inWishlist: boolean; loggedIn: boolean };
 
     expect(res.status).toBe(200);
     expect(body.inWishlist).toBe(true);
+    expect(body.loggedIn).toBe(true);
     expect(mocks.isInWishlist).toHaveBeenCalledOnce();
     expect(mocks.isInWishlist).toHaveBeenCalledWith("user-abc", VALID_CUID);
   });
 
   // ── (d-2) 로그인 + 찜 없음 ────────────────────────────────────────
-  it("로그인 + 찜 없음 → 200 + {inWishlist: false}", async () => {
+  it("로그인 + 찜 없음 → 200 + {inWishlist:false, loggedIn:true}", async () => {
     mocks.auth.mockResolvedValue({ user: { id: "user-abc" } });
     mocks.isInWishlist.mockResolvedValue(false);
 
     const req = new NextRequest(`${BASE_URL}?productId=${VALID_CUID}`);
     const res = await GET(req);
-    const body = (await res.json()) as { inWishlist: boolean };
+    const body = (await res.json()) as { inWishlist: boolean; loggedIn: boolean };
 
     expect(res.status).toBe(200);
     expect(body.inWishlist).toBe(false);
+    expect(body.loggedIn).toBe(true);
   });
 
   // ── 응답 헤더: private, no-store ─────────────────────────────────
