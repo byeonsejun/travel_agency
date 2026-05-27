@@ -1390,12 +1390,12 @@ git commit -m "feat(rate-limit): withRateLimitAction wrapper + barrel (B2-C Task
 
 > 미들웨어는 Edge runtime 컨텍스트로 vitest 단위 테스트가 비현실적(NextRequest 모킹 + auth wrapper 모킹 + Edge globals). **본 Task의 검증은 런타임 curl로** — spec §10.2 / §7 시나리오. Edge 호환성은 import 라인이 ALS/Prisma 의존성 없음을 grep으로 확인.
 
-- [ ] **Step 1: import 의존성 회귀 가드 (Edge 호환성 grep)**
+- [x] **Step 1: import 의존성 회귀 가드 (Edge 호환성 grep)**
 
 Run: `grep -rn "from \"@prisma/client\"\|from \"async_hooks\"\|from \"node:" src/shared/lib/rate-limit/`
 Expected: 출력 0건 — Edge runtime 금지 import가 rate-limit 모듈에 없음.
 
-- [ ] **Step 2: `src/middleware.ts` 수정 — global tier 추가**
+- [x] **Step 2: `src/middleware.ts` 수정 — global tier 추가**
 
 기존 파일을 다음으로 교체:
 
@@ -1519,12 +1519,12 @@ export const config = {
 };
 ```
 
-- [ ] **Step 3: typecheck + 빌드 smoke**
+- [x] **Step 3: typecheck + 빌드 smoke**
 
 Run: `npm run typecheck && npm run build`
 Expected: 0 에러. Edge middleware bundle 생성 성공 (`@upstash/ratelimit` Edge 호환성 확인).
 
-- [ ] **Step 4: 런타임 검증 — fail-open (Upstash 미설정)**
+- [x] **Step 4: 런타임 검증 — fail-open (Upstash 미설정)**
 
 ```bash
 # 1) Upstash env 미설정 상태로 dev 기동
@@ -1544,7 +1544,7 @@ kill %1
 
 증거 캡처: 위 두 카운트 출력을 plan 커밋 메시지에 인용.
 
-- [ ] **Step 5: 런타임 검증 — bypass 경로**
+- [x] **Step 5: 런타임 검증 — bypass 경로**
 
 ```bash
 # Upstash mock (실제 Upstash + RATE_LIMIT_MODE=enforce) 환경에서:
@@ -1559,11 +1559,11 @@ curl -i http://localhost:3000/api/health | grep -i "^x-ratelimit"
 # 기대: 출력 0건 (헬스는 bypass — rate-limit 헤더 박제 없음).
 ```
 
-- [ ] **Step 6: 체크박스 갱신**
+- [x] **Step 6: 체크박스 갱신**
 
 본 plan Task 8의 `- [ ]` 모두 `- [x]`로.
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add src/middleware.ts docs/superpowers/plans/2026-05-28-rate-limit.md

@@ -1,8 +1,15 @@
 import { auth } from "@/features/auth/server/auth";
 import { NextResponse } from "next/server";
 import { buildCspHeader, CSP_NONCE_HEADER } from "@/shared/lib/security";
+import {
+  buildRateLimitHeaders,
+  enforce,
+  identify,
+  isBypassPath,
+  type RateLimitVerdict,
+} from "@/shared/lib/rate-limit";
 
-export default auth((req) => {
+export default auth(async (req) => {
   // Edge runtime — ALS/Prisma import 금지. crypto.randomUUID() / getRandomValues() 만 사용.
   const traceId =
     req.headers.get("x-trace-id") ??
@@ -17,6 +24,32 @@ export default auth((req) => {
   // 홈으로 떨어지는 데이터 연속성 누수가 발생한다 (Phase 3 골든패스 회귀 방지).
   const callbackTarget = `${pathname}${req.nextUrl.search}`;
 
+  // ─── Rate Limit (global tier) — Edge baseline (spec §4 Hybrid 통합) ────────
+  // `/api/*` 한정 + bypass list 제외. shadow 모드면 차단 없이 통과.
+  // 차단 시 즉시 응답하므로 아래 auth/CSP 로직보다 *먼저* 평가한다 — 콜드스타트
+  // 비용 절약 목적이 본 통합의 이유.
+  let rateLimitVerdict: RateLimitVerdict | null = null;
+  if (pathname.startsWith("/api/") && !isBypassPath(pathname)) {
+    const userId = req.auth?.user?.id ?? null;
+    const id = identify(req as unknown as Request, "userFirst", userId);
+    rateLimitVerdict = await enforce("global", id);
+    if (!rateLimitVerdict.ok) {
+      const headers = buildRateLimitHeaders(rateLimitVerdict);
+      headers["Retry-After"] = String(rateLimitVerdict.retryAfterSeconds);
+      headers["x-trace-id"] = traceId;
+      return NextResponse.json(
+        {
+          error: "RATE_LIMITED",
+          tier: "global",
+          retryAfterSeconds: rateLimitVerdict.retryAfterSeconds,
+          traceId,
+        },
+        { status: 429, headers },
+      );
+    }
+  }
+
+  // ─── Auth redirects (unchanged) ───────────────────────────────────────────
   if (pathname.startsWith("/login") && isAuthenticated) {
     const res = NextResponse.redirect(new URL("/", req.url));
     res.headers.set("x-trace-id", traceId);
@@ -45,6 +78,7 @@ export default auth((req) => {
     }
   }
 
+  // ─── CSP nonce + traceId (unchanged) ──────────────────────────────────────
   // 요청별 nonce — 16바이트 base64 (Edge runtime 호환).
   const nonceBytes = new Uint8Array(16);
   crypto.getRandomValues(nonceBytes);
@@ -57,6 +91,13 @@ export default auth((req) => {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("x-trace-id", traceId);
+
+  // Rate Limit 헤더 박제 (api path 통과 시 — quota 가시화).
+  if (rateLimitVerdict) {
+    for (const [k, v] of Object.entries(buildRateLimitHeaders(rateLimitVerdict))) {
+      response.headers.set(k, v);
+    }
+  }
 
   // CSP 헤더 박제 — CSP_MODE=enforce 가 아니면 Report-Only 가 기본 (롤아웃 게이트).
   const csp = buildCspHeader({
