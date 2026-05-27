@@ -9,3 +9,9 @@ out
 .vercel
 .turbo
 coverage
+
+# Local-only Claude Code permission overrides (per-machine)
+.claude/settings.local.json
+
+# TypeScript incremental build cache (regenerated on every tsc run)
+*.tsbuildinfo
