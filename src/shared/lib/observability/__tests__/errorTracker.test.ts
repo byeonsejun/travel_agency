@@ -7,8 +7,6 @@
  *  3. ALS getContext() 자동 결합 (traceId 전파)
  *  4. ctx + ALS 머지 우선순위 (ctx가 ALS 오버라이드)
  *  5. extras PII가 마스킹된 상태로 전달
- *  6. DSN 설정 시 logger.warn("errorTracker.sentry.not_wired") 1회 + logger.error 유지
- *  7. DSN 설정 시 warn은 여러 번 호출해도 1회만 발생
  *  8. ALS 바깥에서도 에러 없이 동작 (fail-safe)
  *  9. Error 아닌 값(string, number) 처리
  * 10. captureMessage — level별 라우팅
@@ -18,8 +16,8 @@
  *       NODE_ENV=test여도 spy가 logger 메서드 자체를 교체하므로 silent 체크를 우회한다.
  */
 
-import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
-import { captureException, captureMessage, _resetForTest } from "../errorTracker";
+import { beforeEach, afterEach, describe, it, expect, vi, type MockInstance } from "vitest";
+import { captureException, captureMessage } from "../errorTracker";
 import { logger } from "../logger";
 import { runWithContext } from "../context";
 
@@ -28,7 +26,6 @@ describe("captureException — DSN 미설정 (기본 logger fanout)", () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    _resetForTest();
     vi.unstubAllEnvs(); // SENTRY_DSN 없는 상태 보장
     errorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
     warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
@@ -106,39 +103,11 @@ describe("captureException — DSN 미설정 (기본 logger fanout)", () => {
     captureException(42);
     expect(errorSpy).toHaveBeenCalledWith("error.captured", 42, expect.any(Object));
   });
-});
 
-describe("captureException — SENTRY_DSN 설정 시", () => {
-  let errorSpy: ReturnType<typeof vi.spyOn>;
-  let warnSpy: ReturnType<typeof vi.spyOn>;
-
-  beforeEach(() => {
-    _resetForTest();
-    vi.stubEnv("SENTRY_DSN", "https://test-key@sentry.io/12345");
-    errorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
-    warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-    vi.unstubAllEnvs();
-  });
-
-  it("logger.warn('errorTracker.sentry.not_wired')를 1회 발생시키고 logger.error fanout도 유지", () => {
-    captureException(new Error("dsn test"));
-
-    expect(warnSpy).toHaveBeenCalledOnce();
-    expect(warnSpy.mock.calls[0][0]).toBe("errorTracker.sentry.not_wired");
-    expect(errorSpy).toHaveBeenCalledOnce(); // logger fanout 유지
-  });
-
-  it("여러 번 호출해도 warn은 1회만 발생한다 (중복 경고 방지)", () => {
-    captureException(new Error("first"));
-    captureException(new Error("second"));
-    captureException(new Error("third"));
-
-    expect(warnSpy).toHaveBeenCalledOnce(); // warn 1회만
-    expect(errorSpy).toHaveBeenCalledTimes(3); // error fanout은 매 호출
+  // warnSpy 사용 방지 lint 경고 억제
+  it("DSN 미설정 시 warn이 호출되지 않는다", () => {
+    captureException(new Error("no warn"));
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -147,7 +116,6 @@ describe("captureMessage", () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    _resetForTest();
     vi.unstubAllEnvs();
     errorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
     warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
@@ -209,5 +177,67 @@ describe("captureException — 내부 실패 격리", () => {
 
     // 호출처에서 throw 없음 (swallow)
     expect(() => captureException(new Error("trigger"))).not.toThrow();
+  });
+});
+
+describe("captureException — DSN 설정 시 Sentry SDK fanout (B2-A)", () => {
+  // MockInstance를 공통 시그니처로 보관 — 세부 제네릭은 spyOn 결과를 캐스팅해 통일
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type SpyMock = MockInstance<(...args: any[]) => unknown>;
+  let errorSpy: SpyMock;
+  let sentryCaptureSpy: SpyMock;
+
+  beforeEach(async () => {
+    vi.unstubAllEnvs();
+    vi.stubEnv("SENTRY_DSN", "https://test-key@sentry.io/12345");
+    errorSpy = vi.spyOn(logger, "error").mockImplementation(() => {}) as SpyMock;
+
+    const Sentry = await import("@sentry/nextjs");
+    sentryCaptureSpy = vi
+      .spyOn(Sentry, "captureException")
+      .mockImplementation(() => "test-event-id" as never) as SpyMock;
+    // withScope는 콜백을 동기로 즉시 실행하도록 stub.
+    // Sentry.Scope 클래스 타입을 리터럴 객체로 대체하기 위해 unknown 경유 이중 캐스팅 사용.
+    vi.spyOn(Sentry, "withScope").mockImplementation((cb) => {
+      (cb as unknown as (scope: { setTag: ReturnType<typeof vi.fn>; setExtra: ReturnType<typeof vi.fn> }) => void)({
+        setTag: vi.fn(),
+        setExtra: vi.fn(),
+      });
+      return "test-event-id" as never;
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it("Sentry.captureException이 1회 호출되고 logger.error도 fanout 유지", () => {
+    const err = new Error("boom");
+    captureException(err, { routeName: "/api/test" });
+
+    expect(sentryCaptureSpy).toHaveBeenCalledTimes(1);
+    expect(sentryCaptureSpy).toHaveBeenCalledWith(err);
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toBe("error.captured");
+  });
+
+  it("Error 아닌 값은 new Error(String(...))로 wrap되어 캡처", () => {
+    captureException("string-error", { routeName: "/api/test" });
+
+    expect(sentryCaptureSpy).toHaveBeenCalledTimes(1);
+    const captured = sentryCaptureSpy.mock.calls[0][0] as unknown;
+    expect(captured).toBeInstanceOf(Error);
+    expect((captured as Error).message).toBe("string-error");
+  });
+
+  it("not_wired warn은 더 이상 발생하지 않음 (SDK가 wired된 Phase)", () => {
+    const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {}) as SpyMock;
+    captureException(new Error("boom"));
+
+    const notWiredCalls = (warnSpy.mock.calls as unknown[][]).filter(
+      (c) => c[0] === "errorTracker.sentry.not_wired",
+    );
+    expect(notWiredCalls).toHaveLength(0);
   });
 });

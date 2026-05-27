@@ -1,26 +1,25 @@
 /**
- * errorTracker.ts — Error Tracking 어댑터 추상화 (Sentry-ready, logger fanout default).
+ * errorTracker.ts — Error Tracking 어댑터 (Sentry-wired, Phase 3 B2-A).
  *
  * 설계 원칙:
  *  - **동기 함수** — 내부 실패를 swallow하여 호출처 흐름을 절대 차단하지 않는다.
  *  - **ALS 자동 머지** — `getContext()`로 traceId/userId/routeName을 자동 결합한다.
  *  - **PII 방어** — 외부 전송(Sentry) 전 `maskPii`로 민감 정보를 리덕션한다.
- *  - **어댑터 인터페이스** — SENTRY_DSN 설정 시 `// TODO(M-OBS-2)` 경로로 전환 가능.
- *    현 Phase에서는 logger fanout만 수행하고 DSN 감지 시 1회 경고를 발한다.
+ *  - **SDK fanout** — SENTRY_DSN 설정 시 `@sentry/nextjs`로 forwarding (instrumentation.ts에서 init 완료된 싱글톤 동기 참조).
+ *  - **Server-only** — 이 모듈은 ALS(async_hooks) 의존이라 client 번들에서 import 금지. 클라이언트는 @sentry/nextjs를 직접 호출 (예: app/global-error.tsx).
  */
 
+import * as Sentry from "@sentry/nextjs";
 import type { ErrorTrackerCtx } from "./types";
 import { logger } from "./logger";
 import { getContext } from "./context";
 import { maskPii } from "./pii";
 
-/** DSN이 감지됐으나 SDK가 미연결임을 알리는 warn — 프로세스 생애 1회만 발한다. */
-let sentryWarnEmitted = false;
-
-/** 테스트 전용 — sentryWarnEmitted 상태를 초기화한다. */
-export function _resetForTest(): void {
-  sentryWarnEmitted = false;
-}
+/** Sentry scope의 최소 인터페이스 — setTag/setExtra만 사용한다. */
+type ScopeMinimal = {
+  setTag: (key: string, value: string | number) => void;
+  setExtra: (key: string, value: unknown) => void;
+};
 
 /**
  * ALS 컨텍스트와 추가 ctx를 병합한 뒤 PII를 마스킹하여 반환한다.
@@ -41,27 +40,39 @@ function mergeAndMaskCtx(ctx?: ErrorTrackerCtx): Record<string, unknown> {
   return maskPii(merged) as Record<string, unknown>;
 }
 
-/** DSN이 설정됐으나 SDK가 미연결인 경우 1회 경고를 발한다. */
-function notifySentryNotWired(): void {
-  if (sentryWarnEmitted) return;
-  sentryWarnEmitted = true;
-  // TODO(M-OBS-2): dynamic import("@sentry/node") — DSN 설정 후 여기서 Sentry SDK를 초기화한다.
-  logger.warn("errorTracker.sentry.not_wired", {
-    hint: "SENTRY_DSN is configured but @sentry/node is not wired. Add dynamic import to enable Sentry transport.",
-  });
+/**
+ * 머지된 context를 Sentry scope에 머지한다.
+ * string/number는 setTag(검색 가능), 그 외는 setExtra(payload 저장).
+ */
+function applyScope(scope: ScopeMinimal, merged: Record<string, unknown>): void {
+  for (const [k, v] of Object.entries(merged)) {
+    if (typeof v === "string" || typeof v === "number") {
+      scope.setTag(k, v);
+    } else {
+      scope.setExtra(k, v);
+    }
+  }
 }
 
 /**
  * 예외를 캡처한다.
  *
- * - SENTRY_DSN 미설정: `logger.error("error.captured", err, maskedCtx)` fanout만 수행
- * - SENTRY_DSN 설정: 1회 경고 후 동일 logger fanout (SDK 미연결 Phase)
+ * - SENTRY_DSN 설정 시: Sentry.withScope로 ALS context를 머지한 뒤 captureException + logger.error fanout
+ * - SENTRY_DSN 미설정: logger.error만 fanout (Sentry.init이 no-op이므로 안전하게도 SDK 호출 가능하지만 분기로 명시)
  */
 export function captureException(err: unknown, ctx?: ErrorTrackerCtx): void {
   try {
-    if (process.env.SENTRY_DSN) notifySentryNotWired();
-
     const merged = mergeAndMaskCtx(ctx);
+
+    if (process.env.SENTRY_DSN) {
+      Sentry.withScope((scope) => {
+        applyScope(scope as unknown as ScopeMinimal, merged);
+        const errAsError = err instanceof Error ? err : new Error(String(err));
+        Sentry.captureException(errAsError);
+      });
+    }
+
+    // logger fanout은 항상 유지 — SDK 장애와 무관한 최후 방어선
     logger.error("error.captured", err, merged);
   } catch (internalErr) {
     try {
@@ -78,18 +89,23 @@ export function captureException(err: unknown, ctx?: ErrorTrackerCtx): void {
 /**
  * 메시지를 캡처한다.
  *
- * - level "error": `logger.error("message.captured", msg, maskedCtx)` 팬아웃
- * - level "warn": `logger.warn("message.captured", { message, ...maskedCtx })` 팬아웃
+ * - level "error": Sentry.captureMessage + logger.error fanout
+ * - level "warn": Sentry.captureMessage(level: "warning") + logger.warn fanout
  */
 export function captureMessage(
   msg: string,
   level: "warn" | "error",
-  ctx?: ErrorTrackerCtx
+  ctx?: ErrorTrackerCtx,
 ): void {
   try {
-    if (process.env.SENTRY_DSN) notifySentryNotWired();
-
     const merged = mergeAndMaskCtx(ctx);
+
+    if (process.env.SENTRY_DSN) {
+      Sentry.withScope((scope) => {
+        applyScope(scope as unknown as ScopeMinimal, merged);
+        Sentry.captureMessage(msg, level === "error" ? "error" : "warning");
+      });
+    }
 
     if (level === "error") {
       logger.error("message.captured", msg, merged);
