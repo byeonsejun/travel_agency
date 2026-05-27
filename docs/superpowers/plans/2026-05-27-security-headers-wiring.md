@@ -707,7 +707,7 @@ git commit -m "feat(security): middleware nonce injection + CSP header + matcher
 - Create: `src/app/api/csp-report/route.ts`
 - Create: `src/app/api/csp-report/__tests__/route.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성 (Red) — 5 케이스 매트릭스**
+- [x] **Step 1: 실패하는 테스트 작성 (Red) — 5 케이스 매트릭스**
 
 `src/app/api/csp-report/__tests__/route.test.ts`:
 
@@ -810,13 +810,13 @@ describe("/api/csp-report", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 Run: `npm run test src/app/api/csp-report/__tests__/route.test.ts`
 
 Expected: FAIL — `Cannot find module '../route'`.
 
-- [ ] **Step 3: 엔드포인트 구현 (Green)**
+- [x] **Step 3: 엔드포인트 구현 (Green)**
 
 `src/app/api/csp-report/route.ts`:
 
@@ -935,13 +935,13 @@ export async function POST(req: Request): Promise<NextResponse> {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 Run: `npm run test src/app/api/csp-report/__tests__/route.test.ts`
 
 Expected: PASS (6 케이스).
 
-- [ ] **Step 5: typecheck + 전체 test 회귀 확인**
+- [x] **Step 5: typecheck + 전체 test 회귀 확인**
 
 Run:
 ```bash
@@ -951,7 +951,7 @@ npm run test
 
 Expected: exit 0 + 전체 테스트 PASS.
 
-- [ ] **Step 6: 런타임 QA 증거 수집 — curl 시나리오 4종**
+- [x] **Step 6: 런타임 QA 증거 수집 — curl 시나리오 4종**
 
 Run (dev 서버 실행 중 가정):
 
@@ -983,7 +983,7 @@ curl -sX POST -H 'Content-Type: text/plain' \
 
 Expected: 4개 시나리오 모두 위 주석의 응답값과 일치.
 
-- [ ] **Step 7: 체크박스 갱신 + 커밋**
+- [x] **Step 7: 체크박스 갱신 + 커밋**
 
 Task 5 항목을 `- [x]` 로 변경 후:
 
