@@ -536,7 +536,7 @@ git commit -m "feat(rate-limit): identifier helpers — IP extraction + strategy
 
 > client.ts는 외부 SDK lazy 인스턴스화 — `cacheGet/cacheSet`(M-CACHE)와 동일 패턴. 단위 테스트는 enforce.test.ts에서 mocking으로 검증하므로 본 Task에선 responseHeaders만 단위 검증.
 
-- [ ] **Step 1: 실패 테스트 작성 (`responseHeaders.test.ts`)**
+- [x] **Step 1: 실패 테스트 작성 (`responseHeaders.test.ts`)**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -577,12 +577,12 @@ describe("buildRateLimitHeaders", () => {
 });
 ```
 
-- [ ] **Step 2: FAIL 확인**
+- [x] **Step 2: FAIL 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/responseHeaders.test.ts`
 Expected: import 실패.
 
-- [ ] **Step 3: `responseHeaders.ts` 구현**
+- [x] **Step 3: `responseHeaders.ts` 구현**
 
 ```ts
 /**
@@ -607,7 +607,7 @@ export function buildRateLimitHeaders(
 
 > **NOTE**: `RateLimitVerdict` 타입은 Task 5의 `enforce.ts`에서 export. 본 파일은 type-only import이라 순환 의존성 없음 (TS는 type-only import를 emit하지 않음).
 
-- [ ] **Step 4: `client.ts` 구현**
+- [x] **Step 4: `client.ts` 구현**
 
 ```ts
 /**
@@ -669,21 +669,21 @@ export function __resetRateLimitClientForTest(): void {
 }
 ```
 
-- [ ] **Step 5: 테스트 재실행 — `responseHeaders.test.ts` PASS 확인**
+- [x] **Step 5: 테스트 재실행 — `responseHeaders.test.ts` PASS 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/responseHeaders.test.ts`
 Expected: 2건 PASS.
 
-- [ ] **Step 6: typecheck**
+- [x] **Step 6: typecheck**
 
 Run: `npm run typecheck`
 Expected: 0 에러.
 
-- [ ] **Step 7: 체크박스 갱신**
+- [x] **Step 7: 체크박스 갱신**
 
 본 plan Task 4의 `- [ ]` 모두 `- [x]`로.
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add src/shared/lib/rate-limit/client.ts src/shared/lib/rate-limit/responseHeaders.ts src/shared/lib/rate-limit/__tests__/responseHeaders.test.ts docs/superpowers/plans/2026-05-28-rate-limit.md
