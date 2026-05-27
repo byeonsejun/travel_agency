@@ -6,14 +6,18 @@ import nextConfigModule from "../../next.config.mjs";
  * wrapper 는 원본 config 를 그대로 보존하며 추가 옵션만 머지한다 → headers() 함수는 동일하게 노출.
  */
 describe("next.config.mjs headers()", () => {
-  it("정적 보안 헤더 7종을 모든 경로(/:path*) 에 박제한다", async () => {
-    const config = (nextConfigModule as { headers?: () => Promise<unknown[]> })
-      .headers;
-    expect(config, "headers() 함수가 export 되어야 한다").toBeTypeOf("function");
+  const cfg = nextConfigModule as {
+    headers?: () => Promise<
+      Array<{ source: string; headers: Array<{ key: string; value: string }> }>
+    >;
+  };
 
-    const rules = await config!();
+  it("정적 보안 헤더 7종을 모든 경로(/:path*) 에 박제한다", async () => {
+    expect(cfg.headers, "headers() 함수가 export 되어야 한다").toBeTypeOf("function");
+
+    const rules = await cfg.headers!();
     expect(rules).toHaveLength(1);
-    const rule = rules[0] as { source: string; headers: Array<{ key: string; value: string }> };
+    const rule = rules[0];
     expect(rule.source).toBe("/:path*");
 
     const headerMap = new Map(rule.headers.map((h) => [h.key, h.value]));
@@ -34,11 +38,8 @@ describe("next.config.mjs headers()", () => {
   });
 
   it("HSTS preload 토큰이 포함되지 않는다 (Rolling Expiration 정책)", async () => {
-    const config = (nextConfigModule as { headers?: () => Promise<unknown[]> }).headers;
-    const rules = await config!();
-    const hsts = (rules[0] as { headers: Array<{ key: string; value: string }> }).headers.find(
-      (h) => h.key === "Strict-Transport-Security",
-    );
+    const rules = await cfg.headers!();
+    const hsts = rules[0].headers.find((h) => h.key === "Strict-Transport-Security");
     expect(hsts?.value).not.toContain("preload");
   });
 });
