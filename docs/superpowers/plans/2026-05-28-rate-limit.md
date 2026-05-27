@@ -968,7 +968,7 @@ git commit -m "feat(rate-limit): enforce primitive — fail-open + shadow-aware 
 - Create: `src/shared/lib/rate-limit/withRateLimit.ts`
 - Create: `src/shared/lib/rate-limit/__tests__/withRateLimit.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/shared/lib/rate-limit/__tests__/withRateLimit.test.ts`:
 
@@ -1068,12 +1068,12 @@ describe("withRateLimit", () => {
 });
 ```
 
-- [ ] **Step 2: FAIL 확인**
+- [x] **Step 2: FAIL 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/withRateLimit.test.ts`
 Expected: import 실패.
 
-- [ ] **Step 3: `withRateLimit.ts` 구현**
+- [x] **Step 3: `withRateLimit.ts` 구현**
 
 ```ts
 /**
@@ -1148,21 +1148,21 @@ export function withRateLimit<Args extends unknown[]>(
 }
 ```
 
-- [ ] **Step 4: 테스트 재실행 — PASS 확인**
+- [x] **Step 4: 테스트 재실행 — PASS 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/withRateLimit.test.ts`
 Expected: 5건 PASS.
 
-- [ ] **Step 5: typecheck**
+- [x] **Step 5: typecheck**
 
 Run: `npm run typecheck`
 Expected: 0 에러.
 
-- [ ] **Step 6: 체크박스 갱신**
+- [x] **Step 6: 체크박스 갱신**
 
 본 plan Task 6의 `- [ ]` 모두 `- [x]`로.
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add src/shared/lib/rate-limit/withRateLimit.ts src/shared/lib/rate-limit/__tests__/withRateLimit.test.ts docs/superpowers/plans/2026-05-28-rate-limit.md
