@@ -1178,7 +1178,7 @@ git commit -m "feat(rate-limit): withRateLimit route handler wrapper — 429 + R
 - Create: `src/shared/lib/rate-limit/index.ts`
 - Create: `src/shared/lib/rate-limit/__tests__/withRateLimitAction.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/shared/lib/rate-limit/__tests__/withRateLimitAction.test.ts`:
 
@@ -1263,12 +1263,12 @@ describe("withRateLimitAction", () => {
 });
 ```
 
-- [ ] **Step 2: FAIL 확인**
+- [x] **Step 2: FAIL 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/withRateLimitAction.test.ts`
 Expected: import 실패.
 
-- [ ] **Step 3: `withRateLimitAction.ts` 구현**
+- [x] **Step 3: `withRateLimitAction.ts` 구현**
 
 ```ts
 /**
@@ -1330,12 +1330,12 @@ export function withRateLimitAction<Args extends unknown[], R>(
 }
 ```
 
-- [ ] **Step 4: 테스트 재실행 — PASS 확인**
+- [x] **Step 4: 테스트 재실행 — PASS 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/withRateLimitAction.test.ts`
 Expected: 4건 PASS.
 
-- [ ] **Step 5: barrel (`index.ts`) 작성**
+- [x] **Step 5: barrel (`index.ts`) 작성**
 
 `src/shared/lib/rate-limit/index.ts`:
 
@@ -1365,16 +1365,16 @@ export {
 export { __resetRateLimitClientForTest } from "./client";
 ```
 
-- [ ] **Step 6: 전체 테스트 + typecheck 회귀 확인**
+- [x] **Step 6: 전체 테스트 + typecheck 회귀 확인**
 
 Run: `npm run typecheck && npm run test`
 Expected: 0 에러, 전부 PASS.
 
-- [ ] **Step 7: 체크박스 갱신**
+- [x] **Step 7: 체크박스 갱신**
 
 본 plan Task 7의 `- [ ]` 모두 `- [x]`로.
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add src/shared/lib/rate-limit/withRateLimitAction.ts src/shared/lib/rate-limit/index.ts src/shared/lib/rate-limit/__tests__/withRateLimitAction.test.ts docs/superpowers/plans/2026-05-28-rate-limit.md
