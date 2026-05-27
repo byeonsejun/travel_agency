@@ -697,7 +697,7 @@ git commit -m "docs(product): cache 무효화 컨트랙트 JSDoc 박제 (SSOT)"
 
 **의도:** 본 plan 이 정합성 제약(체크아웃·예약·리뷰·위시리스트 시 즉시 갱신)을 깨지 않았음을 증거로 확인.
 
-- [ ] **Step 1: 전체 testsuite + typecheck + lint**
+- [x] **Step 1: 전체 testsuite + typecheck + lint**
 
 Run:
 ```bash
@@ -705,7 +705,7 @@ npm run typecheck && npm run lint && npm run test
 ```
 Expected: 모두 PASS. 특히 `src/features/checkout/server/__tests__/actions.test.ts`, `src/features/booking-cancel/server/__tests__/actions.test.ts`, `src/features/admin-booking-cancel/server/__tests__/actions.test.ts` 의 `revalidateTag`/`revalidatePath` 호출 검증 테스트가 그대로 PASS 여야 한다 (변경 없음).
 
-- [ ] **Step 2: `next build` 출력 ●○ 라벨 확인**
+- [x] **Step 2: `next build` 출력 ●○ 라벨 확인**
 
 Run:
 ```bash
@@ -719,7 +719,7 @@ Expected (변하면 안 되는 라벨):
 
 변경된 페이지/엔드포인트 라벨이 의도하지 않게 흔들리지 않았는지 확인.
 
-- [ ] **Step 3: 무효화 flow end-to-end 수동 검증 (mock 결제 + cancel)**
+- [x] **Step 3: 무효화 flow end-to-end 수동 검증 (mock 결제 + cancel)**
 
 자동화 가능한 부분(테스트)은 step 1 에서 완료. 다음은 실제 mutation → 캐시 무효화 chain 확인 — dev server + mock toss server 띄운 상태에서:
 
@@ -749,14 +749,14 @@ Expected:
 - `first` 와 `second` 의 `time_total` 차이로 cache HIT 효과 가시화 (지표상 fail 아님 — 빌드 정합성만 확인).
 - PDP 200.
 
-- [ ] **Step 4: 보고서 (CLAUDE.md §7.1 양식)**
+- [x] **Step 4: 보고서 (CLAUDE.md §7.1 양식)**
 
 작업 완료 보고시 다음 3섹션으로:
 - 🏗️ **Core Architecture:** entities/product 의 3개 데이터 함수(`getProductList`/`getDistinctDestinations`/`getProductsByIds`)에 `unstable_cache` 적용 — `/products` 와 `/compare` 의 underlying DB hit 압축. 페이지 레벨 force-dynamic 은 모두 의도된 안정성 결정으로 유지.
 - ♻️ **Boilerplate:** dead `tagProductDepartures` export 제거, JSDoc 무효화 컨트랙트 박제, 태그 상수 단위 테스트 추가.
 - 🧠 **Concept Insight:** unstable_cache 는 "함수 호출 결과를 함수 인자 + key array 를 키로 한 in-memory + on-disk 캐시" — 마치 도서관 사서가 "이 책 어디 있어요?" 질문을 받을 때 첫 번째 손님 답을 메모해두고, 그 후 5분 동안 같은 질문을 받으면 책장까지 가지 않고 메모에서 즉답하는 것. `revalidateTag` 는 "이 책장 정보 바뀌었으니 모든 메모 폐기" 명령. 메모 폐기와 별개로 5분이 지나면 메모는 자동 소각(TTL) — 어느 쪽이든 stale 보장 시간 상한이 존재.
 
-- [ ] **Step 5: ADR 발행 제안**
+- [x] **Step 5: ADR 발행 제안**
 
 본 작업은 캐시 정책에 대한 의식적 선택을 박제한 결정(force-dynamic 잔존 사유 + per-id tag fan-out 채택) — `docs/superpowers/adr/0020-cache-tag-contracts.md` 로 박제할 가치 있음. **사용자에게 ADR 발행 여부를 묻고**, 동의 시 별도 commit (`docs(adr): 0020 ...`) 으로 추가.
 
