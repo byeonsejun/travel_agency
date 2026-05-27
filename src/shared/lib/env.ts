@@ -69,6 +69,11 @@ export const envSchema = z
     SENTRY_AUTH_TOKEN: z.string().optional(),
     SENTRY_ENVIRONMENT: z.string().optional(),
     SENTRY_RELEASE: z.string().optional(),
+    // Phase 3 B2-B: CSP 적용 모드.
+    // 'report-only' — Content-Security-Policy-Report-Only 헤더(위반 신고만, 차단 없음).
+    // 'enforce'      — Content-Security-Policy 헤더(실제 차단).
+    // 미설정 시 middleware가 report-only를 기본으로 사용.
+    CSP_MODE: z.enum(["report-only", "enforce"]).optional(),
   })
   .superRefine((env, ctx) => {
     // 빌드 phase(NEXT_PHASE=phase-production-build)는 실 runtime이 아니다.

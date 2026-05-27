@@ -282,6 +282,27 @@ describe("envSchema — OAuth provider 페어/포맷 가드", () => {
   });
 });
 
+describe("CSP_MODE", () => {
+  it("미설정 시 undefined — 기본 report-only 동작 (middleware 에서 분기)", () => {
+    const parsed = envSchema.parse(validBase);
+    expect(parsed.CSP_MODE).toBeUndefined();
+  });
+
+  it("CSP_MODE=report-only — 통과", () => {
+    const parsed = envSchema.parse({ ...validBase, CSP_MODE: "report-only" });
+    expect(parsed.CSP_MODE).toBe("report-only");
+  });
+
+  it("CSP_MODE=enforce — 통과", () => {
+    const parsed = envSchema.parse({ ...validBase, CSP_MODE: "enforce" });
+    expect(parsed.CSP_MODE).toBe("enforce");
+  });
+
+  it("CSP_MODE=invalid — Zod 실패", () => {
+    expect(() => envSchema.parse({ ...validBase, CSP_MODE: "bogus" })).toThrow();
+  });
+});
+
 describe("envSchema — SENTRY_AUTH_TOKEN runtime exposure 차단 (build-only invariant)", () => {
   const originalNextPhase = process.env.NEXT_PHASE;
 

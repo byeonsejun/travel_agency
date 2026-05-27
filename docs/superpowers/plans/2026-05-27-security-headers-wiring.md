@@ -376,7 +376,7 @@ git commit -m "feat(security): buildCspHeader pure fn + barrel + catalogue regre
 - Modify: `src/shared/lib/__tests__/env.test.ts`
 - Modify (또는 Create): `.env.example`
 
-- [ ] **Step 1: 실패하는 테스트 작성 (Red) — `CSP_MODE` 3 케이스**
+- [x] **Step 1: 실패하는 테스트 작성 (Red) — `CSP_MODE` 3 케이스**
 
 `src/shared/lib/__tests__/env.test.ts` 끝에 `describe("CSP_MODE", ...)` 블록 추가 (기존 describe 블록들 보존):
 
@@ -414,13 +414,13 @@ describe("CSP_MODE", () => {
 
 > **주의**: 위 `baseEnv` 객체는 *기존 `env.test.ts` 의 baseEnv 가 export 되어 있다면 import 로 재사용*하는 것이 우선. 없다면 위 인라인 정의로 진행하고, 기존 describe 블록의 baseEnv 패턴과 어긋나지 않는지 한 번 더 확인.
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 Run: `npm run test src/shared/lib/__tests__/env.test.ts`
 
 Expected: 새로 추가한 CSP_MODE 케이스 4건이 모두 FAIL — `expected 'report-only' to be undefined` 또는 schema 가 `CSP_MODE` 키를 모름.
 
-- [ ] **Step 3: `envSchema` 에 `CSP_MODE` 추가 (Green)**
+- [x] **Step 3: `envSchema` 에 `CSP_MODE` 추가 (Green)**
 
 `src/shared/lib/env.ts` 의 `envSchema = z.object({ ... })` 블록 내, 기존 `SENTRY_DSN` 다음 자리에 추가:
 
@@ -430,13 +430,13 @@ Expected: 새로 추가한 CSP_MODE 케이스 4건이 모두 FAIL — `expected 
     CSP_MODE: z.enum(["report-only", "enforce"]).optional(),
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 Run: `npm run test src/shared/lib/__tests__/env.test.ts`
 
 Expected: PASS — 신규 4건 포함 모든 케이스 통과.
 
-- [ ] **Step 5: `.env.example` 갱신**
+- [x] **Step 5: `.env.example` 갱신**
 
 `.env.example` 끝에 추가 (파일이 없다면 신규 생성하면서 기존 env 키들의 안전한 placeholder 와 함께 작성):
 
@@ -446,13 +446,13 @@ Expected: PASS — 신규 4건 포함 모든 케이스 통과.
 CSP_MODE=report-only
 ```
 
-- [ ] **Step 6: typecheck 통과 확인**
+- [x] **Step 6: typecheck 통과 확인**
 
 Run: `npm run typecheck`
 
 Expected: exit 0.
 
-- [ ] **Step 7: 체크박스 갱신 + 커밋**
+- [x] **Step 7: 체크박스 갱신 + 커밋**
 
 Task 3 항목을 `- [x]` 로 변경 후:
 
