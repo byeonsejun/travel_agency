@@ -38,7 +38,7 @@
 - Modify: `package.json`
 - Modify: `next.config.mjs`
 
-- [ ] **Step 1: `@sentry/nextjs` 패키지 설치**
+- [x] **Step 1: `@sentry/nextjs` 패키지 설치**
 
 Run:
 ```bash
@@ -47,7 +47,7 @@ npm install @sentry/nextjs@^8
 
 Expected: `package.json`의 `dependencies`에 `"@sentry/nextjs": "^8.x.x"` 추가, `package-lock.json` 업데이트, 부수 의존성(`@sentry/core`, `@sentry/node`, `@sentry/browser` 등) 설치.
 
-- [ ] **Step 2: 설치 검증 — typecheck 통과 확인**
+- [x] **Step 2: 설치 검증 — typecheck 통과 확인**
 
 Run:
 ```bash
@@ -56,7 +56,7 @@ npm run typecheck
 
 Expected: exit 0. 새 패키지 도입으로 typecheck가 깨지지 않음.
 
-- [ ] **Step 3: `next.config.mjs`를 `withSentryConfig`로 래핑**
+- [x] **Step 3: `next.config.mjs`를 `withSentryConfig`로 래핑**
 
 `next.config.mjs` 전체 교체:
 
@@ -90,7 +90,7 @@ export default withSentryConfig(nextConfig, {
 
 > `SENTRY_ORG` / `SENTRY_PROJECT`는 비밀 아닌 식별자라 `env.ts` schema에 추가하지 않고 wrapper가 직접 읽음 (미설정 시 plugin이 silent skip).
 
-- [ ] **Step 4: build 통과 확인**
+- [x] **Step 4: build 통과 확인**
 
 Run:
 ```bash
@@ -99,7 +99,7 @@ SENTRY_AUTH_TOKEN= npm run build
 
 Expected: build success. `SENTRY_AUTH_TOKEN`이 빈 값이라 sourcemap 업로드는 skip되지만 webpack plugin은 로드된다. `Sentry CLI` 관련 경고가 stderr에 나와도 exit 0.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add package.json package-lock.json next.config.mjs
@@ -116,7 +116,7 @@ git commit -m "feat(obs): install @sentry/nextjs + withSentryConfig wrapper (B2-
 - Create: `src/sentry.edge.config.ts`
 - Create: `src/__tests__/instrumentation.test.ts`
 
-- [ ] **Step 1: instrumentation 분기 검증 테스트 작성**
+- [x] **Step 1: instrumentation 분기 검증 테스트 작성**
 
 `src/__tests__/instrumentation.test.ts` 신규 작성:
 
@@ -179,7 +179,7 @@ describe("instrumentation.register — NEXT_RUNTIME 분기", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — FAIL 확인**
+- [x] **Step 2: 테스트 실행 — FAIL 확인**
 
 Run:
 ```bash
@@ -188,7 +188,7 @@ npm run test -- src/__tests__/instrumentation.test.ts
 
 Expected: FAIL — `Cannot find module '../instrumentation'`.
 
-- [ ] **Step 3: `src/sentry.server.config.ts` 작성 (Node runtime)**
+- [x] **Step 3: `src/sentry.server.config.ts` 작성 (Node runtime)**
 
 ```ts
 /**
@@ -214,7 +214,7 @@ if (env.SENTRY_DSN) {
 }
 ```
 
-- [ ] **Step 4: `src/sentry.edge.config.ts` 작성 (Edge runtime)**
+- [x] **Step 4: `src/sentry.edge.config.ts` 작성 (Edge runtime)**
 
 ```ts
 /**
@@ -237,7 +237,7 @@ if (process.env.SENTRY_DSN) {
 }
 ```
 
-- [ ] **Step 5: `src/instrumentation.ts` 작성**
+- [x] **Step 5: `src/instrumentation.ts` 작성**
 
 ```ts
 /**
@@ -270,7 +270,7 @@ export async function onRequestError(
 }
 ```
 
-- [ ] **Step 6: 테스트 실행 — PASS 확인**
+- [x] **Step 6: 테스트 실행 — PASS 확인**
 
 Run:
 ```bash
@@ -279,7 +279,7 @@ npm run test -- src/__tests__/instrumentation.test.ts
 
 Expected: PASS (3 케이스 모두).
 
-- [ ] **Step 7: typecheck 통과 확인**
+- [x] **Step 7: typecheck 통과 확인**
 
 Run:
 ```bash
@@ -288,7 +288,7 @@ npm run typecheck
 
 Expected: exit 0.
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add src/instrumentation.ts src/sentry.server.config.ts src/sentry.edge.config.ts src/__tests__/instrumentation.test.ts
@@ -303,7 +303,7 @@ git commit -m "feat(obs): instrumentation.ts + Node/Edge sentry configs (B2-A Ta
 - Modify: `src/shared/lib/env.ts`
 - Modify: `src/shared/lib/__tests__/env.test.ts`
 
-- [ ] **Step 1: env.test.ts에 SENTRY_AUTH_TOKEN 검증 3 케이스 추가 (TDD)**
+- [x] **Step 1: env.test.ts에 SENTRY_AUTH_TOKEN 검증 3 케이스 추가 (TDD)**
 
 `src/shared/lib/__tests__/env.test.ts` 파일 *맨 끝*에 신규 describe 블록 추가:
 
@@ -351,7 +351,7 @@ describe("envSchema — SENTRY_AUTH_TOKEN runtime exposure 차단 (build-only in
 
 > `afterEach`는 vitest의 `afterEach` import가 필요. 파일 상단 import 구문에 누락됐다면 `import { afterEach, describe, expect, it } from "vitest";`로 추가.
 
-- [ ] **Step 2: 테스트 실행 — FAIL 확인**
+- [x] **Step 2: 테스트 실행 — FAIL 확인**
 
 Run:
 ```bash
@@ -360,7 +360,7 @@ npm run test -- src/shared/lib/__tests__/env.test.ts
 
 Expected: FAIL — 3 케이스 모두 `SENTRY_AUTH_TOKEN` schema 키가 없거나 superRefine 미구현이라 동작 안 함.
 
-- [ ] **Step 3: env.ts에 3 env keys + superRefine 블록 추가**
+- [x] **Step 3: env.ts에 3 env keys + superRefine 블록 추가**
 
 `src/shared/lib/env.ts`의 `z.object({...})` 본문, `CRON_SECRET` 줄 *바로 아래*에 추가:
 
@@ -398,7 +398,7 @@ Expected: FAIL — 3 케이스 모두 `SENTRY_AUTH_TOKEN` schema 키가 없거�
 
 > 변수명을 `isBuildPhaseForAuth`로 둔 이유: 기존 블록 상단의 `isBuildPhase` 상수와 동일 의미지만 *블록 스코프 격리*를 명시 (cross-block 의존 차단). 동일 변수명 재사용 시 lint shadowing 경고 가능.
 
-- [ ] **Step 4: 테스트 실행 — PASS 확인**
+- [x] **Step 4: 테스트 실행 — PASS 확인**
 
 Run:
 ```bash
@@ -407,7 +407,7 @@ npm run test -- src/shared/lib/__tests__/env.test.ts
 
 Expected: PASS (신규 3 케이스 + 기존 모든 케이스).
 
-- [ ] **Step 5: typecheck 통과 확인**
+- [x] **Step 5: typecheck 통과 확인**
 
 Run:
 ```bash
@@ -416,7 +416,7 @@ npm run typecheck
 
 Expected: exit 0.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add src/shared/lib/env.ts src/shared/lib/__tests__/env.test.ts
@@ -431,7 +431,7 @@ git commit -m "feat(env): SENTRY_AUTH_TOKEN runtime exposure 차단 + SENTRY_ENV
 - Modify: `src/shared/lib/observability/errorTracker.ts`
 - Modify: `src/shared/lib/observability/__tests__/errorTracker.test.ts`
 
-- [ ] **Step 1: errorTracker.test.ts에 SDK fanout 검증 케이스 추가 (TDD)**
+- [x] **Step 1: errorTracker.test.ts에 SDK fanout 검증 케이스 추가 (TDD)**
 
 `src/shared/lib/observability/__tests__/errorTracker.test.ts` 파일 *맨 끝*에 신규 describe 블록 추가:
 
@@ -495,7 +495,7 @@ describe("captureException — DSN 설정 시 Sentry SDK fanout (B2-A)", () => {
 });
 ```
 
-- [ ] **Step 2: 기존 "not_wired" 검증 케이스 삭제**
+- [x] **Step 2: 기존 "not_wired" 검증 케이스 삭제**
 
 `src/shared/lib/observability/__tests__/errorTracker.test.ts`에서 다음 describe 블록을 *완전히 삭제*:
 
@@ -506,7 +506,7 @@ describe("captureException — DSN 설정 시 Sentry SDK fanout (B2-A)", () => {
 
 파일 상단 주석의 검증 축 목록(`* 6. DSN 설정 시 logger.warn(...)`, `* 7. DSN 설정 시 warn은 여러 번 호출해도 1회만 발생`) 두 줄도 함께 제거하고, `_resetForTest` import도 다른 곳에서 더 이상 쓰이지 않으면 제거.
 
-- [ ] **Step 3: 테스트 실행 — FAIL 확인**
+- [x] **Step 3: 테스트 실행 — FAIL 확인**
 
 Run:
 ```bash
@@ -515,7 +515,7 @@ npm run test -- src/shared/lib/observability/__tests__/errorTracker.test.ts
 
 Expected: FAIL — Sentry SDK가 실제로 호출되지 않으므로 새 케이스 3건 모두 실패. 또한 `_resetForTest` 제거로 다른 케이스에서도 컴파일/실행 에러 가능.
 
-- [ ] **Step 4: errorTracker.ts SDK fanout 주입**
+- [x] **Step 4: errorTracker.ts SDK fanout 주입**
 
 `src/shared/lib/observability/errorTracker.ts` 전체를 다음으로 교체:
 
@@ -646,7 +646,7 @@ export function captureMessage(
 
 > `_resetForTest` export 제거: `sentryWarnEmitted` 모듈 상태가 사라졌으므로 reset 대상도 없다. 테스트 파일에서 import 라인도 함께 제거 필요.
 
-- [ ] **Step 5: 테스트 실행 — PASS 확인**
+- [x] **Step 5: 테스트 실행 — PASS 확인**
 
 Run:
 ```bash
@@ -655,7 +655,7 @@ npm run test -- src/shared/lib/observability/__tests__/errorTracker.test.ts
 
 Expected: PASS — 기존 케이스(DSN 미설정 fanout, ctx 머지, ALS, PII 마스킹, captureMessage 라우팅, internal 실패 swallow) + 신규 SDK fanout 3 케이스 모두.
 
-- [ ] **Step 6: typecheck 통과 확인**
+- [x] **Step 6: typecheck 통과 확인**
 
 Run:
 ```bash
@@ -664,7 +664,7 @@ npm run typecheck
 
 Expected: exit 0. `_resetForTest` 제거로 인한 import 에러는 Step 2에서 처리됐어야 함 — 남아 있으면 호출처 모두 제거.
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add src/shared/lib/observability/errorTracker.ts src/shared/lib/observability/__tests__/errorTracker.test.ts
@@ -678,7 +678,7 @@ git commit -m "feat(obs): errorTracker SDK fanout 주입 + not_wired 경로 제�
 **Files:**
 - Create: `src/app/global-error.tsx`
 
-- [ ] **Step 1: `src/app/global-error.tsx` 작성**
+- [x] **Step 1: `src/app/global-error.tsx` 작성**
 
 ```tsx
 "use client";
@@ -746,7 +746,7 @@ export default function GlobalError({
 
 > **인라인 스타일 채택 이유**: global-error는 root layout이 터진 상태라 *Tailwind 처리 자체가 실패했을 수 있음*. inline style은 외부 의존 0인 최후 fallback. `(site)/error.tsx`(정상 처리 경로)에서는 Tailwind 사용 가능.
 
-- [ ] **Step 2: typecheck 통과 확인**
+- [x] **Step 2: typecheck 통과 확인**
 
 Run:
 ```bash
@@ -755,7 +755,7 @@ npm run typecheck
 
 Expected: exit 0.
 
-- [ ] **Step 3: build 통과 확인 — global-error가 client 번들에 포함됨을 확인**
+- [x] **Step 3: build 통과 확인 — global-error가 client 번들에 포함됨을 확인**
 
 Run:
 ```bash
@@ -764,7 +764,7 @@ SENTRY_AUTH_TOKEN= npm run build
 
 Expected: build success. 빌드 로그에 `/global-error` 또는 `_error` 라우트가 client component로 처리됨이 확인되어야 한다 (stderr 경고 없음).
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add src/app/global-error.tsx
