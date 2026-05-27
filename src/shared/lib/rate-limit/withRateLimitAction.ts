@@ -20,7 +20,7 @@ export function withRateLimitAction<Args extends unknown[], R>(
 
   return async (...args) => {
     const hdrs = await headers();
-    const req = new Request("http://internal/", { headers: hdrs as never });
+    const req = new Request("http://internal/", { headers: Object.fromEntries(hdrs.entries()) });
     const userId =
       strategy === "ipOnly" ? null : ((await opts.resolveUserId?.()) ?? null);
 
