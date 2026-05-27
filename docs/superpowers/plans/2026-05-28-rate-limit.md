@@ -212,7 +212,7 @@ git commit -m "feat(env): add RATE_LIMIT_MODE schema + @upstash/ratelimit (B2-C 
 - Create: `src/shared/lib/rate-limit/tiers.ts`
 - Create: `src/shared/lib/rate-limit/__tests__/tiers.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/shared/lib/rate-limit/__tests__/tiers.test.ts`:
 
@@ -285,12 +285,12 @@ describe("isBypassPath", () => {
 });
 ```
 
-- [ ] **Step 2: FAIL 확인**
+- [x] **Step 2: FAIL 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/tiers.test.ts`
 Expected: 파일 import 실패 (`../tiers` 미존재).
 
-- [ ] **Step 3: `tiers.ts` 구현**
+- [x] **Step 3: `tiers.ts` 구현**
 
 `src/shared/lib/rate-limit/tiers.ts`:
 
@@ -335,21 +335,21 @@ export function isBypassPath(pathname: string): boolean {
 }
 ```
 
-- [ ] **Step 4: 테스트 재실행 — PASS 확인**
+- [x] **Step 4: 테스트 재실행 — PASS 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/tiers.test.ts`
 Expected: 9건 PASS.
 
-- [ ] **Step 5: typecheck**
+- [x] **Step 5: typecheck**
 
 Run: `npm run typecheck`
 Expected: 에러 0건.
 
-- [ ] **Step 6: 체크박스 갱신**
+- [x] **Step 6: 체크박스 갱신**
 
 본 plan Task 2의 `- [ ]` 모두 `- [x]`로. Task 1 동일 절차.
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add src/shared/lib/rate-limit/tiers.ts src/shared/lib/rate-limit/__tests__/tiers.test.ts docs/superpowers/plans/2026-05-28-rate-limit.md
