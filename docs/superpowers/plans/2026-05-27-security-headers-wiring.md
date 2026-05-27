@@ -186,7 +186,7 @@ git commit -m "feat(security): static security headers x7 in next.config.mjs (B2
 - Create: `src/shared/lib/security/__tests__/csp.test.ts`
 - Create: `src/shared/lib/security/__tests__/csp-fixtures.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성 (Red) — `buildCspHeader` 동작 명세**
+- [x] **Step 1: 실패하는 테스트 작성 (Red) — `buildCspHeader` 동작 명세**
 
 `src/shared/lib/security/__tests__/csp.test.ts`:
 
@@ -284,13 +284,13 @@ describe("CSP directive 카탈로그 회귀 가드", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 Run: `npm run test src/shared/lib/security`
 
 Expected: FAIL — `Cannot find module '../csp'` 또는 import 해소 실패.
 
-- [ ] **Step 3: `buildCspHeader` 순수 함수 구현 (Green)**
+- [x] **Step 3: `buildCspHeader` 순수 함수 구현 (Green)**
 
 `src/shared/lib/security/csp.ts`:
 
@@ -346,19 +346,19 @@ export { buildCspHeader, CSP_NONCE_HEADER } from "./csp";
 export type { CspBuildInput, CspBuildOutput } from "./csp";
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 Run: `npm run test src/shared/lib/security`
 
 Expected: PASS (csp.test.ts 5건 + csp-fixtures.test.ts 7건 = 총 12건).
 
-- [ ] **Step 5: typecheck 통과 확인**
+- [x] **Step 5: typecheck 통과 확인**
 
 Run: `npm run typecheck`
 
 Expected: exit 0.
 
-- [ ] **Step 6: 체크박스 갱신 + 커밋**
+- [x] **Step 6: 체크박스 갱신 + 커밋**
 
 Task 2 항목을 `- [x]` 로 변경 후:
 
