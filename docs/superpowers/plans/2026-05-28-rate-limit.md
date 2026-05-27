@@ -698,7 +698,7 @@ git commit -m "feat(rate-limit): lazy Ratelimit client + response headers helper
 - Create: `src/shared/lib/rate-limit/enforce.ts`
 - Create: `src/shared/lib/rate-limit/__tests__/enforce.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/shared/lib/rate-limit/__tests__/enforce.test.ts`:
 
@@ -834,12 +834,12 @@ describe("enforce — over limit", () => {
 });
 ```
 
-- [ ] **Step 2: FAIL 확인**
+- [x] **Step 2: FAIL 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/enforce.test.ts`
 Expected: import 실패.
 
-- [ ] **Step 3: `enforce.ts` 구현**
+- [x] **Step 3: `enforce.ts` 구현**
 
 ```ts
 /**
@@ -939,21 +939,21 @@ export async function enforce(
 }
 ```
 
-- [ ] **Step 4: 테스트 재실행 — PASS 확인**
+- [x] **Step 4: 테스트 재실행 — PASS 확인**
 
 Run: `npm run test -- src/shared/lib/rate-limit/__tests__/enforce.test.ts`
 Expected: 6건 PASS.
 
-- [ ] **Step 5: typecheck + 기존 테스트 회귀 확인**
+- [x] **Step 5: typecheck + 기존 테스트 회귀 확인**
 
 Run: `npm run typecheck && npm run test`
 Expected: 0 에러, 기존 테스트 전부 PASS.
 
-- [ ] **Step 6: 체크박스 갱신**
+- [x] **Step 6: 체크박스 갱신**
 
 본 plan Task 5의 `- [ ]` 모두 `- [x]`로.
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add src/shared/lib/rate-limit/enforce.ts src/shared/lib/rate-limit/__tests__/enforce.test.ts docs/superpowers/plans/2026-05-28-rate-limit.md
