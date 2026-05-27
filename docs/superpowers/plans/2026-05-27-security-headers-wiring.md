@@ -40,7 +40,7 @@
 - Modify: `next.config.mjs`
 - Create: `src/__tests__/next-config-headers.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성 (Red) — 7종 헤더 정합성 가드**
+- [x] **Step 1: 실패하는 테스트 작성 (Red) — 7종 헤더 정합성 가드**
 
 `src/__tests__/next-config-headers.test.ts`:
 
@@ -91,13 +91,13 @@ describe("next.config.mjs headers()", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 Run: `npm run test src/__tests__/next-config-headers.test.ts`
 
 Expected: FAIL — `headers() 함수가 export 되어야 한다` 또는 `expect(received).toBeTypeOf("function")` 실패.
 
-- [ ] **Step 3: `next.config.mjs` 에 `headers()` 함수 추가 (Green)**
+- [x] **Step 3: `next.config.mjs` 에 `headers()` 함수 추가 (Green)**
 
 `next.config.mjs` 전체 교체:
 
@@ -142,19 +142,19 @@ export default withSentryConfig(nextConfig, {
 });
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 Run: `npm run test src/__tests__/next-config-headers.test.ts`
 
 Expected: PASS (2 케이스).
 
-- [ ] **Step 5: typecheck 통과 확인**
+- [x] **Step 5: typecheck 통과 확인**
 
 Run: `npm run typecheck`
 
 Expected: exit 0.
 
-- [ ] **Step 6: 런타임 QA 증거 수집 — dev 서버 응답 헤더 검증**
+- [x] **Step 6: 런타임 QA 증거 수집 — dev 서버 응답 헤더 검증**
 
 Run (두 터미널 필요):
 ```bash
@@ -167,7 +167,7 @@ curl -sI http://localhost:3000/ | grep -iE 'strict-transport-security|x-content-
 
 Expected: 7줄 출력. `Strict-Transport-Security: max-age=15552000; includeSubDomains` / `X-Content-Type-Options: nosniff` / `Referrer-Policy: strict-origin-when-cross-origin` / `Permissions-Policy: ...` / `X-Frame-Options: DENY` / `Cross-Origin-Opener-Policy: same-origin` / `Cross-Origin-Resource-Policy: same-origin` 모두 출현.
 
-- [ ] **Step 7: 체크박스 갱신 + 커밋**
+- [x] **Step 7: 체크박스 갱신 + 커밋**
 
 `docs/superpowers/plans/2026-05-27-security-headers-wiring.md` 의 Task 1 항목을 `- [x]` 로 변경한 뒤:
 
