@@ -20,6 +20,7 @@
     "@anthropic-ai/sdk": "^0.30.0",
     "@auth/prisma-adapter": "^2.7.0",
     "@prisma/client": "^5.22.0",
+    "@sentry/nextjs": "^8.55.2",
     "@supabase/supabase-js": "^2.106.1",
     "@tosspayments/tosspayments-sdk": "^2.7.0",
     "@upstash/redis": "^1.38.0",
