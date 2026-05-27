@@ -64,6 +64,11 @@ export const envSchema = z
     // 헤더로 이 값을 검증한다. production에선 superRefine으로 required.
     // dev/test에선 optional이지만 설정되어 있으면 동일 검증을 거친다.
     CRON_SECRET: z.string().min(32).optional(),
+    // M-OBS-2: Sentry SDK 운영 env (Phase 3 B2-A).
+    // SENTRY_AUTH_TOKEN은 sourcemap upload용 build-only 비밀 — 런타임 노출 차단을 superRefine에서 강제.
+    SENTRY_AUTH_TOKEN: z.string().optional(),
+    SENTRY_ENVIRONMENT: z.string().optional(),
+    SENTRY_RELEASE: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     // 빌드 phase(NEXT_PHASE=phase-production-build)는 실 runtime이 아니다.
@@ -165,6 +170,26 @@ export const envSchema = z
             "(localhost Mock만 허용).",
         });
       }
+    }
+
+    // 🔐 SENTRY_AUTH_TOKEN: build-time only invariant.
+    // - NEXT_PHASE=phase-production-build (Vercel 빌드 단계)에서만 통과 허용
+    // - 그 외 runtime(serverless function cold start / edge)에서는 부재해야 함
+    // - 잘못 주입되어 있으면 부팅 자체를 차단 → sourcemap upload key leak 방어선
+    const isBuildPhaseForAuth =
+      process.env.NEXT_PHASE === "phase-production-build";
+
+    if (env.SENTRY_AUTH_TOKEN && !isBuildPhaseForAuth) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["SENTRY_AUTH_TOKEN"],
+        message:
+          "SENTRY_AUTH_TOKEN은 빌드 단계(NEXT_PHASE=phase-production-build)에서만 " +
+          "노출되어야 합니다. 런타임(serverless function / edge)에 주입되면 즉시 " +
+          "부팅을 차단합니다 — Vercel 환경 변수의 'Build' scope만 체크하고 " +
+          "'Production'·'Preview' runtime scope에서는 해제하세요. " +
+          "(sourcemap upload token leak 방어 — ADR-0014 NEXT_PHASE 분기 패턴 참조)",
+      });
     }
   });
 

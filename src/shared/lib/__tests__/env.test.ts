@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { envSchema } from "@/shared/lib/env";
 
@@ -279,5 +279,45 @@ describe("envSchema — OAuth provider 페어/포맷 가드", () => {
       const result = envSchema.safeParse(validBase);
       expect(result.success).toBe(true);
     });
+  });
+});
+
+describe("envSchema — SENTRY_AUTH_TOKEN runtime exposure 차단 (build-only invariant)", () => {
+  const originalNextPhase = process.env.NEXT_PHASE;
+
+  afterEach(() => {
+    if (originalNextPhase === undefined) delete process.env.NEXT_PHASE;
+    else process.env.NEXT_PHASE = originalNextPhase;
+  });
+
+  it("NEXT_PHASE=phase-production-build + SENTRY_AUTH_TOKEN 설정 → parse 통과", () => {
+    process.env.NEXT_PHASE = "phase-production-build";
+    const result = envSchema.safeParse({
+      ...validBase,
+      SENTRY_AUTH_TOKEN: "sntrys_xxxxxxxxxxxxxxxx",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("NEXT_PHASE 미설정 + SENTRY_AUTH_TOKEN 설정 → parse 실패 (런타임 노출 차단)", () => {
+    delete process.env.NEXT_PHASE;
+    const result = envSchema.safeParse({
+      ...validBase,
+      SENTRY_AUTH_TOKEN: "sntrys_xxxxxxxxxxxxxxxx",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (i) => i.path[0] === "SENTRY_AUTH_TOKEN",
+      );
+      expect(issue).toBeDefined();
+      expect(issue?.message).toContain("phase-production-build");
+    }
+  });
+
+  it("SENTRY_AUTH_TOKEN 부재 → NEXT_PHASE 무관 통과", () => {
+    delete process.env.NEXT_PHASE;
+    const result = envSchema.safeParse(validBase);
+    expect(result.success).toBe(true);
   });
 });
