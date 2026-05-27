@@ -71,4 +71,8 @@ describe("hashIdForLog", () => {
   it("returns scope only when value missing", () => {
     expect(hashIdForLog("anon")).toBe("anon");
   });
+  it("masks short values (<=6 chars) using first 2 chars", () => {
+    expect(hashIdForLog("ip:1.2.3")).toBe("ip:1....");
+    expect(hashIdForLog("user:ab")).toBe("user:ab...");
+  });
 });
