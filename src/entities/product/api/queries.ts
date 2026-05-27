@@ -11,7 +11,7 @@ export const PAGE_SIZE = 12;
 //   products:list           → /products 리스팅 + filter (5min TTL fallback)
 //   products:destinations   → /products 필터 옵션 목록  (1h  TTL fallback)
 //   product:${id}           → PDP 단건 상세 + compare   (1h  TTL fallback)
-const TAG_PRODUCTS_FEATURED = "products:featured";
+export const TAG_PRODUCTS_FEATURED = "products:featured";
 export const TAG_PRODUCTS_LIST = "products:list";
 export const TAG_DESTINATIONS_LIST = "products:destinations";
 export const tagProductDetail = (id: string) => `product:${id}`;

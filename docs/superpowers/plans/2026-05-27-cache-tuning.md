@@ -639,7 +639,7 @@ git commit -m "feat(product): getProductsByIds unstable_cache(1h, per-id tags) �
 **Files:**
 - Modify: `src/entities/product/index.ts` (re-export 블록 상단에 JSDoc 주석 추가)
 
-- [ ] **Step 1: JSDoc 박제**
+- [x] **Step 1: JSDoc 박제**
 
 Edit `src/entities/product/index.ts`. queries.ts re-export 블록을 다음으로 교체:
 
@@ -675,7 +675,7 @@ export {
 } from "./api/queries";
 ```
 
-- [ ] **Step 2: typecheck + lint**
+- [x] **Step 2: typecheck + lint**
 
 Run:
 ```bash
@@ -684,7 +684,7 @@ npm run lint
 ```
 Expected: PASS / no warnings.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/entities/product/index.ts
