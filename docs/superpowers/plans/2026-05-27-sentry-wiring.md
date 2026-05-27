@@ -883,7 +883,7 @@ git commit -m "chore(plan): Sentry wiring Task 1-6 완료 + QA 증거 + 체크�
 - Modify: `docs/superpowers/adr/README.md`
 - Modify: `docs/superpowers/plans/2026-05-27-sentry-wiring.md` (Task 7 체크박스 갱신)
 
-- [ ] **Step 1: Task 1~6 커밋 SHA 수집**
+- [x] **Step 1: Task 1~6 커밋 SHA 수집**
 
 Run:
 ```bash
@@ -892,7 +892,7 @@ git log --oneline -7 | head -7
 
 Expected: Task 1~6의 commit SHA 6~7건이 short-form으로 나열됨. 다음 Step의 ADR 본문 "관련 commit" 줄에 채워 넣을 값.
 
-- [ ] **Step 2: ADR-0021 본문 작성**
+- [x] **Step 2: ADR-0021 본문 작성**
 
 `docs/superpowers/adr/0021-sentry-sdk-adoption.md` 신규 작성 — 본문의 `(Task 1~6 커밋 SHA)` placeholder를 Step 1에서 수집한 SHA로 치환:
 
@@ -983,7 +983,7 @@ logger.error("error.captured", err, merged);  // fanout 항상 유지
   - dynamic import 분기가 Turbopack의 tree-shake 규칙 변경 시 영향받을 수 있음 — Edge 번들 사이즈 회귀 모니터링 필요
 ```
 
-- [ ] **Step 3: ADR README 인덱스 갱신**
+- [x] **Step 3: ADR README 인덱스 갱신**
 
 `docs/superpowers/adr/README.md`에 한 줄 추가 (기존 ADR-0020 줄 *바로 아래*):
 
@@ -993,7 +993,7 @@ logger.error("error.captured", err, merged);  // fanout 항상 유지
 
 > 기존 README의 정확한 라인 패턴은 작성 직전 `cat docs/superpowers/adr/README.md`로 확인 후 동일 포맷 유지.
 
-- [ ] **Step 4: plan 파일 Task 7 체크박스 갱신**
+- [x] **Step 4: plan 파일 Task 7 체크박스 갱신**
 
 `docs/superpowers/plans/2026-05-27-sentry-wiring.md`의 Task 7 모든 `- [ ]` → `- [x]` 처리.
 
@@ -1004,7 +1004,7 @@ grep -n "\- \[ \]" docs/superpowers/plans/2026-05-27-sentry-wiring.md
 
 Expected: 출력 없음 (모든 Task 완료).
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add docs/superpowers/adr/0021-sentry-sdk-adoption.md docs/superpowers/adr/README.md docs/superpowers/plans/2026-05-27-sentry-wiring.md
@@ -1021,8 +1021,8 @@ git commit -m "docs(adr): 0021 Sentry SDK adoption + sourcemap policy (B2-A 완�
 - [x] `SENTRY_AUTH_TOKEN= npm run build` exit 0
 - [x] runtime exposure 차단 증거 (Task 6 Step 5) — ZodError 인용
 - [x] build phase 통과 증거 (Task 6 Step 6) — EXPECTED PASS 인용
-- [ ] plan 파일 전체 체크박스가 `- [x]` (Task 7 Step 3 grep 결과 빈 출력)
-- [ ] ADR-0021 발행 + README 인덱스 추가
+- [x] plan 파일 전체 체크박스가 `- [x]` (Task 7 Step 3 grep 결과 빈 출력)
+- [x] ADR-0021 발행 + README 인덱스 추가
 - [ ] **사용자 수동 확인 요청** (자동화 불가):
   - Vercel `SENTRY_AUTH_TOKEN` scope = Build only UI 캡처
   - Sentry dashboard 의도적 에러 이벤트 도착
