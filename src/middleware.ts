@@ -1,8 +1,9 @@
 import { auth } from "@/features/auth/server/auth";
 import { NextResponse } from "next/server";
+import { buildCspHeader, CSP_NONCE_HEADER } from "@/shared/lib/security";
 
 export default auth((req) => {
-  // Edge runtime — ALS/Prisma import 금지. crypto.randomUUID()만 사용.
+  // Edge runtime — ALS/Prisma import 금지. crypto.randomUUID() / getRandomValues() 만 사용.
   const traceId =
     req.headers.get("x-trace-id") ??
     crypto.randomUUID().replace(/-/g, "").slice(0, 16);
@@ -16,7 +17,6 @@ export default auth((req) => {
   // 홈으로 떨어지는 데이터 연속성 누수가 발생한다 (Phase 3 골든패스 회귀 방지).
   const callbackTarget = `${pathname}${req.nextUrl.search}`;
 
-  // 이미 인증된 사용자가 /login 접근 시 홈으로 리다이렉트
   if (pathname.startsWith("/login") && isAuthenticated) {
     const res = NextResponse.redirect(new URL("/", req.url));
     res.headers.set("x-trace-id", traceId);
@@ -45,22 +45,40 @@ export default auth((req) => {
     }
   }
 
-  // 다운스트림 route handler로 x-trace-id 전파
+  // 요청별 nonce — 16바이트 base64 (Edge runtime 호환).
+  const nonceBytes = new Uint8Array(16);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = btoa(String.fromCharCode(...nonceBytes));
+
+  // 요청 헤더에 traceId + nonce 박제 → RSC tree 가 headers() API 로 회수.
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-trace-id", traceId);
+  requestHeaders.set(CSP_NONCE_HEADER, nonce);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("x-trace-id", traceId);
+
+  // CSP 헤더 박제 — CSP_MODE=enforce 가 아니면 Report-Only 가 기본 (롤아웃 게이트).
+  const csp = buildCspHeader({
+    nonce,
+    reportOnly: process.env.CSP_MODE !== "enforce",
+  });
+  response.headers.set(csp.headerName, csp.value);
+
   return response;
 });
 
 export const config = {
+  // CSP nonce 는 모든 HTML 응답에 박혀야 함.
+  // _next/static, _next/image, favicon, /api/csp-report (재귀 방지) 만 제외.
+  // missing 조건은 Next 의 RSC prefetch 호출에서 middleware 가 nonce 를 다시 생성하지 않도록 함.
   matcher: [
-    "/login/:path*",           // 인증된 사용자 /login 접근 차단
-    "/admin/:path*",
-    "/mypage/:path*",
-    "/booking/:path*",
-    "/bookings/:path*",        // 예약 상세·성공·실패 페이지 보호
-    "/products/:id/checkout",  // 체크아웃 이중 방어 (page auth() 가드와 병행)
+    {
+      source: "/((?!_next/static|_next/image|favicon.ico|api/csp-report).*)",
+      missing: [
+        { type: "header", key: "next-router-prefetch" },
+        { type: "header", key: "purpose", value: "prefetch" },
+      ],
+    },
   ],
 };

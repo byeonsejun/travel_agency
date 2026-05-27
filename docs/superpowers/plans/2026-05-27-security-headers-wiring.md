@@ -469,7 +469,7 @@ git commit -m "feat(env): add CSP_MODE schema (report-only|enforce) + .env.examp
 - Modify: `src/middleware.ts`
 - Create: `src/__tests__/middleware-csp.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성 (Red) — middleware 응답에 CSP 박제 + nonce 랜덤성**
+- [x] **Step 1: 실패하는 테스트 작성 (Red) — middleware 응답에 CSP 박제 + nonce 랜덤성**
 
 `src/__tests__/middleware-csp.test.ts`:
 
@@ -553,13 +553,13 @@ describe("middleware — CSP nonce 주입 + 헤더 박제", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 Run: `npm run test src/__tests__/middleware-csp.test.ts`
 
 Expected: FAIL — 응답 헤더에 `content-security-policy-report-only` 가 존재하지 않음 (현재 middleware 는 `x-trace-id` 만 박제).
 
-- [ ] **Step 3: `src/middleware.ts` 에 nonce 생성 + CSP 박제 추가 (Green)**
+- [x] **Step 3: `src/middleware.ts` 에 nonce 생성 + CSP 박제 추가 (Green)**
 
 `src/middleware.ts` 전체 교체 (기존 인증 가드 로직 보존 + CSP 블록 추가 + matcher 확장):
 
@@ -648,13 +648,13 @@ export const config = {
 
 > **인증 가드 회귀 주의**: 기존 matcher 5종(`/login/...`, `/admin/...`, `/mypage/...`, `/booking/...`, `/bookings/...`, `/products/[id]/checkout`)은 negative-pattern matcher 로 *모두 포괄됨* (해당 경로들이 negative 에 걸리지 않으므로 middleware 가 거친다). `pathname.startsWith` 분기 자체는 그대로 → 인증 가드 동작 보존.
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 Run: `npm run test src/__tests__/middleware-csp.test.ts`
 
 Expected: PASS (3 케이스).
 
-- [ ] **Step 5: 기존 인증 가드 회귀 테스트 통과 확인**
+- [x] **Step 5: 기존 인증 가드 회귀 테스트 통과 확인**
 
 기존 인증 가드 관련 테스트가 있다면 함께 실행:
 
@@ -662,13 +662,13 @@ Run: `npm run test`
 
 Expected: 전체 PASS — 신규 + 기존 모두 통과.
 
-- [ ] **Step 6: typecheck 통과 확인**
+- [x] **Step 6: typecheck 통과 확인**
 
 Run: `npm run typecheck`
 
 Expected: exit 0.
 
-- [ ] **Step 7: 런타임 QA 증거 수집 — 두 요청의 nonce 가 다르고 Report-Only 헤더가 박힌다**
+- [x] **Step 7: 런타임 QA 증거 수집 — 두 요청의 nonce 가 다르고 Report-Only 헤더가 박힌다**
 
 Run (dev 서버 실행 중 가정):
 ```bash
@@ -690,7 +690,7 @@ curl -sI http://localhost:3000/admin | grep -iE 'location|content-security-polic
 
 Expected: `Location: /login?callbackUrl=...` + CSP 헤더 *없음* (redirect 응답이라 CSP 박제 경로 미진입 — 기존 redirect 경로 보존 정합).
 
-- [ ] **Step 8: 체크박스 갱신 + 커밋**
+- [x] **Step 8: 체크박스 갱신 + 커밋**
 
 Task 4 항목을 `- [x]` 로 변경 후:
 
