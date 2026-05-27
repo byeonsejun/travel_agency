@@ -778,7 +778,7 @@ git commit -m "feat(app): global-error.tsx root layout fallback + Sentry capture
 **Files:**
 - Modify: `docs/superpowers/plans/2026-05-27-sentry-wiring.md` (체크박스 갱신)
 
-- [ ] **Step 1: 전체 typecheck**
+- [x] **Step 1: 전체 typecheck**
 
 Run:
 ```bash
@@ -787,7 +787,7 @@ npm run typecheck
 
 Expected: exit 0. 출력 전체 인용 가능해야 함 — 실패하면 호출처(예: features/auth/server/auth.ts에서 errorTracker import) 점검.
 
-- [ ] **Step 2: 전체 단위 테스트**
+- [x] **Step 2: 전체 단위 테스트**
 
 Run:
 ```bash
@@ -799,7 +799,7 @@ Expected: 모든 테스트 PASS. 특히 신규/수정 케이스:
 - `src/shared/lib/__tests__/env.test.ts`의 SENTRY_AUTH_TOKEN describe (3 케이스)
 - `src/shared/lib/observability/__tests__/errorTracker.test.ts`의 SDK fanout describe (3 케이스)
 
-- [ ] **Step 3: lint 통과**
+- [x] **Step 3: lint 통과**
 
 Run:
 ```bash
@@ -808,7 +808,7 @@ npm run lint
 
 Expected: exit 0. 신규 파일에 ESLint 위반 없음.
 
-- [ ] **Step 4: production build (sourcemap 업로드 skip 모드)**
+- [x] **Step 4: production build (sourcemap 업로드 skip 모드)**
 
 Run:
 ```bash
@@ -817,7 +817,7 @@ SENTRY_AUTH_TOKEN= NEXT_PHASE=phase-production-build npm run build
 
 Expected: build success. stderr에 `[@sentry/nextjs] No SENTRY_AUTH_TOKEN — skipping sourcemap upload` 류의 경고만 (silent flag로 가려질 수도 있음).
 
-- [ ] **Step 5: runtime exposure 차단 증거 수집 — SENTRY_AUTH_TOKEN을 runtime에 노출시키면 부팅 실패**
+- [x] **Step 5: runtime exposure 차단 증거 수집 — SENTRY_AUTH_TOKEN을 runtime에 노출시키면 부팅 실패**
 
 Run:
 ```bash
@@ -832,7 +832,7 @@ SENTRY_AUTH_TOKEN=sntrys_test123 NODE_ENV=test \
 
 Expected: `EXPECTED FAIL: ... SENTRY_AUTH_TOKEN ... phase-production-build ...` 로 시작하는 ZodError 메시지 출력. exit code 1. (NEXT_PHASE를 일부러 미설정해 runtime 경로 시뮬레이션.)
 
-- [ ] **Step 6: build phase 통과 증거 수집 — NEXT_PHASE 설정 시 같은 토큰이 통과**
+- [x] **Step 6: build phase 통과 증거 수집 — NEXT_PHASE 설정 시 같은 토큰이 통과**
 
 Run:
 ```bash
@@ -848,7 +848,7 @@ SENTRY_AUTH_TOKEN=sntrys_test123 NODE_ENV=test \
 
 Expected: `EXPECTED PASS` 출력. exit code 0.
 
-- [ ] **Step 7: 사용자 수동 확인 요청 항목 정리 (자동화 불가)**
+- [x] **Step 7: 사용자 수동 확인 요청 항목 정리 (자동화 불가)**
 
 다음 항목은 자동 증거 수집이 불가능하므로 PR/보고에 명시:
 
@@ -856,7 +856,7 @@ Expected: `EXPECTED PASS` 출력. exit code 0.
 2. **Sentry dashboard 이벤트 도착 확인**: 운영 배포 후 1건이라도 의도적 에러(예: `/api/health`에 `throw`)를 발생시키고 Sentry projects → issues에 표시되는지 확인.
 3. **sourcemap 디코딩 검증**: 위 의도적 에러의 stack trace가 minified가 아닌 원본 source 위치로 표시되는지 (sourcemap upload 성공의 최종 증거).
 
-- [ ] **Step 8: plan 체크박스 일괄 갱신 (CLAUDE.md §4.1)**
+- [x] **Step 8: plan 체크박스 일괄 갱신 (CLAUDE.md §4.1)**
 
 이 plan 파일(`docs/superpowers/plans/2026-05-27-sentry-wiring.md`)의 Task 1~6 모든 `- [ ]` 항목을 `- [x]`로 변경.
 
@@ -867,7 +867,7 @@ grep -n "\- \[ \]" docs/superpowers/plans/2026-05-27-sentry-wiring.md
 
 Expected: Task 7(ADR 작성)을 제외하고는 출력 없음. Task 7은 별 commit이므로 이 step 시점엔 미체크 상태가 정상.
 
-- [ ] **Step 9: 커밋 — QA 증거 + 체크박스 갱신**
+- [x] **Step 9: 커밋 — QA 증거 + 체크박스 갱신**
 
 ```bash
 git add docs/superpowers/plans/2026-05-27-sentry-wiring.md
@@ -1015,12 +1015,12 @@ git commit -m "docs(adr): 0021 Sentry SDK adoption + sourcemap policy (B2-A 완�
 
 ## 최종 검증 체크리스트 (PR 직전)
 
-- [ ] `npm run typecheck` exit 0
-- [ ] `npm run test` 모든 케이스 PASS (신규 9 케이스 포함: instrumentation 3 + env 3 + errorTracker 3)
-- [ ] `npm run lint` exit 0
-- [ ] `SENTRY_AUTH_TOKEN= npm run build` exit 0
-- [ ] runtime exposure 차단 증거 (Task 6 Step 5) — ZodError 인용
-- [ ] build phase 통과 증거 (Task 6 Step 6) — EXPECTED PASS 인용
+- [x] `npm run typecheck` exit 0
+- [x] `npm run test` 모든 케이스 PASS (신규 9 케이스 포함: instrumentation 3 + env 3 + errorTracker 3)
+- [x] `npm run lint` exit 0
+- [x] `SENTRY_AUTH_TOKEN= npm run build` exit 0
+- [x] runtime exposure 차단 증거 (Task 6 Step 5) — ZodError 인용
+- [x] build phase 통과 증거 (Task 6 Step 6) — EXPECTED PASS 인용
 - [ ] plan 파일 전체 체크박스가 `- [x]` (Task 7 Step 3 grep 결과 빈 출력)
 - [ ] ADR-0021 발행 + README 인덱스 추가
 - [ ] **사용자 수동 확인 요청** (자동화 불가):
