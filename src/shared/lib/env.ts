@@ -74,6 +74,11 @@ export const envSchema = z
     // 'enforce'      — Content-Security-Policy 헤더(실제 차단).
     // 미설정 시 middleware가 report-only를 기본으로 사용.
     CSP_MODE: z.enum(["report-only", "enforce"]).optional(),
+    // Phase 3 B2-C: Rate limit 모드.
+    // 'shadow'   — 한도 초과를 로그만 남기고 차단하지 않음 (점진 롤아웃).
+    // 'enforce'  — 한도 초과 시 429 차단.
+    // 미설정 시 enforce가 안전 기본값(wrapper/middleware 내부 default).
+    RATE_LIMIT_MODE: z.enum(["shadow", "enforce"]).optional(),
   })
   .superRefine((env, ctx) => {
     // 빌드 phase(NEXT_PHASE=phase-production-build)는 실 runtime이 아니다.

@@ -114,7 +114,7 @@ export function withRateLimitAction<Args extends unknown[], R>(
 - Modify: `.env.example`
 - Modify: `src/shared/lib/__tests__/env.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성 — `RATE_LIMIT_MODE` enum 검증**
+- [x] **Step 1: 실패 테스트 작성 — `RATE_LIMIT_MODE` enum 검증**
 
 `src/shared/lib/__tests__/env.test.ts`에 케이스 추가 (기존 describe 블록 안):
 
@@ -151,17 +151,17 @@ describe("envSchema — RATE_LIMIT_MODE", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행해 FAIL 확인**
+- [x] **Step 2: 테스트 실행해 FAIL 확인**
 
 Run: `npm run test -- src/shared/lib/__tests__/env.test.ts`
 Expected: 4건 FAIL — `RATE_LIMIT_MODE` 스키마 부재로 `unknown value` 케이스가 통과해 버림.
 
-- [ ] **Step 3: `@upstash/ratelimit` 설치**
+- [x] **Step 3: `@upstash/ratelimit` 설치**
 
 Run: `npm install @upstash/ratelimit@^2.0.5`
 Expected: `package.json` `dependencies`에 `"@upstash/ratelimit": "^2.0.5"` 추가.
 
-- [ ] **Step 4: `env.ts`에 `RATE_LIMIT_MODE` 스키마 추가**
+- [x] **Step 4: `env.ts`에 `RATE_LIMIT_MODE` 스키마 추가**
 
 `src/shared/lib/env.ts`의 `CSP_MODE` 다음에 추가:
 
@@ -173,7 +173,7 @@ Expected: `package.json` `dependencies`에 `"@upstash/ratelimit": "^2.0.5"` 추�
     RATE_LIMIT_MODE: z.enum(["shadow", "enforce"]).optional(),
 ```
 
-- [ ] **Step 5: `.env.example`에 안내 추가** (CSP_MODE 블록 다음에)
+- [x] **Step 5: `.env.example`에 안내 추가** (CSP_MODE 블록 다음에)
 
 ```dotenv
 # Phase 3 B2-C: Rate limit (속도 제한)
@@ -183,21 +183,21 @@ Expected: `package.json` `dependencies`에 `"@upstash/ratelimit": "^2.0.5"` 추�
 RATE_LIMIT_MODE=enforce
 ```
 
-- [ ] **Step 6: 테스트 재실행 — PASS 확인**
+- [x] **Step 6: 테스트 재실행 — PASS 확인**
 
 Run: `npm run test -- src/shared/lib/__tests__/env.test.ts`
 Expected: 4건 PASS.
 
-- [ ] **Step 7: typecheck**
+- [x] **Step 7: typecheck**
 
 Run: `npm run typecheck`
 Expected: 에러 0건.
 
-- [ ] **Step 8: 체크박스 갱신**
+- [x] **Step 8: 체크박스 갱신**
 
 본 plan 파일의 Task 1 모든 `- [ ]`를 `- [x]`로 변경. `grep -n "\- \[ \]" docs/superpowers/plans/2026-05-28-rate-limit.md` 의 Task 1 섹션 결과 0건 확인 (CLAUDE.md §4.1).
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 git add package.json package-lock.json src/shared/lib/env.ts src/shared/lib/__tests__/env.test.ts .env.example docs/superpowers/plans/2026-05-28-rate-limit.md

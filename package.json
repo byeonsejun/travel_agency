@@ -23,6 +23,7 @@
     "@sentry/nextjs": "^8.55.2",
     "@supabase/supabase-js": "^2.106.1",
     "@tosspayments/tosspayments-sdk": "^2.7.0",
+    "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "next": "^15.0.0",
     "next-auth": "5.0.0-beta.25",

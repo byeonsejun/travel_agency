@@ -303,6 +303,34 @@ describe("CSP_MODE", () => {
   });
 });
 
+describe("envSchema — RATE_LIMIT_MODE", () => {
+  const base = {
+    DATABASE_URL: "postgres://x:y@host/db",
+    DIRECT_URL: "postgres://x:y@host/db",
+    AUTH_SECRET: "a".repeat(32),
+  };
+
+  it("accepts 'enforce'", () => {
+    const r = envSchema.safeParse({ ...base, RATE_LIMIT_MODE: "enforce" });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.RATE_LIMIT_MODE).toBe("enforce");
+  });
+  it("accepts 'shadow'", () => {
+    const r = envSchema.safeParse({ ...base, RATE_LIMIT_MODE: "shadow" });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.RATE_LIMIT_MODE).toBe("shadow");
+  });
+  it("allows omission (undefined)", () => {
+    const r = envSchema.safeParse(base);
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.RATE_LIMIT_MODE).toBeUndefined();
+  });
+  it("rejects unknown value", () => {
+    const r = envSchema.safeParse({ ...base, RATE_LIMIT_MODE: "off" });
+    expect(r.success).toBe(false);
+  });
+});
+
 describe("envSchema — SENTRY_AUTH_TOKEN runtime exposure 차단 (build-only invariant)", () => {
   const originalNextPhase = process.env.NEXT_PHASE;
 
