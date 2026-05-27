@@ -197,7 +197,7 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 
 ## 6. 권장 패턴
 
-- ✅ 모든 페이지 RSC 기본, `export const dynamic = "force-dynamic"` (Phase 2에서 캐시 튜닝).
+- ✅ 모든 페이지 RSC 기본. `force-dynamic` 은 안전 도메인(결제·예약·admin·webhook·cron) 한정 ([ADR-0020] 옵션 A 거부). 그 외는 ISR(`/products/[id]` 1h, `/` 5m) 또는 데이터 레이어 `unstable_cache`(5min/1h TTL).
 - ✅ 외부 입력은 Zod로 파싱, 폴백은 `.catch()`.
 - ✅ 독립 쿼리는 `Promise.all` 병렬화.
 - ✅ 복잡 정렬·집계는 `db.$queryRaw` + `Prisma.sql` 태그드 템플릿 (SQL 인젝션 차단 + N+1 회피).
@@ -255,12 +255,14 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 ## 8. 기억해야 할 컨텍스트
 
 - 🛑 **이 서비스는 라이브 실거래(실제 과금)를 구현하지 않는다.** 결제는 영구히 Mock/샌드박스(`test_` 키)까지만. §5 NO-REAL-MONEY 참조. ([ADR-0009], [ADR-0014])
-- **Phase 1 (Product 표시) 완료. Phase 2 (예약·결제·AI 검색) 거의 완료** — Toss 웹훅 v2 envelope-first 마이그레이션 + cross-check 진위 검증([ADR-0013]/[ADR-0016]), 환불 Saga 3-phase([ADR-0003]), Cron 멱등 워커([ADR-0005]), 위시리스트 island + PDP ISR 시리즈([ADR-0012]/[ADR-0015]/[ADR-0017]/[ADR-0018]/[ADR-0019]) 박제 완료.
-- **현재는 Phase 3 (캐시 튜닝 + 운영 준비) 초입** — `force-dynamic` 일괄 가정은 더 이상 유효하지 않다. PDP `/products/[id]` 는 `●` (SSG with 1h ISR), 홈 `/` 은 `○` (Static, 5m revalidate) 로 이미 승격됨. 새 페이지 추가 시 default 는 **RSC + 정적 prerender 자격을 갖추도록** 작성하고, 사용자별 데이터는 island 패턴(`useEffect` + `AbortController` + 분리 endpoint)을 따른다([ADR-0018] 가이드).
+- **Phase 1 (Product 표시) + Phase 2 (예약·결제·AI 검색) + Phase 3 B1 (캐시 튜닝) 완료** — Toss 웹훅 v2 envelope-first + cross-check([ADR-0013]/[ADR-0016]), 환불 Saga 3-phase([ADR-0003]), Cron 멱등 워커([ADR-0005]), 위시리스트 island + PDP ISR 시리즈([ADR-0012]/[ADR-0015]/[ADR-0017]/[ADR-0018]/[ADR-0019]), 데이터 레이어 unstable_cache 확장 + 무효화 컨트랙트 SSOT([ADR-0020]) 박제 완료.
+- **현재는 Phase 3 B2~ (운영 준비) 진입** — 캐시 튜닝(B1)은 끝났다. `force-dynamic` 잔존 16 페이지 + 10 API route 는 모두 의도된 안전성 유지([ADR-0020]). PDP `/products/[id]` `●` (1h ISR), 홈 `/` `○` (5m revalidate), `entities/product` 의 list/destinations/byIds 모두 `unstable_cache(5min/1h)` + 무효화 컨트랙트는 `entities/product/index.ts` JSDoc 표가 SSOT. 새 페이지 추가 시 default 는 **RSC + 정적 prerender 자격을 갖추도록** 작성하고, 사용자별 데이터는 island 패턴(`useEffect` + `AbortController` + 분리 endpoint)을 따른다([ADR-0018] 가이드).
 - **다음 작업자의 혼란 방지 노트**:
-  - "왜 어떤 페이지는 force-dynamic, 어떤 페이지는 ISR 이지?" → 도메인별 캐시 정책 분리 진행 중. 결제·예약·웹훅 등 안정성 민감 도메인은 일부러 dynamic 유지(NO-REAL-MONEY + PPR 보류 정책, [ADR-0009]).
-  - "PPR opt-in 하면 더 깔끔하지 않나?" → 결정 시점에 experimental 이라 보류. [ADR-0012]/[ADR-0017]/[ADR-0018]/[ADR-0015] 모두 같은 이유로 거부. PPR stable 승격 시 시리즈 일괄 재논의.
+  - "왜 어떤 페이지는 force-dynamic, 어떤 페이지는 ISR 이지?" → 도메인별 캐시 정책 분리. 결제·예약·웹훅·admin·cron 등 안정성 민감 도메인은 일부러 dynamic 유지(NO-REAL-MONEY + PPR 보류 정책, [ADR-0009] / [ADR-0020]).
+  - "PPR opt-in 하면 더 깔끔하지 않나?" → 결정 시점에 experimental 이라 보류. [ADR-0012]/[ADR-0015]/[ADR-0017]/[ADR-0018]/[ADR-0020] 모두 같은 이유로 거부. PPR stable 승격 시 시리즈 일괄 재논의.
   - "wishlist hook 이 왜 `useOptimistic` 안 쓰지?" → [ADR-0019] 박제. Next dynamic 페이지의 `revalidatePath` no-op + transition 종료 시 base prop revert 의 조합으로 깜빡임 발생. manual `useState` + CustomEvent bus 가 채택.
+  - "`getProductsByIds` 가 왜 per-id fan-out 태그를 쓰지?" → [ADR-0020] 박제. `tagProductDetail` 단일 namespace 를 PDP(`getProductById`) + 비교(`getProductsByIds`) 양쪽이 공유 → admin product 한 번의 `revalidateTag(tagProductDetail("X"))` 호출이 PDP + X 가 포함된 모든 비교 캐시 엔트리를 동시에 무효화. N-회 fan-out 호출 패턴(옵션 B)은 round-trip 증가로 거부.
+  - "admin product CMS 가 아직 없는데 신규 태그(`TAG_PRODUCTS_LIST`/`TAG_DESTINATIONS_LIST`/`TAG_PRODUCTS_FEATURED`) 발신처는?" → 현재 0건. TTL fallback(5min/1h)만이 유일 invalidation 경로 — 의식적 trade-off([ADR-0020] Consequences). admin product CRUD PR 에서 wiring 추가 예정 ([ADR-0020] Notes).
 - 시드 데이터는 `prisma/seed.ts`. 검증용 10개 상품(JP/VN/TH/EU/ID/PH).
 - 자세한 진행 상황은 `docs/superpowers/plans/done/` 의 완료된 plan, 의사결정은 `docs/superpowers/adr/` 참조.
 
