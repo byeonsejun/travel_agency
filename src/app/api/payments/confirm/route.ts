@@ -6,6 +6,7 @@ import {
   PaymentError,
 } from "@/entities/payment";
 import { withObservedRoute } from "@/shared/lib/observability";
+import { withRateLimit } from "@/shared/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -43,34 +44,46 @@ function mapPaymentError(err: unknown): NextResponse {
   return NextResponse.json({ error: "INTERNAL_ERROR" }, { status: 500 });
 }
 
+const handler = async (req: NextRequest): Promise<NextResponse> => {
+  // Step 1: 인증 가드 — backend-expert R3-3
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Step 2: 입력 검증 — backend-expert R3-1, domain-booking R6
+  const body = await req.json().catch(() => null);
+  const parsed = ConfirmPaymentRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "INVALID_REQUEST", issues: parsed.error.issues },
+      { status: 400 },
+    );
+  }
+
+  // Step 3: 도메인 위임 — 비즈니스 로직 없음, architect R3
+  try {
+    const result = await confirmPayment({
+      userId: session.user.id,
+      ...parsed.data,
+    });
+    return NextResponse.json(result);
+  } catch (err) {
+    return mapPaymentError(err);
+  }
+};
+
+/**
+ * Phase 3 B2-C: payment tier — 10 req / 1min per userId (spec §3).
+ * Card testing 차단. resolveUserId 에서 1회 + handler 에서 1회 auth() — JWT 디코드만(~50µs).
+ */
 export const POST = withObservedRoute(
   "payments.confirm",
-  async (req: NextRequest): Promise<NextResponse> => {
-    // Step 1: 인증 가드 — backend-expert R3-3
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Step 2: 입력 검증 — backend-expert R3-1, domain-booking R6
-    const body = await req.json().catch(() => null);
-    const parsed = ConfirmPaymentRequestSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "INVALID_REQUEST", issues: parsed.error.issues },
-        { status: 400 },
-      );
-    }
-
-    // Step 3: 도메인 위임 — 비즈니스 로직 없음, architect R3
-    try {
-      const result = await confirmPayment({
-        userId: session.user.id,
-        ...parsed.data,
-      });
-      return NextResponse.json(result);
-    } catch (err) {
-      return mapPaymentError(err);
-    }
-  }
+  withRateLimit(
+    {
+      tier: "payment",
+      resolveUserId: async () => (await auth())?.user?.id ?? null,
+    },
+    handler,
+  ),
 );
