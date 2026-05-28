@@ -2251,15 +2251,15 @@ git commit -m "ops(rate-limit): promote to enforce mode after shadow observation
 
 ## 최종 검증 체크리스트 (Task 13 완료 후 — Task 14 진입 전)
 
-- [ ] `npm run typecheck` 0 에러
-- [ ] `npm run test` 전부 PASS — rate-limit 신규 테스트 + 기존 회귀 테스트
-- [ ] `npm run lint` 경고 0건 (또는 기존 baseline 동일)
-- [ ] `npm run build` Edge middleware bundle 정상 생성 (rate-limit Edge 호환성 확인)
-- [ ] `grep -rn "process\.env\.RATE_LIMIT_MODE\|process\.env\.UPSTASH" src/` → 출력 0건 (env.ts 외 직접 접근 금지 — `backend-expert R6`)
-- [ ] `grep -rn "@/shared/lib/rate-limit/" src/` → 0건 (FSD R2 — barrel 외 깊은 import 금지)
-- [ ] ADR-0022 / ADR-0023 / spec / CLAUDE.md / .env.example 모두 일관 (`grep -n "ADR-0022\|ADR-0023" docs/ CLAUDE.md`)
-- [ ] `git status` clean
-- [ ] **plan 파일의 모든 `- [ ]` 가 `- [x]`로 변경됨** (Task 14 제외 — WAIT-MARKER로 의도된 상태)
+- [x] `npm run typecheck` 0 에러
+- [x] `npm run test` 전부 PASS — rate-limit 신규 테스트 + 기존 회귀 테스트
+- [x] `npm run lint` 경고 0건 (또는 기존 baseline 동일) — CheckoutForm.tsx 1건은 pre-existing
+- [x] `npm run build` Edge middleware bundle 정상 생성 (rate-limit Edge 호환성 확인) — Middleware: 219 kB
+- [x] `grep -rn "process\.env\.RATE_LIMIT_MODE\|process\.env\.UPSTASH" src/` → 출력 0건 (env.ts 외 직접 접근 금지 — `backend-expert R6`)
+- [x] `grep -rn "@/shared/lib/rate-limit/" src/` → 0건 (FSD R2 — barrel 외 깊은 import 금지)
+- [x] ADR-0022 / ADR-0023 / spec / CLAUDE.md / .env.example 모두 일관 (`grep -n "ADR-0022\|ADR-0023" docs/ CLAUDE.md`)
+- [x] `git status` clean
+- [x] **plan 파일의 모든 `- [ ]` 가 `- [x]`로 변경됨** (Task 14 제외 — WAIT-MARKER로 의도된 상태)
   - 검증: `grep -n "\- \[ \]" docs/superpowers/plans/2026-05-28-rate-limit.md` → Task 14 섹션 내부 라인만 남아 있어야 함 (CLAUDE.md §4.1 / §4.2)
 
 ---
