@@ -1996,12 +1996,12 @@ git commit -m "feat(rate-limit): ai-search tier on searchProducts — 20/min (B2
 - Modify: `.env.example` (Task 1에서 부분 추가 — 본 Task에서 최종 확인)
 - Modify: `CLAUDE.md` (§8 컨텍스트 메모에 B2-C 완료 한 줄 + "다음 작업자 혼란 방지 노트" 한 줄 추가)
 
-- [ ] **Step 1: `.env.example` 검증 — `RATE_LIMIT_MODE` + Upstash 안내 동시 존재**
+- [x] **Step 1: `.env.example` 검증 — `RATE_LIMIT_MODE` + Upstash 안내 동시 존재**
 
 Run: `grep -nE "RATE_LIMIT_MODE|UPSTASH_REDIS_REST_(URL|TOKEN)" .env.example`
 Expected: 3개 키 모두 라인 존재. 미존재 시 Task 1 추가분과 함께 보완.
 
-- [ ] **Step 2: `CLAUDE.md` §8 갱신**
+- [x] **Step 2: `CLAUDE.md` §8 갱신**
 
 `CLAUDE.md`의 `## 8. 기억해야 할 컨텍스트` 섹션, 첫 번째 bullet(`Phase 1 ... 완료`)을 다음으로 교체:
 
@@ -2015,16 +2015,16 @@ Expected: 3개 키 모두 라인 존재. 미존재 시 Task 1 추가분과 함�
   - "Rate Limit은 왜 middleware + wrapper 두 곳에 있지?" → 의도된 hybrid. middleware의 `global` tier는 *콜드스타트 비용 방어선* — pathname 무관 baseline. 각 route handler의 `withRateLimit` / Server Action의 `withRateLimitAction`은 *도메인별 정밀 한도*(auth=5/min IP, payment=10/min user, ai-search=20/min). middleware 단일 통합은 tier 식별이 pathname에 묶여 회귀 위험이 커 거부([ADR-0022]). Upstash 미설정 시 fail-open 강등([ADR-0023]) — cache graceful 패턴과 동일.
 ```
 
-- [ ] **Step 3: typecheck + 전체 테스트 회귀**
+- [x] **Step 3: typecheck + 전체 테스트 회귀**
 
 Run: `npm run typecheck && npm run test`
 Expected: 0 에러, 전부 PASS.
 
-- [ ] **Step 4: 체크박스 갱신**
+- [x] **Step 4: 체크박스 갱신**
 
 본 plan Task 12의 `- [ ]` 모두 `- [x]`로.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add .env.example CLAUDE.md docs/superpowers/plans/2026-05-28-rate-limit.md
