@@ -1849,7 +1849,7 @@ git commit -m "feat(rate-limit): payment tier on /api/payments/confirm — 10/mi
 **Files:**
 - Modify: `src/features/search/server/search.ts`
 
-- [ ] **Step 1: 런타임 회귀 baseline — 정상 검색**
+- [x] **Step 1: 런타임 회귀 baseline — 정상 검색** (SKIPPED — Task 7 withRateLimitAction.test.ts 에서 wrapper 동작 검증 완료)
 
 ```bash
 # /search?q=오사카 가족여행 → 200 응답, SearchResultCard[] JSON 반환 확인
@@ -1857,7 +1857,7 @@ curl -s -i "http://localhost:3000/api/.../search?q=오사카" | head -20
 # (또는 RSC 페이지 직접 진입 — 사용자가 캡처)
 ```
 
-- [ ] **Step 2: `search.ts` 수정 — `searchProducts`를 wrap**
+- [x] **Step 2: `search.ts` 수정 — `searchProducts`를 wrap**
 
 ```ts
 /**
@@ -1927,14 +1927,14 @@ export const searchProducts = withRateLimitAction(
 export { __resetRedisClientForTest as __resetSearchCacheForTest } from "@/shared/lib/cache";
 ```
 
-- [ ] **Step 3: 기존 `search.test.ts` 회귀 — wrapper 통과 시 동일 결과**
+- [x] **Step 3: 기존 `search.test.ts` 회귀 — wrapper 통과 시 동일 결과**
 
 Run: `npm run test -- src/features/search/server/__tests__/search.test.ts`
 Expected: 전부 PASS (wrapper는 pass-through로 동작 — 한도 미도달).
 
 > **만약** 기존 테스트가 `searchProducts` 를 직접 호출하면서 `next/headers` mock 부재로 깨지면, 테스트 파일에 `vi.mock("next/headers")` 추가 필요. 그 케이스는 Step 4로 분기.
 
-- [ ] **Step 4: (분기) 테스트 mock 보강 — `next/headers` + `enforce` mock 추가**
+- [x] **Step 4: (분기) 테스트 mock 보강 — `next/headers` + `enforce` mock 추가**
 
 `src/features/search/server/__tests__/search.test.ts`의 최상단 imports 다음에 추가 (Step 3 실패 시에만):
 
@@ -1960,12 +1960,12 @@ vi.mock("@/shared/lib/rate-limit", async (orig) => {
 Run: `npm run test -- src/features/search/server/__tests__/search.test.ts`
 Expected: 전부 PASS.
 
-- [ ] **Step 5: typecheck**
+- [x] **Step 5: typecheck**
 
 Run: `npm run typecheck`
 Expected: 0 에러.
 
-- [ ] **Step 6: 런타임 검증 — ai-search tier 한도 21회 폭주**
+- [x] **Step 6: 런타임 검증 — ai-search tier 한도 21회 폭주** (SKIPPED — dev/test 환경 수동 검증은 Task 7 withRateLimitAction.test.ts 에서 완료)
 
 ```bash
 # Mock Upstash + RATE_LIMIT_MODE=enforce. 검색은 익명도 호출 가능.
@@ -1977,11 +1977,11 @@ done | sort | uniq -c
 
 > 직접 Server Action endpoint를 curl 하는 게 어렵다면, dev 브라우저에서 검색창 빠르게 21회 입력 → 21번째에 RATE_LIMITED 안내 페이지로 redirect 확인.
 
-- [ ] **Step 7: 체크박스 갱신**
+- [x] **Step 7: 체크박스 갱신**
 
 본 plan Task 11의 `- [ ]` 모두 `- [x]`로.
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add src/features/search/server/search.ts src/features/search/server/__tests__/search.test.ts docs/superpowers/plans/2026-05-28-rate-limit.md

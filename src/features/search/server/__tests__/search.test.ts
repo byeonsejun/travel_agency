@@ -31,6 +31,22 @@ vi.mock("@/entities/product", () => ({
   searchProductsByVector: mocks.searchProductsByVector,
 }));
 vi.mock("../router", () => ({ routeQuery: mocks.routeQuery }));
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "x-real-ip": "127.0.0.1" }),
+}));
+vi.mock("@/features/auth/server/auth", () => ({
+  auth: async () => null,
+}));
+vi.mock("@/shared/lib/rate-limit", async (orig) => {
+  const real = await orig<typeof import("@/shared/lib/rate-limit")>();
+  return {
+    ...real,
+    withRateLimitAction: <Args extends unknown[], R>(
+      _opts: unknown,
+      handler: (...args: Args) => Promise<R>,
+    ) => handler,
+  };
+});
 
 import { searchProducts } from "../search";
 
