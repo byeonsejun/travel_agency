@@ -2040,7 +2040,7 @@ git commit -m "docs: B2-C rate limit completion notes in CLAUDE.md + .env.exampl
 - Create: `docs/superpowers/adr/0023-rate-limit-fail-open-policy.md`
 - Modify: `docs/superpowers/adr/README.md`
 
-- [ ] **Step 1: ADR-0022 작성**
+- [x] **Step 1: ADR-0022 작성**
 
 `docs/superpowers/adr/0022-rate-limit-hybrid-integration.md`:
 
@@ -2104,7 +2104,7 @@ export const POST = withRateLimit({ tier: "payment", resolveUserId: ... }, handl
 - **Tier별 분리 Upstash 인스턴스**: 운영 단순성 손해. 한 인스턴스에 prefix(`ratelimit:v1:<tier>`)로 격리 — Upstash analytics 가시화로 충분.
 ```
 
-- [ ] **Step 2: ADR-0023 작성**
+- [x] **Step 2: ADR-0023 작성**
 
 `docs/superpowers/adr/0023-rate-limit-fail-open-policy.md`:
 
@@ -2159,7 +2159,7 @@ try { ... } catch (e) {
 - **`unknown` IP 단일 버킷 → 분리 버킷화**: 모든 unknown 요청이 같은 버킷에 들어가 한 사용자가 한도 소비 시 다른 unknown도 차단되는 *부수효과*. 분리(랜덤 fingerprint 등)는 사실상 무제한과 동의 — 차라리 운영 환경에서 `unknown` 발생을 Sentry breadcrumb로 *가시화*하고 인프라 단(헤더 정규화)에서 줄이는 게 정직. 거부.
 ```
 
-- [ ] **Step 3: ADR README 인덱스 갱신**
+- [x] **Step 3: ADR README 인덱스 갱신**
 
 `docs/superpowers/adr/README.md`의 인덱스 표 끝에 두 줄 추가:
 
@@ -2168,16 +2168,16 @@ try { ... } catch (e) {
 | 0023  | [Rate Limit Fail-Open 강등 정책 (Upstash 부재/장애 시)](./0023-rate-limit-fail-open-policy.md) | Accepted | 2026-05-28   |
 ```
 
-- [ ] **Step 4: 링크 회귀 — 다른 곳에서 ADR-0022/0023을 참조한 텍스트 검증**
+- [x] **Step 4: 링크 회귀 — 다른 곳에서 ADR-0022/0023을 참조한 텍스트 검증**
 
 Run: `grep -rn "ADR-0022\|ADR-0023" docs/ CLAUDE.md`
 Expected: 본 ADR 파일 + 스펙 §10.3 + plan 본 Task + CLAUDE.md §8 메모(Task 12 수정분)에서 출력.
 
-- [ ] **Step 5: 체크박스 갱신**
+- [x] **Step 5: 체크박스 갱신**
 
 본 plan Task 13의 `- [ ]` 모두 `- [x]`로.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add docs/superpowers/adr/0022-rate-limit-hybrid-integration.md docs/superpowers/adr/0023-rate-limit-fail-open-policy.md docs/superpowers/adr/README.md docs/superpowers/plans/2026-05-28-rate-limit.md

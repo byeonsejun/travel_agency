@@ -69,7 +69,9 @@
 | 0019  | [Wishlist 토글 — `useOptimistic` 폐기 + CustomEvent 기반 cross-island 동기화](./0019-wishlist-toggle-no-flicker-event-bus.md) | Accepted | 2026-05-27   |
 | 0020  | [캐시 무효화 컨트랙트 + force-dynamic audit (Phase 3 B1)](./0020-cache-tag-contracts-and-force-dynamic-audit.md) | Accepted | 2026-05-27   |
 | 0021  | [Sentry SDK 채택 + sourcemap upload policy](./0021-sentry-sdk-adoption.md) | Accepted | 2026-05-27   |
+| 0022  | [Rate Limit 4-tier sliding window + Hybrid 통합 (middleware + route/action wrapper)](./0022-rate-limit-hybrid-integration.md) | Accepted | 2026-05-28   |
+| 0023  | [Rate Limit Fail-Open 강등 정책 (Upstash 부재/장애 시)](./0023-rate-limit-fail-open-policy.md) | Accepted | 2026-05-28   |
 
 ## 향후 후보 (작성 대기)
 
-_(현재 대기 항목 없음 — A4-A6-0018-0019 PDP ISR 시리즈 박제 완료)_
+_(현재 대기 항목 없음)_
