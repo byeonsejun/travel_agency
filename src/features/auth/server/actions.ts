@@ -3,6 +3,7 @@
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, signOut } from "./auth";
+import { withRateLimitAction } from "@/shared/lib/rate-limit";
 
 type OAuthProvider = "kakao" | "google";
 
@@ -19,11 +20,11 @@ function safeCallback(raw: string | null | undefined): string {
 }
 
 /**
- * 소셜 로그인 Server Action — Kakao/Google 공통.
+ * 소셜 로그인 Server Action 구현체 — Kakao/Google 공통.
  * `<form action={signInWithProvider}>` 패턴에서 hidden input 으로 provider 및
  * callbackUrl 을 전달받는다. AuthError는 `/login?error=...` 로 리다이렉트.
  */
-export async function signInWithProvider(formData: FormData): Promise<void> {
+async function signInWithProviderImpl(formData: FormData): Promise<void> {
   const provider = formData.get("provider");
   const callbackUrl = safeCallback(
     typeof formData.get("callbackUrl") === "string"
@@ -48,6 +49,20 @@ export async function signInWithProvider(formData: FormData): Promise<void> {
     throw e;
   }
 }
+
+/**
+ * Phase 3 B2-C: auth tier — 5 req / 1min per IP (spec §3).
+ * Credential stuffing 방어 + half-config provider 차단([ADR-0014])과 직교.
+ * 차단 시 `/login?error=RATE_LIMITED&retryAfter=N` 로 리다이렉트 → UI 가 안내.
+ */
+export const signInWithProvider = withRateLimitAction(
+  {
+    tier: "auth",
+    redirectOnBlock: (retry) =>
+      `/login?error=RATE_LIMITED&retryAfter=${retry}`,
+  },
+  signInWithProviderImpl,
+);
 
 // 로그아웃 Server Action. LogoutButton 이 client component(UserNavIsland) 안에서
 // import 되므로 inline "use server" 가 아닌 module-level Server Action 으로 정의.
