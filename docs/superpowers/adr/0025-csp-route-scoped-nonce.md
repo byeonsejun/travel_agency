@@ -146,3 +146,68 @@ nonce 기반 CSP 는 **매일 바뀌는 호텔 룸 키카드** 다. 프런트(mi
 - `DYNAMIC_CSP_PREFIXES` 가 force-dynamic 도메인과 *수동 동기화* 되어 있음 — 향후 force-dynamic audit 시 양쪽 동기화 자동화 가능성 검토 (예: `force-dynamic` export 를 grep 하여 prefix 자동 생성하는 빌드 시점 검증).
 - inline script 주입을 막는 또 다른 방어선 (예: Trusted Types) 이 표준화되면 정적 페이지의 `'self'` 완화 정책을 *상향 조정* 가능.
 - `'strict-dynamic'` 자체가 점진적으로 deprecated 되거나 새 CSP3 directive 가 도입되면 본 ADR 의 분기 모델 재설계 필요.
+
+---
+
+## Addendum: 배포 후 실측에 따른 수정 (2026-05-29)
+
+### 발견된 사실
+
+본 ADR 초기 결정의 "Consequences > 포기한 것" 에 다음과 같이 박혀 있었다:
+
+> "정적/ISR 페이지의 CSP 가 *XSS 보호 등급* 측면에서 약화됨. inline `<script>` 가 만약 주입된다면 `'self'` 만으로는 차단 못함 (단, 본 프로젝트의 정적 페이지는 사용자 입력 반영 영역이 없어 inline script 주입 surface 가 사실상 부재)."
+
+**이 단언이 틀렸다.** Vercel production (`travel-agency-sooty-mu.vercel.app/`) 배포 직후 Report-Only 모니터링에서 16+ 개의 *서로 다른 hash* 를 가진 인라인 스크립트 violation 폭발:
+
+```
+Executing inline script violates the following Content Security Policy directive 'script-src 'self''.
+Either the 'unsafe-inline' keyword, a hash ('sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo='), or a nonce ('nonce-...') is required to enable inline execution.
+The policy is report-only, so the violation has been logged but no further action has been taken.
+```
+
+근본 원인 — **Next.js 15 App Router 의 React Server Components (RSC) 스트리밍** 은 사용자 입력과 무관하게 framework 가 *무조건* 인라인 `<script>` 를 emit 한다:
+
+- **RSC flight payload chunks** — `<script>self.__next_f.push([1, "..."])</script>` 형태로, 서버 컴포넌트 트리 직렬화 결과를 청크 단위로 클라이언트에 스트리밍. 페이지마다 N 개 발생.
+- **Bootstrap script** — `<script>(self.__next_f=self.__next_f||[]).push([...])</script>` 형태로 flight buffer 초기화.
+- **Hydration script** — React 가 서버 렌더 결과를 클라이언트 트리와 reconcile 하기 위해 emit.
+
+이건 정적/ISR 페이지에도 동일하게 적용된다 (SSR 산출물의 일부이므로). 초기 ADR 의 *"정적 페이지 = 인라인 script 부재"* 가정은 사용자 입력 reflection 만 고려하고 framework 자체 emission 을 누락한 검증 부재 단언이었다.
+
+### 영향
+
+- **현재 운영 영향**: 0 (Report-Only 모드 — 차단 안 함, 콘솔 노이즈만)
+- **잠재 영향**: `CSP_MODE=enforce` 승급 시 홈/PDP 의 **모든 framework script 차단 → React hydration 실패 → 전 페이지 화이트아웃**
+- **Phase 3 B2-B 목표 손상**: nonce violation 노이즈는 정상화됐으나 다른 종류의 violation 노이즈로 대체되어 진짜 XSS 신호 탐지 여전히 어려움
+
+### 수정 결정
+
+static 모드의 `script-src` 에 **`'unsafe-inline'` 추가**:
+
+```ts
+// src/shared/lib/security/csp.ts (수정 후)
+const scriptSrc =
+  input.mode === "dynamic"
+    ? `script-src 'self' 'nonce-${input.nonce}' 'strict-dynamic'`
+    : `script-src 'self' 'unsafe-inline'`;  // ← 추가
+```
+
+근거:
+- Next 15 의 RSC 인라인 emission 은 framework 합의 사항으로 회피 경로 없음 (별도 build plugin 으로 hash 추출하지 않는 한)
+- 정적 페이지(`/`, `/products/*`) 는 사용자 입력 reflection 0 — 인라인 XSS 주입 surface 가 실제로 존재 X (이번엔 코드 audit 으로 확인)
+- 외부 origin script 는 **`'self'` 가 여전히 차단** — 핵심 attack vector 인 외부 악성 도메인 로딩 차단선 유지
+- CSP3 spec: `'strict-dynamic'` 부재 시 `'unsafe-inline'` + `'self'` 가 함께 활성화되어 기대대로 동작
+
+### 거부한 대안 (Addendum 시점)
+
+- **hash 기반 화이트리스트**: Next RSC flight chunk 의 SHA256 hash 를 빌드 시 추출하여 `'sha256-...'` 로 박제. 빌드 plugin 필요 + Next 업그레이드/Sentry SDK 업그레이드마다 hash 갱신 누락 위험. ROI 낮음 — 정적 페이지의 인라인 XSS 위협 모델 대비 과투자.
+- **CSP 자체 폐기**: ADR-0021 의 XSS 방어선 전면 손실, 외부 origin script 차단까지 잃음. 거부.
+- **force-dynamic 전체 전환**: ADR-0020 정면 위배. 본 ADR 초기 옵션 C 거부 사유와 동치.
+
+### 보존된 손실 (인정)
+
+- 정적 페이지에서 *인라인 XSS* 방어선 부재. 사용자 입력 reflection 이 없는 현재 정적 페이지 surface 에서는 실질 위험 0 이나, 향후 정적 페이지에 사용자 입력 echo 가 도입되면 (예: 검색어를 정적 페이지에 reflect) 재평가 필요.
+- 향후 정적 페이지에 사용자 입력 echo 가 도입될 경우 본 ADR 의 분기 모델 재검토 — 그 경로만 force-dynamic 으로 격리하거나 별도 ADR 로 hash CSP 도입 결정.
+
+### 자기 비판 / 후속 작업자 메모
+
+본 ADR 초기 작성 시 *"정적 페이지 = 인라인 script surface 부재"* 를 검증 없이 단언한 것이 본질적 오류였다. 검증 절차 (production 배포 → Report-Only 콘솔 관찰) 가 *결정 직후* 가 아니라 본 ADR 박제 *직후* 에 수행되었더라면 초기 결정 시 즉시 발견 가능했다. 향후 CSP 정책 변경 시 **(a) ADR 작성 → (b) 머지 → (c) Report-Only 1주 관측 → (d) 결과 ADR Addendum 으로 박제 → (e) enforce 승급** 의 단계로 진행하는 게 안전하다. ADR-0021 의 롤아웃 게이트 절차와 정합.
