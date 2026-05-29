@@ -190,23 +190,30 @@ export const envSchema = z
       }
     }
 
-    // 🔐 SENTRY_AUTH_TOKEN: build-time only invariant.
-    // - NEXT_PHASE=phase-production-build (Vercel 빌드 단계)에서만 통과 허용
-    // - 그 외 runtime(serverless function cold start / edge)에서는 부재해야 함
-    // - 잘못 주입되어 있으면 부팅 자체를 차단 → sourcemap upload key leak 방어선
+    // 🔐 SENTRY_AUTH_TOKEN: build-time only invariant (Vercel 예외 적용 — ADR-0024).
+    // - NEXT_PHASE=phase-production-build → 빌드 단계, 통과.
+    // - process.env.VERCEL=="1" → Vercel runtime. Vercel 은 Production/Preview env 를
+    //   빌드+런타임 모두에 주입하며 별도 Build-only scope 가 없으므로 차단 시 middleware
+    //   매 호출 부팅 실패(production crash). 보안은 다층 방어선으로 대체:
+    //     (a) Sentry org token scope=org:ci (sourcemap upload 권한 한정)
+    //     (b) Vercel "Sensitive" 옵션 (대시보드 마스킹)
+    //     (c) errorTracker/SDK 런타임 코드는 SENTRY_AUTH_TOKEN 참조 0건 (withSentryConfig 만 사용)
+    // - 그 외 환경(Docker/bare metal/CI runner)에서 runtime 노출 → 차단 유지 (Original invariant).
     const isBuildPhaseForAuth =
       process.env.NEXT_PHASE === "phase-production-build";
+    const isVercelRuntime =
+      process.env.VERCEL === "1" && !isBuildPhaseForAuth;
 
-    if (env.SENTRY_AUTH_TOKEN && !isBuildPhaseForAuth) {
+    if (env.SENTRY_AUTH_TOKEN && !isBuildPhaseForAuth && !isVercelRuntime) {
       ctx.addIssue({
         code: "custom",
         path: ["SENTRY_AUTH_TOKEN"],
         message:
           "SENTRY_AUTH_TOKEN은 빌드 단계(NEXT_PHASE=phase-production-build)에서만 " +
-          "노출되어야 합니다. 런타임(serverless function / edge)에 주입되면 즉시 " +
-          "부팅을 차단합니다 — Vercel 환경 변수의 'Build' scope만 체크하고 " +
-          "'Production'·'Preview' runtime scope에서는 해제하세요. " +
-          "(sourcemap upload token leak 방어 — ADR-0014 NEXT_PHASE 분기 패턴 참조)",
+          "노출되어야 합니다. Vercel 외 런타임(Docker / bare metal / CI runner)에 " +
+          "주입되면 즉시 부팅을 차단합니다 (sourcemap upload token leak 방어). " +
+          "Vercel 운영 시에는 'Sensitive' 옵션 + org:ci scope token 으로 다층 방어 " +
+          "— ADR-0024 참조.",
       });
     }
   });

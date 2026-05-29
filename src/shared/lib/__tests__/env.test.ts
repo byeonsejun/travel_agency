@@ -327,14 +327,18 @@ describe("envSchema — RATE_LIMIT_MODE", () => {
 
 describe("envSchema — SENTRY_AUTH_TOKEN runtime exposure 차단 (build-only invariant)", () => {
   const originalNextPhase = process.env.NEXT_PHASE;
+  const originalVercel = process.env.VERCEL;
 
   afterEach(() => {
     if (originalNextPhase === undefined) delete process.env.NEXT_PHASE;
     else process.env.NEXT_PHASE = originalNextPhase;
+    if (originalVercel === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = originalVercel;
   });
 
   it("NEXT_PHASE=phase-production-build + SENTRY_AUTH_TOKEN 설정 → parse 통과", () => {
     process.env.NEXT_PHASE = "phase-production-build";
+    delete process.env.VERCEL;
     const result = envSchema.safeParse({
       ...validBase,
       SENTRY_AUTH_TOKEN: "sntrys_xxxxxxxxxxxxxxxx",
@@ -342,8 +346,9 @@ describe("envSchema — SENTRY_AUTH_TOKEN runtime exposure 차단 (build-only in
     expect(result.success).toBe(true);
   });
 
-  it("NEXT_PHASE 미설정 + SENTRY_AUTH_TOKEN 설정 → parse 실패 (런타임 노출 차단)", () => {
+  it("비-Vercel runtime (Docker / bare metal) + SENTRY_AUTH_TOKEN 설정 → parse 실패 (런타임 노출 차단)", () => {
     delete process.env.NEXT_PHASE;
+    delete process.env.VERCEL;
     const result = envSchema.safeParse({
       ...validBase,
       SENTRY_AUTH_TOKEN: "sntrys_xxxxxxxxxxxxxxxx",
@@ -358,8 +363,21 @@ describe("envSchema — SENTRY_AUTH_TOKEN runtime exposure 차단 (build-only in
     }
   });
 
-  it("SENTRY_AUTH_TOKEN 부재 → NEXT_PHASE 무관 통과", () => {
+  // ADR-0024: Vercel runtime 은 빌드+런타임 env scope 분리가 없어 차단 시 middleware crash.
+  // 보안은 (a) org:ci token scope + (b) Vercel Sensitive 마스킹 + (c) 런타임 코드 token 미참조의 다층 방어로 대체.
+  it("Vercel runtime (VERCEL=1, NEXT_PHASE 미설정) + SENTRY_AUTH_TOKEN 설정 → parse 통과 (ADR-0024)", () => {
     delete process.env.NEXT_PHASE;
+    process.env.VERCEL = "1";
+    const result = envSchema.safeParse({
+      ...validBase,
+      SENTRY_AUTH_TOKEN: "sntrys_xxxxxxxxxxxxxxxx",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("SENTRY_AUTH_TOKEN 부재 → NEXT_PHASE/VERCEL 무관 통과", () => {
+    delete process.env.NEXT_PHASE;
+    delete process.env.VERCEL;
     const result = envSchema.safeParse(validBase);
     expect(result.success).toBe(true);
   });
