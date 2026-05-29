@@ -72,6 +72,7 @@
 | 0022  | [Rate Limit 4-tier sliding window + Hybrid 통합 (middleware + route/action wrapper)](./0022-rate-limit-hybrid-integration.md) | Accepted | 2026-05-28   |
 | 0023  | [Rate Limit Fail-Open 강등 정책 (Upstash 부재/장애 시)](./0023-rate-limit-fail-open-policy.md) | Accepted | 2026-05-28   |
 | 0024  | [SENTRY_AUTH_TOKEN runtime 차단 invariant — Vercel 예외 분기](./0024-sentry-auth-token-vercel-runtime-relaxation.md) | Accepted | 2026-05-29   |
+| 0025  | [CSP nonce 경로별 분기 — ISR 캐시-nonce 미스매치 차단](./0025-csp-route-scoped-nonce.md) | Accepted | 2026-05-29   |
 
 ## 향후 후보 (작성 대기)
 
