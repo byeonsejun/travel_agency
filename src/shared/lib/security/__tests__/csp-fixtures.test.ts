@@ -6,7 +6,8 @@ import { buildCspHeader } from "../csp";
  * 본 테스트는 §3.2 의 SSOT 를 외부에서 한 번 더 잠그는 안전망.
  */
 describe("CSP directive 카탈로그 회귀 가드", () => {
-  const out = buildCspHeader({ nonce: "TEST_NONCE_VALUE", reportOnly: true });
+  // dynamic 모드 fixture 1개로 충분 — script-src 외 directive 는 두 모드 동일.
+  const out = buildCspHeader({ mode: "dynamic", nonce: "TEST_NONCE_VALUE", reportOnly: true });
 
   it("Sentry ingest 도메인이 connect-src 에 포함", () => {
     expect(out.value).toMatch(/connect-src[^;]*https:\/\/\*\.ingest\.sentry\.io/);

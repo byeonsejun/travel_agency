@@ -1,6 +1,6 @@
 import { auth } from "@/features/auth/server/auth";
 import { NextResponse } from "next/server";
-import { buildCspHeader, CSP_NONCE_HEADER } from "@/shared/lib/security";
+import { buildCspHeader, CSP_NONCE_HEADER, isDynamicCspPath } from "@/shared/lib/security";
 import {
   buildRateLimitHeaders,
   enforce,
@@ -78,16 +78,25 @@ export default auth(async (req) => {
     }
   }
 
-  // ─── CSP nonce + traceId (unchanged) ──────────────────────────────────────
-  // 요청별 nonce — 16바이트 base64 (Edge runtime 호환).
-  const nonceBytes = new Uint8Array(16);
-  crypto.getRandomValues(nonceBytes);
-  const nonce = btoa(String.fromCharCode(...nonceBytes));
+  // ─── CSP 분기 (경로별 — ADR-0025) + traceId ───────────────────────────────
+  // dynamic 경로(force-dynamic 도메인 + /api/*) 만 nonce + 'strict-dynamic' 적용.
+  // static/ISR 경로(`/`, `/products/*` 등) 는 nonce 미발급 → script-src 'self' 로 완화.
+  // 이유: ISR 캐시된 HTML 의 <script> nonce 와 요청별 CSP nonce 가 매 요청 불일치 →
+  // 'strict-dynamic' 이 모든 framework script 를 차단하는 구조적 충돌을 차단.
+  const isDynamic = isDynamicCspPath(pathname);
 
-  // 요청 헤더에 traceId + nonce 박제 → RSC tree 가 headers() API 로 회수.
+  // 요청 헤더에 traceId 박제 → RSC tree 가 headers() API 로 회수.
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-trace-id", traceId);
-  requestHeaders.set(CSP_NONCE_HEADER, nonce);
+
+  let nonce: string | null = null;
+  if (isDynamic) {
+    // 요청별 nonce — 16바이트 base64 (Edge runtime 호환).
+    const nonceBytes = new Uint8Array(16);
+    crypto.getRandomValues(nonceBytes);
+    nonce = btoa(String.fromCharCode(...nonceBytes));
+    requestHeaders.set(CSP_NONCE_HEADER, nonce);
+  }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("x-trace-id", traceId);
@@ -100,10 +109,11 @@ export default auth(async (req) => {
   }
 
   // CSP 헤더 박제 — CSP_MODE=enforce 가 아니면 Report-Only 가 기본 (롤아웃 게이트).
-  const csp = buildCspHeader({
-    nonce,
-    reportOnly: process.env.CSP_MODE !== "enforce",
-  });
+  const reportOnly = process.env.CSP_MODE !== "enforce";
+  const csp =
+    isDynamic && nonce
+      ? buildCspHeader({ mode: "dynamic", nonce, reportOnly })
+      : buildCspHeader({ mode: "static", reportOnly });
   response.headers.set(csp.headerName, csp.value);
 
   return response;
