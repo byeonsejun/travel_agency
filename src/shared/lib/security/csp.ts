@@ -42,10 +42,15 @@ export type CspBuildOutput = {
 };
 
 export function buildCspHeader(input: CspBuildInput): CspBuildOutput {
+  // static 모드의 'unsafe-inline' 은 Next 15 App Router 의 RSC hydration payload 지원용.
+  // Next 가 정적/ISR 페이지에도 `self.__next_f.push([...])` flight chunk 를 다수의
+  // 인라인 <script> 로 emit 하므로 'self' 만으로는 framework script 가 전부 차단된다.
+  // 외부 origin script 는 여전히 'self' 가 차단 — 인라인 XSS 방어선은 포기, 외부
+  // 악성 도메인 로딩 차단은 유지하는 트레이드오프 (ADR-0025 Addendum).
   const scriptSrc =
     input.mode === "dynamic"
       ? `script-src 'self' 'nonce-${input.nonce}' 'strict-dynamic'`
-      : `script-src 'self'`;
+      : `script-src 'self' 'unsafe-inline'`;
 
   const directives = [
     `default-src 'self'`,

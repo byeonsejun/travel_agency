@@ -31,10 +31,11 @@ describe("buildCspHeader", () => {
       );
     });
 
-    it("script-src 가 'self' 만 — nonce / strict-dynamic 둘 다 부재", () => {
+    it("script-src 가 'self' + 'unsafe-inline' (Next 15 RSC hydration payload 허용), nonce/strict-dynamic 부재", () => {
       const out = buildCspHeader({ mode: "static", reportOnly: true });
-      // 정확히 self 1개만으로 닫혀야 — 그 뒤에 ; (다음 directive) 가 와야 함.
-      expect(out.value).toMatch(/script-src 'self'\s*;/);
+      // ADR-0025 Addendum: Next 15 App Router 가 self.__next_f.push(...) flight chunk 를
+      // 정적/ISR 페이지에도 인라인 <script> 로 emit. 'self' 만으로는 모두 차단됨.
+      expect(out.value).toContain(`script-src 'self' 'unsafe-inline'`);
       expect(out.value).not.toContain("nonce-");
       expect(out.value).not.toContain("strict-dynamic");
     });

@@ -65,13 +65,13 @@ describe("middleware — CSP 경로별 분기 (ADR-0025)", () => {
   });
 
   describe("static/ISR 경로 — nonce 미발급, 'script-src self' 만", () => {
-    it("`/` 응답에 CSP 헤더는 존재하되 nonce/strict-dynamic 모두 부재", async () => {
+    it("`/` 응답에 'self' + 'unsafe-inline' (Next RSC chunk 허용), nonce/strict-dynamic 부재", async () => {
       vi.stubEnv("CSP_MODE", "");
       const middleware = await loadMiddleware();
       const res = await middleware(buildReq("http://localhost:3000/"));
       const csp = res.headers.get("content-security-policy-report-only") ?? "";
       expect(csp, "CSP 헤더 자체는 박혀야 함").not.toBe("");
-      expect(csp).toMatch(/script-src 'self'\s*;/);
+      expect(csp).toContain(`script-src 'self' 'unsafe-inline'`);
       expect(csp).not.toContain("nonce-");
       expect(csp).not.toContain("strict-dynamic");
     });
@@ -81,16 +81,16 @@ describe("middleware — CSP 경로별 분기 (ADR-0025)", () => {
       const middleware = await loadMiddleware();
       const res = await middleware(buildReq("http://localhost:3000/products/123"));
       const csp = res.headers.get("content-security-policy-report-only") ?? "";
-      expect(csp).toMatch(/script-src 'self'\s*;/);
+      expect(csp).toContain(`script-src 'self' 'unsafe-inline'`);
       expect(csp).not.toContain("nonce-");
     });
 
-    it("`CSP_MODE=enforce` + 정적 경로 → enforce 헤더 + 완화 정책", async () => {
+    it("`CSP_MODE=enforce` + 정적 경로 → enforce 헤더 + 완화 정책 ('unsafe-inline' 포함)", async () => {
       vi.stubEnv("CSP_MODE", "enforce");
       const middleware = await loadMiddleware();
       const res = await middleware(buildReq("http://localhost:3000/"));
       const csp = res.headers.get("content-security-policy") ?? "";
-      expect(csp).toMatch(/script-src 'self'\s*;/);
+      expect(csp).toContain(`script-src 'self' 'unsafe-inline'`);
       expect(csp).not.toContain("strict-dynamic");
       expect(res.headers.get("content-security-policy-report-only")).toBeNull();
     });
