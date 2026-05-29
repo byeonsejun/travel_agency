@@ -2196,9 +2196,14 @@ git commit -m "docs(adr): 0022 rate limit hybrid integration + 0023 fail-open po
 
 **Files:** 운영 환경 변수 (Vercel dashboard 또는 `vercel env`)
 
-- [ ] **Step 1: shadow 모드로 24~48h 운영 관찰**
+- [x] **Step 1: shadow 모드로 24~48h 운영 관찰** — 2026-05-29 시작
+
+**관찰 시작 시점**: 2026-05-29 (production 첫 배포 시점) — Vercel `RATE_LIMIT_MODE=shadow` Production + Preview 등록 완료, 사용자 확인됨. Vercel CLI 미사용 — 대시보드 UI 등록.
+
+**관찰 종료 예정**: 2026-05-30 ~ 2026-05-31 (24~48h)
 
 ```bash
+# (참고) Vercel CLI 가 설치되어 있다면 다음과 동치:
 vercel env add RATE_LIMIT_MODE shadow production
 vercel env add RATE_LIMIT_MODE shadow preview
 vercel deploy --prod
