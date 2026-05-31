@@ -128,26 +128,26 @@ Product CRUD Server Action마다 4개 태그 발신:
 
 ### Task 0 — 컨텍스트 정독 & 기존 패턴 인용
 
-- [ ] `src/app/(admin)/admin/layout.tsx` 정독 (ADMIN 가드 패턴)
-- [ ] `src/features/admin-booking-cancel/server/actions.ts` 정독 (admin Server Action 3-layer 가드 선례)
-- [ ] `scripts/backfill-embeddings.ts` 정독 (ProductEmbedding upsert SQL + ivfflat 인덱스)
-- [ ] `docs/superpowers/adr/0005-cron-worker-3-layer-idempotency.md` 재독
-- [ ] `docs/superpowers/adr/0020-cache-tag-contracts-and-force-dynamic-audit.md` 재독
-- [ ] 본 plan과 brainstorming 결정사항 정합 확인
+- [x] `src/app/(admin)/admin/layout.tsx` 정독 (ADMIN 가드 패턴)
+- [x] `src/features/admin-booking-cancel/server/actions.ts` 정독 (admin Server Action 3-layer 가드 선례)
+- [x] `scripts/backfill-embeddings.ts` 정독 (ProductEmbedding upsert SQL + ivfflat 인덱스)
+- [x] `docs/superpowers/adr/0005-cron-worker-3-layer-idempotency.md` 재독
+- [x] `docs/superpowers/adr/0020-cache-tag-contracts-and-force-dynamic-audit.md` 재독
+- [x] 본 plan과 brainstorming 결정사항 정합 확인
 
 ### Task 1 — Prisma 스키마: EmbeddingJob + ProductEmbedding.contentHash
 
 DoD:
-- [ ] `prisma/schema.prisma`에 enum `EmbeddingJobStatus { PENDING IN_PROGRESS SUCCEEDED FAILED }` 추가
-- [ ] `EmbeddingJob` 모델 추가:
+- [x] `prisma/schema.prisma`에 enum `EmbeddingJobStatus { PENDING IN_PROGRESS SUCCEEDED FAILED }` 추가
+- [x] `EmbeddingJob` 모델 추가:
   - 필드: `id`, `productId`, `status`(PENDING default), `attempts`(0), `lastError`(String?), `nextRunAt`(now), `actor`(String?), `contentHash`(String?), `version`(Int, 낙관적 락 보조), `createdAt`, `updatedAt`
   - 관계: `product Product @relation(...)` (`onDelete: Cascade`)
   - 인덱스: `@@index([status, nextRunAt])` (cron 픽업), `@@index([productId, status])` (멱등성 조회)
-- [ ] `ProductEmbedding`에 `contentHash String?` 추가
-- [ ] `prisma/schema.prisma` Product 모델에 `embeddingJobs EmbeddingJob[]` 역참조 추가
-- [ ] 마이그레이션: `npx prisma migrate dev --name embedding_job_pipeline`
-- [ ] `npx prisma generate` 통과 인용
-- [ ] git commit: `feat(db): add EmbeddingJob model + ProductEmbedding.contentHash (B3 Task 1)`
+- [x] `ProductEmbedding`에 `contentHash String?` 추가
+- [x] `prisma/schema.prisma` Product 모델에 `embeddingJobs EmbeddingJob[]` 역참조 추가
+- [x] 마이그레이션 적용 — ⚠️ plan 작성 시 가정한 `prisma migrate dev`는 본 프로젝트에서 동작 불가 (`20260519...` 첫 migration이 partial raw SQL artifact라 shadow DB 재현 실패). 기존 프로젝트 컨벤션(`prisma db execute --file <migration.sql>` + `prisma migrate resolve --applied <name>`, `20260519/21/22...` 동일 패턴) 사용. 결과 동일 — `EmbeddingJob` 테이블 + `ProductEmbedding.contentHash` 컬럼 dev DB에 반영 + runtime smoke test PASS.
+- [x] `npx prisma generate` 통과 — `✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 209ms`
+- [x] git commit: `feat(db): add EmbeddingJob model + ProductEmbedding.contentHash (B3 Task 1)` (SHA `d25a2e2`) + follow-up `docs(schema): clarify EmbeddingJob onDelete divergence from RefundJob` (SHA `92e3cbe`, code review Important 1건 + Minor 1건 해소)
 
 ### Task 2 — `buildEmbeddingText` + contentHash (TDD)
 
