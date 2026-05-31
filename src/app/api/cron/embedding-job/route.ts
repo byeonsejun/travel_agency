@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/shared/lib/env";
 import { processEmbeddingJobBatch } from "@/shared/lib/embedding-job/worker";
-import { logger } from "@/shared/lib/observability";
+import { logger, metrics } from "@/shared/lib/observability";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -53,6 +53,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       "cron.embedding-job.unexpected_error",
       err instanceof Error ? err : new Error(msg),
     );
+    metrics.incr("cron.embedding-job.unexpected_error");
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
