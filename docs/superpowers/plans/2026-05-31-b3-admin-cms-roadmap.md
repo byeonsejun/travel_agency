@@ -183,16 +183,16 @@ DoD:
 > 💳 Domain Booking 페르소나 영향 없음(돈·좌석 미관여), but 🔬 QA + ⚙️ Backend 페르소나 검토 필수.
 
 DoD:
-- [ ] `src/shared/lib/embedding-job/__tests__/worker.test.ts` 작성 → FAIL
-  - [ ] `updateMany(status=PENDING → IN_PROGRESS, version++)` 조건부 점유 — TOCTOU 차단
-  - [ ] contentHash 동일 → OpenAI **호출 skip** + SUCCEEDED + ProductEmbedding.updatedAt만 갱신 (빈 호출 절약)
-  - [ ] contentHash 변경 → OpenAI 호출 → `INSERT ... ON CONFLICT(productId) DO UPDATE` (backfill 패턴 차용) → SUCCEEDED
-  - [ ] OpenAI 실패 → FAILED + lastError + attempts++ + `nextRunAt = now + 2^attempts * 60s` (지수 백오프, max 1h)
-  - [ ] modelVersion 불일치(ProductEmbedding row 부재 또는 다른 modelVersion) → contentHash 무관 강제 재호출
-  - [ ] attempts ≥ 5 → 영구 FAILED 표시 (수동 재시도만 허용)
-- [ ] `src/shared/lib/embedding-job/worker.ts` 구현
+- [x] `src/shared/lib/embedding-job/__tests__/worker.test.ts` 작성 → FAIL
+  - [x] `updateMany(status=PENDING → IN_PROGRESS, version++)` 조건부 점유 — TOCTOU 차단
+  - [x] contentHash 동일 → OpenAI **호출 skip** + SUCCEEDED + ProductEmbedding.updatedAt만 갱신 (빈 호출 절약)
+  - [x] contentHash 변경 → OpenAI 호출 → `INSERT ... ON CONFLICT(productId) DO UPDATE` (backfill 패턴 차용) → SUCCEEDED
+  - [x] OpenAI 실패 → FAILED + lastError + attempts++ + `nextRunAt = now + 2^attempts * 60s` (지수 백오프, max 1h)
+  - [x] modelVersion 불일치(ProductEmbedding row 부재 또는 다른 modelVersion) → contentHash 무관 강제 재호출
+  - [x] attempts ≥ 5 → 영구 FAILED 표시 (수동 재시도만 허용)
+- [x] `src/shared/lib/embedding-job/worker.ts` 구현
   - 시그니처: `processEmbeddingJobBatch(opts: { limit: number }): Promise<{ processed: number; succeeded: number; failed: number; skipped: number }>`
-- [ ] PASS 인용 + commit: `feat(embedding-job): worker with 3-layer idempotency + backoff (B3 Task 4)`
+- [x] PASS 인용 + commit: `feat(embedding-job): worker with 3-layer idempotency + backoff (B3 Task 4)`
 
 ### Task 5 — Cron 엔드포인트 + Vercel 등록
 
