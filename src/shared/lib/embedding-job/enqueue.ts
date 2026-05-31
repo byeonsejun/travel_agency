@@ -11,13 +11,14 @@
  * 금지: @/shared/lib/db, observability, features/widgets/app
  */
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma, EmbeddingJobStatus } from "@prisma/client";
 
-// 결정 트리 결과 타입 — 조건 분기를 명시적으로 표현해 switch/if 중복 제거.
 type EnqueueDecision = "create" | "noop" | "reset-failed";
 
-function resolveDecision(
-  existingStatus: string | undefined,
+// enum을 명시적으로 받아 스키마에 새 상태가 추가되면 switch 누락이 컴파일 에러로 드러나게 한다.
+// default는 런타임 안전망(DB 마이그 타이밍 차이로 알 수 없는 값이 오는 경우)으로 유지.
+function decideEnqueueAction(
+  existingStatus: EmbeddingJobStatus | undefined,
 ): EnqueueDecision {
   switch (existingStatus) {
     case undefined:
@@ -29,7 +30,6 @@ function resolveDecision(
     case "FAILED":
       return "reset-failed";
     default:
-      // 알 수 없는 상태는 방어적으로 새 row를 생성한다
       return "create";
   }
 }
@@ -47,7 +47,7 @@ export async function enqueueProductEmbeddingJob(
     select: { id: true, status: true },
   });
 
-  const decision = resolveDecision(existing?.status);
+  const decision = decideEnqueueAction(existing?.status);
 
   if (decision === "noop") {
     // PENDING이 이미 큐에 있다 — 두 번째 admin 저장도 같은 job을 재사용.
