@@ -11,22 +11,20 @@
 import { createHash } from "node:crypto";
 import type { ProductDetail } from "../model/types";
 
-// ──────────────────────────────────────────────
-// 내부 헬퍼: 공백 정규화
-// ──────────────────────────────────────────────
+// 문자열 정렬은 반드시 codepoint 비교로 한다 — localeCompare는 process locale
+// (ICU 데이터)에 의존해 dev(ko)와 CI(C.UTF-8) 간 결과가 달라지므로 contentHash
+// 결정론을 깬다. 한글-only 시드에선 우연히 안전하지만 영문 태그 도입 즉시 break.
+function byCodepoint(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
 
-/** 앞뒤 공백 제거 + 내부 연속 공백을 단일 공백으로 축소. */
 function normalizeWhitespace(s: string): string {
   return s.trim().replace(/\s+/g, " ");
 }
 
-// ──────────────────────────────────────────────
-// 내부 헬퍼: 각 컬렉션을 정렬된 텍스트 청크로 변환
-// ──────────────────────────────────────────────
-
 function sortedTagLines(tags: ProductDetail["tags"]): string[] {
   return [...tags]
-    .toSorted((a, b) => a.tag.localeCompare(b.tag))
+    .toSorted((a, b) => byCodepoint(a.tag, b.tag))
     .map((t) => normalizeWhitespace(t.tag));
 }
 
@@ -35,7 +33,7 @@ function includedInclusionLines(
 ): string[] {
   return [...inclusions]
     .filter((inc) => inc.kind === "INCLUDED")
-    .toSorted((a, b) => a.label.localeCompare(b.label))
+    .toSorted((a, b) => byCodepoint(a.label, b.label))
     .flatMap((inc) => {
       const parts: string[] = [normalizeWhitespace(inc.label)];
       if (inc.note) parts.push(normalizeWhitespace(inc.note));
@@ -60,10 +58,6 @@ function itineraryLines(
         })
     );
 }
-
-// ──────────────────────────────────────────────
-// 공개 API
-// ──────────────────────────────────────────────
 
 export interface EmbeddingTextResult {
   /** 임베딩 모델에 전달할 합성 텍스트. */

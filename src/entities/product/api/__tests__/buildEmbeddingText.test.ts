@@ -286,6 +286,15 @@ describe("buildEmbeddingText", () => {
       expect(r1.contentHash).not.toBe(r2.contentHash);
     });
 
+    it("summary change → different hash", () => {
+      const r1 = buildEmbeddingText(BASE_PRODUCT);
+      const r2 = buildEmbeddingText({
+        ...BASE_PRODUCT,
+        summary: "완전히 다른 요약 문구로 교체",
+      });
+      expect(r1.contentHash).not.toBe(r2.contentHash);
+    });
+
     it("stop description change → different hash", () => {
       const r1 = buildEmbeddingText(BASE_PRODUCT);
       const modifiedDays = BASE_PRODUCT.itineraryDays.map((day) =>
