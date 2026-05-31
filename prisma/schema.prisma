@@ -460,6 +460,8 @@ enum EmbeddingJobStatus {
 
 // 상품 벡터 임베딩 비동기 워커 큐.
 // RefundJob 패턴과 동일한 status / attempts / nextRunAt / lastError / actor / version 구조.
+// 단 onDelete는 Cascade — RefundJob과 다름(RefundJob은 RESTRICT 디폴트). Product 하드 삭제 시
+// 잔존 job은 의미가 없으므로 같이 정리한다.
 // cron worker가 PENDING 행을 픽업하여 임베딩 생성 후 ProductEmbedding을 upsert.
 model EmbeddingJob {
   id          String             @id @default(cuid())
@@ -468,8 +470,7 @@ model EmbeddingJob {
   attempts    Int                @default(0)
   lastError   String?            @db.Text
   nextRunAt   DateTime           @default(now()) // exponential backoff
-  // 임베딩을 트리거한 주체. ex) "admin:cluser...", "system:modelbump"
-  // nullable: 기존 row 호환. 신규 enqueue부터 채움.
+  // enqueue 시 선택적. ex) "admin:cuid", "system:modelbump"
   actor       String?
   // worker가 완료 시점에 기록하는 콘텐츠 해시 (디버깅 추적용).
   // 실제 재인덱싱 판단은 ProductEmbedding.contentHash와 비교.
