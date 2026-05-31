@@ -209,29 +209,29 @@ DoD:
 ### Task 6 — admin-product Zod schema + Server Actions (TDD)
 
 DoD:
-- [ ] `src/features/admin-product/model/schema.ts` — `productInputSchema`:
-  - [ ] title: `z.string().min(1).max(120)`
-  - [ ] summary: `z.string().min(1).max(2000)`
-  - [ ] destination: `z.string().min(1)` / destinationCode: `z.string().regex(/^[A-Z]{2}-[A-Z]{3}$/).optional()`
-  - [ ] durationNights: `z.coerce.number().int().min(1).max(60)` / durationDays
-  - [ ] basePriceAdult: `z.coerce.number().int().min(0)` (**원 단위 정수만** — Domain Booking R: float 금지)
-  - [ ] heroImageUrl: `z.string().url().optional()`
-  - [ ] status: `z.enum(["DRAFT","PUBLISHED","CLOSED"])`
-  - [ ] tags: `z.array(z.string().min(1)).max(20)`
-  - [ ] inclusions: `z.array(z.object({ kind: z.enum(["INCLUDED","EXCLUDED"]), label, note }))`
-  - [ ] itinerary: `z.array(z.object({ dayNumber, title, accommodation, meals, stops: z.array(...) }))`
-- [ ] `src/features/admin-product/server/__tests__/actions.test.ts`:
-  - [ ] ADMIN 아닌 사용자 → `forbidden` 에러
-  - [ ] Zod 실패 → field errors 반환 (`flattenError`)
-  - [ ] 성공 → Product + 자식 모두 nested upsert + EmbeddingJob enqueue + revalidateTag 4종 호출 (spy)
-  - [ ] update 시 itinerary는 deleteMany + createMany 패턴(가장 단순) — 충돌 없는지 검증
-- [ ] `src/features/admin-product/server/actions.ts` 구현:
-  - [ ] `createProductAction(prevState, formData)` — `useActionState` 시그니처
-  - [ ] `updateProductAction(prevState, formData)` — `productId` hidden
-  - [ ] `publishProductAction(productId)` — status DRAFT→PUBLISHED 전이
-  - [ ] `archiveProductAction(productId)` — PUBLISHED→CLOSED
-  - [ ] `retryEmbeddingJobAction(jobId)` — FAILED→PENDING 재진입
-- [ ] PASS 인용 + commit: `feat(admin-product): server actions with embedding enqueue (B3 Task 6)`
+- [x] `src/features/admin-product/model/schema.ts` — `productInputSchema`:
+  - [x] title: `z.string().min(1).max(120)`
+  - [x] summary: `z.string().min(1).max(2000)`
+  - [x] destination: `z.string().min(1)` / destinationCode: `z.string().regex(/^[A-Z]{2}-[A-Z]{3}$/).optional()`
+  - [x] durationNights: `z.coerce.number().int().min(1).max(60)` / durationDays
+  - [x] basePriceAdult: `z.coerce.number().int().min(0)` (**원 단위 정수만** — Domain Booking R: float 금지)
+  - [x] heroImageUrl: `z.string().url().optional()`
+  - [x] status: `z.enum(["DRAFT","PUBLISHED","CLOSED"])`
+  - [x] tags: `z.array(z.string().min(1)).max(20)`
+  - [x] inclusions: `z.array(z.object({ kind: z.enum(["INCLUDED","EXCLUDED"]), label, note }))`
+  - [x] itinerary: `z.array(z.object({ dayNumber, title, accommodation, meals, stops: z.array(...) }))`
+- [x] `src/features/admin-product/server/__tests__/actions.test.ts`:
+  - [x] ADMIN 아닌 사용자 → `forbidden` 에러
+  - [x] Zod 실패 → field errors 반환 (`flattenError`)
+  - [x] 성공 → Product + 자식 모두 nested upsert + EmbeddingJob enqueue + revalidateTag 4종 호출 (spy)
+  - [x] update 시 itinerary는 deleteMany + createMany 패턴(가장 단순) — 충돌 없는지 검증
+- [x] `src/features/admin-product/server/actions.ts` 구현:
+  - [x] `createProductAction(prevState, formData)` — `useActionState` 시그니처
+  - [x] `updateProductAction(prevState, formData)` — `productId` hidden
+  - [x] `publishProductAction(productId)` — status DRAFT→PUBLISHED 전이
+  - [x] `archiveProductAction(productId)` — PUBLISHED→CLOSED
+  - [x] `retryEmbeddingJobAction(jobId)` — FAILED→PENDING 재진입 (enqueue SSOT가 FAILED→reset 처리, 별도 action 불필요)
+- [x] PASS 인용 + commit: `feat(admin-product): server actions with embedding enqueue (B3 Task 6)`
 
 ### Task 7 — admin-product UI: ProductForm + ItineraryEditor
 
