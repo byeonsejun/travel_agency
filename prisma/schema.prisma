@@ -135,6 +135,7 @@ model Product {
   embedding     ProductEmbedding?
   wishlists     Wishlist[]
   reviews       Review[]
+  embeddingJobs EmbeddingJob[]
 
   @@index([status, destinationCode])
 }
@@ -218,6 +219,7 @@ model ProductEmbedding {
   productId    String                      @id
   vector       Unsupported("vector(1536)")
   modelVersion String // "claude-embed-v1" 등 — 모델 교체 시 일괄 재색인 키
+  contentHash  String? // 마지막으로 임베딩된 콘텐츠 해시 (재인덱싱 판단용, 기존 row 호환을 위해 nullable)
   updatedAt    DateTime                    @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -447,6 +449,39 @@ model RefundJob {
   payment Payment @relation(fields: [paymentId], references: [id])
 
   @@index([status, nextRunAt])
+}
+
+enum EmbeddingJobStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+}
+
+// 상품 벡터 임베딩 비동기 워커 큐.
+// RefundJob 패턴과 동일한 status / attempts / nextRunAt / lastError / actor / version 구조.
+// cron worker가 PENDING 행을 픽업하여 임베딩 생성 후 ProductEmbedding을 upsert.
+model EmbeddingJob {
+  id          String             @id @default(cuid())
+  productId   String
+  status      EmbeddingJobStatus @default(PENDING)
+  attempts    Int                @default(0)
+  lastError   String?            @db.Text
+  nextRunAt   DateTime           @default(now()) // exponential backoff
+  // 임베딩을 트리거한 주체. ex) "admin:cluser...", "system:modelbump"
+  // nullable: 기존 row 호환. 신규 enqueue부터 채움.
+  actor       String?
+  // worker가 완료 시점에 기록하는 콘텐츠 해시 (디버깅 추적용).
+  // 실제 재인덱싱 판단은 ProductEmbedding.contentHash와 비교.
+  contentHash String?
+  version     Int                @default(0) // 낙관적 락 보조 (RefundJob 패턴 동일)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRunAt]) // cron picker: WHERE status='PENDING' AND nextRunAt <= now()
+  @@index([productId, status]) // idempotent enqueue: 중복 PENDING 행 검사
 }
 
 // ─────────────────────────────────────────────────────────────
