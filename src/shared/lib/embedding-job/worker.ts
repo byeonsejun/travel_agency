@@ -14,8 +14,7 @@
  * 금지: features/, widgets/, app/
  */
 
-import { Prisma } from "@prisma/client";
-import type { EmbeddingJobStatus } from "@prisma/client";
+import { Prisma, EmbeddingJobStatus } from "@prisma/client";
 import { db } from "@/shared/lib/db";
 import { getEmbeddingProvider, EMBEDDING_DIM } from "@/shared/lib/embedding";
 import { buildEmbeddingText } from "@/entities/product";
@@ -27,23 +26,18 @@ export interface BatchResult {
   skipped: number;
 }
 
-// IN_PROGRESS인 채로 멈춰 있는 job을 stuck으로 판정하는 임계 시간 (refundRetry 패턴 동일)
-const STALE_IN_PROGRESS_MS = 10 * 60_000; // 10분
+// IN_PROGRESS 채로 멈춘 job을 stuck으로 판정하는 임계 — worker death/배포 중단 회복용 (refundRetry 동일).
+const STALE_IN_PROGRESS_MS = 10 * 60_000;
 
-// 영구 실패 임계 시도 횟수
 const MAX_ATTEMPTS = 5;
 
-// 지수 백오프 — 2^newAttempts * 60_000ms, max 1h (spec 명시)
+// 지수 백오프 — 2^newAttempts * 60_000ms, max 1h. newAttempts는 호출자 계약상 항상 >= 1.
 function computeBackoff(newAttempts: number): Date {
-  const delayMs = Math.min(2 ** newAttempts * 60_000, 3_600_000);
+  const n = Math.max(1, newAttempts);
+  const delayMs = Math.min(2 ** n * 60_000, 3_600_000);
   return new Date(Date.now() + delayMs);
 }
 
-/**
- * 처리 대기 중인 EmbeddingJob 후보 조회.
- * - PENDING + nextRunAt <= now: 정상 backoff 도래
- * - IN_PROGRESS + updatedAt < now - 10min: stuck job 회복(reaper)
- */
 async function listDueEmbeddingJobs(
   limit: number,
 ): Promise<{ id: string; productId: string }[]> {
@@ -52,9 +46,9 @@ async function listDueEmbeddingJobs(
   return db.embeddingJob.findMany({
     where: {
       OR: [
-        { status: "PENDING" as EmbeddingJobStatus, nextRunAt: { lte: now } },
+        { status: EmbeddingJobStatus.PENDING, nextRunAt: { lte: now } },
         {
-          status: "IN_PROGRESS" as EmbeddingJobStatus,
+          status: EmbeddingJobStatus.IN_PROGRESS,
           updatedAt: { lt: staleBoundary },
         },
       ],
@@ -65,11 +59,7 @@ async function listDueEmbeddingJobs(
   });
 }
 
-/**
- * 단일 job을 atomic CAS로 claim.
- * affected=1: 이 worker가 처리 권한 획득.
- * affected=0: 다른 worker가 먼저 가져갔거나 상태가 바뀜 → skip.
- */
+// affected=1: 처리 권한 획득. affected=0: 다른 worker가 먼저 잡음 → skip.
 async function claimEmbeddingJob(
   tx: Prisma.TransactionClient,
   jobId: string,
@@ -80,46 +70,40 @@ async function claimEmbeddingJob(
     where: {
       id: jobId,
       OR: [
-        { status: "PENDING" as EmbeddingJobStatus, nextRunAt: { lte: now } },
+        { status: EmbeddingJobStatus.PENDING, nextRunAt: { lte: now } },
         {
-          status: "IN_PROGRESS" as EmbeddingJobStatus,
+          status: EmbeddingJobStatus.IN_PROGRESS,
           updatedAt: { lt: staleBoundary },
         },
       ],
     },
-    data: { status: "IN_PROGRESS" }, // @updatedAt 자동
+    data: { status: EmbeddingJobStatus.IN_PROGRESS },
   });
   return result.count > 0;
 }
 
 /**
- * 단일 EmbeddingJob을 처리.
- * 반환: "succeeded" | "failed" | "skipped"
- *
- * 각 결과 경로:
+ * 단일 EmbeddingJob 처리. 반환: "succeeded" | "failed" | "skipped"
  *  - claim 실패 → "skipped" (not_claimable)
  *  - product 없음 → FAILED 영구 + "failed"
  *  - contentHash+modelVersion 일치 → updatedAt만 갱신 + SUCCEEDED + "skipped"
- *  - contentHash/modelVersion 불일치 또는 row 없음 → embed + upsert + SUCCEEDED + "succeeded"
+ *  - 불일치/row 없음 → embed + upsert + SUCCEEDED + "succeeded"
  *  - embed 실패 → attempts<MAX: PENDING+backoff / attempts>=MAX: FAILED 영구, "failed"
  */
 async function processOneJob(
   jobId: string,
   provider: ReturnType<typeof getEmbeddingProvider>,
 ): Promise<"succeeded" | "failed" | "skipped"> {
-  // ── L1: CAS Claim ─────────────────────────────────────────────────────────
   const claimed = await db.$transaction((tx) => claimEmbeddingJob(tx, jobId));
   if (!claimed) {
     return "skipped";
   }
 
-  // ── 현재 job 상태 로드 (attempts, productId) ──────────────────────────────
   const job = await db.embeddingJob.findUniqueOrThrow({
     where: { id: jobId },
     select: { attempts: true, productId: true },
   });
 
-  // ── Product 로드 (full relations for buildEmbeddingText) ──────────────────
   const product = await db.product.findUnique({
     where: { id: job.productId },
     include: {
@@ -135,21 +119,19 @@ async function processOneJob(
   });
 
   if (!product) {
-    // orphan job — product 하드 삭제 혹은 FK cascade 타이밍 이슈. 영구 FAILED.
+    // orphan job — product 하드 삭제 또는 FK cascade 타이밍 이슈. 영구 FAILED (재시도 의미 없음).
     await db.embeddingJob.update({
       where: { id: jobId },
       data: {
-        status: "FAILED",
+        status: EmbeddingJobStatus.FAILED,
         lastError: "product not found",
       },
     });
     return "failed";
   }
 
-  // ── 콘텐츠 텍스트 + hash 생성 ────────────────────────────────────────────
   const { text, contentHash } = buildEmbeddingText(product);
 
-  // ── L2: 현재 ProductEmbedding 조회 ───────────────────────────────────────
   const existingEmbedding = await db.productEmbedding.findUnique({
     where: { productId: job.productId },
     select: { modelVersion: true, contentHash: true },
@@ -161,7 +143,6 @@ async function processOneJob(
     existingEmbedding.contentHash !== contentHash;
 
   if (!needsEmbed) {
-    // contentHash + modelVersion 모두 일치 → updatedAt만 갱신 (임베딩 호출 0회)
     await db.productEmbedding.update({
       where: { productId: job.productId },
       data: { updatedAt: new Date() },
@@ -169,14 +150,14 @@ async function processOneJob(
     await db.embeddingJob.update({
       where: { id: jobId },
       data: {
-        status: "SUCCEEDED",
+        status: EmbeddingJobStatus.SUCCEEDED,
         contentHash,
       },
     });
     return "skipped";
   }
 
-  // ── provider.embed (외부 IO — Tx 바깥, ADR-0003) ──────────────────────────
+  // provider.embed는 의도적으로 Tx 바깥 (ADR-0003). 실패해도 claim Tx 손상 없음.
   try {
     const vec = await provider.embed(text);
 
@@ -184,7 +165,9 @@ async function processOneJob(
       throw new Error(`embedding 차원 불일치: ${vec.length} (기대 ${EMBEDDING_DIM})`);
     }
 
-    // ── L3: pgvector upsert (injection-safe: vecLiteral은 our own number[]) ──
+    // vecLiteral은 `Prisma.sql` 파라미터 binding이 아닌 직접 문자열 주입이다 (::vector 캐스트
+    // 때문에 불가피). vec은 우리가 생성한 number[]이므로 외부 입력 경로 0 → 인젝션 안전.
+    // 다음 작업자가 "Prisma 파라미터로 바꿔야 하지 않나"라고 시도하지 않도록 명시.
     const vecLiteral = `[${vec.join(",")}]`;
     await db.$executeRaw(Prisma.sql`
       INSERT INTO "ProductEmbedding" ("productId", "vector", "modelVersion", "contentHash", "updatedAt")
@@ -199,7 +182,7 @@ async function processOneJob(
     await db.embeddingJob.update({
       where: { id: jobId },
       data: {
-        status: "SUCCEEDED",
+        status: EmbeddingJobStatus.SUCCEEDED,
         contentHash,
       },
     });
@@ -209,11 +192,11 @@ async function processOneJob(
     const lastError = String(err);
 
     if (newAttempts >= MAX_ATTEMPTS) {
-      // 영구 FAILED — 수동 재시도만 허용 (admin이 FAILED job을 reset)
+      // 영구 FAILED — 수동 재시도만 허용 (admin이 FAILED job을 reset).
       await db.embeddingJob.update({
         where: { id: jobId },
         data: {
-          status: "FAILED",
+          status: EmbeddingJobStatus.FAILED,
           attempts: { increment: 1 },
           lastError,
         },
@@ -221,14 +204,12 @@ async function processOneJob(
       return "failed";
     }
 
-    // 일시적 실패 → PENDING + 지수 백오프
-    const nextRunAt = computeBackoff(newAttempts);
     await db.embeddingJob.update({
       where: { id: jobId },
       data: {
-        status: "PENDING",
+        status: EmbeddingJobStatus.PENDING,
         attempts: { increment: 1 },
-        nextRunAt,
+        nextRunAt: computeBackoff(newAttempts),
         lastError,
       },
     });
@@ -237,10 +218,10 @@ async function processOneJob(
 }
 
 /**
- * EmbeddingJob 배치 처리 진입점.
- * Vercel Cron 엔드포인트(Task 5)에서 호출.
+ * EmbeddingJob 배치 처리 진입점 — Vercel Cron 엔드포인트(Task 5)가 호출.
  *
- * @param opts.limit 한 번에 처리할 최대 job 수
+ * `for...of` (not `Promise.allSettled`): 직렬 처리가 DB connection 압박 면에서 안전하고
+ * cron 특성상 지연보다 안정성이 우선. provider는 배치 당 한 번만 초기화.
  */
 export async function processEmbeddingJobBatch(opts: {
   limit: number;
@@ -251,25 +232,22 @@ export async function processEmbeddingJobBatch(opts: {
     return { processed: 0, succeeded: 0, failed: 0, skipped: 0 };
   }
 
-  // provider는 배치 당 한 번만 초기화 (안정적 factory)
   const provider = getEmbeddingProvider();
 
   let succeeded = 0;
   let failed = 0;
   let skipped = 0;
 
-  // for...of: 직렬 처리 + per-job 실패 격리. 한 job 실패가 배치 전체를 중단시키지 않음.
-  // (Promise.allSettled 사용 가능하나 직렬이 DB connection 압박 면에서 안전하고
-  //  cron 특성상 지연보다 안정성이 우선임.)
   for (const { id: jobId } of jobs) {
     try {
       const outcome = await processOneJob(jobId, provider);
       if (outcome === "succeeded") succeeded++;
       else if (outcome === "failed") failed++;
       else skipped++;
-    } catch (unexpectedErr) {
-      // processOneJob 내부 catch가 핸들하지 못한 예외 (findUniqueOrThrow 등)
-      // job은 IN_PROGRESS인 채로 남아 stale reaper에 의해 10분 후 재시도됨.
+    } catch {
+      // processOneJob 내부 catch가 핸들하지 못한 예외 (예: findUniqueOrThrow의 DB 오류).
+      // job은 IN_PROGRESS인 채 남아 stale reaper가 10분 후 회수 → 데이터 손상 없음.
+      // 의도된 fallback이며, 더 정교한 retry 분기는 stale 회복 경로에 위임.
       failed++;
     }
   }
