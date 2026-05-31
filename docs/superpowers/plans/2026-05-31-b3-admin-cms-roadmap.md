@@ -154,17 +154,17 @@ DoD:
 > 🔬 TDD 필수. 순수 함수(부수효과 0). Architect 페르소나의 entities 레이어 정책 준수.
 
 DoD:
-- [ ] `src/entities/product/api/__tests__/buildEmbeddingText.test.ts` 작성 → **FAIL 확인 인용**
-  - [ ] title + summary + destination + (tag 정렬 join) + (Inclusion[INCLUDED] label·note) + (ItineraryDay→Stop description) 결합 결과 검증
-  - [ ] 빈 필드 견고성: tag 0건 / itinerary 0건 / inclusion 0건
-  - [ ] **결정론**: 동일 입력 → 동일 SHA-256 hash (Map/Set 순서 의존 0)
-  - [ ] 한 필드만 변경 → hash 변동
-  - [ ] tag 배열 순서 바뀌어도 hash 동일(내부 정렬)
-- [ ] `src/entities/product/api/buildEmbeddingText.ts` 구현 → **PASS 확인 인용**
-- [ ] export: `buildEmbeddingText(product: ProductWithRelations): { text: string; contentHash: string }`
-- [ ] `entities/product/index.ts` barrel 통과 export
-- [ ] `npm run test -- buildEmbeddingText` 결과 인용
-- [ ] git commit: `feat(product): embedding text builder with deterministic contentHash (B3 Task 2)`
+- [x] `src/entities/product/api/__tests__/buildEmbeddingText.test.ts` 작성 → **FAIL 확인 인용**
+  - [x] title + summary + destination + (tag 정렬 join) + (Inclusion[INCLUDED] label·note) + (ItineraryDay→Stop description) 결합 결과 검증
+  - [x] 빈 필드 견고성: tag 0건 / itinerary 0건 / inclusion 0건
+  - [x] **결정론**: 동일 입력 → 동일 SHA-256 hash (Map/Set 순서 의존 0)
+  - [x] 한 필드만 변경 → hash 변동
+  - [x] tag 배열 순서 바뀌어도 hash 동일(내부 정렬)
+- [x] `src/entities/product/api/buildEmbeddingText.ts` 구현 → **PASS 확인 인용**
+- [x] export: `buildEmbeddingText(product: ProductWithRelations): { text: string; contentHash: string }`
+- [x] `entities/product/index.ts` barrel 통과 export
+- [x] `npm run test -- buildEmbeddingText` 결과 인용
+- [x] git commit: `feat(product): embedding text builder with deterministic contentHash (B3 Task 2)`
 
 ### Task 3 — `EmbeddingJob` enqueue SSOT (TDD)
 

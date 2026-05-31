@@ -58,6 +58,9 @@ export {
 export { searchProductsByVector } from "./api/searchByVector";
 export type { VectorSearchFilters } from "./api/searchByVector";
 
+export { buildEmbeddingText } from "./api/buildEmbeddingText";
+export type { EmbeddingTextResult } from "./api/buildEmbeddingText";
+
 export { ProductImage } from "./ui/ProductImage";
 export { ProductCard } from "./ui/ProductCard";
 export { InclusionList } from "./ui/InclusionList";
