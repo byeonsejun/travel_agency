@@ -169,14 +169,14 @@ DoD:
 ### Task 3 — `EmbeddingJob` enqueue SSOT (TDD)
 
 DoD:
-- [ ] `src/shared/lib/embedding-job/__tests__/enqueue.test.ts` 작성 → FAIL
-  - [ ] 동일 productId의 PENDING이 있으면 신규 생성 안 함 (멱등)
-  - [ ] FAILED 잔존 job은 PENDING으로 재진입 + attempts/lastError 보존
-  - [ ] IN_PROGRESS 중 새 변경 발생 시 새 PENDING 생성 가능 (worker가 직렬 처리)
-  - [ ] `tx` 인자 받아 동일 트랜잭션 내부에서 동작 (atomicity 보장)
-- [ ] `src/shared/lib/embedding-job/enqueue.ts` 구현
-- [ ] 시그니처: `enqueueProductEmbeddingJob(tx: Prisma.TransactionClient, productId: string, actor: string): Promise<void>`
-- [ ] PASS 인용 + commit: `feat(embedding-job): enqueue SSOT with idempotent upsert (B3 Task 3)`
+- [x] `src/shared/lib/embedding-job/__tests__/enqueue.test.ts` 작성 → FAIL
+  - [x] 동일 productId의 PENDING이 있으면 신규 생성 안 함 (멱등)
+  - [x] FAILED 잔존 job은 PENDING으로 재진입 + attempts/lastError 보존
+  - [x] IN_PROGRESS 중 새 변경 발생 시 새 PENDING 생성 가능 (worker가 직렬 처리)
+  - [x] `tx` 인자 받아 동일 트랜잭션 내부에서 동작 (atomicity 보장)
+- [x] `src/shared/lib/embedding-job/enqueue.ts` 구현
+- [x] 시그니처: `enqueueProductEmbeddingJob(tx: Prisma.TransactionClient, productId: string, actor: string): Promise<void>`
+- [x] PASS 인용 + commit: `feat(embedding-job): enqueue SSOT with idempotent upsert (B3 Task 3)`
 
 ### Task 4 — `EmbeddingJob` worker (TDD)
 
