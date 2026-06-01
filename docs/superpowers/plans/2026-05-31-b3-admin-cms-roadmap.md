@@ -238,17 +238,17 @@ DoD:
 > 🎨 Frontend Expert: useEffect/타이머/리스너 cleanup 의무, 'use client' 페이지 직접 부착 금지.
 
 DoD:
-- [ ] `src/features/admin-product/ui/ProductForm.tsx` (`'use client'`)
-  - [ ] `useActionState(action, initialState)` + `useFormStatus`로 제출 중 표시
-  - [ ] 필드별 에러 표시 — Zod `flattenError().fieldErrors`
-  - [ ] tags: comma-separated input → 배열 변환 (간단 UX)
-  - [ ] inclusions: 동적 row 추가/삭제
-- [ ] `src/features/admin-product/ui/ItineraryEditor.tsx` (`'use client'`)
-  - [ ] day 추가/삭제/순서 변경
-  - [ ] day 안 stop 추가/삭제/순서 변경
-  - [ ] FormData 직렬화 시 nested 구조를 dot-path로 인코딩 (`itinerary.0.stops.1.description` 등)
-- [ ] `src/features/admin-product/index.ts` barrel: `export { ProductForm }`
-- [ ] commit: `feat(admin-product): product + itinerary form UI (B3 Task 7)`
+- [x] `src/features/admin-product/ui/ProductForm.tsx` (`'use client'`)
+  - [x] `useActionState(action, initialState)` + `useFormStatus`로 제출 중 표시
+  - [x] 필드별 에러 표시 — Zod `flattenError().fieldErrors`
+  - [x] tags: comma-separated input → 배열 변환 (간단 UX)
+  - [x] inclusions: 동적 row 추가/삭제
+- [x] `src/features/admin-product/ui/ItineraryEditor.tsx` (`'use client'`)
+  - [x] day 추가/삭제/순서 변경
+  - [x] day 안 stop 추가/삭제/순서 변경
+  - [x] FormData 직렬화 시 nested 구조를 dot-path로 인코딩 (`itinerary.0.stops.1.description` 등)
+- [x] `src/features/admin-product/index.ts` barrel: `export { ProductForm }`
+- [x] commit: `feat(admin-product): product + itinerary form UI (B3 Task 7)`
 
 ### Task 8 — admin 라우트 페이지
 

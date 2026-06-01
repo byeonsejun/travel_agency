@@ -1,3 +1,5 @@
+export { ProductForm } from "./ui/ProductForm";
+
 export {
   createProductAction,
   updateProductAction,
