@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ProductDetail } from "@/entities/product";
 import type { ProductInput, UpdateProductInput } from "../model/schemas";
@@ -9,6 +9,7 @@ import {
   updateProductAction,
 } from "../server/actions";
 import type { CreateProductState, UpdateProductState } from "../server/actions";
+import { getHeroUploadUrl } from "../server/uploadHero";
 import { ItineraryEditor } from "./ItineraryEditor";
 import type { ItineraryDayInput } from "./ItineraryEditor";
 
@@ -103,6 +104,11 @@ function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) 
     () => (initial ? initial.tags.map((t) => t.tag).join(", ") : ""),
   );
 
+  // hero image upload
+  const heroFileInputRef = useRef<HTMLInputElement>(null);
+  const [heroUploadStatus, setHeroUploadStatus] = useState<"idle" | "uploading" | "error">("idle");
+  const [heroUploadError, setHeroUploadError] = useState<string | null>(null);
+
   // inclusions — 동적 row 배열
   const [inclusions, setInclusions] = useState<InclusionRow[]>(
     () => (initial ? productDetailToInput(initial).inclusions : []),
@@ -114,6 +120,48 @@ function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) 
   // ── itinerary controlled ────────────────────────────────────────
   function handleItineraryChange(days: ItineraryDayInput[]) {
     setForm((prev) => ({ ...prev, itineraryDays: days }));
+  }
+
+  // ── hero image upload ──────────────────────────────────────────
+  async function handleHeroFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setHeroUploadStatus("uploading");
+    setHeroUploadError(null);
+
+    try {
+      const res = await getHeroUploadUrl(file.type);
+      if (!res.ok) {
+        setHeroUploadStatus("error");
+        setHeroUploadError(
+          res.error === "INVALID_MIME"
+            ? "JPEG·PNG·WebP 파일만 지원합니다."
+            : "업로드 URL 발급에 실패했습니다.",
+        );
+        return;
+      }
+
+      const putRes = await fetch(res.signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!putRes.ok) {
+        setHeroUploadStatus("error");
+        setHeroUploadError("파일 업로드에 실패했습니다. 다시 시도해 주세요.");
+        return;
+      }
+
+      setField("heroImageUrl", res.publicUrl);
+      setHeroUploadStatus("idle");
+      // 동일 파일 재선택 허용
+      if (heroFileInputRef.current) heroFileInputRef.current.value = "";
+    } catch {
+      setHeroUploadStatus("error");
+      setHeroUploadError("네트워크 오류가 발생했습니다.");
+    }
   }
 
   // ── submit ─────────────────────────────────────────────────────
@@ -300,21 +348,46 @@ function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) 
           )}
         </div>
 
-        {/* Hero Image URL (YAGNI: 업로드는 Task 9, 여기서는 URL 직접 입력) */}
+        {/* 대표 이미지 */}
         <div>
-          <label className={labelCls} htmlFor="heroImageUrl">
-            대표 이미지 URL
-          </label>
+          <label className={labelCls}>대표 이미지</label>
+
+          {form.heroImageUrl && (
+            <div className="mb-3 overflow-hidden rounded-lg border border-gray-200">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={form.heroImageUrl}
+                alt="대표 이미지 미리보기"
+                className="h-40 w-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* 실제 file input — 버튼 클릭으로 트리거 */}
           <input
-            id="heroImageUrl"
-            type="url"
-            value={form.heroImageUrl ?? ""}
-            onChange={(e) =>
-              setField("heroImageUrl", e.target.value || undefined)
-            }
-            placeholder="https://..."
-            className={inputCls}
+            ref={heroFileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleHeroFileChange}
           />
+
+          <button
+            type="button"
+            disabled={heroUploadStatus === "uploading"}
+            onClick={() => heroFileInputRef.current?.click()}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          >
+            {heroUploadStatus === "uploading"
+              ? "업로드 중..."
+              : form.heroImageUrl
+                ? "이미지 변경"
+                : "이미지 선택 (JPEG·PNG·WebP)"}
+          </button>
+
+          {heroUploadStatus === "error" && heroUploadError && (
+            <p className={errorCls}>{heroUploadError}</p>
+          )}
           {fieldErrors?.heroImageUrl && (
             <p className={errorCls}>{fieldErrors.heroImageUrl[0]}</p>
           )}
@@ -479,14 +552,16 @@ function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) 
       <div className="sticky bottom-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md">
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || heroUploadStatus === "uploading"}
           className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
         >
           {isPending
             ? "저장 중..."
-            : mode === "edit"
-              ? "상품 수정 저장"
-              : "상품 등록"}
+            : heroUploadStatus === "uploading"
+              ? "이미지 업로드 중..."
+              : mode === "edit"
+                ? "상품 수정 저장"
+                : "상품 등록"}
         </button>
       </div>
     </form>

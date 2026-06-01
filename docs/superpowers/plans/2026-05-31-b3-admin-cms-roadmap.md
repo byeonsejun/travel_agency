@@ -267,11 +267,11 @@ DoD:
 ### Task 9 — heroImageUrl 업로드 (Supabase Storage)
 
 DoD:
-- [ ] `product-images` 버킷 존재 확인(없으면 RLS 정책과 함께 생성 — admin write, public read)
-- [ ] `src/features/admin-product/server/uploadHero.ts`: `createProductHeroSignedUploadUrl(productId, ext, mime)` (review-photos 패턴 차용)
-- [ ] `ProductForm`에 파일 input → signed upload → 응답 URL을 `heroImageUrl` 폼 필드에 set
-- [ ] `next.config.mjs` `remotePatterns`에 이미 Supabase Storage 도메인 등록 확인 (review에서 추가된 상태)
-- [ ] commit: `feat(admin-product): hero image upload via signed URL (B3 Task 9)`
+- [x] `product-images` 버킷 존재 확인 — `photoMime.ts`의 `REVIEW_PHOTO_BUCKET = "product-images"` 및 review-upload 기존 사용으로 버킷 존재 확인됨. Service-role key 기반 signed URL이라 RLS bypass, public 버킷이라 public read 이미 적용.
+- [x] `src/features/admin-product/server/uploadHero.ts`: `getHeroUploadUrl(mime)` — ADMIN role 가드 + Zod mime 검증 + `createProductHeroSignedUploadUrl(mime)` 호출 → `{ ok, signedUrl, publicUrl, path, token }` 반환. UUID 기반 경로(`product-hero/${uuid}.${ext}`)로 create/edit 모드 통합.
+- [x] `ProductForm`에 파일 input → signed PUT → `publicUrl`을 `heroImageUrl` 필드에 set. 업로드 중 버튼·제출 비활성 + 에러 메시지 노출 + 업로드 완료 시 미리보기 이미지 표시.
+- [x] `next.config.mjs` `remotePatterns` 확인 — `*.supabase.co/storage/v1/object/public/**` 이미 등록. 추가 작업 없음.
+- [x] commit: `feat(admin-product): hero image upload via signed URL (B3 Task 9)`
 
 ### Task 10 — Embedding Jobs 모니터링 페이지
 
