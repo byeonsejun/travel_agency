@@ -25,15 +25,15 @@ export type { ProductFormData } from "./model/schema";
 export { parseProductListParams } from "./api/parseListParams";
 export type { ProductListParams } from "./api/parseListParams";
 /**
- * Cache 무효화 컨트랙트 — 미래 admin product CMS / CRUD 작업 시 반드시 호출.
+ * Cache 무효화 컨트랙트 — admin product CMS / CRUD 작업 시 반드시 호출.
  *
- * | Tag                          | 무효화 발신 시점                                   | TTL  |
- * | ---------------------------- | ------------------------------------------------- | ---- |
- * | `TAG_PRODUCTS_FEATURED`      | 추천 상품 변경(admin pick)                         | 5min |
- * | `TAG_PRODUCTS_LIST`          | 신규 상품 등록 / status 변경 / 정렬 영향 필드 변경  | 5min |
- * | `TAG_DESTINATIONS_LIST`      | 신규 destinationCode 도입 / 상품 status 변경        | 1h   |
- * | `tagProductDetail(id)`       | 단건 상품 update (title/desc/hero/price 등)         | 1h   |
- * | `tagDeparturesByProduct(id)` | 좌석/일정 변경 (booking 확정/취소가 자동 wiring)    | 1h   |
+ * | Tag                          | 무효화 발신 시점                                   | TTL  | Writer (발신 함수)                                                                                   |
+ * | ---------------------------- | ------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------- |
+ * | `TAG_PRODUCTS_FEATURED`      | 추천 상품 변경(admin pick)                         | 5min | createProductAction / updateProductAction / publishProductAction / archiveProductAction              |
+ * | `TAG_PRODUCTS_LIST`          | 신규 상품 등록 / status 변경 / 정렬 영향 필드 변경  | 5min | 동일 4종                                                                                             |
+ * | `TAG_DESTINATIONS_LIST`      | 신규 destinationCode 도입 / 상품 status 변경        | 1h   | 동일 4종                                                                                             |
+ * | `tagProductDetail(id)`       | 단건 상품 update (title/desc/hero/price 등)         | 1h   | admin-booking-cancel + 동일 4종                                                                      |
+ * | `tagDeparturesByProduct(id)` | 좌석/일정 변경 (booking 확정/취소가 자동 wiring)    | 1h   | checkout / booking-cancel / admin-booking-cancel                                                    |
  *
  * `tagProductDetail` 은 `getProductById` + `getProductsByIds` 양쪽에 부여되므로
  * 한 번 bust 으로 PDP + 비교 페이지 캐시가 동시에 무효화된다.

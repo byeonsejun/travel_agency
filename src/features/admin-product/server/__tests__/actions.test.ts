@@ -38,6 +38,12 @@ import {
   archiveProductAction,
 } from "../actions";
 import { productInputSchema } from "../../model/schemas";
+import {
+  TAG_PRODUCTS_FEATURED,
+  TAG_PRODUCTS_LIST,
+  TAG_DESTINATIONS_LIST,
+  tagProductDetail,
+} from "@/entities/product";
 
 // ── 공통 픽스처 ──────────────────────────────────────────────────
 const ADMIN_ID = "cladmin0000000000000000001";
@@ -266,8 +272,12 @@ describe("createProductAction", () => {
       `admin:${ADMIN_ID}`,
     );
 
-    // revalidateTag 4종
+    // revalidateTag 4종 — ADR-0020 캐시 컨트랙트 SSOT 검증
     expect(mocks.revalidateTag).toHaveBeenCalledTimes(4);
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_PRODUCTS_FEATURED);
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_PRODUCTS_LIST);
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_DESTINATIONS_LIST);
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(tagProductDetail(PRODUCT_ID));
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/products");
   });
 

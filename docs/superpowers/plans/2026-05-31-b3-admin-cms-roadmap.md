@@ -285,28 +285,24 @@ DoD:
 ### Task 11 — 캐시 태그 SSOT JSDoc 갱신 (ADR-0020)
 
 DoD:
-- [ ] `src/entities/product/index.ts` JSDoc 표의 "Writer" 칸 갱신:
-  - `tagProductDetail(productId)` — 기존(admin booking cancel) + **createProductAction / updateProductAction / publishProductAction / archiveProductAction**
-  - `TAG_PRODUCTS_LIST` — (0건 → admin product actions 4종)
-  - `TAG_DESTINATIONS_LIST` — (0건 → 동일)
-  - `TAG_PRODUCTS_FEATURED` — (0건 → 동일)
-- [ ] `__tests__/cache-tags.test.ts` 갱신 — 신규 발신처 검증
-- [ ] commit: `docs(product): wire admin actions to cache tag SSOT (B3 Task 11)`
+- [x] `src/entities/product/index.ts` JSDoc 표에 "Writer" 칸 추가:
+  - `tagProductDetail(productId)` — admin-booking-cancel + createProductAction / updateProductAction / publishProductAction / archiveProductAction
+  - `TAG_PRODUCTS_LIST` / `TAG_DESTINATIONS_LIST` / `TAG_PRODUCTS_FEATURED` — admin product actions 4종
+- [x] `__tests__/cache-tags.test.ts` 갱신 — `TAG_PRODUCTS_FEATURED` 안정성 테스트 추가 + admin CRUD 발신처 계약 블록 + `actions.test.ts` 특정 tag 값 spy 강화 (5 tests PASS)
+- [x] commit: `docs(product): wire admin actions to cache tag SSOT (B3 Task 11)`
 
 ### Task 12 — ADR-0026 발행 (사용자 승인 후)
 
 > 본 plan 작성 단계에서는 후보로 박제. CLAUDE.md §6.1 정책: 사용자 명시 요청 전 임의 발행 금지.
 
-DoD (사용자 승인 시):
-- [ ] `docs/superpowers/adr/0026-async-embedding-job-pipeline.md` 작성
-  - [ ] Context: B3 CMS, RAG 데이터 공급, ADR-0005 차용 배경
-  - [ ] Decision: EmbeddingJob 비동기 큐 + contentHash 멱등 + cron worker (limit=5/2min)
-  - [ ] Consequences: admin UX OpenAI 지연 비노출, 빈 호출 절약(contentHash), modelVersion bump 시 일괄 재인덱싱 자연스러움. 추가 인프라 1테이블 + 1엔드포인트.
-  - [ ] Alternatives Considered:
-    - 동기 호출 — admin UX 2~5s 지연, OpenAI 장애가 publish 자체를 막음, 트랜잭션 외부 호출 두면 부분 실패 위험 → 거부
-    - After-commit fire-and-forget — 영속화 부재로 실패 시 검색에서 영구 누락, 운영 안정성 미검증 → 거부
-- [ ] `docs/superpowers/adr/README.md` 인덱스에 한 줄 추가
-- [ ] commit: `docs(adr): 0026 async embedding job pipeline (B3)`
+DoD (사용자 승인 후 — 2026-06-01 승인):
+- [x] `docs/superpowers/adr/0026-async-embedding-job-pipeline.md` 작성
+  - [x] Context: B3 CMS, RAG 데이터 공급, ADR-0005 차용 배경
+  - [x] Decision: EmbeddingJob 비동기 큐 + contentHash 멱등 + cron worker (limit=5/2min)
+  - [x] Consequences: admin UX OpenAI 지연 비노출, 빈 호출 절약(contentHash), modelVersion bump 시 일괄 재인덱싱 자연스러움. 추가 인프라 1테이블 + 1엔드포인트.
+  - [x] Alternatives Considered: 동기 호출(UX+장애전파 거부), fire-and-forget(영속화 부재 거부), Redis/SQS(인프라 추가 비용 대비 이점 없음 거부)
+- [x] `docs/superpowers/adr/README.md` 인덱스에 한 줄 추가
+- [x] commit: `docs(adr): 0026 async embedding job pipeline (B3)`
 
 ### Task 13 — 종합 QA (🔬 QA Engineer 강제 발동)
 
