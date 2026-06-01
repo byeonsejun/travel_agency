@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import {
@@ -434,4 +435,34 @@ export async function archiveProductAction(
   revalidatePath(`/admin/products/${productId}/edit`);
 
   return { type: "success", productId };
+}
+
+// ══════════════════════════════════════════════════════════════════
+// retryEmbeddingJobAction
+// ══════════════════════════════════════════════════════════════════
+
+const retryJobSchema = z.object({ jobId: z.string().min(1) });
+
+/**
+ * FAILED EmbeddingJob을 PENDING으로 되돌려 즉시 재시도 큐에 투입.
+ * form action (hidden input jobId) 패턴으로 RSC 페이지에서 직접 사용.
+ * updateMany + status=FAILED 조건으로 동시 클릭 race-free.
+ */
+export async function retryEmbeddingJobAction(formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "ADMIN") return;
+
+  const parsed = retryJobSchema.safeParse({ jobId: formData.get("jobId") });
+  if (!parsed.success) return;
+
+  await db.embeddingJob.updateMany({
+    where: { id: parsed.data.jobId, status: "FAILED" },
+    data: {
+      status: "PENDING",
+      nextRunAt: new Date(),
+      actor: `admin:retry:${session.user.id}`,
+    },
+  });
+
+  revalidatePath("/admin/embedding-jobs");
 }

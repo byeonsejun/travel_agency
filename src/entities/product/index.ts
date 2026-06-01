@@ -64,6 +64,8 @@ export type { EmbeddingTextResult } from "./api/buildEmbeddingText";
 export {
   listAdminProducts,
   getAdminProductById,
+  summarizeEmbeddingJobs,
+  listEmbeddingJobs,
   ADMIN_PAGE_SIZE,
 } from "./api/adminQueries";
 export type {
@@ -71,6 +73,7 @@ export type {
   AdminEmbeddingInfo,
   AdminLatestJobInfo,
   AdminProductDetailResult,
+  EmbeddingJobRow,
 } from "./api/adminQueries";
 
 export { ProductImage } from "./ui/ProductImage";

@@ -125,3 +125,51 @@ export async function getAdminProductById(
     latestJob: embeddingJobs[0] ?? null,
   };
 }
+
+// ── EmbeddingJob 모니터링 전용 쿼리 ────────────────────────────────────────
+
+export async function summarizeEmbeddingJobs() {
+  const grouped = await db.embeddingJob.groupBy({
+    by: ["status"],
+    _count: { id: true },
+  });
+
+  const statusCounts = Object.fromEntries(
+    grouped.map((g) => [g.status, g._count.id]),
+  );
+
+  return { statusCounts };
+}
+
+interface ListEmbeddingJobsOptions {
+  status?: EmbeddingJobStatus;
+  limit?: number;
+}
+
+export async function listEmbeddingJobs({
+  status,
+  limit = 50,
+}: ListEmbeddingJobsOptions = {}) {
+  return db.embeddingJob.findMany({
+    where: status !== undefined ? { status } : undefined,
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      productId: true,
+      status: true,
+      attempts: true,
+      lastError: true,
+      nextRunAt: true,
+      actor: true,
+      contentHash: true,
+      updatedAt: true,
+      createdAt: true,
+      product: {
+        select: { id: true, title: true },
+      },
+    },
+  });
+}
+
+export type EmbeddingJobRow = Awaited<ReturnType<typeof listEmbeddingJobs>>[number];

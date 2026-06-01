@@ -276,11 +276,11 @@ DoD:
 ### Task 10 — Embedding Jobs 모니터링 페이지
 
 DoD:
-- [ ] `src/app/(admin)/admin/embedding-jobs/page.tsx`:
-  - [ ] 상태 필터(`?status=...`) — refund-jobs 페이지 패턴 차용
-  - [ ] 컬럼: productId(→ edit 링크), status, attempts, lastError, nextRunAt, updatedAt
-  - [ ] FAILED row에 "재시도" 버튼 (`retryEmbeddingJobAction` 호출)
-- [ ] commit: `feat(admin): embedding-jobs monitoring + manual retry (B3 Task 10)`
+- [x] `src/app/(admin)/admin/embedding-jobs/page.tsx`:
+  - [x] 상태 필터(`?status=...`) — refund-jobs 페이지 패턴 차용. `summarizeEmbeddingJobs` + `listEmbeddingJobs` 병렬 조회.
+  - [x] 컬럼: 상품명(→ edit 링크), status badge, attempts, nextRunAt, lastError(truncated + title tooltip), updatedAt.
+  - [x] FAILED row에 "재시도" 버튼 — `retryEmbeddingJobAction(formData)` hidden input 패턴. `updateMany(status=FAILED)` 조건부 update로 race-free.
+- [x] commit: `feat(admin): embedding-jobs monitoring + manual retry (B3 Task 10)`
 
 ### Task 11 — 캐시 태그 SSOT JSDoc 갱신 (ADR-0020)
 
