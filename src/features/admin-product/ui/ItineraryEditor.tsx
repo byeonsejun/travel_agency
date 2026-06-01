@@ -3,7 +3,7 @@
 import type { z } from "zod";
 import type { itineraryDaySchema } from "@/entities/product";
 
-// ── 타입 ────────────────────────────────────────────────────────────
+// 타입 
 export type ItineraryDayInput = z.infer<typeof itineraryDaySchema>;
 type ItineraryStopInput = ItineraryDayInput["stops"][number];
 
@@ -13,7 +13,7 @@ type Props = {
   fieldErrors?: Record<string, string[]>;
 };
 
-// ── 팩토리 ──────────────────────────────────────────────────────────
+// 팩토리 
 function emptyStop(order: number): ItineraryStopInput {
   return { order, time: "", place: "", description: "" };
 }
@@ -28,7 +28,7 @@ function emptyDay(dayNumber: number): ItineraryDayInput {
   };
 }
 
-// ── 컴포넌트 ────────────────────────────────────────────────────────
+// 컴포넌트 
 export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
   // 상위에서 controlled로 동작 — 로컬 state 없음
 

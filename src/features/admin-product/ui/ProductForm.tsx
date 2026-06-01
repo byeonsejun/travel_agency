@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ProductDetail } from "@/entities/product";
 import type { ProductInput, UpdateProductInput } from "../model/schemas";
@@ -12,12 +12,12 @@ import type { CreateProductState, UpdateProductState } from "../server/actions";
 import { ItineraryEditor } from "./ItineraryEditor";
 import type { ItineraryDayInput } from "./ItineraryEditor";
 
-// ── Props ────────────────────────────────────────────────────────────
+// Props 
 type ProductFormProps =
   | { mode: "create"; initial?: undefined }
   | { mode: "edit"; initial: ProductDetail };
 
-// ── 초기화 헬퍼 ──────────────────────────────────────────────────────
+// 초기화 헬퍼 
 
 function emptyProductInput(): ProductInput {
   return {
@@ -76,14 +76,14 @@ export function productDetailToInput(d: ProductDetail): ProductInput {
   };
 }
 
-// ── inclusion row 타입 ────────────────────────────────────────────────
+// inclusion row 타입 
 type InclusionRow = ProductInput["inclusions"][number];
 
 function emptyInclusion(): InclusionRow {
   return { kind: "INCLUDED", label: "", note: "" };
 }
 
-// ── 내부 shared form 상태 타입 ────────────────────────────────────────
+// 내부 shared form 상태 타입 
 type FormBodyProps = {
   state: CreateProductState | UpdateProductState | null;
   isPending: boolean;
@@ -92,7 +92,7 @@ type FormBodyProps = {
   mode: "create" | "edit";
 };
 
-// ── FormBody: 두 모드에서 재사용하는 실제 렌더링 ────────────────────────
+// FormBody: 두 모드에서 재사용하는 실제 렌더링 
 function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) {
   const [form, setForm] = useState<ProductInput>(() =>
     initial ? productDetailToInput(initial) : emptyProductInput(),
@@ -493,24 +493,31 @@ function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) 
   );
 }
 
-// ── CreateForm: create 모드 전용 (useActionState 타입을 분리) ─────────
+// CreateForm — create 모드 전용 (useActionState 타입을 분리)
 function CreateForm() {
   const router = useRouter();
   const [state, dispatch, isPending] = useActionState(createProductAction, null);
 
-  if (state?.type === "success") {
-    router.push(`/admin/products/${state.productId}/edit`);
-    return (
-      <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
-        저장됨 — 이동 중...
-      </div>
-    );
-  }
+  // 성공 시 navigation은 render 중이 아닌 effect에서 수행해야 한다.
+  // render 중 router.push는 StrictMode/Concurrent에서 중복 호출 위험.
+  useEffect(() => {
+    if (state?.type === "success") {
+      router.push(`/admin/products/${state.productId}/edit`);
+    }
+  }, [state, router]);
 
   function handleSubmit(payload: ProductInput) {
     startTransition(() => {
       dispatch(payload);
     });
+  }
+
+  if (state?.type === "success") {
+    return (
+      <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+        저장됨 — 이동 중...
+      </div>
+    );
   }
 
   return (
@@ -524,25 +531,30 @@ function CreateForm() {
   );
 }
 
-// ── EditForm: edit 모드 전용 (productId 포함 payload) ─────────────────
+// EditForm — edit 모드 전용 (productId 포함 payload)
 function EditForm({ initial }: { initial: ProductDetail }) {
   const router = useRouter();
   const [state, dispatch, isPending] = useActionState(updateProductAction, null);
 
-  if (state?.type === "success") {
-    router.push(`/admin/products/${state.productId}/edit`);
-    return (
-      <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
-        저장됨 — 이동 중...
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (state?.type === "success") {
+      router.push(`/admin/products/${state.productId}/edit`);
+    }
+  }, [state, router]);
 
   function handleSubmit(payload: ProductInput) {
     const updatePayload: UpdateProductInput = { ...payload, productId: initial.id };
     startTransition(() => {
       dispatch(updatePayload);
     });
+  }
+
+  if (state?.type === "success") {
+    return (
+      <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+        저장됨 — 이동 중...
+      </div>
+    );
   }
 
   return (
@@ -556,7 +568,7 @@ function EditForm({ initial }: { initial: ProductDetail }) {
   );
 }
 
-// ── 공개 API: ProductForm (mode에 따라 분기) ─────────────────────────
+// 공개 API: ProductForm (mode에 따라 분기)
 export function ProductForm(props: ProductFormProps) {
   if (props.mode === "edit") {
     return <EditForm initial={props.initial} />;
