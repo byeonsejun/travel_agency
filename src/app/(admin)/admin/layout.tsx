@@ -42,6 +42,18 @@ export default async function AdminLayout({
               >
                 환불 모니터링
               </Link>
+              <Link
+                href="/admin/products"
+                className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
+              >
+                상품 관리
+              </Link>
+              <Link
+                href="/admin/embedding-jobs"
+                className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
+              >
+                임베딩 Jobs
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">

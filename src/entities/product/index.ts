@@ -61,6 +61,18 @@ export type { VectorSearchFilters } from "./api/searchByVector";
 export { buildEmbeddingText } from "./api/buildEmbeddingText";
 export type { EmbeddingTextResult } from "./api/buildEmbeddingText";
 
+export {
+  listAdminProducts,
+  getAdminProductById,
+  ADMIN_PAGE_SIZE,
+} from "./api/adminQueries";
+export type {
+  AdminProductRow,
+  AdminEmbeddingInfo,
+  AdminLatestJobInfo,
+  AdminProductDetailResult,
+} from "./api/adminQueries";
+
 export { ProductImage } from "./ui/ProductImage";
 export { ProductCard } from "./ui/ProductCard";
 export { InclusionList } from "./ui/InclusionList";

@@ -253,16 +253,16 @@ DoD:
 ### Task 8 — admin 라우트 페이지
 
 DoD:
-- [ ] `src/app/(admin)/admin/products/page.tsx` (RSC, `force-dynamic`):
-  - [ ] status 필터(`?status=DRAFT|PUBLISHED|CLOSED`), 페이지네이션, 최근 임베딩 상태 컬럼
-- [ ] `src/app/(admin)/admin/products/new/page.tsx`:
-  - [ ] `<ProductForm action={createProductAction} initial={null} />`
-- [ ] `src/app/(admin)/admin/products/[id]/edit/page.tsx`:
-  - [ ] Prisma fetch (relations: tags, inclusions, itineraryDays.stops, embedding, embeddingJobs 최근 1건)
-  - [ ] `<ProductForm action={updateProductAction} initial={product} />`
-  - [ ] 우측에 임베딩 상태 패널: 최근 Job status / contentHash / modelVersion / lastError
-- [ ] `src/app/(admin)/admin/layout.tsx` nav에 "Products" / "Embedding Jobs" 링크 추가
-- [ ] commit: `feat(admin): product CMS routes (B3 Task 8)`
+- [x] `src/app/(admin)/admin/products/page.tsx` (RSC, `force-dynamic`):
+  - [x] status 필터(`?status=DRAFT|PUBLISHED|CLOSED`), 페이지네이션, 최근 임베딩 상태 컬럼
+- [x] `src/app/(admin)/admin/products/new/page.tsx`:
+  - [x] `<ProductForm action={createProductAction} initial={null} />`
+- [x] `src/app/(admin)/admin/products/[id]/edit/page.tsx`:
+  - [x] Prisma fetch (relations: tags, inclusions, itineraryDays.stops, embedding, embeddingJobs 최근 1건)
+  - [x] `<ProductForm action={updateProductAction} initial={product} />`
+  - [x] 우측에 임베딩 상태 패널: 최근 Job status / contentHash / modelVersion / lastError
+- [x] `src/app/(admin)/admin/layout.tsx` nav에 "Products" / "Embedding Jobs" 링크 추가
+- [x] commit: `feat(admin): product CMS routes (B3 Task 8)`
 
 ### Task 9 — heroImageUrl 업로드 (Supabase Storage)
 
