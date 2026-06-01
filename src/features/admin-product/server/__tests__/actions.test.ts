@@ -407,6 +407,13 @@ describe("publishProductAction", () => {
     expect(mocks.db.$transaction).not.toHaveBeenCalled();
   });
 
+  it("ADMIN + invalid productId (non-cuid) → Zod error, NO db query", async () => {
+    mocks.auth.mockResolvedValue(adminSession);
+    const result = await publishProductAction(null, { productId: "not-a-cuid" });
+    expect(result.type).toBe("error");
+    expect(mocks.db.product.findUnique).not.toHaveBeenCalled();
+  });
+
   it("ADMIN + product 없음 → error", async () => {
     mocks.auth.mockResolvedValue(adminSession);
     mocks.db.product.findUnique.mockResolvedValue(null);
@@ -493,6 +500,13 @@ describe("archiveProductAction", () => {
     mocks.auth.mockResolvedValue(customerSession);
     const result = await archiveProductAction(null, { productId: PRODUCT_ID });
     expect(result.type).toBe("error");
+  });
+
+  it("ADMIN + invalid productId (non-cuid) → Zod error, NO db query", async () => {
+    mocks.auth.mockResolvedValue(adminSession);
+    const result = await archiveProductAction(null, { productId: "../../etc/passwd" });
+    expect(result.type).toBe("error");
+    expect(mocks.db.product.findUnique).not.toHaveBeenCalled();
   });
 
   it("PUBLISHED → CLOSED 성공 + enqueue 미호출 + revalidateTag×4", async () => {

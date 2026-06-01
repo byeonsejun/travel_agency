@@ -360,3 +360,4 @@ DoD:
 - **"Vercel Cron 없는 환경(Docker/bare metal)에선?"** — CRON_SECRET 가드된 엔드포인트라 외부 cron(GitHub Actions, systemd timer 등)도 동일하게 호출 가능. ADR-0024 Vercel-runtime 분기 패턴과 양립.
 - **"왜 admin 페이지는 RSC + force-dynamic인가? ISR 안 됨?"** — ADR-0020 안전 도메인(admin) 분류. 운영 즉시성 + 권한 가드가 ISR 캐시-사용자 미스매치보다 우선.
 - **"임베딩 텍스트 빌더가 왜 entities 레이어인가?"** — Architect: 도메인 모듈(Product)에 속한 순수 함수. shared로 끌어내면 의존성 역전.
+- **"publishProductAction/archiveProductAction의 status 검사는 race 안전한가?"** — 현재는 `findUnique → status check → product.update` 패턴이라 동시 publish/archive 클릭 시 이론적 TOCTOU 존재. admin-only + 단일 사용자 클릭 빈도라 risk 낮아 1차 마일스톤에서는 그대로 유지. 강화 시 `updateMany({ where: { id, status: "DRAFT" }, data: { status: "PUBLISHED" }})` + `count===0` 분기로 race-free 전환. Task 13 종합 QA 또는 별도 follow-up으로 처리 가능.

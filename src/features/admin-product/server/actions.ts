@@ -328,9 +328,20 @@ export async function publishProductAction(
   if (!guard.ok) return guard.error;
   const { adminId } = guard;
 
-  // 2. 상품 조회
+  // 2. Zod 검증 — Server Action 입력은 wire 경계라 타입스크립트 타입은 erase됨.
+  //    CLAUDE.md §5: Server Action 입력 Zod 검증 누락 금지.
+  const parsed = productIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      type: "error",
+      message: parsed.error.issues[0]?.message ?? "올바른 상품 ID를 입력하세요",
+    };
+  }
+  const { productId } = parsed.data;
+
+  // 3. 상품 조회
   const product = await db.product.findUnique({
-    where: { id: input.productId },
+    where: { id: productId },
     select: { id: true, status: true },
   });
   if (!product) {
@@ -349,21 +360,21 @@ export async function publishProductAction(
   try {
     await db.$transaction(async (tx) => {
       await tx.product.update({
-        where: { id: input.productId },
+        where: { id: productId },
         data: { status: "PUBLISHED" },
       });
-      await enqueueProductEmbeddingJob(tx, input.productId, `admin:${adminId}`);
+      await enqueueProductEmbeddingJob(tx, productId, `admin:${adminId}`);
     });
   } catch {
     return { type: "error", message: "상품 게시에 실패했습니다. 잠시 후 다시 시도해 주세요" };
   }
 
   // 5. 캐시 무효화
-  invalidateProductCaches(input.productId);
+  invalidateProductCaches(productId);
   revalidatePath("/admin/products");
-  revalidatePath(`/admin/products/${input.productId}/edit`);
+  revalidatePath(`/admin/products/${productId}/edit`);
 
-  return { type: "success", productId: input.productId };
+  return { type: "success", productId };
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -383,34 +394,44 @@ export async function archiveProductAction(
   const guard = await requireAdminSession();
   if (!guard.ok) return guard.error;
 
-  // 2. 상품 조회
+  // 2. Zod 검증 (CLAUDE.md §5)
+  const parsed = productIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      type: "error",
+      message: parsed.error.issues[0]?.message ?? "올바른 상품 ID를 입력하세요",
+    };
+  }
+  const { productId } = parsed.data;
+
+  // 3. 상품 조회
   const product = await db.product.findUnique({
-    where: { id: input.productId },
+    where: { id: productId },
     select: { id: true, status: true },
   });
   if (!product) {
     return { type: "error", message: "상품을 찾을 수 없습니다" };
   }
 
-  // 3. 상태 전이 검증 — PUBLISHED만 archive 가능
+  // 4. 상태 전이 검증 — PUBLISHED만 archive 가능
   if (product.status !== "PUBLISHED") {
     return { type: "error", message: "현재 상태에서는 보관할 수 없습니다" };
   }
 
-  // 4. status 변경 (enqueue 없음 — CLOSED 상품은 검색 노출 불필요)
+  // 5. status 변경 (enqueue 없음 — CLOSED 상품은 검색 노출 불필요)
   try {
     await db.product.update({
-      where: { id: input.productId },
+      where: { id: productId },
       data: { status: "CLOSED" },
     });
   } catch {
     return { type: "error", message: "상품 보관에 실패했습니다. 잠시 후 다시 시도해 주세요" };
   }
 
-  // 5. 캐시 무효화
-  invalidateProductCaches(input.productId);
+  // 6. 캐시 무효화
+  invalidateProductCaches(productId);
   revalidatePath("/admin/products");
-  revalidatePath(`/admin/products/${input.productId}/edit`);
+  revalidatePath(`/admin/products/${productId}/edit`);
 
-  return { type: "success", productId: input.productId };
+  return { type: "success", productId };
 }
