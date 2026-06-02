@@ -4,5 +4,5 @@ export {
   transitionDepartureAction,
 } from "./server/actions";
 export type { DepartureActionState } from "./server/actions";
-export { departureFormSchema } from "./model/schemas";
-export type { DepartureFormInput } from "./model/schemas";
+export { departureFormSchema, departureTransitionSchema } from "./model/schemas";
+export type { DepartureFormInput, DepartureTransitionInput } from "./model/schemas";

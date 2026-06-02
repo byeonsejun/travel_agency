@@ -10,6 +10,7 @@ import {
   CapacityBelowBookedError,
   DepartureDateConflictError,
   DepartureHasBookingsError,
+  DepartureNotFoundError,
   StaleDepartureStatusError,
   InvalidDepartureTransitionError,
 } from "@/entities/departure";
@@ -22,7 +23,7 @@ export type DepartureActionState =
 
 // ── 3중 권한 가드 helper ──────────────────────────────────────────────
 
-async function requireAdmin(): Promise<
+async function requireAdminSession(): Promise<
   { ok: true; adminId: string } | { ok: false; error: DepartureActionState }
 > {
   const session = await auth();
@@ -35,18 +36,15 @@ async function requireAdmin(): Promise<
 
 // ── Zod 에러 → fieldErrors ────────────────────────────────────────────
 
-function buildZodError(
-  parsed: ReturnType<typeof departureFormSchema.safeParse>,
-): DepartureActionState | null {
-  if (parsed.success) return null;
+function buildZodError(error: import("zod").ZodError): DepartureActionState {
   const fieldErrors: Record<string, string[]> = {};
-  for (const issue of parsed.error.issues) {
+  for (const issue of error.issues) {
     const key = String(issue.path[0] ?? "form");
     (fieldErrors[key] ??= []).push(issue.message);
   }
   return {
     type: "error",
-    message: parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요",
+    message: error.issues[0]?.message ?? "입력값을 확인해 주세요",
     fieldErrors,
   };
 }
@@ -69,6 +67,8 @@ function mapDomainError(e: unknown): string {
     return "해당 날짜에 이미 출발일이 있습니다";
   if (e instanceof DepartureHasBookingsError)
     return `예약 ${e.bookedSeats}건이 존재합니다 — 개별 취소 후 출발 취소가 가능합니다`;
+  if (e instanceof DepartureNotFoundError)
+    return "출발일을 찾을 수 없습니다. 새로고침 후 다시 시도해 주세요";
   if (e instanceof StaleDepartureStatusError)
     return "상태가 변경되었습니다. 새로고침 후 다시 시도해 주세요";
   if (e instanceof InvalidDepartureTransitionError)
@@ -93,13 +93,12 @@ export async function createDepartureAction(
   input: DepartureFormInput,
 ): Promise<DepartureActionState> {
   // 1. ADMIN 가드
-  const guard = await requireAdmin();
+  const guard = await requireAdminSession();
   if (!guard.ok) return guard.error;
 
   // 2. Zod 검증
   const parsed = departureFormSchema.safeParse(input);
-  const zodErr = buildZodError(parsed);
-  if (zodErr || !parsed.success) return zodErr!;
+  if (!parsed.success) return buildZodError(parsed.error);
 
   // 3. 출발일 생성
   try {
@@ -128,13 +127,12 @@ export async function updateDepartureAction(
   input: DepartureFormInput,
 ): Promise<DepartureActionState> {
   // 1. ADMIN 가드
-  const guard = await requireAdmin();
+  const guard = await requireAdminSession();
   if (!guard.ok) return guard.error;
 
   // 2. Zod 검증
   const parsed = departureFormSchema.safeParse(input);
-  const zodErr = buildZodError(parsed);
-  if (zodErr || !parsed.success) return zodErr!;
+  if (!parsed.success) return buildZodError(parsed.error);
 
   // 3. 출발일 수정
   try {
@@ -163,7 +161,7 @@ export async function updateDepartureAction(
 export async function transitionDepartureAction(formData: FormData): Promise<void> {
   const { redirect } = await import("next/navigation");
 
-  const guard = await requireAdmin();
+  const guard = await requireAdminSession();
   if (!guard.ok) {
     redirect(`/admin/products`);
     return; // TypeScript 제어 흐름 힌트 — redirect()는 throw이지만 never로 타입이 좁혀지지 않음.
@@ -191,9 +189,11 @@ export async function transitionDepartureAction(formData: FormData): Promise<voi
         ? "has_bookings"
         : e instanceof StaleDepartureStatusError
           ? "stale"
-          : e instanceof InvalidDepartureTransitionError
-            ? "invalid"
-            : "unknown";
+          : e instanceof DepartureNotFoundError
+            ? "not_found"
+            : e instanceof InvalidDepartureTransitionError
+              ? "invalid"
+              : "unknown";
     redirect(`${editPath}?error=${code}`);
     return;
   }
