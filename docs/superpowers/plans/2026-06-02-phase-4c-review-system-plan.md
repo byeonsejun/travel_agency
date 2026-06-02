@@ -57,7 +57,7 @@ app/(admin)/admin/layout.tsx                ← nav "리뷰 관리" 추가
 - Modify: `src/shared/lib/supabase/photoMime.ts`
 - Test: `src/shared/lib/supabase/__tests__/photoMime.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/shared/lib/supabase/__tests__/photoMime.test.ts
@@ -87,12 +87,12 @@ describe("reviewPhotoPublicUrl", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm run test -- src/shared/lib/supabase/__tests__/photoMime.test.ts`
 Expected: FAIL — `reviewPhotoPublicUrl is not a function`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/shared/lib/supabase/photoMime.ts` 하단에 추가:
 
@@ -109,12 +109,12 @@ export function reviewPhotoPublicUrl(path: string): string {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm run test -- src/shared/lib/supabase/__tests__/photoMime.test.ts`
 Expected: PASS (2 tests)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/shared/lib/supabase/photoMime.ts src/shared/lib/supabase/__tests__/photoMime.test.ts
@@ -129,7 +129,7 @@ git commit -m "feat(review): client-safe reviewPhotoPublicUrl builder (4C Task 1
 - Create: `src/entities/review/model/transitions.ts`
 - Test: `src/entities/review/model/__tests__/transitions.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/entities/review/model/__tests__/transitions.test.ts
@@ -164,12 +164,12 @@ describe("assertReviewTransition", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm run test -- src/entities/review/model/__tests__/transitions.test.ts`
 Expected: FAIL — cannot find module `../transitions`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 ```ts
 // src/entities/review/model/transitions.ts
@@ -206,12 +206,12 @@ export function assertReviewTransition(
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm run test -- src/entities/review/model/__tests__/transitions.test.ts`
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/entities/review/model/transitions.ts src/entities/review/model/__tests__/transitions.test.ts
@@ -226,7 +226,7 @@ git commit -m "feat(review): review status transition guard (4C Task 2)"
 - Create: `src/entities/review/model/ratingDistribution.ts`
 - Test: `src/entities/review/model/__tests__/ratingDistribution.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/entities/review/model/__tests__/ratingDistribution.test.ts
@@ -255,12 +255,12 @@ describe("normalizeRatingDistribution", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm run test -- src/entities/review/model/__tests__/ratingDistribution.test.ts`
 Expected: FAIL — cannot find module
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 ```ts
 // src/entities/review/model/ratingDistribution.ts
@@ -287,12 +287,12 @@ export function normalizeRatingDistribution(
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm run test -- src/entities/review/model/__tests__/ratingDistribution.test.ts`
 Expected: PASS (2 tests)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/entities/review/model/ratingDistribution.ts src/entities/review/model/__tests__/ratingDistribution.test.ts
