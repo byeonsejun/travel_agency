@@ -5,6 +5,7 @@ import type {
   DepartureSummary,
   DepartureCheckoutInfo,
   DepartureLiveSeat,
+  AdminDepartureRow,
 } from "../model/types";
 
 // 좌석 잔여 정보는 booking 생성/취소로 즉시 무효화되어야 한다 — features 레이어가
@@ -118,4 +119,27 @@ export async function getDeparturesByProduct(
     ["departures-by-product"],
     { revalidate: 3600, tags: [tagDeparturesByProduct(productId)] }
   )(productId);
+}
+
+// admin 목록 — 미래/과거/CANCELED 전부, 최신 출발일 순. 캐시하지 않음(운영 즉시성).
+export async function listAdminDepartures(
+  productId: string,
+): Promise<AdminDepartureRow[]> {
+  const rows = await db.departure.findMany({
+    where: { productId },
+    orderBy: { departureDate: "desc" },
+  });
+  return rows.map((d) => ({
+    ...d,
+    remainingSeats: computeRemainingSeats(d.capacity, d.bookedSeats),
+  }));
+}
+
+// admin 편집 단건 — 전이 가드 표시(bookedSeats)·폼 초기값.
+export async function getAdminDepartureById(
+  departureId: string,
+): Promise<AdminDepartureRow | null> {
+  const d = await db.departure.findUnique({ where: { id: departureId } });
+  if (!d) return null;
+  return { ...d, remainingSeats: computeRemainingSeats(d.capacity, d.bookedSeats) };
 }
