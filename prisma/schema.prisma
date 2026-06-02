@@ -252,8 +252,9 @@ model Departure {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  product  Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  product       Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  bookings      Booking[]
+  cancellations DepartureCancellation[]
 
   @@unique([productId, departureDate])
   @@index([departureDate, status])
@@ -421,6 +422,32 @@ model PaymentEvent {
   @@index([type, createdAt])
 }
 
+// Phase 4-B: 출발 취소 fan-out 배치 진행 상태 (RefundJob 상태에서 파생). [ADR-0028]
+enum DepartureCancellationStatus {
+  PROCESSING // 환불 job 일부 미종결
+  COMPLETED // 전 건 종결 + 실패 0
+  PARTIALLY_FAILED // 전 건 종결 but FAILED 1건 이상 (admin 재시도 필요)
+}
+
+// 출발 취소 1회 = 배치 1개. 결제 여부 무관 N건 예약 취소를 통합 추적. [ADR-0028]
+model DepartureCancellation {
+  id               String                      @id @default(cuid())
+  departureId      String
+  status           DepartureCancellationStatus @default(PROCESSING)
+  totalBookings    Int // 취소 시점 활성(좌석점유) 예약 수
+  immediateCancels Int                         @default(0) // 미결제 → 즉시 취소된 건수
+  actor            String // "admin:<id>"
+  reason           String?
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+
+  departure  Departure   @relation(fields: [departureId], references: [id], onDelete: Cascade)
+  refundJobs RefundJob[]
+
+  @@index([status])
+  @@index([departureId])
+}
+
 enum RefundJobStatus {
   PENDING
   IN_PROGRESS
@@ -445,10 +472,15 @@ model RefundJob {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
+  // Phase 4-B: 출발 취소 fan-out 배치 연결 (단일 사용자 환불은 null). [ADR-0028]
+  cancellationBatchId String?
+
   booking Booking @relation(fields: [bookingId], references: [id])
   payment Payment @relation(fields: [paymentId], references: [id])
+  cancellationBatch DepartureCancellation? @relation(fields: [cancellationBatchId], references: [id], onDelete: SetNull)
 
   @@index([status, nextRunAt])
+  @@index([cancellationBatchId])
 }
 
 enum EmbeddingJobStatus {

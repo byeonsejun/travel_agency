@@ -49,7 +49,7 @@
 - Modify: `prisma/schema.prisma`
 - Create: `prisma/migrations/20260602000000_departure_cancellation/migration.sql`
 
-- [ ] **Step 1: schema.prisma 수정**
+- [x] **Step 1: schema.prisma 수정**
 
 `enum RefundJobStatus { ... }` 근처에 추가:
 ```prisma
@@ -93,7 +93,7 @@ model DepartureCancellation {
   cancellations DepartureCancellation[]
 ```
 
-- [ ] **Step 2: 마이그레이션 SQL 작성**
+- [x] **Step 2: 마이그레이션 SQL 작성**
 
 `prisma/migrations/20260602000000_departure_cancellation/migration.sql`:
 ```sql
@@ -128,7 +128,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 ```
 
-- [ ] **Step 3: 마이그레이션 적용** (⚠️ `prisma migrate dev` 불가 — B3/4-A 선례. db execute + resolve 사용)
+- [x] **Step 3: 마이그레이션 적용** (⚠️ `prisma migrate dev` 불가 — B3/4-A 선례. db execute + resolve 사용)
 
 Run:
 ```bash
@@ -138,7 +138,7 @@ npx prisma generate
 ```
 Expected: `Generated Prisma Client` 출력. 에러 0.
 
-- [ ] **Step 4: 적용 smoke 확인**
+- [x] **Step 4: 적용 smoke 확인**
 
 Run:
 ```bash
@@ -146,7 +146,7 @@ npx tsx -e "import {PrismaClient} from '@prisma/client'; const db=new PrismaClie
 ```
 Expected: `DepartureCancellation rows: 0` (테이블 존재 확인).
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 ```bash
 git add prisma/schema.prisma prisma/migrations/20260602000000_departure_cancellation
 git commit -m "feat(db): DepartureCancellation batch + RefundJob.cancellationBatchId (4B Task 1)"
