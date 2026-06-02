@@ -21,6 +21,8 @@ import {
   retryRefundJob,
   type RetryRefundResult,
 } from "@/entities/payment";
+import { recomputeBatchStatus } from "@/entities/departure-cancellation";
+import { db } from "@/shared/lib/db";
 import { logger, metrics } from "@/shared/lib/observability";
 
 export const dynamic = "force-dynamic";
@@ -68,6 +70,31 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       metrics.incr("cron.refund.unexpected_error");
       results.push({ type: "error", jobId: job.id, error: msg });
     }
+  }
+
+  // 처리된 job들이 속한 출발-취소 배치를 distinct하게 모아 status 재계산. [ADR-0028]
+  // RefundJob 상태가 SSOT → 배치 status는 그 투영. null(단일 사용자 환불)은 skip.
+  // recompute 실패가 cron 응답을 막지 않도록 격리(.catch).
+  const processedIds = due.map((j) => j.id);
+  const processedJobs = await db.refundJob.findMany({
+    where: { id: { in: processedIds } },
+    select: { cancellationBatchId: true },
+  });
+  const batchIds = [
+    ...new Set(
+      processedJobs
+        .map((j) => j.cancellationBatchId)
+        .filter((x): x is string => x !== null),
+    ),
+  ];
+  for (const batchId of batchIds) {
+    await recomputeBatchStatus(batchId).catch((err) => {
+      logger.error(
+        "cron.refund.batch_recompute_failed",
+        err instanceof Error ? err : new Error(String(err)),
+        { batchId },
+      );
+    });
   }
 
   // 요약 카운트 — 운영자가 응답만 보고 처리 결과를 파악

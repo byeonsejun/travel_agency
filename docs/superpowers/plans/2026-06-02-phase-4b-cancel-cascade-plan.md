@@ -814,7 +814,7 @@ git commit -m "feat(admin-departure-cancel): fan-out orchestration + batch retry
 - Modify: `src/app/api/cron/process-refunds/route.ts`
 - Create test: `src/app/api/cron/process-refunds/__tests__/batch-recompute.test.ts`
 
-- [ ] **Step 1: 실패 테스트** (recompute 호출 검증)
+- [x] **Step 1: 실패 테스트** (recompute 호출 검증)
 
 ```ts
 // src/app/api/cron/process-refunds/__tests__/batch-recompute.test.ts
@@ -861,12 +861,12 @@ it("drain한 job들의 distinct batchId에 대해 recomputeBatchStatus 호출", 
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/app/api/cron/process-refunds/__tests__/batch-recompute.test.ts`
 Expected: FAIL (recompute 미호출)
 
-- [ ] **Step 3: route.ts 확장**
+- [x] **Step 3: route.ts 확장**
 
 기존 GET의 job 루프 직후(요약 계산 전)에 배치 recompute 블록 추가:
 ```ts
@@ -889,12 +889,12 @@ for (const batchId of batchIds) {
 
 > `due`/`results` 변수명은 기존 route.ts 그대로. `processedIds`는 `due`에서 추출. recompute는 try-catch 격리 불필요(자체 안전) but 한 배치 실패가 응답을 막지 않도록 `.catch(()=>{})` 권장.
 
-- [ ] **Step 4: PASS 확인**
+- [x] **Step 4: PASS 확인**
 
 Run: `npx vitest run src/app/api/cron/process-refunds/__tests__/batch-recompute.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 ```bash
 git add src/app/api/cron/process-refunds
 git commit -m "feat(cron): recompute cancellation batch status after refund drain (4B Task 5)"
