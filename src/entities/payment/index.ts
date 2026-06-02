@@ -53,5 +53,9 @@ export {
 } from "./api/observability";
 export type { ActiveRefundJob, RefundJobRow } from "./api/observability";
 
+// ── 환불 enqueue (Phase 4-B fan-out — Phase 1 only) ─────────────
+export { enqueueRefundJob } from "./api/enqueueRefundJob";
+export type { EnqueueRefundJobArgs } from "./api/enqueueRefundJob";
+
 // ── UI ──────────────────────────────────────────────────────────
 export { PaymentStatusBadge, PAYMENT_STATUS_LABEL } from "./ui/PaymentStatusBadge";

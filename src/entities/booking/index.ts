@@ -35,8 +35,10 @@ export type { CreateBookingInput, TravelerInput } from "./model/schemas";
 export {
   createBooking,
   transitionStatus,
+  transitionStatusTx,
   cancelBookingByUser,
   cancelBookingByAgency,
+  cancelBookingByAgencyTx,
 } from "./api/mutations";
 
 export {

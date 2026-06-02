@@ -165,7 +165,7 @@ git commit -m "feat(db): DepartureCancellation batch + RefundJob.cancellationBat
 - Create test: `src/entities/booking/api/__tests__/cancelBookingByAgencyTx.test.ts`
 - Modify: `src/entities/payment/index.ts`, `src/entities/booking/index.ts` (barrel)
 
-- [ ] **Step 1: enqueueRefundJob 실패 테스트**
+- [x] **Step 1: enqueueRefundJob 실패 테스트**
 
 ```ts
 // src/entities/payment/api/__tests__/enqueueRefundJob.test.ts
@@ -210,12 +210,12 @@ describe("enqueueRefundJob", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/entities/payment/api/__tests__/enqueueRefundJob.test.ts`
 Expected: FAIL — `Cannot find module '../enqueueRefundJob'`
 
-- [ ] **Step 3: enqueueRefundJob 구현**
+- [x] **Step 3: enqueueRefundJob 구현**
 
 ```ts
 // src/entities/payment/api/enqueueRefundJob.ts
@@ -261,12 +261,12 @@ export async function enqueueRefundJob(
 }
 ```
 
-- [ ] **Step 4: PASS 확인**
+- [x] **Step 4: PASS 확인**
 
 Run: `npx vitest run src/entities/payment/api/__tests__/enqueueRefundJob.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: transitionStatusTx 추출 + cancelBookingByAgencyTx (booking)**
+- [x] **Step 5: transitionStatusTx 추출 + cancelBookingByAgencyTx (booking)**
 
 `src/entities/booking/api/mutations.ts`에서 `transitionStatus`의 본문(tx 콜백 내부)을 `transitionStatusTx`로 추출:
 
@@ -308,7 +308,7 @@ export async function cancelBookingByAgencyTx(
 }
 ```
 
-- [ ] **Step 6: cancelBookingByAgencyTx 테스트**
+- [x] **Step 6: cancelBookingByAgencyTx 테스트**
 
 ```ts
 // src/entities/booking/api/__tests__/cancelBookingByAgencyTx.test.ts
@@ -347,7 +347,7 @@ it("PAID booking → CANCELED_BY_AGENCY 전이 + 좌석 환원(releaseSeats raw 
 
 > `releaseSeats`는 `tx.$executeRaw`(태그드 템플릿)를 호출하므로 mock의 `$executeRaw`가 불린다. (seatLock.ts 참조.)
 
-- [ ] **Step 7: 테스트 통과 + barrel 갱신**
+- [x] **Step 7: 테스트 통과 + barrel 갱신**
 
 `src/entities/payment/index.ts`에 추가:
 ```ts
@@ -362,7 +362,7 @@ export { transitionStatusTx, cancelBookingByAgencyTx } from "./api/mutations";
 Run: `npx vitest run src/entities/payment src/entities/booking && npx tsc --noEmit`
 Expected: 전 테스트 PASS, 타입 에러 0 (기존 refundBooking/transitionStatus 동작 불변).
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 ```bash
 git add src/entities/payment src/entities/booking
 git commit -m "feat(payment,booking): enqueueRefundJob + tx-accepting cancel helpers (4B Task 2)"
