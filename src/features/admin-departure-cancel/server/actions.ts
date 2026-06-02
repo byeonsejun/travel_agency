@@ -1,12 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import type { BookingStatus } from "@prisma/client";
 import { auth } from "@/features/auth/server/auth";
 import { db } from "@/shared/lib/db";
 import { enqueueRefundJob } from "@/entities/payment";
 import { cancelBookingByAgencyTx } from "@/entities/booking";
 import { recomputeBatchStatus } from "@/entities/departure-cancellation";
+import { tagDeparturesByProduct } from "@/entities/departure";
 import { DepartureNotCancelableError, RefundablePaymentMissingError } from "./errors";
 
 // 좌석 점유(활성) 상태 — booking transitions SEAT_HELD_STATES와 동일 집합.
@@ -117,12 +119,48 @@ export async function startDepartureCancellation(
 }
 
 /**
+ * departure 편집 페이지의 "강제 취소" 진입점 — form action.
+ * ADMIN 가드 후 startDepartureCancellation 위임 → departure 캐시 무효화 → 배치 상세로 redirect.
+ * 이미 취소된 경우(DepartureNotCancelableError) 출발일 목록으로 안내.
+ */
+export async function forceCancelDepartureAction(formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/admin/products");
+  const adminId = session.user.id;
+
+  const departureId = String(formData.get("departureId") ?? "");
+  const productId = String(formData.get("productId") ?? "");
+  if (!departureId) redirect("/admin/products");
+
+  let batchId: string;
+  try {
+    const res = await startDepartureCancellation({
+      departureId,
+      actor: `admin:${adminId}`,
+      reason: "관리자 강제 취소",
+    });
+    batchId = res.batchId;
+  } catch (e) {
+    if (e instanceof DepartureNotCancelableError) {
+      redirect(`/admin/products/${productId}/departures`);
+    }
+    throw e;
+  }
+
+  // departure가 CANCELED 되었으므로 공개 PDP 좌석표 캐시 무효화 (checkout과 동일 contract).
+  if (productId) {
+    revalidateTag(tagDeparturesByProduct(productId));
+    revalidatePath(`/products/${productId}`);
+  }
+  redirect(`/admin/departure-cancellations/${batchId}`);
+}
+
+/**
  * 배치 단위(또는 단건) FAILED RefundJob 재시도. FAILED → PENDING(nextRunAt=now) CAS 후
  * cron이 같은 Saga로 재drain. 재시도 직후 배치 status 재계산.
  * jobId 있으면 단건, 없으면 배치 전체 FAILED.
  */
 export async function retryBatchRefundAction(formData: FormData): Promise<void> {
-  const { redirect } = await import("next/navigation");
   const session = await auth();
   if (session?.user?.role !== "ADMIN") redirect("/admin/products");
 

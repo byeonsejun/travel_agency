@@ -912,7 +912,7 @@ git commit -m "feat(cron): recompute cancellation batch status after refund drai
 - Modify: `src/app/(admin)/admin/products/[id]/departures/[depId]/edit/page.tsx`
 - Modify: `src/app/(admin)/admin/layout.tsx` (nav 링크)
 
-- [ ] **Step 1: 배치 목록 페이지**
+- [x] **Step 1: 배치 목록 페이지**
 
 ```tsx
 // src/app/(admin)/admin/departure-cancellations/page.tsx
@@ -975,7 +975,7 @@ export default async function CancellationBatchesPage() {
 }
 ```
 
-- [ ] **Step 2: 배치 상세 + 재시도 페이지**
+- [x] **Step 2: 배치 상세 + 재시도 페이지**
 
 ```tsx
 // src/app/(admin)/admin/departure-cancellations/[id]/page.tsx
@@ -1063,7 +1063,7 @@ export default async function BatchDetailPage({ params }: PageProps) {
 }
 ```
 
-- [ ] **Step 3: departure 편집 페이지 "강제 취소" 버튼**
+- [x] **Step 3: departure 편집 페이지 "강제 취소" 버튼**
 
 `src/app/(admin)/admin/products/[id]/departures/[depId]/edit/page.tsx`의 상태 전이 패널에서, `bookedSeats > 0`일 때 비활성이던 취소 버튼을 **강제 취소 form**으로 교체. 파일 상단에 force-cancel 액션 래퍼 import 후 패널 내 CANCELED 분기 처리:
 
@@ -1101,14 +1101,14 @@ async function forceCancelAction(formData: FormData) {
 
 > 기존 transitionDepartureAction 버튼 로직은 유지하되, 위 조건 분기만 추가. `cancelBlocked` disabled 로직은 강제취소로 대체되므로 제거.
 
-- [ ] **Step 4: admin layout nav 링크 추가**
+- [x] **Step 4: admin layout nav 링크 추가**
 
 `src/app/(admin)/admin/layout.tsx` nav에 추가:
 ```tsx
 <Link href="/admin/departure-cancellations" className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100">취소 배치</Link>
 ```
 
-- [ ] **Step 5: typecheck + lint + 런타임 스모크**
+- [x] **Step 5: typecheck + lint + 런타임 스모크**
 
 Run:
 ```bash
@@ -1117,7 +1117,7 @@ npx tsc --noEmit && npx eslint "src/app/(admin)/admin/departure-cancellations" "
 Expected: 0 에러.
 런타임: admin 쿠키로 `/admin/departure-cancellations` 200 확인(Task 7 QA에서 수행 가능).
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 ```bash
 git add "src/app/(admin)/admin/departure-cancellations" "src/app/(admin)/admin/products/[id]/departures/[depId]/edit/page.tsx" "src/app/(admin)/admin/layout.tsx"
 git commit -m "feat(admin): cancellation batch observability UI + force-cancel button (4B Task 6)"

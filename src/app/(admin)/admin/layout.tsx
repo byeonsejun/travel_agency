@@ -54,6 +54,12 @@ export default async function AdminLayout({
               >
                 임베딩 Jobs
               </Link>
+              <Link
+                href="/admin/departure-cancellations"
+                className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
+              >
+                취소 배치
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">

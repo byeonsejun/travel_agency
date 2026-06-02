@@ -10,6 +10,10 @@ import {
   updateDepartureAction,
   transitionDepartureAction,
 } from "@/features/admin-departure";
+import {
+  ForceCancelButton,
+  forceCancelDepartureAction,
+} from "@/features/admin-departure-cancel";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +83,19 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
             <p className="text-xs text-gray-400">더 이상 전이할 수 없습니다 (종료 상태).</p>
           ) : (
             nextStatuses.map((to) => {
-              const cancelBlocked = to === "CANCELED" && dep.bookedSeats > 0;
+              // 취소 + 예약 존재 → 강제 취소(fan-out 환불) 진입점 (fat-finger confirm).
+              if (to === "CANCELED" && dep.bookedSeats > 0) {
+                return (
+                  <ForceCancelButton
+                    key={to}
+                    action={forceCancelDepartureAction}
+                    departureId={dep.id}
+                    productId={productId}
+                    bookedSeats={dep.bookedSeats}
+                  />
+                );
+              }
+              // 그 외 전이(확정/마감/재개봉 + 예약 0건 일반 취소) → 기존 progressive-enhancement form.
               return (
                 <form key={to} action={transitionDepartureAction}>
                   <input type="hidden" name="departureId" value={dep.id} />
@@ -87,15 +103,9 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
                   <input type="hidden" name="to" value={to} />
                   <button
                     type="submit"
-                    disabled={cancelBlocked}
-                    title={
-                      cancelBlocked
-                        ? "예약이 있어 취소 불가 — 개별 취소 후 가능"
-                        : undefined
-                    }
                     className={`w-full rounded-lg px-3 py-2 text-sm font-medium ${
                       to === "CANCELED"
-                        ? "bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-40"
+                        ? "bg-red-50 text-red-700 hover:bg-red-100"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
