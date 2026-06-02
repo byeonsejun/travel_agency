@@ -332,7 +332,7 @@ async function main() {
   assert(failedJob.status === "PENDING", "실패 후 status = PENDING (재시도 대기, attempts<5)");
   assert(failedJob.attempts === 1, "attempts = 1 (증가)");
   assert(
-    failedJob.lastError?.includes("401 Unauthorized"),
+    failedJob.lastError?.includes("401 Unauthorized") === true,
     "lastError에 에러 메시지 기록됨",
   );
   assert(
