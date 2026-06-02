@@ -18,6 +18,7 @@ import {
   CapacityBelowBookedError,
   DepartureDateConflictError,
   DepartureHasBookingsError,
+  DepartureNotFoundError,
   StaleDepartureStatusError,
 } from "../mutations";
 import { InvalidDepartureTransitionError } from "../../model/transitions";
@@ -95,6 +96,14 @@ describe("updateDeparture — capacity 축소 CAS (D3)", () => {
 });
 
 describe("transitionDepartureStatus — 가드", () => {
+  it("findUnique null → DepartureNotFoundError (updateMany 미호출)", async () => {
+    mocks.db.departure.findUnique.mockResolvedValue(null);
+    await expect(
+      transitionDepartureStatus("dep_missing", "CLOSED"),
+    ).rejects.toBeInstanceOf(DepartureNotFoundError);
+    expect(mocks.db.departure.updateMany).not.toHaveBeenCalled();
+  });
+
   it("불가능한 전이 → InvalidDepartureTransitionError (DB 미접근)", async () => {
     mocks.db.departure.findUnique.mockResolvedValue({
       status: "CANCELED",

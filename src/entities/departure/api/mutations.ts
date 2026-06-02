@@ -18,8 +18,8 @@ export class CapacityBelowBookedError extends Error {
 }
 
 export class DepartureDateConflictError extends Error {
-  constructor(public readonly productId: string) {
-    super(`Duplicate departureDate for product ${productId}`);
+  constructor() {
+    super(`Duplicate departureDate (violates productId+departureDate unique constraint)`);
     this.name = "DepartureDateConflictError";
   }
 }
@@ -81,7 +81,7 @@ export async function createDeparture(
     });
     return created.id;
   } catch (e) {
-    if (isP2002(e)) throw new DepartureDateConflictError(productId);
+    if (isP2002(e)) throw new DepartureDateConflictError();
     throw e;
   }
 }
@@ -108,12 +108,13 @@ export async function updateDeparture(
       },
     });
     if (result.count === 0) {
-      // edit 페이지가 존재를 보장하므로 count===0 == 현재 예약 > 새 정원.
+      // 호출자(edit action)가 departure 존재를 보장하므로 count===0 은
+      // "정원 < 예약"을 의미한다(not-found 아님). 직접 API 경로 추가 시 재검토.
       throw new CapacityBelowBookedError(departureId);
     }
   } catch (e) {
     if (e instanceof CapacityBelowBookedError) throw e;
-    if (isP2002(e)) throw new DepartureDateConflictError(departureId);
+    if (isP2002(e)) throw new DepartureDateConflictError();
     throw e;
   }
 }
