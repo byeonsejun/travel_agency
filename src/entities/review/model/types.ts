@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, ReviewStatus } from "@prisma/client";
 
 // Prisma row + photos relation 의 결합형. server-side에서 사진까지 함께 fetch
 // 한 결과의 정확한 타입을 GetPayload 로 도출 — schema 변경 시 자동 추종.
@@ -40,4 +40,34 @@ export type ReviewStats = {
 export type ReviewListPage = {
   items: ReviewListItem[];
   nextCursor: string | null;
+};
+
+// admin 모더레이션 목록 row. raw email/name 은 displayName 으로 사전 마스킹.
+export type AdminReviewListItem = {
+  id: string;
+  rating: number;
+  status: ReviewStatus;
+  createdAt: Date;
+  productId: string;
+  productTitle: string;
+  authorDisplayName: string;
+  photoCount: number;
+};
+
+export type AdminReviewListPage = {
+  items: AdminReviewListItem[];
+  nextCursor: string | null;
+};
+
+// admin 상세 — 본문·사진 전체·상품 컨텍스트.
+export type AdminReviewDetail = {
+  id: string;
+  rating: number;
+  status: ReviewStatus;
+  content: string;
+  createdAt: Date;
+  productId: string;
+  productTitle: string;
+  authorDisplayName: string;
+  photos: Array<{ id: string; storagePath: string; order: number }>;
 };
