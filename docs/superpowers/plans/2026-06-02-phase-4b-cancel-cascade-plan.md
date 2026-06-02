@@ -379,7 +379,7 @@ git commit -m "feat(payment,booking): enqueueRefundJob + tx-accepting cancel hel
 - Create: `src/entities/departure-cancellation/api/queries.ts`
 - Create: `src/entities/departure-cancellation/index.ts`
 
-- [ ] **Step 1: 타입**
+- [x] **Step 1: 타입**
 
 ```ts
 // src/entities/departure-cancellation/model/types.ts
@@ -398,7 +398,7 @@ export type CancellationBatchDetail = DepartureCancellation & {
 };
 ```
 
-- [ ] **Step 2: recomputeBatchStatus 실패 테스트**
+- [x] **Step 2: recomputeBatchStatus 실패 테스트**
 
 ```ts
 // src/entities/departure-cancellation/api/__tests__/recomputeBatchStatus.test.ts
@@ -449,12 +449,12 @@ describe("recomputeBatchStatus", () => {
 });
 ```
 
-- [ ] **Step 3: 실패 확인**
+- [x] **Step 3: 실패 확인**
 
 Run: `npx vitest run src/entities/departure-cancellation/api/__tests__/recomputeBatchStatus.test.ts`
 Expected: FAIL — module 없음
 
-- [ ] **Step 4: recomputeBatchStatus 구현**
+- [x] **Step 4: recomputeBatchStatus 구현**
 
 ```ts
 // src/entities/departure-cancellation/api/recomputeBatchStatus.ts
@@ -483,12 +483,12 @@ export async function recomputeBatchStatus(
 }
 ```
 
-- [ ] **Step 5: PASS 확인**
+- [x] **Step 5: PASS 확인**
 
 Run: `npx vitest run src/entities/departure-cancellation/api/__tests__/recomputeBatchStatus.test.ts`
 Expected: PASS
 
-- [ ] **Step 6: queries + barrel**
+- [x] **Step 6: queries + barrel**
 
 ```ts
 // src/entities/departure-cancellation/api/queries.ts
@@ -543,12 +543,12 @@ export type {
 } from "./model/types";
 ```
 
-- [ ] **Step 7: typecheck + 테스트**
+- [x] **Step 7: typecheck + 테스트**
 
 Run: `npx tsc --noEmit && npx vitest run src/entities/departure-cancellation`
 Expected: 타입 에러 0, 테스트 PASS
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 ```bash
 git add src/entities/departure-cancellation
 git commit -m "feat(departure-cancellation): batch status recompute + queries (4B Task 3)"
