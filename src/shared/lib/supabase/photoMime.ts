@@ -1,3 +1,5 @@
+import { env } from "@/shared/lib/env";
+
 // 리뷰 사진 후기 — 순수 MIME·path 헬퍼.
 //
 // **client-safe**: `import "server-only"` 없음. 클라이언트 폼이 파일 선택 직후
@@ -43,4 +45,13 @@ export function buildReviewPhotoPath(
   mime: AllowedReviewPhotoMime,
 ): string {
   return `review-photos/${reviewId}/${idx}.${mimeToExt(mime)}`;
+}
+
+// PDP·라이트박스·admin 이 공유하는 client-safe public URL 빌더.
+// Supabase public object URL 은 결정적 문자열이라 SDK(server-only) 불필요.
+// server-only 인 storage.ts 의 getReviewPhotoPublicUrl 과 동일 결과를 내되,
+// 클라이언트 컴포넌트에서도 import 가능 (drift 0).
+export function reviewPhotoPublicUrl(path: string): string {
+  const base = env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return `${base}/storage/v1/object/public/${REVIEW_PHOTO_BUCKET}/${path}`;
 }
