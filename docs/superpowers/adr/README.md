@@ -75,6 +75,7 @@
 | 0025  | [CSP nonce 경로별 분기 — ISR 캐시-nonce 미스매치 차단](./0025-csp-route-scoped-nonce.md) | Accepted | 2026-05-29   |
 | 0026  | [임베딩 파이프라인 — 비동기 EmbeddingJob 큐 + contentHash 멱등 + Cron Worker](./0026-async-embedding-job-pipeline.md) | Accepted | 2026-06-01   |
 | 0027  | [Departure CMS — 취소 cascade 범위 제외 + 가격 스냅샷 무결성 + admin 리터럴 CAS](./0027-departure-cancel-scope-and-literal-cas.md) | Accepted | 2026-06-02   |
+| 0028  | [출발 취소 Cascade — 부모 배치 오케스트레이션 + 부분 실패 복구](./0028-departure-cancel-cascade-batch.md) | Accepted | 2026-06-02   |
 
 ## 향후 후보 (작성 대기)
 

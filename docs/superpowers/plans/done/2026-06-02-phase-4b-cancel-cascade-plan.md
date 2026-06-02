@@ -1134,12 +1134,12 @@ git commit -m "feat(admin): cancellation batch observability UI + force-cancel b
 - Create: `docs/superpowers/adr/0028-departure-cancel-cascade-batch.md` (사용자 승인 시)
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: 전체 typecheck / test / lint**
+- [x] **Step 1: 전체 typecheck / test / lint**
 
 Run: `npm run typecheck && npx vitest run && npm run lint`
 Expected: typecheck 0, 전체 테스트 PASS(신규 4B 포함), lint 에러 0. 출력 인용.
 
-- [ ] **Step 2: 부분 실패 QA 스크립트 작성**
+- [x] **Step 2: 부분 실패 QA 스크립트 작성**
 
 `scripts/qa/4b-cascade-qa.ts` — `4a-departure-qa.ts`의 section/assert 헬퍼 차용. 시나리오:
 
@@ -1166,12 +1166,12 @@ S8) 신규 예약 차단: reserveSeats(canceled dep) → InsufficientCapacityErr
 
 각 단계 DB raw 값(status/count) 인용. assert로 PASS/FAIL 집계.
 
-- [ ] **Step 3: 스크립트 실행 + evidence**
+- [x] **Step 3: 스크립트 실행 + evidence**
 
 Run: `npx tsx scripts/qa/4b-cascade-qa.ts`
 Expected: 전 시나리오 PASS. 특히 **PARTIALLY_FAILED → 재시도 → COMPLETED** 복구 흐름 raw evidence 인용.
 
-- [ ] **Step 4: force-dynamic + 멱등 grep audit**
+- [x] **Step 4: force-dynamic + 멱등 grep audit**
 
 Run:
 ```bash
@@ -1179,7 +1179,7 @@ grep -rl "force-dynamic" "src/app/(admin)/admin/departure-cancellations"   # 2�
 grep -n "status: { in: \[" src/features/admin-departure-cancel/server/actions.ts  # force CAS 가드 확인
 ```
 
-- [ ] **Step 5: ADR-0028 작성** (사용자 승인 시)
+- [x] **Step 5: ADR-0028 작성** (사용자 승인 시)
 
 `docs/superpowers/adr/0028-departure-cancel-cascade-batch.md` — template 채움:
 - Context: 4-A가 막은 취소를 4-B가 fan-out으로 해소
@@ -1188,13 +1188,13 @@ grep -n "status: { in: \[" src/features/admin-departure-cancel/server/actions.ts
 - Alternatives: 동기 루프(타임아웃)·파생 집계(미결제 누락)·새 CANCELING 상태(enum 비용)
 `docs/superpowers/adr/README.md` 인덱스 + "향후 후보" 갱신.
 
-- [ ] **Step 6: CLAUDE.md §8 + plan → done/**
+- [x] **Step 6: CLAUDE.md §8 + plan → done/**
 
 - §8 "Phase 4-B 완료" 마킹 + 노트("출발 취소가 이제 어떻게 동작?", "배치 status는 파생", "부분 실패 재시도").
 - `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-02-phase-4b-cancel-cascade-plan.md` → 0 확인(백틱 예시 제외).
 - `git mv docs/superpowers/plans/2026-06-02-phase-4b-cancel-cascade-plan.md docs/superpowers/plans/done/`
 
-- [ ] **Step 7: 최종 커밋**
+- [x] **Step 7: 최종 커밋**
 ```bash
 git add -A
 git commit -m "docs(adr): 0028 cancel cascade batch; mark Phase 4-B complete + QA evidence"
@@ -1204,12 +1204,12 @@ git commit -m "docs(adr): 0028 cancel cascade batch; mark Phase 4-B complete + Q
 
 ## 종합 검증 체크리스트 (Task 7 inventory)
 
-- [ ] typecheck / test / lint 3종 PASS
-- [ ] 혼합 배치(PAID+미결제) 강제취소 → departure 즉시 CANCELED + 배치 PROCESSING
-- [ ] 미결제 즉시 취소(immediateCancels) + PAID enqueue(RefundJob batchId)
-- [ ] 부분 실패 주입 → 배치 PARTIALLY_FAILED
-- [ ] 재시도(FAILED→PENDING) → cron drain → COMPLETED 복구
-- [ ] 멱등: 재호출 DepartureNotCancelable (배치 1개)
-- [ ] 이중 환불 차단: enqueueRefundJob 중복 게이트
-- [ ] CANCELED 후 reserveSeats 신규예약 차단 + 좌석 환원(bookedSeats 감소)
-- [ ] 단일 사용자 환불(batchId=null) recompute skip 확인
+- [x] typecheck / test / lint 3종 PASS
+- [x] 혼합 배치(PAID+미결제) 강제취소 → departure 즉시 CANCELED + 배치 PROCESSING
+- [x] 미결제 즉시 취소(immediateCancels) + PAID enqueue(RefundJob batchId)
+- [x] 부분 실패 주입 → 배치 PARTIALLY_FAILED
+- [x] 재시도(FAILED→PENDING) → cron drain → COMPLETED 복구
+- [x] 멱등: 재호출 DepartureNotCancelable (배치 1개)
+- [x] 이중 환불 차단: enqueueRefundJob 중복 게이트
+- [x] CANCELED 후 reserveSeats 신규예약 차단 + 좌석 환원(bookedSeats 감소)
+- [x] 단일 사용자 환불(batchId=null) recompute skip 확인
