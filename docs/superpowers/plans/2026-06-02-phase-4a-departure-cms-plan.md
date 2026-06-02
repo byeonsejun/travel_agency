@@ -1312,7 +1312,7 @@ git commit -m "feat(admin): departure CMS routes + status transition buttons (4A
 **Files:**
 - Create(임시 가능): `scripts/qa/4a-departure-qa.ts` (런타임 evidence 수집 스크립트)
 
-- [ ] **Step 1: 전체 typecheck / test / lint**
+- [x] **Step 1: 전체 typecheck / test / lint**
 
 Run:
 ```bash
@@ -1321,7 +1321,7 @@ npm run typecheck && npx vitest run && npm run lint
 Expected: typecheck 0, 전체 테스트 PASS(신규 departure/admin-departure 포함), lint 에러 0
 → 출력 인용해 plan에 기록.
 
-- [ ] **Step 2: 런타임 evidence 스크립트 작성**
+- [x] **Step 2: 런타임 evidence 스크립트 작성**
 
 `scripts/qa/b3-embedding-qa.ts`의 구조(assert 헬퍼 + section)를 차용해 `scripts/qa/4a-departure-qa.ts` 작성. 검증 시나리오:
 
@@ -1338,7 +1338,7 @@ Expected: typecheck 0, 전체 테스트 PASS(신규 departure/admin-departure �
 // 9) CLOSED 출발에 reserveSeats → InsufficientCapacity/0 affected (신규 예약 차단 확인)
 ```
 
-- [ ] **Step 3: 스크립트 실행 + evidence 인용**
+- [x] **Step 3: 스크립트 실행 + evidence 인용**
 
 Run: `npx tsx scripts/qa/4a-departure-qa.ts`
 Expected: 전 시나리오 PASS. DB raw 값(bookedSeats/status) 인용해 plan에 기록:
@@ -1347,17 +1347,17 @@ Expected: 전 시나리오 PASS. DB raw 값(bookedSeats/status) 인용해 plan�
   - CLOSED 후 신규 예약 차단 evidence
   - reopen 후 재판매 가능 evidence
 
-- [ ] **Step 4: 캐시 무효화 계약 확인**
+- [x] **Step 4: 캐시 무효화 계약 확인**
 
 Run: `grep -n "tagDeparturesByProduct\|revalidatePath" src/features/admin-departure/server/actions.ts`
 Expected: create/update 양쪽에서 `tagDeparturesByProduct` + `revalidatePath('/products/${productId}')` 발신 확인(actions.test.ts spy로도 검증됨).
 
-- [ ] **Step 5: force-dynamic audit (ADR-0020)**
+- [x] **Step 5: force-dynamic audit (ADR-0020)**
 
 Run: `grep -rn "force-dynamic" "src/app/(admin)/admin/products/[id]/departures"`
 Expected: 3개 라우트 모두 `force-dynamic`(admin 안전 도메인). 미승인 0건.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add scripts/qa/4a-departure-qa.ts
