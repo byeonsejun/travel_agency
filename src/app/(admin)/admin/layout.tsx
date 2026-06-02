@@ -60,6 +60,12 @@ export default async function AdminLayout({
               >
                 취소 배치
               </Link>
+              <Link
+                href="/admin/reviews"
+                className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
+              >
+                리뷰 관리
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">
