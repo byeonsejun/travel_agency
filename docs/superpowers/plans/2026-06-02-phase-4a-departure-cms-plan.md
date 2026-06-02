@@ -904,7 +904,7 @@ git commit -m "feat(admin-departure): server actions with guard + domain error m
 - Create: `src/features/admin-departure/ui/DepartureForm.tsx`
 - Modify: `src/features/admin-departure/index.ts` (`DepartureForm` export 활성화)
 
-- [ ] **Step 1: DepartureForm 구현**
+- [x] **Step 1: DepartureForm 구현**
 
 ```tsx
 // src/features/admin-departure/ui/DepartureForm.tsx
@@ -1023,19 +1023,19 @@ function Field({
 }
 ```
 
-- [ ] **Step 2: barrel의 `DepartureForm` export 활성화** (Task 3 Step 5에서 보류했던 줄 확인/추가)
+- [x] **Step 2: barrel의 `DepartureForm` export 활성화** (Task 3 Step 5에서 보류했던 줄 확인/추가)
 
 `src/features/admin-departure/index.ts`에 다음이 있는지 확인:
 ```ts
 export { DepartureForm } from "./ui/DepartureForm";
 ```
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npx tsc --noEmit`
 Expected: 타입 에러 0
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add src/features/admin-departure/ui src/features/admin-departure/index.ts
