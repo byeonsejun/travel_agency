@@ -308,7 +308,7 @@ git commit -m "feat(review): rating distribution normalizer (4C Task 3)"
 - Modify: `src/entities/review/model/types.ts`
 - Modify: `src/entities/review/index.ts`
 
-- [ ] **Step 1: 타입 추가**
+- [x] **Step 1: 타입 추가**
 
 `src/entities/review/model/types.ts` 하단에 추가:
 
@@ -344,7 +344,7 @@ export type AdminReviewDetail = {
 };
 ```
 
-- [ ] **Step 2: 쿼리 구현**
+- [x] **Step 2: 쿼리 구현**
 
 `src/entities/review/api/queries.ts` 의 import 에 추가:
 
@@ -452,7 +452,7 @@ export async function getReviewForAdmin(
 }
 ```
 
-- [ ] **Step 3: barrel export 갱신**
+- [x] **Step 3: barrel export 갱신**
 
 `src/entities/review/index.ts` 수정:
 
@@ -491,12 +491,12 @@ export {
 } from "./api/queries";
 ```
 
-- [ ] **Step 4: typecheck**
+- [x] **Step 4: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS (no errors)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/entities/review/
@@ -511,7 +511,7 @@ git commit -m "feat(review): rating distribution + admin list/detail queries (4C
 - Create: `src/entities/review/api/mutations.ts`
 - Modify: `src/entities/review/index.ts`
 
-- [ ] **Step 1: 구현 (DB 의존 — 단위 테스트는 Task 10 서버 액션에서 mock 으로 커버)**
+- [x] **Step 1: 구현 (DB 의존 — 단위 테스트는 Task 10 서버 액션에서 mock 으로 커버)**
 
 ```ts
 // src/entities/review/api/mutations.ts
@@ -543,7 +543,7 @@ export async function setReviewStatus(
 }
 ```
 
-- [ ] **Step 2: barrel export 추가**
+- [x] **Step 2: barrel export 추가**
 
 `src/entities/review/index.ts` 의 queries export 블록 아래에 추가:
 
@@ -551,12 +551,12 @@ export async function setReviewStatus(
 export { setReviewStatus } from "./api/mutations";
 ```
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add src/entities/review/api/mutations.ts src/entities/review/index.ts
