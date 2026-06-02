@@ -1370,7 +1370,7 @@ git commit -m "qa(4a): runtime evidence for departure CMS guards (4A Task 6)"
 
 > CLAUDE.md §6.1: ADR은 사용자 명시 요청 시에만 발행. 후보로 기록.
 
-- [ ] **Step 1: (사용자 승인 시) ADR 작성**
+- [x] **Step 1: (사용자 승인 시) ADR 작성**
 
 `docs/superpowers/adr/0027-departure-cancel-scope-and-literal-cas.md` — template 복사 후:
 - Context: Phase 4-A Departure CMS, 좌석/가격 안전
@@ -1380,7 +1380,7 @@ git commit -m "qa(4a): runtime evidence for departure CMS guards (4A Task 6)"
 
 `docs/superpowers/adr/README.md` 인덱스에 0027 한 줄 추가.
 
-- [ ] **Step 2: CLAUDE.md §8 갱신**
+- [x] **Step 2: CLAUDE.md §8 갱신**
 
 - "Phase 1+2+3+**4-A** 완료" 마킹, 한 줄 노트 추가.
 - 다음 작업자 노트 추가:
@@ -1388,14 +1388,14 @@ git commit -m "qa(4a): runtime evidence for departure CMS guards (4A Task 6)"
   - "왜 출발 취소가 예약 있으면 막히나?" → D1, cascade 별도 마일스톤
   - "CLOSED vs CANCELED?" → 둘 다 신규예약 차단, CLOSED만 reopen 가능
 
-- [ ] **Step 3: plan → done/ 이동 + 미체크 0 확인**
+- [x] **Step 3: plan → done/ 이동 + 미체크 0 확인**
 
 ```bash
 grep -n "\- \[ \]" docs/superpowers/plans/2026-06-02-phase-4a-departure-cms-plan.md   # 기대: 0건
 git mv docs/superpowers/plans/2026-06-02-phase-4a-departure-cms-plan.md docs/superpowers/plans/done/
 ```
 
-- [ ] **Step 4: 최종 커밋**
+- [x] **Step 4: 최종 커밋**
 
 ```bash
 git add -A
@@ -1406,13 +1406,13 @@ git commit -m "docs(claude-md): mark Phase 4-A (Departure CMS) complete"
 
 ## 종합 검증 체크리스트 (Task 6 inventory)
 
-- [ ] typecheck / test / lint 3종 PASS
-- [ ] 상태머신: 합법/금지 전이쌍 + CANCELED terminal + reopen
-- [ ] capacity 축소 < bookedSeats → 거부 (CAS count===0)
-- [ ] capacity 증가 → 통과
-- [ ] 취소: bookedSeats>0 거부 → 좌석 비움 후 성공 (D1)
-- [ ] CLOSED 후 reserveSeats 신규예약 차단 / reopen 후 재판매
-- [ ] 가격 수정 시 기존 booking.totalPrice 불변 (스냅샷, D2)
-- [ ] revalidateTag(tagDeparturesByProduct)+revalidatePath 발신 (actions.test spy)
-- [ ] ADMIN 3중 가드 (actions.test forbidden 케이스)
-- [ ] force-dynamic 3라우트 ADR-0020 허용 도메인
+- [x] typecheck / test / lint 3종 PASS
+- [x] 상태머신: 합법/금지 전이쌍 + CANCELED terminal + reopen
+- [x] capacity 축소 < bookedSeats → 거부 (CAS count===0)
+- [x] capacity 증가 → 통과
+- [x] 취소: bookedSeats>0 거부 → 좌석 비움 후 성공 (D1)
+- [x] CLOSED 후 reserveSeats 신규예약 차단 / reopen 후 재판매
+- [x] 가격 수정 시 기존 booking.totalPrice 불변 (스냅샷, D2)
+- [x] revalidateTag(tagDeparturesByProduct)+revalidatePath 발신 (actions.test spy)
+- [x] ADMIN 3중 가드 (actions.test forbidden 케이스)
+- [x] force-dynamic 3라우트 ADR-0020 허용 도메인

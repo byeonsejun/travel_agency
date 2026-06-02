@@ -74,6 +74,7 @@
 | 0024  | [SENTRY_AUTH_TOKEN runtime 차단 invariant — Vercel 예외 분기](./0024-sentry-auth-token-vercel-runtime-relaxation.md) | Accepted | 2026-05-29   |
 | 0025  | [CSP nonce 경로별 분기 — ISR 캐시-nonce 미스매치 차단](./0025-csp-route-scoped-nonce.md) | Accepted | 2026-05-29   |
 | 0026  | [임베딩 파이프라인 — 비동기 EmbeddingJob 큐 + contentHash 멱등 + Cron Worker](./0026-async-embedding-job-pipeline.md) | Accepted | 2026-06-01   |
+| 0027  | [Departure CMS — 취소 cascade 범위 제외 + 가격 스냅샷 무결성 + admin 리터럴 CAS](./0027-departure-cancel-scope-and-literal-cas.md) | Accepted | 2026-06-02   |
 
 ## 향후 후보 (작성 대기)
 
