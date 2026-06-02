@@ -570,7 +570,7 @@ git commit -m "feat(review): setReviewStatus mutation with transition guard (4C 
 **Files:**
 - Create: `src/shared/ui/Lightbox.tsx`
 
-- [ ] **Step 1: 구현**
+- [x] **Step 1: 구현**
 
 ```tsx
 // src/shared/ui/Lightbox.tsx
@@ -681,12 +681,12 @@ export function Lightbox({ images, index, onClose, onIndexChange }: Props) {
 }
 ```
 
-- [ ] **Step 2: typecheck**
+- [x] **Step 2: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add src/shared/ui/Lightbox.tsx
@@ -700,7 +700,7 @@ git commit -m "feat(ui): domain-agnostic Lightbox with keyboard nav + scroll loc
 **Files:**
 - Create: `src/shared/ui/PhotoGrid.tsx`
 
-- [ ] **Step 1: 구현**
+- [x] **Step 1: 구현**
 
 ```tsx
 // src/shared/ui/PhotoGrid.tsx
@@ -755,12 +755,12 @@ export function PhotoGrid({ images }: Props) {
 }
 ```
 
-- [ ] **Step 2: typecheck**
+- [x] **Step 2: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add src/shared/ui/PhotoGrid.tsx
@@ -777,7 +777,7 @@ git commit -m "feat(ui): self-contained PhotoGrid opening Lightbox (4C Task 7)"
 - Create: `src/features/review-feed/ui/ReviewFeed.tsx`
 - Create: `src/features/review-feed/index.ts`
 
-- [ ] **Step 1: 서버 액션 (더보기 페치)**
+- [x] **Step 1: 서버 액션 (더보기 페치)**
 
 ```ts
 // src/features/review-feed/server/loadMore.ts
@@ -808,7 +808,7 @@ export async function loadMoreReviewsAction(
 }
 ```
 
-- [ ] **Step 2: ReviewCard (presentational)**
+- [x] **Step 2: ReviewCard (presentational)**
 
 ```tsx
 // src/features/review-feed/ui/ReviewCard.tsx
@@ -879,7 +879,7 @@ export function ReviewCard({ review }: { review: ReviewListItem }) {
 }
 ```
 
-- [ ] **Step 3: ReviewFeed (client island, 누적 + 더보기)**
+- [x] **Step 3: ReviewFeed (client island, 누적 + 더보기)**
 
 ```tsx
 // src/features/review-feed/ui/ReviewFeed.tsx
@@ -936,19 +936,19 @@ export function ReviewFeed({ productId, initialItems, initialCursor }: Props) {
 }
 ```
 
-- [ ] **Step 4: barrel**
+- [x] **Step 4: barrel**
 
 ```ts
 // src/features/review-feed/index.ts
 export { ReviewFeed } from "./ui/ReviewFeed";
 ```
 
-- [ ] **Step 5: typecheck**
+- [x] **Step 5: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add src/features/review-feed/
@@ -965,7 +965,7 @@ git commit -m "feat(review): PDP load-more feed island consuming nextCursor (4C 
 - Modify: `src/widgets/review-list/index.ts`
 - Modify: `src/app/(site)/products/[id]/page.tsx`
 
-- [ ] **Step 1: RatingDistribution 위젯 (RSC)**
+- [x] **Step 1: RatingDistribution 위젯 (RSC)**
 
 ```tsx
 // src/widgets/review-list/ui/RatingDistribution.tsx
@@ -1007,7 +1007,7 @@ export function RatingDistribution({ distribution, total }: Props) {
 }
 ```
 
-- [ ] **Step 2: ReviewList 위젯 삭제 + barrel 갱신**
+- [x] **Step 2: ReviewList 위젯 삭제 + barrel 갱신**
 
 ```bash
 git rm src/widgets/review-list/ui/ReviewList.tsx
@@ -1020,7 +1020,7 @@ export { ReviewStatsBar } from "./ui/ReviewStatsBar";
 export { RatingDistribution } from "./ui/RatingDistribution";
 ```
 
-- [ ] **Step 3: PDP page.tsx 배선**
+- [x] **Step 3: PDP page.tsx 배선**
 
 `src/app/(site)/products/[id]/page.tsx` 수정 — import 블록:
 
@@ -1084,12 +1084,12 @@ import {
   );
 ```
 
-- [ ] **Step 4: typecheck + 잔여 ReviewList 참조 확인**
+- [x] **Step 4: typecheck + 잔여 ReviewList 참조 확인**
 
 Run: `npm run typecheck && grep -rn "ReviewList" src/ || echo "no ReviewList refs"`
 Expected: typecheck PASS, `ReviewList` 참조 0건 (또는 주석만)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/widgets/review-list/ src/app/\(site\)/products/\[id\]/page.tsx
