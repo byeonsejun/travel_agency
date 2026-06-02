@@ -54,7 +54,7 @@
 - Create: `src/entities/departure/model/transitions.ts`
 - Test: `src/entities/departure/model/__tests__/transitions.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/entities/departure/model/__tests__/transitions.test.ts
@@ -122,12 +122,12 @@ describe("requiresEmptySeats — 취소만 좌석 비움 요구 (D1)", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/entities/departure/model/__tests__/transitions.test.ts`
 Expected: FAIL — `Cannot find module '../transitions'`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 ```ts
 // src/entities/departure/model/transitions.ts
@@ -176,12 +176,12 @@ export function allowedNextStatuses(from: DepartureStatus): DepartureStatus[] {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/entities/departure/model/__tests__/transitions.test.ts`
 Expected: PASS (전 케이스)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/entities/departure/model/transitions.ts src/entities/departure/model/__tests__/transitions.test.ts
@@ -201,7 +201,7 @@ git commit -m "feat(departure): status transition state machine SSOT (4A Task 1)
 - Modify: `src/entities/departure/index.ts` (barrel)
 - Test: `src/entities/departure/api/__tests__/mutations.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/entities/departure/api/__tests__/mutations.test.ts
@@ -357,12 +357,12 @@ describe("transitionDepartureStatus — 가드", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/entities/departure/api/__tests__/mutations.test.ts`
 Expected: FAIL — `Cannot find module '../mutations'`
 
-- [ ] **Step 3: mutations.ts 구현**
+- [x] **Step 3: mutations.ts 구현**
 
 ```ts
 // src/entities/departure/api/mutations.ts
@@ -503,12 +503,12 @@ export async function transitionDepartureStatus(
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/entities/departure/api/__tests__/mutations.test.ts`
 Expected: PASS (전 케이스)
 
-- [ ] **Step 5: admin 읽기 쿼리 + 타입 추가**
+- [x] **Step 5: admin 읽기 쿼리 + 타입 추가**
 
 `src/entities/departure/model/types.ts` 끝에 추가:
 
@@ -550,7 +550,7 @@ export async function getAdminDepartureById(
 
 > `queries.ts` 상단 import에 `AdminDepartureRow`를 `DepartureSummary` 등과 함께 추가한다. `Departure` 타입은 `model/types.ts`가 이미 `@prisma/client`에서 가져와 `AdminDepartureRow`에 합성하므로 queries.ts는 추가 prisma import 불필요.
 
-- [ ] **Step 6: barrel 확장**
+- [x] **Step 6: barrel 확장**
 
 `src/entities/departure/index.ts`에 추가:
 
@@ -578,12 +578,12 @@ export { listAdminDepartures, getAdminDepartureById } from "./api/queries";
 export type { AdminDepartureRow } from "./model/types";
 ```
 
-- [ ] **Step 7: typecheck + 전체 departure 테스트**
+- [x] **Step 7: typecheck + 전체 departure 테스트**
 
 Run: `npx tsc --noEmit && npx vitest run src/entities/departure`
 Expected: 타입 에러 0, 테스트 PASS
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add src/entities/departure
