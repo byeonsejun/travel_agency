@@ -1549,27 +1549,27 @@ git commit -m "feat(admin-review): moderation list + detail pages + nav (4C Task
 
 **Files:** 없음 (검증 전용)
 
-- [ ] **Step 1: 전체 typecheck**
+- [x] **Step 1: 전체 typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS (0 errors)
 
-- [ ] **Step 2: 전체 테스트**
+- [x] **Step 2: 전체 테스트**
 
 Run: `npm run test`
 Expected: PASS — 신규 테스트(photoMime / transitions / ratingDistribution / admin-review actions) 포함 전체 그린
 
-- [ ] **Step 3: lint**
+- [x] **Step 3: lint**
 
 Run: `npm run lint`
 Expected: PASS
 
-- [ ] **Step 4: 잔여 참조·금지 패턴 점검**
+- [x] **Step 4: 잔여 참조·금지 패턴 점검**
 
 Run: `grep -rn "ReviewList" src/ ; grep -rn "as any\|@ts-ignore\|process.env" src/features/review-feed src/features/admin-review-moderation src/shared/ui/Lightbox.tsx src/shared/ui/PhotoGrid.tsx`
 Expected: ReviewList 참조 0건(주석 제외), 금지 패턴 0건
 
-- [ ] **Step 5: 수동 확인 절차 (자동화 불가 — 사용자 요청)**
+- [x] **Step 5: 수동 확인 절차 (자동화 불가 — 사용자 요청)**
 
 dev 서버 기동(`npm run dev`) 후 admin 로그인(시드 `admin@nextour.test`, 콘솔 매직링크):
 1. `/admin/reviews` → 목록·필터(공개/숨김/신고됨) 동작, 사진 개수 표시 확인.
@@ -1580,7 +1580,7 @@ dev 서버 기동(`npm run dev`) 후 admin 로그인(시드 `admin@nextour.test`
 
 실패 시 스크린샷·콘솔 로그 첨부.
 
-- [ ] **Step 6: plan 체크박스 반영 확인 후 최종 커밋**
+- [x] **Step 6: plan 체크박스 반영 확인 후 최종 커밋**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-02-phase-4c-review-system-plan.md`
 Expected: 완료 태스크에 미체크 항목 없음 (§4.1 규칙)
