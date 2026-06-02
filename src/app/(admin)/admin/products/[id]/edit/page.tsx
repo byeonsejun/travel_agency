@@ -166,6 +166,12 @@ export default async function AdminProductEditPage({ params }: PageProps) {
           <h1 className="text-2xl font-bold text-gray-900">상품 편집</h1>
           <p className="mt-0.5 font-mono text-xs text-gray-400">{product.id}</p>
         </div>
+        <Link
+          href={`/admin/products/${product.id}/departures`}
+          className="ml-auto rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+        >
+          출발일 관리 →
+        </Link>
       </div>
 
       {/* 2-column 레이아웃 */}

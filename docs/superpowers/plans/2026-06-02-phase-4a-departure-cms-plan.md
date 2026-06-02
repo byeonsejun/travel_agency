@@ -1054,7 +1054,7 @@ git commit -m "feat(admin-departure): departure form island with price warning (
 - Create: `src/app/(admin)/admin/products/[id]/departures/[depId]/edit/page.tsx`
 - Modify: `src/app/(admin)/admin/products/[id]/edit/page.tsx` (링크 추가)
 
-- [ ] **Step 1: 목록 페이지**
+- [x] **Step 1: 목록 페이지**
 
 ```tsx
 // src/app/(admin)/admin/products/[id]/departures/page.tsx
@@ -1147,7 +1147,7 @@ export default async function AdminDeparturesPage({ params }: PageProps) {
 
 > `DEPARTURE_STATUS_LABEL`이 barrel에 export되어 있는지 확인(`entities/departure/index.ts`의 constants export). 없으면 `model/constants.ts`에서 추가 export.
 
-- [ ] **Step 2: 생성 페이지**
+- [x] **Step 2: 생성 페이지**
 
 ```tsx
 // src/app/(admin)/admin/products/[id]/departures/new/page.tsx
@@ -1177,7 +1177,7 @@ export default async function NewDeparturePage({ params }: PageProps) {
 }
 ```
 
-- [ ] **Step 3: 편집 페이지 + 상태 전이 버튼 + 에러 배너**
+- [x] **Step 3: 편집 페이지 + 상태 전이 버튼 + 에러 배너**
 
 ```tsx
 // src/app/(admin)/admin/products/[id]/departures/[depId]/edit/page.tsx
@@ -1276,7 +1276,7 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
 }
 ```
 
-- [ ] **Step 4: 상품 편집 페이지에 "출발일 관리" 링크 추가**
+- [x] **Step 4: 상품 편집 페이지에 "출발일 관리" 링크 추가**
 
 `src/app/(admin)/admin/products/[id]/edit/page.tsx`의 헤더 영역(목록 링크 옆, line ~158-169 블록)에 추가:
 
@@ -1291,12 +1291,12 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
 
 > 헤더 `<div className="flex items-center gap-3">` 안, `product.id`를 쓰는 위치에 삽입. `ml-auto`로 우측 정렬.
 
-- [ ] **Step 5: typecheck + lint**
+- [x] **Step 5: typecheck + lint**
 
 Run: `npx tsc --noEmit && npm run lint`
 Expected: 타입 에러 0, lint 에러 0
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add "src/app/(admin)/admin/products/[id]/departures" "src/app/(admin)/admin/products/[id]/edit/page.tsx"
