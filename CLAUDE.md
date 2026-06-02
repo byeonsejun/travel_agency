@@ -268,6 +268,8 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
   - "왜 임베딩이 동기가 아닌가?" → [ADR-0026] 박제. 동기 호출은 admin UX 저하(OpenAI P99 ~2s) + OpenAI 장애가 상품 저장 실패로 전파됨. 비동기 큐(EmbeddingJob) + cron worker(*/2min, limit=5)로 분리. Product 저장 ↔ Job enqueue는 동일 `$transaction`으로 원자성 보장.
   - "contentHash 가 왜 SHA-256 인가? `updatedAt`이면?" → `updatedAt`은 무변동 저장(edit 페이지 열고 그대로 저장)에도 갱신됨 → 빈 OpenAI 호출 낭비 발생. 입력 텍스트 SHA-256으로 실제 콘텐츠 변경만 감지. modelVersion bump 시 hash 무관 강제 재호출(worker 분기 — [ADR-0026]).
   - "Departure CMS 는 왜 없는가?" → 도메인 안전성(좌석·결제·🛑 NO-REAL-MONEY)이 끼어들어와 본 B3 작업(RAG 데이터 공급) 초점이 흐려짐. 별도 마일스톤 + 💳 Domain Booking 페르소나 강제 참여 필요.
+  - "admin 으로 로그인했는데 일반 화면만 보인다?" → 공개 사이트(`(site)`)와 admin(`(admin)`)은 **완전히 분리된 셸**이다. 홈(`/`)은 권한 무관 공용. admin 진입은 (1) 헤더 우상단 **"관리자" 링크**(`UserNavIsland` — `session.user.role === "ADMIN"` 일 때만 노출, `/admin/products` 로 이동) 또는 (2) URL 직접. `/admin` 인덱스는 독립 화면 없이 `/admin/products` 로 redirect(`(admin)/admin/page.tsx`) — 과거 `page.tsx` 부재로 인증된 admin 이 `/admin` 직접 접근 시 404 나던 문제 해소. admin 셸 nav: 예약 관리 / 환불 모니터링 / 상품 관리 / 임베딩 Jobs. **새 admin 1차 화면을 바꾸려면 `UserNavIsland` 의 링크 href + `(admin)/admin/page.tsx` 의 redirect 대상 두 곳을 함께 갱신**.
+  - "admin 계정으로 어떻게 로그인하나?" → 시드 계정 `admin@nextour.test`(role ADMIN). 가짜 도메인이라 실메일 수신 불가 → dev 매직링크는 **`npm run dev` 콘솔에 `📧 [DEV] Magic link for ...` 로 출력**(auth.ts `useDevConsoleFallback`, NODE_ENV≠production). 그 URL 을 브라우저에 붙여 로그인. role 은 JWT 토큰에 박히므로 권한 변경 시 **재로그인 필요**.
 - 시드 데이터는 `prisma/seed.ts`. 검증용 10개 상품(JP/VN/TH/EU/ID/PH) + 1개 보라카이 Draft + 1개 QA 테스트 상품 = 총 12건(시드 외 2건은 관리자 직접 생성).
 - 자세한 진행 상황은 `docs/superpowers/plans/done/` 의 완료된 plan, 의사결정은 `docs/superpowers/adr/` 참조.
 
