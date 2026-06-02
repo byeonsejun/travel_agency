@@ -602,7 +602,7 @@ git commit -m "feat(departure): mutations with capacity CAS + cancel guard + adm
 - Create: `src/features/admin-departure/index.ts`
 - Test: `src/features/admin-departure/server/__tests__/actions.test.ts`
 
-- [ ] **Step 1: schema 작성**
+- [x] **Step 1: schema 작성**
 
 ```ts
 // src/features/admin-departure/model/schemas.ts
@@ -623,7 +623,7 @@ export const departureTransitionSchema = z.object({
 export type DepartureTransitionInput = z.infer<typeof departureTransitionSchema>;
 ```
 
-- [ ] **Step 2: 실패 테스트 작성**
+- [x] **Step 2: 실패 테스트 작성**
 
 ```ts
 // src/features/admin-departure/server/__tests__/actions.test.ts
@@ -708,12 +708,12 @@ describe("updateDepartureAction — 도메인 에러 매핑", () => {
 });
 ```
 
-- [ ] **Step 3: 실패 확인**
+- [x] **Step 3: 실패 확인**
 
 Run: `npx vitest run src/features/admin-departure/server/__tests__/actions.test.ts`
 Expected: FAIL — `Cannot find module '../actions'`
 
-- [ ] **Step 4: actions.ts 구현**
+- [x] **Step 4: actions.ts 구현**
 
 ```ts
 // src/features/admin-departure/server/actions.ts
@@ -865,7 +865,7 @@ export async function transitionDepartureAction(formData: FormData): Promise<voi
 
 > ⚠️ `redirect()`는 내부적으로 throw하므로 try 블록 **밖**(성공 경로 끝)에서 호출한다. 위 구조처럼 catch에서 error redirect, try 종료 후 success redirect로 분리.
 
-- [ ] **Step 5: barrel 작성**
+- [x] **Step 5: barrel 작성**
 
 ```ts
 // src/features/admin-departure/index.ts
@@ -882,12 +882,12 @@ export { DepartureForm } from "./ui/DepartureForm"; // Task 4에서 생성
 
 > Task 4 이전에는 마지막 `DepartureForm` export 줄을 잠시 주석 처리하거나, Task 4 완료 후 함께 커밋한다. 본 Task에서는 그 줄을 제외하고 작성 → Task 4에서 추가.
 
-- [ ] **Step 6: 테스트 통과 확인**
+- [x] **Step 6: 테스트 통과 확인**
 
 Run: `npx vitest run src/features/admin-departure/server/__tests__/actions.test.ts`
 Expected: PASS
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add src/features/admin-departure/model src/features/admin-departure/server src/features/admin-departure/index.ts
