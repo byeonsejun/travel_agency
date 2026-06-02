@@ -323,13 +323,13 @@ DoD (모두 evidence 인용):
 ### Task 14 — CLAUDE.md §8 업데이트 + plan → done/ 이동
 
 DoD:
-- [ ] CLAUDE.md §8 "Phase 1 + 2 + 3 B1/B2/**B3** 완료" 갱신 및 한 줄 노트 추가
-- [ ] "다음 작업자 혼란 방지 노트"에 추가:
+- [x] CLAUDE.md §8 "Phase 1 + 2 + 3 B1/B2/**B3** 완료" 갱신 및 한 줄 노트 추가
+- [x] "다음 작업자 혼란 방지 노트"에 추가:
   - "왜 임베딩이 동기가 아닌가?" → ADR-0026 + 본 plan §Core Architecture 1
   - "contentHash 가 왜 SHA-256 인가? `updatedAt`이면?" → updatedAt은 무변동 저장에도 갱신 → 빈 호출 절약 실패
   - "Departure CMS 는 왜 없는가?" → 도메인 안전성 분리, 별도 마일스톤
-- [ ] `git mv docs/superpowers/plans/2026-05-31-b3-admin-cms-roadmap.md docs/superpowers/plans/done/`
-- [ ] final commit: `docs(claude-md): mark Phase 3 B3 (Admin CMS) complete`
+- [x] `git mv docs/superpowers/plans/2026-05-31-b3-admin-cms-roadmap.md docs/superpowers/plans/done/`
+- [x] final commit: `docs(claude-md): mark Phase 3 B3 (Admin CMS) complete`
 
 ---
 
