@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   assertDepartureTransition,
   requiresEmptySeats,
+  allowedNextStatuses,
   InvalidDepartureTransitionError,
 } from "../transitions";
 
@@ -48,6 +49,11 @@ describe("assertDepartureTransition — 금지 전이", () => {
       InvalidDepartureTransitionError,
     );
   });
+  it("CLOSED → CONFIRMED 금지 (reopen은 SCHEDULED 경유만)", () => {
+    expect(() => assertDepartureTransition("CLOSED", "CONFIRMED")).toThrow(
+      InvalidDepartureTransitionError,
+    );
+  });
 });
 
 describe("requiresEmptySeats — 취소만 좌석 비움 요구 (D1)", () => {
@@ -58,5 +64,18 @@ describe("requiresEmptySeats — 취소만 좌석 비움 요구 (D1)", () => {
     expect(requiresEmptySeats("CLOSED")).toBe(false);
     expect(requiresEmptySeats("CONFIRMED")).toBe(false);
     expect(requiresEmptySeats("SCHEDULED")).toBe(false);
+  });
+});
+
+describe("allowedNextStatuses — UI 전이 게이트 (SSOT 위임)", () => {
+  it("SCHEDULED → 3개 전이 가능", () => {
+    expect(allowedNextStatuses("SCHEDULED")).toEqual([
+      "CONFIRMED",
+      "CLOSED",
+      "CANCELED",
+    ]);
+  });
+  it("CANCELED → terminal (빈 배열)", () => {
+    expect(allowedNextStatuses("CANCELED")).toEqual([]);
   });
 });
