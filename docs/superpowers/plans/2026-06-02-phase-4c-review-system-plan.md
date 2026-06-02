@@ -1107,7 +1107,7 @@ git commit -m "feat(review): wire ReviewFeed + RatingDistribution into PDP, reti
 - Create: `src/features/admin-review-moderation/ui/ReviewStatusToggle.tsx`
 - Create: `src/features/admin-review-moderation/index.ts`
 
-- [ ] **Step 1: Zod 스키마**
+- [x] **Step 1: Zod 스키마**
 
 ```ts
 // src/features/admin-review-moderation/model/schemas.ts
@@ -1122,7 +1122,7 @@ export const SetReviewStatusSchema = z.object({
 export type SetReviewStatusInput = z.infer<typeof SetReviewStatusSchema>;
 ```
 
-- [ ] **Step 2: 실패 테스트 작성 (서버 액션)**
+- [x] **Step 2: 실패 테스트 작성 (서버 액션)**
 
 ```ts
 // src/features/admin-review-moderation/server/__tests__/actions.test.ts
@@ -1187,12 +1187,12 @@ describe("setReviewStatusAction", () => {
 });
 ```
 
-- [ ] **Step 3: 실패 확인**
+- [x] **Step 3: 실패 확인**
 
 Run: `npm run test -- src/features/admin-review-moderation/server/__tests__/actions.test.ts`
 Expected: FAIL — cannot find module `../actions`
 
-- [ ] **Step 4: 서버 액션 구현**
+- [x] **Step 4: 서버 액션 구현**
 
 ```ts
 // src/features/admin-review-moderation/server/actions.ts
@@ -1251,12 +1251,12 @@ export async function setReviewStatusAction(
 }
 ```
 
-- [ ] **Step 5: 통과 확인**
+- [x] **Step 5: 통과 확인**
 
 Run: `npm run test -- src/features/admin-review-moderation/server/__tests__/actions.test.ts`
 Expected: PASS (3 tests)
 
-- [ ] **Step 6: 토글 UI (client)**
+- [x] **Step 6: 토글 UI (client)**
 
 ```tsx
 // src/features/admin-review-moderation/ui/ReviewStatusToggle.tsx
@@ -1310,19 +1310,19 @@ export function ReviewStatusToggle({ reviewId, status }: Props) {
 }
 ```
 
-- [ ] **Step 7: barrel**
+- [x] **Step 7: barrel**
 
 ```ts
 // src/features/admin-review-moderation/index.ts
 export { ReviewStatusToggle } from "./ui/ReviewStatusToggle";
 ```
 
-- [ ] **Step 8: typecheck**
+- [x] **Step 8: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 git add src/features/admin-review-moderation/
@@ -1338,7 +1338,7 @@ git commit -m "feat(admin-review): moderation toggle action + UI with PDP ISR in
 - Create: `src/app/(admin)/admin/reviews/[id]/page.tsx`
 - Modify: `src/app/(admin)/admin/layout.tsx`
 
-- [ ] **Step 1: 목록 페이지**
+- [x] **Step 1: 목록 페이지**
 
 ```tsx
 // src/app/(admin)/admin/reviews/page.tsx
@@ -1457,7 +1457,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
 }
 ```
 
-- [ ] **Step 2: 상세 페이지**
+- [x] **Step 2: 상세 페이지**
 
 ```tsx
 // src/app/(admin)/admin/reviews/[id]/page.tsx
@@ -1518,7 +1518,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
 }
 ```
 
-- [ ] **Step 3: admin nav 링크 추가**
+- [x] **Step 3: admin nav 링크 추가**
 
 `src/app/(admin)/admin/layout.tsx` 의 nav 에서 "취소 배치" Link 바로 뒤(닫는 `</nav>` 직전)에 추가:
 
@@ -1531,12 +1531,12 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
               </Link>
 ```
 
-- [ ] **Step 4: typecheck + lint**
+- [x] **Step 4: typecheck + lint**
 
 Run: `npm run typecheck && npm run lint`
 Expected: PASS
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/app/\(admin\)/admin/reviews/ src/app/\(admin\)/admin/layout.tsx
