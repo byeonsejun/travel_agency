@@ -565,7 +565,7 @@ git commit -m "feat(departure-cancellation): batch status recompute + queries (4
 - Create test: `src/features/admin-departure-cancel/server/__tests__/actions.test.ts`
 - Create: `src/features/admin-departure-cancel/index.ts`
 
-- [ ] **Step 1: 실패 테스트**
+- [x] **Step 1: 실패 테스트**
 
 ```ts
 // src/features/admin-departure-cancel/server/__tests__/actions.test.ts
@@ -650,12 +650,12 @@ describe("startDepartureCancellation", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/features/admin-departure-cancel/server/__tests__/actions.test.ts`
 Expected: FAIL — module 없음
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 ```ts
 // src/features/admin-departure-cancel/server/actions.ts
@@ -781,12 +781,12 @@ export async function retryBatchRefundAction(formData: FormData): Promise<void> 
 
 > `revalidateTag`/`tagDeparturesByProduct` import는 향후 departure 목록 무효화에 사용(force-cancel이 departure status를 바꾸므로). step 5 호출부는 Task 6 UI 연결 시 액션 래퍼에서 수행 — 본 step에서는 import만 두고 lint 통과 위해 사용처가 없으면 제거. (구현자 판단: 사용 안 하면 import 삭제.)
 
-- [ ] **Step 4: PASS 확인**
+- [x] **Step 4: PASS 확인**
 
 Run: `npx vitest run src/features/admin-departure-cancel/server/__tests__/actions.test.ts`
 Expected: PASS (4 케이스)
 
-- [ ] **Step 5: barrel**
+- [x] **Step 5: barrel**
 
 ```ts
 // src/features/admin-departure-cancel/index.ts
@@ -799,7 +799,7 @@ export {
 export type { StartCancellationInput, StartCancellationResult } from "./server/actions";
 ```
 
-- [ ] **Step 6: typecheck + 커밋**
+- [x] **Step 6: typecheck + 커밋**
 ```bash
 npx tsc --noEmit
 git add src/features/admin-departure-cancel
