@@ -367,6 +367,7 @@ enum PaymentStatus {
   PENDING
   PAID
   CANCELED
+  PARTIAL_CANCELED
   FAILED
 }
 
@@ -460,7 +461,8 @@ model RefundJob {
   id        String          @id @default(cuid())
   bookingId String
   paymentId String
-  amount    Int // 원 단위 정수 (전액 환불)
+  amount    Int // 실제 환불액 = baseAmount − penaltyAmount (위약금 0이면 결제 전액)
+  penaltyAmount Int @default(0) // 취소 요청 시점 동결된 위약금 스냅샷 (spec §4)
   reason    String?
   // 환불을 트리거한 주체. worker가 재시도 시 booking transition(user vs agency)을
   // 정확히 분기하기 위해 필요. ex) "user:cluser...", "admin:...", "system:webhook"

@@ -4,6 +4,7 @@ const STATUS_STYLE: Record<PaymentStatus, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
   PAID: "bg-emerald-100 text-emerald-800",
   CANCELED: "bg-gray-100 text-gray-700",
+  PARTIAL_CANCELED: "bg-orange-100 text-orange-700",
   FAILED: "bg-red-100 text-red-700",
 };
 
@@ -13,6 +14,7 @@ const STATUS_LABEL: Record<PaymentStatus, string> = {
   PENDING: "결제 대기",
   PAID: "결제 완료",
   CANCELED: "환불 완료",
+  PARTIAL_CANCELED: "부분 환불",
   FAILED: "결제 실패",
 };
 

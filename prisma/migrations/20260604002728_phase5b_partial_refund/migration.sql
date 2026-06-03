@@ -1,0 +1,4 @@
+-- ALTER TYPE ... ADD VALUE는 트랜잭션 밖에서 실행되어야 한다(Postgres 제약).
+ALTER TYPE "PaymentStatus" ADD VALUE IF NOT EXISTS 'PARTIAL_CANCELED';
+
+ALTER TABLE "RefundJob" ADD COLUMN IF NOT EXISTS "penaltyAmount" INTEGER NOT NULL DEFAULT 0;
