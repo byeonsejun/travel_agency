@@ -101,6 +101,8 @@ export const envSchema = z
         "TOSS_CLIENT_KEY",
         "TOSS_SECRET_KEY",
         "CRON_SECRET",
+        "RESEND_API_KEY",
+        "RESEND_FROM_EMAIL",
       ] as const) {
         if (!env[key]) {
           ctx.addIssue({
