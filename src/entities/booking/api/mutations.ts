@@ -7,6 +7,8 @@ import type { BookingStatus } from "@prisma/client";
 import { computeTotalPrice } from "./pricing";
 import { reserveSeats, releaseSeats } from "./seatLock";
 import { ForbiddenError, PriceMismatchError } from "./errors";
+import { emailJobForTransition } from "../model/emailPolicy";
+import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
 
 export async function createBooking(input: CreateBookingInput): Promise<Booking> {
   // R3-1: 입력 검증
@@ -137,6 +139,12 @@ export async function transitionStatusTx(
       reason: reason ?? null,
     },
   });
+
+  // 트랜잭셔널 아웃박스: 거래 종료 메일을 같은 Tx에 원자적으로 적재 (유실 0).
+  const emailDescriptor = emailJobForTransition(current.status, to, bookingId);
+  if (emailDescriptor) {
+    await enqueueEmailJob(tx, { ...emailDescriptor, bookingId });
+  }
 
   return updated;
 }

@@ -4,10 +4,12 @@ const mocks = vi.hoisted(() => ({
   tx: {
     booking: { findUniqueOrThrow: vi.fn(), update: vi.fn() },
     bookingEvent: { create: vi.fn() },
+    emailJob: { findUnique: vi.fn(), create: vi.fn() },
     $executeRaw: vi.fn(),
   },
 }));
 vi.mock("@/shared/lib/db", () => ({ db: { $transaction: vi.fn() } }));
+vi.mock("@/shared/lib/email-job/enqueue", () => ({ enqueueEmailJob: vi.fn() }));
 
 import { cancelBookingByAgencyTx } from "../mutations";
 import type { Prisma } from "@prisma/client";
