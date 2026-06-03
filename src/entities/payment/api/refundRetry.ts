@@ -125,14 +125,14 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
     },
   });
 
-  // ── Short-circuit 1: Payment가 이미 CANCELED ─────────────────────
-  // 다른 경로(webhook / 외부 reconcile)로 이미 환불됐다면 job만 정리.
-  if (job.payment.status === "CANCELED") {
+  // ── Short-circuit 1: Payment가 이미 CANCELED 또는 PARTIAL_CANCELED ─
+  // 다른 경로(webhook / 외부 reconcile / 부분 환불 선행 처리)로 이미 환불됐다면 job만 정리.
+  if (job.payment.status === "CANCELED" || job.payment.status === "PARTIAL_CANCELED") {
     await db.refundJob.update({
       where: { id: jobId },
       data: {
         status: "SUCCEEDED",
-        lastError: "payment already CANCELED; cleaned up by retry worker",
+        lastError: "payment already (partial-)canceled; cleaned up by retry worker",
       },
     });
     metrics.incr("payment.refund.retry.already_canceled");
@@ -153,11 +153,13 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
   }
 
   // ── Phase 2: 외부 PG 취소 (Tx 바깥, ADR-0003) ─────────────────────
+  // cancelAmount = job.amount (enqueue 시점 동결 환불금) — payment.amount(원금)가 아님.
+  // 부분 환불(위약금 존재)의 경우 원금보다 작은 금액만 취소해야 한다.
   try {
     await tossClient.cancel({
       paymentKey: job.payment.tossPaymentKey,
       cancelReason: job.reason ?? "환불 처리 재시도",
-      cancelAmount: job.payment.amount,
+      cancelAmount: job.amount,
     });
   } catch (cancelErr) {
     const newAttempts = job.attempts + 1;
@@ -192,11 +194,16 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
     };
   }
 
-  // ── Phase 3: Payment CANCELED + RefundJob SUCCEEDED + PaymentEvent ─
+  // ── Phase 3: Payment 상태 갱신 + RefundJob SUCCEEDED + PaymentEvent ─
+  // penaltyAmount > 0이면 부분 환불 → PARTIAL_CANCELED, 아니면 전액 → CANCELED.
+  // 재연산 금지: job.penaltyAmount / job.amount는 enqueue 시점에 동결된 스냅샷.
   await db.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: job.paymentId },
-      data: { status: "CANCELED", canceledAt: new Date() },
+      data: {
+        status: job.penaltyAmount > 0 ? "PARTIAL_CANCELED" : "CANCELED",
+        canceledAt: new Date(),
+      },
     });
     await tx.refundJob.update({
       where: { id: jobId },
@@ -213,6 +220,8 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
           reason: job.reason,
           actor: job.actor ?? "system:refund-retry",
           retryAttempt: job.attempts,
+          penaltyAmount: job.penaltyAmount,
+          refundAmount: job.amount,
         } as unknown as Prisma.InputJsonValue,
         result: "PROCESSED",
       },
