@@ -81,6 +81,7 @@ export async function adminCancelBookingAction(
         bookingId,
         actor: `admin:${adminId}`,
         reason,
+        applyPenalty: false, // admin 취소는 위약금 면제 (Task 5에서 토글 UI 추가 예정)
       });
     } else {
       // 결제 전 예약: 단순 booking 전이

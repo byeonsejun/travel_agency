@@ -404,7 +404,7 @@ async function scenarioRefundSuccess() {
 
   log("refund-success.before", { ...(await snapshot(bookingId)), bookedSeats: depBefore?.bookedSeats });
 
-  await refundBooking({ bookingId, actor: `user:${userId}`, reason: "evidence test refund" });
+  await refundBooking({ bookingId, actor: `user:${userId}`, reason: "evidence test refund", applyPenalty: false });
 
   const depAfter = await db.departure.findUnique({
     where: { id: depBefore?.id ?? "" },
@@ -447,7 +447,7 @@ async function scenarioRefundPgFailureEnqueuesJob() {
 
   try {
     // mock 서버가 cancel에 400을 반환하면 RefundJob이 enqueue됨
-    await refundBooking({ bookingId, actor: `user:${userId}`, reason: "evidence fail test" });
+    await refundBooking({ bookingId, actor: `user:${userId}`, reason: "evidence fail test", applyPenalty: false });
     log("refund-pg-failure-enqueues-job.result", {
       UNEXPECTED: "refund succeeded — mock should be in fail mode",
     });
