@@ -94,7 +94,7 @@ export function computePenalty(input: PenaltyInput): PenaltyResult;
 - **정수 보존**: `penaltyAmount`, `refundAmount` 모두 정수. `Math.floor`로 위약금 내림 → 환불액 올림(소비자 유리).
 - **합 보존**: `penaltyAmount + refundAmount === baseAmount` (1원 누락 금지).
 - **범위**: `0 ≤ penaltyAmount ≤ baseAmount`, `refundAmount ≥ 0`.
-- **D-day 계산**: `daysBefore = floor((departureDate@KST자정 − now) / 86_400_000)`. KST(Asia/Seoul) 고정. `departureDate`는 `@db.Date`라 시간 정보 없음 → KST 자정으로 해석.
+- **D-day 계산**: `daysBefore = ceil((departureDate@KST자정 − now) / 86_400_000)`. KST(Asia/Seoul) 고정. `departureDate`는 `@db.Date`라 시간 정보 없음 → Prisma 역직렬화 UTC 자정에서 KST 자정(UTC 전날 15:00)으로 환산. **`ceil` 채택 이유**: 약관의 "출발 N일 전"은 통보 *달력일* 기준이라, KST 한 달력일 전체가 동일 D값에 매핑돼야 한다(예: 06-24 하루 종일 = D7). `floor`는 같은 날 정오 이후 D가 1 줄어드는 within-day drift가 생겨 부적합.
 - **경계값**: D=30 → 0%, D=29 → 10%, D=20 → 10%, D=19 → 15%, D=8 → 20%, D=7 → 30%, D=1 → 30%, D=0 → 50%, D=-3 → 50%.
 - **순수성**: 입력 배열·객체 변이 금지, 동일 입력 → 동일 출력.
 
