@@ -78,6 +78,7 @@
 | 0028  | [출발 취소 Cascade — 부모 배치 오케스트레이션 + 부분 실패 복구](./0028-departure-cancel-cascade-batch.md) | Accepted | 2026-06-02   |
 | 0029  | [리뷰 시스템 경계 — client-safe URL 빌더 + 모더레이션 무효화 SSOT 재사용](./0029-review-system-boundaries.md) | Accepted | 2026-06-03   |
 | 0030  | [트랜잭셔널 아웃박스 단일 훅 + Resend 멱등키 effectively-once](./0030-email-outbox-and-idempotency.md) | Accepted | 2026-06-03   |
+| 0031  | [위약금 동결 스냅샷 + 부분취소 상태 모델 (Phase 5-B)](./0031-penalty-snapshot-partial-cancel.md) | Accepted | 2026-06-04   |
 
 ## 향후 후보 (작성 대기)
 
