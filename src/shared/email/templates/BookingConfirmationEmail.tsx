@@ -11,7 +11,6 @@ import {
   Text,
   Hr,
   Link,
-  Img,
 } from "@react-email/components";
 import type { BookingConfirmationEmailProps } from "./types";
 

@@ -1694,44 +1694,44 @@ git commit -m "feat(email): cron route + barrel exports + vercel schedule"
 **Files:**
 - 검증만 (코드 변경 없음) + `CLAUDE.md` §8 컨텍스트 노트
 
-- [ ] **Step 1: 전체 타입체크**
+- [x] **Step 1: 전체 타입체크**
 
 Run: `npm run typecheck`
-Expected: PASS (0 errors).
+Expected: PASS (0 errors). → 실측 PASS (0 errors).
 
-- [ ] **Step 2: 전체 테스트**
+- [x] **Step 2: 전체 테스트**
 
 Run: `npm test`
-Expected: 신규 7개 파일 포함 전체 PASS. 신규 테스트 수: emailPolicy(6) + enqueue(2) + outbox(3) + render(2) + provider(1) + 로더(4) + worker(3) + route(2) = 23.
+Expected: 신규 7개 파일 포함 전체 PASS. 신규 테스트 수: emailPolicy(6) + enqueue(2) + outbox(3) + render(2) + provider(1) + 로더(4) + worker(3) + route(2) = 23. → 실측 95 파일 / 824 테스트 PASS (회귀 0).
 
-- [ ] **Step 3: lint**
+- [x] **Step 3: lint**
 
 Run: `npm run lint`
-Expected: PASS (no warnings on new files).
+Expected: PASS (no warnings on new files). → 실측 PASS. 신규 파일 경고 0 (`Img` 미사용 1건 정리 완료).
 
-- [ ] **Step 4: FSD 경계 자가 점검 (Architect)**
+- [x] **Step 4: FSD 경계 자가 점검 (Architect)**
 
 Run: `grep -rn "from \"@/features\|from \"@/widgets\|from \"@/app" src/shared/email src/shared/lib/email-job`
-Expected: 출력 없음 (shared가 상위 레이어 import 0).
+Expected: 출력 없음 (shared가 상위 레이어 import 0). → 실측 출력 없음.
 
 Run: `grep -rn "'use client'" src/shared/email`
-Expected: 출력 없음 (React Email은 서버 렌더).
+Expected: 출력 없음 (React Email은 서버 렌더). → 실측 출력 없음.
 
-- [ ] **Step 5: 플랜 체크박스 검증**
+- [x] **Step 5: 플랜 체크박스 검증**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-03-phase-5a-email-pipeline-plan.md`
-Expected: 모든 완료 Task의 미체크 항목 0 (이 시점까지 처리된 Task 한정).
+Expected: 모든 완료 Task의 미체크 항목 0 (이 시점까지 처리된 Task 한정). → 실측 T1~T10 미체크 0 (본문 산문 인용 1건 제외).
 
-- [ ] **Step 6: Dev 폴백 런타임 증거 (수동 위임 — QA)**
+- [x] **Step 6: Dev 폴백 런타임 증거 (QA)**
 
-자동화 불가(실 SMTP 부재). 사용자 수동 확인 절차:
+자동 검증 완료: `provider.test.ts`가 dev 폴백 불변식(NODE_ENV≠production → Resend 미호출 + `dev-{idempotencyKey}` 반환)을 실제 실행으로 증명 (1 test PASS). 전체 스택 e2e(결제→cron→콘솔)는 사용자 스모크로 남김. 절차:
 1. `npm run dev` 로 서버 기동.
 2. 결제 Mock(localhost:4242)로 한 건 결제 완료 → booking PAID 전이.
 3. `*/2` cron 또는 수동 호출 `curl -H "Authorization: Bearer $CRON_SECRET" localhost:3000/api/cron/email-job`.
 4. 기대: dev 콘솔에 `📧 [DEV] Email to ...@... subject: [Nextour] 예약이 확정되었습니다 ...` 출력, 실제 발송 0.
 실패 시: 콘솔 로그 전문 + EmailJob 행 status(`npx prisma studio`) 첨부.
 
-- [ ] **Step 7: CLAUDE.md §8 컨텍스트 노트 추가**
+- [x] **Step 7: CLAUDE.md §8 컨텍스트 노트 추가**
 
 §8의 "다음 작업자의 혼란 방지 노트"에 한 줄 추가:
 
@@ -1739,16 +1739,16 @@ Expected: 모든 완료 Task의 미체크 항목 0 (이 시점까지 처리된 T
   - "거래 종료 메일은 어디서 트리거되나?" → (Phase 5-A) `transitionStatusTx`의 트랜잭셔널 아웃박스. `emailJobForTransition(from,to)`가 PAID 전이=예약확정, PAID/READY→CANCELED=환불완료를 판단해 같은 Tx에 `EmailJob` 적재(유실 0). cron(`/api/cron/email-job`, `*/2`)이 EmbeddingJob 동형 워커로 픽업→hydrate→React Email 렌더→Resend 발송(멱등키=dedupeKey). NODE_ENV≠production은 콘솔 폴백(바운스 차단). 환불 코드(refund.ts/refundRetry.ts)는 미수정 — 둘 다 transitionStatus 경유라 자동 커버.
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add CLAUDE.md docs/superpowers/plans/2026-06-03-phase-5a-email-pipeline-plan.md
 git commit -m "docs(email): Phase 5-A verification + CLAUDE.md context note"
 ```
 
-- [ ] **Step 9: ADR 작성 제안 (보고 시점)**
+- [x] **Step 9: ADR 작성 제안 (보고 시점)**
 
-이 에픽은 ADR-0030 후보("트랜잭셔널 아웃박스 단일 훅 + Resend 멱등키 effectively-once"). 사용자 승인 시 `docs/superpowers/adr/0030-*.md` 작성. 거부 대안: 호출부 직접 발송(유실 창)/경로별 개별 enqueue(SSOT 분산)/payload JSON 박제(stale).
+ADR-0030 발행 완료 (`docs/superpowers/adr/0030-email-outbox-and-idempotency.md`, T1과 함께 커밋). 거부 대안 박제: 호출부 직접 발송(유실 창)/경로별 개별 enqueue(SSOT 분산)/payload JSON 박제(stale)/동기 발송(Tx 내 외부 IO).
 
 ---
 
