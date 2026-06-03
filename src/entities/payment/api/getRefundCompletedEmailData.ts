@@ -1,6 +1,7 @@
 /**
  * 환불완료 메일 데이터 단일쿼리 조립.
- * CANCELED payment 1건에서 환불 금액·수단을 읽는다. 없으면 null.
+ * CANCELED 또는 PARTIAL_CANCELED payment + SUCCEEDED RefundJob 1건에서
+ * 실제 환불액(위약금 차감 후)·위약금·수단을 읽는다. 없으면 null.
  */
 
 import { db } from "@/shared/lib/db";
@@ -27,16 +28,23 @@ export async function getRefundCompletedEmailData(
       user: { select: { email: true, name: true } },
       departure: { select: { product: { select: { title: true } } } },
       payments: {
-        where: { status: "CANCELED" },
-        select: { amount: true, method: true },
+        where: { status: { in: ["CANCELED", "PARTIAL_CANCELED"] } },
+        select: { method: true },
         orderBy: { canceledAt: "desc" },
+        take: 1,
+      },
+      refundJobs: {
+        where: { status: "SUCCEEDED" },
+        select: { amount: true, penaltyAmount: true },
+        orderBy: { updatedAt: "desc" },
         take: 1,
       },
     },
   });
 
-  const refunded = booking?.payments[0];
-  if (!booking || !refunded) return null;
+  const refundedPayment = booking?.payments[0];
+  const refundJob = booking?.refundJobs[0];
+  if (!booking || !refundedPayment || !refundJob) return null;
 
   return {
     recipientEmail: booking.user.email,
@@ -44,8 +52,9 @@ export async function getRefundCompletedEmailData(
       customerName: booking.user.name ?? "고객",
       bookingId: booking.id,
       productTitle: booking.departure.product.title,
-      refundAmount: refunded.amount,
-      paymentMethod: METHOD_LABEL[refunded.method] ?? refunded.method,
+      refundAmount: refundJob.amount,          // 실제 환불액 (위약금 차감 후)
+      penaltyAmount: refundJob.penaltyAmount,  // 위약금 (0이면 전액 환불)
+      paymentMethod: METHOD_LABEL[refundedPayment.method] ?? refundedPayment.method,
     },
   };
 }

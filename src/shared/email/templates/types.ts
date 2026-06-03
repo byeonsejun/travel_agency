@@ -14,6 +14,7 @@ export interface RefundCompletedEmailProps {
   customerName: string;
   bookingId: string;
   productTitle: string;
-  refundAmount: number; // 원
+  refundAmount: number; // 원 (위약금 차감 후 실제 환불액)
+  penaltyAmount: number; // 위약금 (0이면 템플릿에서 라인 숨김)
   paymentMethod: string; // "카드"
 }

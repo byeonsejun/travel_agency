@@ -21,6 +21,7 @@ export function RefundCompletedEmail({
   bookingId,
   productTitle,
   refundAmount,
+  penaltyAmount,
   paymentMethod,
 }: RefundCompletedEmailProps) {
   return (
@@ -207,6 +208,11 @@ export function RefundCompletedEmail({
             >
               {won(refundAmount)}
             </Text>
+            {penaltyAmount > 0 && (
+              <Text style={{ color: "#92400e", fontSize: "13px", margin: "6px 0 0" }}>
+                위약금 {won(penaltyAmount)} 공제 후 환불 금액입니다.
+              </Text>
+            )}
           </Section>
 
           {/* 안내 박스 */}

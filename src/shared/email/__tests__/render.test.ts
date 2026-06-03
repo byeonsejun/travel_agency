@@ -25,6 +25,7 @@ describe("renderEmail", () => {
       bookingId: "clbk2",
       productTitle: "다낭 4박5일",
       refundAmount: 880000,
+      penaltyAmount: 0,
       paymentMethod: "카드",
     });
     expect(out.subject).toContain("환불");
