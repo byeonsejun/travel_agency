@@ -1,5 +1,3 @@
-import { env } from "@/shared/lib/env";
-
 // 리뷰 사진 후기 — 순수 MIME·path 헬퍼.
 //
 // **client-safe**: `import "server-only"` 없음. 클라이언트 폼이 파일 선택 직후
@@ -51,7 +49,13 @@ export function buildReviewPhotoPath(
 // Supabase public object URL 은 결정적 문자열이라 SDK(server-only) 불필요.
 // server-only 인 storage.ts 의 getReviewPhotoPublicUrl 과 동일 결과를 내되,
 // 클라이언트 컴포넌트에서도 import 가능 (drift 0).
+//
+// ⚠️ `env`(@/shared/lib/env)를 import하지 않는다 — env.ts 는 로드 시점에
+// DATABASE_URL/AUTH_SECRET 등 서버 전용 변수를 parse 하므로, 이 모듈이 client
+// 번들에 포함되면 브라우저에서 ZodError 가 난다(client-safe 계약 파괴, ADR-0029).
+// NEXT_PUBLIC_ 변수는 Next 가 빌드 타임에 클라이언트 번들로 인라인하므로
+// process.env 직접 접근이 유일하고 안전한 경로(CLAUDE.md §5 env.X 규칙의 의도된 예외).
 export function reviewPhotoPublicUrl(path: string): string {
-  const base = env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   return `${base}/storage/v1/object/public/${REVIEW_PHOTO_BUCKET}/${path}`;
 }
