@@ -72,3 +72,6 @@ export type {
   BookingProgressStepState,
   BookingProgressStepView,
 } from "./model/progress";
+
+export { getBookingConfirmationEmailData } from "./api/getBookingConfirmationEmailData";
+export type { BookingConfirmationEmailData } from "./api/getBookingConfirmationEmailData";

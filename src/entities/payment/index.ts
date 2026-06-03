@@ -59,3 +59,6 @@ export type { EnqueueRefundJobArgs } from "./api/enqueueRefundJob";
 
 // ── UI ──────────────────────────────────────────────────────────
 export { PaymentStatusBadge, PAYMENT_STATUS_LABEL } from "./ui/PaymentStatusBadge";
+
+export { getRefundCompletedEmailData } from "./api/getRefundCompletedEmailData";
+export type { RefundCompletedEmailData } from "./api/getRefundCompletedEmailData";
