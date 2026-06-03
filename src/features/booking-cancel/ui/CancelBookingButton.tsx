@@ -8,15 +8,17 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { CANCEL_REASON_PRESETS } from "@/entities/booking";
+import type { PenaltyResult } from "@/entities/payment";
 import { cancelBookingAction } from "../server/actions";
 
 type Props = {
   bookingId: string;
+  refundPreview?: PenaltyResult | null;
 };
 
 const FREE_TEXT_VALUE = "__free__";
 
-export function CancelBookingButton({ bookingId }: Props) {
+export function CancelBookingButton({ bookingId, refundPreview }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>(
@@ -101,6 +103,30 @@ export function CancelBookingButton({ bookingId }: Props) {
             <p className="mt-1 text-sm text-gray-500">
               취소 후에는 좌석이 환원되며 동일 예약을 되돌릴 수 없습니다.
             </p>
+
+            {refundPreview && (
+              <div className="mt-3 rounded-lg bg-slate-50 px-4 py-3 text-sm">
+                {refundPreview.penaltyAmount > 0 ? (
+                  <>
+                    <p className="text-gray-700">
+                      환불 예정{" "}
+                      <strong className="text-gray-900">
+                        {refundPreview.refundAmount.toLocaleString("ko-KR")}원
+                      </strong>
+                    </p>
+                    <p className="mt-1 text-amber-700">
+                      위약금 {refundPreview.penaltyAmount.toLocaleString("ko-KR")}원 공제
+                      (출발 D-{Math.max(refundPreview.daysBefore, 0)},{" "}
+                      {Math.round(refundPreview.rate * 100)}%)
+                    </p>
+                  </>
+                ) : (
+                  <p className="font-medium text-emerald-700">
+                    전액 환불 ({refundPreview.refundAmount.toLocaleString("ko-KR")}원)
+                  </p>
+                )}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
               <div>

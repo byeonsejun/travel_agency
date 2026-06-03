@@ -57,6 +57,10 @@ export type { ActiveRefundJob, RefundJobRow } from "./api/observability";
 export { enqueueRefundJob } from "./api/enqueueRefundJob";
 export type { EnqueueRefundJobArgs } from "./api/enqueueRefundJob";
 
+// ── 위약금 정책 (순수) ─────────────────────────────────────────
+export { computePenalty, OVERSEAS_PENALTY_TIERS } from "./model/penaltyPolicy";
+export type { PenaltyResult, PenaltyInput } from "./model/penaltyPolicy";
+
 // ── UI ──────────────────────────────────────────────────────────
 export { PaymentStatusBadge, PAYMENT_STATUS_LABEL } from "./ui/PaymentStatusBadge";
 

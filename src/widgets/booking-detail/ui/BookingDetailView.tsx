@@ -6,7 +6,7 @@ import {
   isCancelableByUser,
 } from "@/entities/booking";
 import type { BookingDetail } from "@/entities/booking";
-import { PaymentStatusBadge } from "@/entities/payment";
+import { PaymentStatusBadge, computePenalty } from "@/entities/payment";
 import type { ActiveRefundJob } from "@/entities/payment";
 import { CancelBookingButton } from "@/features/booking-cancel";
 
@@ -45,6 +45,17 @@ export function BookingDetailView({ booking, activeRefundJob }: Props) {
   // 재시도하지 못하게 막아 REFUND_ALREADY_REQUESTED 에러 노출을 사전 차단.
   const refundInFlight = !!activeRefundJob;
   const cancelable = isCancelableByUser(booking.status) && !refundInFlight;
+
+  // 자가취소 미리보기: PAID 결제 + 출발일로 위약금/환불액을 RSC에서 미리 계산.
+  // 실제 동결은 Server Action 실행 시점에 권위 재계산 (spec §6.1).
+  const paidForPreview = booking.payments.find((p) => p.status === "PAID");
+  const refundPreview = paidForPreview
+    ? computePenalty({
+        baseAmount: paidForPreview.amount,
+        departureDate: booking.departure.departureDate,
+        now: new Date(),
+      })
+    : null;
 
   return (
     <div className="space-y-8">
@@ -154,7 +165,7 @@ export function BookingDetailView({ booking, activeRefundJob }: Props) {
           PAID payment가 있으면 refundBooking 경로로 자동 dispatch된다. */}
       {cancelable && (
         <section className="flex justify-end border-t border-gray-100 pt-6">
-          <CancelBookingButton bookingId={booking.id} />
+          <CancelBookingButton bookingId={booking.id} refundPreview={refundPreview} />
         </section>
       )}
     </div>
