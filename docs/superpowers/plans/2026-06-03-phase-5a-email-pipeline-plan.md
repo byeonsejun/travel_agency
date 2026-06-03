@@ -909,7 +909,7 @@ git commit -m "feat(email): Resend provider + dev console fallback + prod env gu
 - Test: `src/entities/booking/api/__tests__/getBookingConfirmationEmailData.test.ts`
 - Test: `src/entities/payment/api/__tests__/getRefundCompletedEmailData.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성 (booking 확정 데이터)**
+- [x] **Step 1: 실패 테스트 작성 (booking 확정 데이터)**
 
 ```ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -961,12 +961,12 @@ describe("getBookingConfirmationEmailData", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm test -- src/entities/booking/api/__tests__/getBookingConfirmationEmailData.test.ts`
 Expected: FAIL (모듈 없음).
 
-- [ ] **Step 3: booking 로더 구현**
+- [x] **Step 3: booking 로더 구현**
 
 `src/entities/booking/api/getBookingConfirmationEmailData.ts`:
 
@@ -1028,12 +1028,12 @@ export async function getBookingConfirmationEmailData(
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm test -- src/entities/booking/api/__tests__/getBookingConfirmationEmailData.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: 실패 테스트 작성 (refund 데이터)**
+- [x] **Step 5: 실패 테스트 작성 (refund 데이터)**
 
 ```ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -1081,12 +1081,12 @@ describe("getRefundCompletedEmailData", () => {
 });
 ```
 
-- [ ] **Step 6: 실패 확인**
+- [x] **Step 6: 실패 확인**
 
 Run: `npm test -- src/entities/payment/api/__tests__/getRefundCompletedEmailData.test.ts`
 Expected: FAIL (모듈 없음).
 
-- [ ] **Step 7: refund 로더 구현**
+- [x] **Step 7: refund 로더 구현**
 
 `src/entities/payment/api/getRefundCompletedEmailData.ts`:
 
@@ -1144,14 +1144,14 @@ export async function getRefundCompletedEmailData(
 }
 ```
 
-- [ ] **Step 8: 통과 확인**
+- [x] **Step 8: 통과 확인**
 
 Run: `npm test -- src/entities/payment/api/__tests__/getRefundCompletedEmailData.test.ts`
 Expected: PASS (2 tests).
 
 > 참고: `shared/email` barrel(`BookingConfirmationEmailProps`/`RefundCompletedEmailProps` re-export)은 Task 9 Step에서 생성한다. 이 Task 구현이 먼저 import하므로, barrel 미생성으로 typecheck가 깨지면 Task 9의 `src/shared/email/index.ts` 생성을 먼저 수행해도 된다 (둘은 같은 커밋 묶음으로 봐도 무방).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/entities/booking/api/getBookingConfirmationEmailData.ts src/entities/payment/api/getRefundCompletedEmailData.ts src/entities/booking/api/__tests__/getBookingConfirmationEmailData.test.ts src/entities/payment/api/__tests__/getRefundCompletedEmailData.test.ts
@@ -1167,7 +1167,7 @@ git commit -m "feat(email): hydration loaders for confirmation/refund emails"
 - Create: `src/shared/lib/email-job/worker.ts`
 - Test: `src/shared/lib/email-job/__tests__/worker.test.ts`
 
-- [ ] **Step 1: shared/email barrel 생성**
+- [x] **Step 1: shared/email barrel 생성**
 
 `src/shared/email/index.ts`:
 
@@ -1182,7 +1182,7 @@ export type {
 } from "./templates/types";
 ```
 
-- [ ] **Step 2: 실패 테스트 작성**
+- [x] **Step 2: 실패 테스트 작성**
 
 ```ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -1315,12 +1315,12 @@ describe("processEmailJobBatch", () => {
 });
 ```
 
-- [ ] **Step 3: 실패 확인**
+- [x] **Step 3: 실패 확인**
 
 Run: `npm test -- src/shared/lib/email-job/__tests__/worker.test.ts`
 Expected: FAIL ("Cannot find module '../worker'").
 
-- [ ] **Step 4: 워커 구현**
+- [x] **Step 4: 워커 구현**
 
 `src/shared/lib/email-job/worker.ts`:
 
@@ -1516,12 +1516,12 @@ export async function processEmailJobBatch(opts: {
 }
 ```
 
-- [ ] **Step 5: 통과 확인**
+- [x] **Step 5: 통과 확인**
 
 Run: `npm test -- src/shared/lib/email-job/__tests__/worker.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: email-job barrel 생성**
+- [x] **Step 6: email-job barrel 생성**
 
 `src/shared/lib/email-job/index.ts`:
 
@@ -1532,7 +1532,7 @@ export { processEmailJobBatch } from "./worker";
 export type { BatchResult } from "./worker";
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/shared/email/index.ts src/shared/lib/email-job/worker.ts src/shared/lib/email-job/index.ts src/shared/lib/email-job/__tests__/worker.test.ts
@@ -1549,7 +1549,7 @@ git commit -m "feat(email): batch worker (claim→hydrate→render→send)"
 - Modify: `src/entities/booking/index.ts`, `src/entities/payment/index.ts` (로더 export)
 - Modify: `vercel.json`
 
-- [ ] **Step 1: entity barrel export 추가**
+- [x] **Step 1: entity barrel export 추가**
 
 `src/entities/booking/index.ts`에 추가:
 
@@ -1565,7 +1565,7 @@ export { getRefundCompletedEmailData } from "./api/getRefundCompletedEmailData";
 export type { RefundCompletedEmailData } from "./api/getRefundCompletedEmailData";
 ```
 
-- [ ] **Step 2: 실패 테스트 작성**
+- [x] **Step 2: 실패 테스트 작성**
 
 ```ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -1614,12 +1614,12 @@ describe("GET /api/cron/email-job", () => {
 });
 ```
 
-- [ ] **Step 3: 실패 확인**
+- [x] **Step 3: 실패 확인**
 
 Run: `npm test -- src/app/api/cron/email-job/__tests__/route.test.ts`
 Expected: FAIL ("Cannot find module '../route'").
 
-- [ ] **Step 4: 라우트 구현**
+- [x] **Step 4: 라우트 구현**
 
 `src/app/api/cron/email-job/route.ts`:
 
@@ -1667,12 +1667,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 ```
 
-- [ ] **Step 5: 통과 확인**
+- [x] **Step 5: 통과 확인**
 
 Run: `npm test -- src/app/api/cron/email-job/__tests__/route.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: vercel.json cron 등록**
+- [x] **Step 6: vercel.json cron 등록**
 
 `vercel.json`의 `crons` 배열에 추가:
 
@@ -1680,7 +1680,7 @@ Expected: PASS (2 tests).
     { "path": "/api/cron/email-job", "schedule": "*/2 * * * *" }
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/app/api/cron/email-job src/entities/booking/index.ts src/entities/payment/index.ts vercel.json
