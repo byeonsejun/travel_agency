@@ -52,7 +52,7 @@
 **Files:**
 - Modify: `prisma/schema.prisma`
 
-- [ ] **Step 1: EmailJob enum/model 추가**
+- [x] **Step 1: EmailJob enum/model 추가**
 
 `prisma/schema.prisma`의 EmbeddingJob 블록(`@@index([productId, status])` 닫는 `}`) 바로 다음에 추가:
 
@@ -94,7 +94,7 @@ model EmailJob {
 }
 ```
 
-- [ ] **Step 2: Booking 모델에 역참조 추가**
+- [x] **Step 2: Booking 모델에 역참조 추가**
 
 `model Booking`의 relation 목록(`payments Payment[]` 인근)에 추가:
 
@@ -102,17 +102,17 @@ model EmailJob {
   emailJobs     EmailJob[]
 ```
 
-- [ ] **Step 3: 마이그레이션 생성 + 클라이언트 재생성**
+- [x] **Step 3: 마이그레이션 생성 + 클라이언트 재생성**
 
 Run: `npm run db:migrate -- --name add_email_job`
 Expected: 마이그레이션 파일 생성 + `EmailJob` 테이블 CREATE + `prisma generate` 성공.
 
-- [ ] **Step 4: 타입 확인**
+- [x] **Step 4: 타입 확인**
 
 Run: `npm run typecheck`
 Expected: PASS (Prisma Client에 `emailJob` delegate + `EmailType`/`EmailJobStatus` enum 생성됨).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add prisma/schema.prisma prisma/migrations
@@ -127,7 +127,7 @@ git commit -m "feat(email): add EmailJob queue schema + migration"
 - Create: `src/entities/booking/model/emailPolicy.ts`
 - Test: `src/entities/booking/model/__tests__/emailPolicy.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -173,12 +173,12 @@ describe("emailJobForTransition", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm test -- src/entities/booking/model/__tests__/emailPolicy.test.ts`
 Expected: FAIL ("Cannot find module '../emailPolicy'").
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 `src/entities/booking/model/emailPolicy.ts`:
 
@@ -224,12 +224,12 @@ export function emailJobForTransition(
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm test -- src/entities/booking/model/__tests__/emailPolicy.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/booking/model/emailPolicy.ts src/entities/booking/model/__tests__/emailPolicy.test.ts
@@ -244,7 +244,7 @@ git commit -m "feat(email): transition→email policy pure function"
 - Create: `src/shared/lib/email-job/enqueue.ts`
 - Test: `src/shared/lib/email-job/__tests__/enqueue.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -295,12 +295,12 @@ describe("enqueueEmailJob", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm test -- src/shared/lib/email-job/__tests__/enqueue.test.ts`
 Expected: FAIL ("Cannot find module '../enqueue'").
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 `src/shared/lib/email-job/enqueue.ts`:
 
@@ -340,12 +340,12 @@ export async function enqueueEmailJob(
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm test -- src/shared/lib/email-job/__tests__/enqueue.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/shared/lib/email-job/enqueue.ts src/shared/lib/email-job/__tests__/enqueue.test.ts
@@ -360,7 +360,7 @@ git commit -m "feat(email): idempotent EmailJob enqueue (outbox)"
 - Modify: `src/entities/booking/api/mutations.ts:131-141` (BookingEvent.create 직후)
 - Test: `src/entities/booking/api/__tests__/transitionEmailOutbox.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `transitionStatusTx`가 PAID 전이 시 `enqueueEmailJob`을 호출하고, 비대상 전이엔 호출하지 않음을 검증.
 
@@ -446,12 +446,12 @@ describe("transitionStatusTx 아웃박스 훅", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm test -- src/entities/booking/api/__tests__/transitionEmailOutbox.test.ts`
 Expected: FAIL (enqueueEmailJob 미호출 — 아직 훅 없음).
 
-- [ ] **Step 3: `mutations.ts` 수정**
+- [x] **Step 3: `mutations.ts` 수정**
 
 상단 import 추가:
 
@@ -470,17 +470,17 @@ import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
   }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm test -- src/entities/booking/api/__tests__/transitionEmailOutbox.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: 회귀 확인 (기존 booking 전이 테스트)**
+- [x] **Step 5: 회귀 확인 (기존 booking 전이 테스트)**
 
 Run: `npm test -- src/entities/booking`
 Expected: PASS (기존 transitions/mutations 테스트 무손상).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/entities/booking/api/mutations.ts src/entities/booking/api/__tests__/transitionEmailOutbox.test.ts
@@ -498,12 +498,12 @@ git commit -m "feat(email): wire transactional outbox into transitionStatusTx"
 - Create: `src/shared/email/render.ts`
 - Test: `src/shared/email/__tests__/render.test.ts`
 
-- [ ] **Step 1: React Email 의존성 설치**
+- [x] **Step 1: React Email 의존성 설치**
 
 Run: `npm install @react-email/components @react-email/render`
 Expected: 두 패키지가 `dependencies`에 추가.
 
-- [ ] **Step 2: props 타입 정의**
+- [x] **Step 2: props 타입 정의**
 
 `src/shared/email/templates/types.ts`:
 
@@ -529,7 +529,7 @@ export interface RefundCompletedEmailProps {
 }
 ```
 
-- [ ] **Step 3: 실패 테스트 작성**
+- [x] **Step 3: 실패 테스트 작성**
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -568,12 +568,12 @@ describe("renderEmail", () => {
 });
 ```
 
-- [ ] **Step 4: 실패 확인**
+- [x] **Step 4: 실패 확인**
 
 Run: `npm test -- src/shared/email/__tests__/render.test.ts`
 Expected: FAIL ("Cannot find module '../render'").
 
-- [ ] **Step 5: 템플릿 구현 — BookingConfirmationEmail**
+- [x] **Step 5: 템플릿 구현 — BookingConfirmationEmail**
 
 `src/shared/email/templates/BookingConfirmationEmail.tsx`:
 
@@ -632,7 +632,7 @@ export function BookingConfirmationEmail({
 }
 ```
 
-- [ ] **Step 6: 템플릿 구현 — RefundCompletedEmail**
+- [x] **Step 6: 템플릿 구현 — RefundCompletedEmail**
 
 `src/shared/email/templates/RefundCompletedEmail.tsx`:
 
@@ -683,7 +683,7 @@ export function RefundCompletedEmail({
 }
 ```
 
-- [ ] **Step 7: render 구현**
+- [x] **Step 7: render 구현**
 
 `src/shared/email/render.ts`:
 
@@ -738,12 +738,12 @@ export async function renderEmail<T extends EmailType>(
 }
 ```
 
-- [ ] **Step 8: 통과 확인**
+- [x] **Step 8: 통과 확인**
 
 Run: `npm test -- src/shared/email/__tests__/render.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add package.json package-lock.json src/shared/email/templates src/shared/email/render.ts src/shared/email/__tests__/render.test.ts
@@ -759,7 +759,7 @@ git commit -m "feat(email): React Email templates + renderEmail"
 - Modify: `src/shared/lib/env.ts` (prod 필수화)
 - Test: `src/shared/email/__tests__/provider.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 dev 폴백이 Resend를 호출하지 않고 콘솔 경로로 가는지 검증.
 
@@ -800,12 +800,12 @@ describe("sendEmail dev 폴백", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm test -- src/shared/email/__tests__/provider.test.ts`
 Expected: FAIL ("Cannot find module '../provider'").
 
-- [ ] **Step 3: provider 구현**
+- [x] **Step 3: provider 구현**
 
 `src/shared/email/provider.ts`:
 
@@ -868,12 +868,12 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm test -- src/shared/email/__tests__/provider.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: env prod 필수화**
+- [x] **Step 5: env prod 필수화**
 
 `src/shared/lib/env.ts`의 production superRefine 루프 배열에 `RESEND_API_KEY`, `RESEND_FROM_EMAIL` 추가:
 
@@ -887,12 +887,12 @@ Expected: PASS (1 test).
       ] as const) {
 ```
 
-- [ ] **Step 6: typecheck**
+- [x] **Step 6: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/shared/email/provider.ts src/shared/email/__tests__/provider.test.ts src/shared/lib/env.ts
