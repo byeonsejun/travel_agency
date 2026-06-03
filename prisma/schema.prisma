@@ -299,6 +299,7 @@ model Booking {
   events        BookingEvent[]
   paymentEvents PaymentEvent[]
   refundJobs    RefundJob[]
+  emailJobs     EmailJob[]
   review        Review?
 
   @@index([userId, status])
@@ -515,6 +516,42 @@ model EmbeddingJob {
 
   @@index([status, nextRunAt]) // cron picker: WHERE status='PENDING' AND nextRunAt <= now()
   @@index([productId, status]) // idempotent enqueue: 중복 PENDING 행 검사
+}
+
+enum EmailType {
+  BOOKING_CONFIRMATION // 예약 확정서 + 결제 영수증 (PAID 전이)
+  REFUND_COMPLETED // 환불 처리 완료 안내 (PAID/READY → CANCELED)
+}
+
+enum EmailJobStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+}
+
+// 거래 종료 알림 메일 비동기 큐. EmbeddingJob/RefundJob과 동형
+// (status/attempts/lastError/nextRunAt/@@index). 트랜잭셔널 아웃박스:
+// booking 상태전이 Tx 안에서 적재되어 유실 0. payload 컬럼 없음 —
+// bookingId만으로 워커가 발송 시점에 전체 데이터를 hydrate한다.
+model EmailJob {
+  id         String         @id @default(cuid())
+  type       EmailType
+  // 멱등 enqueue 키. ex) "booking-confirmation:<bookingId>" / "refund-completed:<bookingId>"
+  dedupeKey  String         @unique
+  bookingId  String
+  status     EmailJobStatus @default(PENDING)
+  attempts   Int            @default(0)
+  lastError  String?        @db.Text
+  nextRunAt  DateTime       @default(now()) // 지수 백오프
+  sentTo     String? // 발송 시점 수신 주소 스냅샷 (감사)
+  providerId String? // Resend 메시지 id (감사 + 멱등 추적)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRunAt]) // cron picker
 }
 
 // ─────────────────────────────────────────────────────────────
