@@ -34,7 +34,7 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
     e.preventDefault();
     if (submitDisabled) return;
     startTransition(() => {
-      dispatch({ bookingId, reason: trimmed });
+      dispatch({ bookingId, reason: trimmed, waivePenalty: false });
     });
   }
 
