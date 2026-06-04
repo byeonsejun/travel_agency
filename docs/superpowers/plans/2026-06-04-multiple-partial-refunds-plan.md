@@ -1337,7 +1337,7 @@ git commit -m "feat(payment): refundRetry ledger release + kind-based post-settl
 - Create: `src/features/admin-discretionary-refund/server/actions.ts`
 - Test: `src/features/admin-discretionary-refund/server/__tests__/actions.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성 (Zod 검증 + 권한 게이트)**
+- [x] **Step 1: 실패 테스트 작성 (Zod 검증 + 권한 게이트)**
 
 Create `src/features/admin-discretionary-refund/server/__tests__/actions.test.ts`:
 
@@ -1356,12 +1356,12 @@ describe("DiscretionaryRefundSchema", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- admin-discretionary-refund`
 Expected: FAIL ("Cannot find module ../actions")
 
-- [ ] **Step 3: 구현 — discretionary action**
+- [x] **Step 3: 구현 — discretionary action**
 
 Create `src/features/admin-discretionary-refund/server/actions.ts`:
 
@@ -1389,7 +1389,7 @@ export async function discretionaryRefundAction(input: z.infer<typeof Discretion
 }
 ```
 
-- [ ] **Step 4: 구현 — traveler cancel action**
+- [x] **Step 4: 구현 — traveler cancel action**
 
 Create `src/features/admin-traveler-cancel/server/actions.ts`:
 
@@ -1416,12 +1416,12 @@ export async function travelerCancelAction(input: z.infer<typeof TravelerCancelS
 }
 ```
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 Run: `npm run test -- admin-discretionary-refund && npm run typecheck`
 Expected: PASS, typecheck PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/features/admin-traveler-cancel/ src/features/admin-discretionary-refund/
