@@ -9,6 +9,7 @@ import { reserveSeats, releaseSeats } from "./seatLock";
 import { ForbiddenError, PriceMismatchError } from "./errors";
 import { emailJobForTransition } from "../model/emailPolicy";
 import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
+import { assignPaxTypes } from "../model/paxAssignment";
 
 export async function createBooking(input: CreateBookingInput): Promise<Booking> {
   // R3-1: 입력 검증
@@ -35,6 +36,19 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
     throw new PriceMismatchError(totalPrice, data.expectedTotalPrice);
   }
 
+  // pax 배정 — index를 key로 assignPaxTypes 호출 후 역매핑
+  const assignments = assignPaxTypes({
+    travelers: data.travelers.map((t, i) => ({ key: String(i), birthDate: t.birthDate })),
+    adultCount: data.adultCount,
+    childCount: data.childCount,
+    infantCount: data.infantCount,
+    priceAdult: departure.priceAdult,
+    priceChild: departure.priceChild,
+    priceInfant: departure.priceInfant,
+    totalPrice,
+  });
+  const assignByIndex = new Map(assignments.map((a) => [a.key, a]));
+
   // R1: 좌석 차감 + booking + travelers + event를 단일 트랜잭션
   const totalSeats = data.adultCount + data.childCount; // infant는 좌석 미차감
   return db.$transaction(async (tx) => {
@@ -51,7 +65,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
         status: "RECEIVED",
         notes: data.notes,
         travelers: {
-          create: data.travelers.map((t) => ({
+          create: data.travelers.map((t, i) => ({
             role: t.role ?? "TRAVELER",
             lastNameEn: t.lastNameEn,
             firstNameEn: t.firstNameEn,
@@ -61,6 +75,8 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
             expireDate: t.expireDate,
             phone: t.phone,
             email: t.email,
+            paxType: assignByIndex.get(String(i))!.paxType,
+            unitPrice: assignByIndex.get(String(i))!.unitPrice,
           })),
         },
         terms: {
