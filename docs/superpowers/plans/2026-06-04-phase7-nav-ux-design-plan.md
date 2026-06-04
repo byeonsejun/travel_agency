@@ -43,7 +43,7 @@
 - Create: `src/shared/ui/Skeleton.tsx`
 - Test: `src/shared/ui/__tests__/Skeleton.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { describe, it, expect, afterEach } from "vitest";
@@ -73,12 +73,12 @@ describe("<Skeleton />", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/shared/ui/__tests__/Skeleton.test.tsx`
 Expected: FAIL — `Cannot find module '../Skeleton'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```tsx
 import type { ComponentPropsWithoutRef } from "react";
@@ -97,12 +97,12 @@ export function Skeleton({ className = "", ...rest }: SkeletonProps) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/shared/ui/__tests__/Skeleton.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/shared/ui/Skeleton.tsx src/shared/ui/__tests__/Skeleton.test.tsx
