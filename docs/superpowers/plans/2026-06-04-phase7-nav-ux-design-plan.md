@@ -520,7 +520,7 @@ git commit -m "perf(pdp): stream reviews via Suspense, unblock product body pain
 - Modify: `src/widgets/product-card-list/ui/SortSelect.tsx`
 - Test: `src/widgets/product-card-list/ui/__tests__/SortSelect.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/widgets/product-card-list/ui/__tests__/SortSelect.test.tsx`:
 
@@ -569,14 +569,14 @@ describe("<SortSelect />", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/widgets/product-card-list/ui/__tests__/SortSelect.test.tsx`
 Expected: FAIL — 현재 컴포넌트는 React 이벤트 핸들러라 native `dispatchEvent` 로는 호출이 안 잡힐 수 있음. (만약 통과하면 Step 3 의 펜딩 처리만 추가하고 Step 4 로 진행.)
 
 > NOTE: happy-dom 에서 React onChange 가 native change 이벤트에 바인딩되므로 통상 PASS 한다. 핵심은 펜딩 처리 추가 후에도 이 동작이 보존되는지다.
 
-- [ ] **Step 3: Add useTransition pending feedback**
+- [x] **Step 3: Add useTransition pending feedback**
 
 `src/widgets/product-card-list/ui/SortSelect.tsx` 전체 교체:
 
@@ -632,12 +632,12 @@ export function SortSelect({ current }: SortSelectProps) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/widgets/product-card-list/ui/__tests__/SortSelect.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/widgets/product-card-list/ui/SortSelect.tsx src/widgets/product-card-list/ui/__tests__/SortSelect.test.tsx
