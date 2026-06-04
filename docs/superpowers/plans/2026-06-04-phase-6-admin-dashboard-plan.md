@@ -575,7 +575,7 @@ git commit -m "feat(dashboard): KRW/percent format helpers"
 **Files:**
 - Create: `src/widgets/admin-dashboard/ui/RevenueTrendChart.tsx`
 
-- [ ] **Step 1: 구현**
+- [x] **Step 1: 구현**
 
 `src/widgets/admin-dashboard/ui/RevenueTrendChart.tsx`:
 ```tsx
@@ -637,12 +637,12 @@ export function RevenueTrendChart({ data }: { data: RevenueTrendPoint[] }) {
 }
 ```
 
-- [ ] **Step 2: typecheck**
+- [x] **Step 2: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/RevenueTrendChart.tsx
@@ -658,7 +658,7 @@ git commit -m "feat(dashboard): RevenueTrendChart client leaf (Recharts BarChart
 **Files:**
 - Create: `src/widgets/admin-dashboard/ui/BookingStatusDonut.tsx`
 
-- [ ] **Step 1: 구현**
+- [x] **Step 1: 구현**
 
 `src/widgets/admin-dashboard/ui/BookingStatusDonut.tsx`:
 ```tsx
@@ -720,12 +720,12 @@ export function BookingStatusDonut({ data }: { data: StatusSlice[] }) {
 }
 ```
 
-- [ ] **Step 2: typecheck**
+- [x] **Step 2: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/BookingStatusDonut.tsx
@@ -742,7 +742,7 @@ git commit -m "feat(dashboard): BookingStatusDonut client leaf (Recharts PieChar
 - Create: `src/widgets/admin-dashboard/ui/DashboardKpiCards.tsx`
 - Create: `src/widgets/admin-dashboard/ui/DashboardRangeFilter.tsx`
 
-- [ ] **Step 1: KPI 카드 (server)**
+- [x] **Step 1: KPI 카드 (server)**
 
 `src/widgets/admin-dashboard/ui/DashboardKpiCards.tsx`:
 ```tsx
@@ -822,7 +822,7 @@ export function DashboardKpiCards({
 }
 ```
 
-- [ ] **Step 2: 기간 필터 (server, Link 기반)**
+- [x] **Step 2: 기간 필터 (server, Link 기반)**
 
 `src/widgets/admin-dashboard/ui/DashboardRangeFilter.tsx`:
 ```tsx
@@ -862,12 +862,12 @@ export function DashboardRangeFilter({ active }: { active: RangeKey }) {
 }
 ```
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/DashboardKpiCards.tsx src/widgets/admin-dashboard/ui/DashboardRangeFilter.tsx
@@ -884,7 +884,7 @@ KPI 카드 + 차트 2종을 그리드로 조립하는 server 컴포넌트.
 - Create: `src/widgets/admin-dashboard/ui/AdminDashboard.tsx`
 - Create: `src/widgets/admin-dashboard/index.ts`
 
-- [ ] **Step 1: 조립 컴포넌트**
+- [x] **Step 1: 조립 컴포넌트**
 
 `src/widgets/admin-dashboard/ui/AdminDashboard.tsx`:
 ```tsx
@@ -934,19 +934,19 @@ export function AdminDashboard({
 }
 ```
 
-- [ ] **Step 2: barrel**
+- [x] **Step 2: barrel**
 
 `src/widgets/admin-dashboard/index.ts`:
 ```typescript
 export { AdminDashboard } from "./ui/AdminDashboard";
 ```
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/AdminDashboard.tsx src/widgets/admin-dashboard/index.ts
@@ -962,7 +962,7 @@ git commit -m "feat(dashboard): AdminDashboard widget assembly + barrel"
 **Files:**
 - Create: `src/app/(admin)/admin/dashboard/page.tsx`
 
-- [ ] **Step 1: 페이지 구현**
+- [x] **Step 1: 페이지 구현**
 
 `src/app/(admin)/admin/dashboard/page.tsx`:
 ```tsx
@@ -1021,12 +1021,12 @@ export default async function AdminDashboardPage({
 }
 ```
 
-- [ ] **Step 2: typecheck**
+- [x] **Step 2: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 3: 런타임 증거 — 페이지 렌더**
+- [x] **Step 3: 런타임 증거 — 페이지 렌더**
 
 Run: `npm run dev` (별도 터미널) 후
 ```bash
@@ -1035,7 +1035,7 @@ curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:3000/admin/dashboard?
 Expected: admin 미인증 시 리다이렉트(307/302) 또는 인증 세션이면 200. 500 아님.
 (인증 필요 — admin 매직링크 콘솔 로그인 후 브라우저로 `?range=today/7d/30d/90d/all` 각각 확인.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add "src/app/(admin)/admin/dashboard/page.tsx"
@@ -1053,7 +1053,7 @@ nav 링크 추가 + `/admin` 랜딩 전환 + UserNavIsland href 동기화.
 - Modify: `src/app/(admin)/admin/page.tsx`
 - Modify: `src/features/auth/ui/UserNavIsland.tsx` (경로/내용 먼저 확인)
 
-- [ ] **Step 1: nav 최상단에 "대시보드" 링크 추가**
+- [x] **Step 1: nav 최상단에 "대시보드" 링크 추가**
 
 `src/app/(admin)/admin/layout.tsx` — "예약 관리" Link **앞에** 삽입:
 ```tsx
@@ -1065,7 +1065,7 @@ nav 링크 추가 + `/admin` 랜딩 전환 + UserNavIsland href 동기화.
               </Link>
 ```
 
-- [ ] **Step 2: `/admin` redirect 대상 변경**
+- [x] **Step 2: `/admin` redirect 대상 변경**
 
 `src/app/(admin)/admin/page.tsx`:
 ```tsx
@@ -1077,18 +1077,18 @@ export default function AdminIndexPage() {
 }
 ```
 
-- [ ] **Step 3: UserNavIsland 관리자 링크 href 확인·갱신**
+- [x] **Step 3: UserNavIsland 관리자 링크 href 확인·갱신**
 
 Run: `grep -rn "/admin/products" src/features/auth/ui/UserNavIsland.tsx`
 - 해당 href(`/admin/products`)가 있으면 `/admin/dashboard`로 변경.
 - 파일·해당 라인이 없으면(다른 위치) `grep -rn "admin" src/features/auth/ui/` 로 실제 링크 위치를 찾아 동일 갱신. **이 Step 은 grep 결과에 따라 정확한 파일을 수정한다.**
 
-- [ ] **Step 4: typecheck + lint**
+- [x] **Step 4: typecheck + lint**
 
 Run: `npm run typecheck && npm run lint`
 Expected: PASS.
 
-- [ ] **Step 5: 런타임 증거 — 리다이렉트 체인**
+- [x] **Step 5: 런타임 증거 — 리다이렉트 체인**
 
 Run:
 ```bash
@@ -1096,7 +1096,7 @@ curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" "http://localhost:30
 ```
 Expected: 인증 세션이면 `/admin/dashboard`로, 미인증이면 `/login...`로 리다이렉트.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "src/app/(admin)/admin/layout.tsx" "src/app/(admin)/admin/page.tsx" src/features/auth/ui/UserNavIsland.tsx
@@ -1109,17 +1109,17 @@ git commit -m "feat(dashboard): wire dashboard into admin nav + landing"
 
 **Files:** 없음(검증 전용).
 
-- [ ] **Step 1: 전체 게이트**
+- [x] **Step 1: 전체 게이트** (typecheck clean · 863 tests pass · lint: 기존 CheckoutForm 경고만. UserNavIsland 테스트 href `/admin/dashboard`로 갱신 `510f168` 후속)
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: 3개 모두 PASS. 신규 테스트(parseRange 6 + format 6) 포함 그린.
 
-- [ ] **Step 2: 미체크 박스 잔존 점검 (§4.1)**
+- [x] **Step 2: 미체크 박스 잔존 점검 (§4.1)**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-04-phase-6-admin-dashboard-plan.md`
 Expected: 완료된 Task 범위에 미체크 항목 0 (전 Task 완료 시 출력 없음).
 
-- [ ] **Step 3: 차트 leaf 서버 누출 점검**
+- [x] **Step 3: 차트 leaf 서버 누출 점검** (`use client` = RevenueTrendChart·BookingStatusDonut 2개 한정 · any/ts-ignore 0건)
 
 Run: `grep -rn "use client" src/widgets/admin-dashboard/ui/`
 Expected: `RevenueTrendChart.tsx`·`BookingStatusDonut.tsx` 2개만. KPI/필터/조립/format 은 server.
