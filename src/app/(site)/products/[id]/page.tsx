@@ -1,14 +1,10 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getProductById, getAllPublishedProductIds } from "@/entities/product";
 import { getDeparturesByProduct } from "@/entities/departure";
-import {
-  getProductReviewStats,
-  listReviewsByProduct,
-  getReviewRatingDistribution,
-} from "@/entities/review";
 import { ProductDetail } from "@/widgets/product-detail/ui/ProductDetail";
-import { ReviewStatsBar, RatingDistribution } from "@/widgets/review-list";
-import { ReviewFeed } from "@/features/review-feed";
+import { ProductReviewsSection } from "@/widgets/product-detail/ui/ProductReviewsSection";
+import { ReviewsSkeleton } from "@/widgets/product-detail/ui/ReviewsSkeleton";
 import {
   CompareToggleButton,
   FloatingCompareCart,
@@ -32,14 +28,11 @@ type PageProps = {
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const [product, departures, reviewStats, reviewPage, ratingDist] =
-    await Promise.all([
-      getProductById(id),
-      getDeparturesByProduct(id),
-      getProductReviewStats(id),
-      listReviewsByProduct(id, { limit: 10 }),
-      getReviewRatingDistribution(id),
-    ]);
+  // 본문(상품·출발일)만 우선 await → 즉시 페인트. 리뷰는 아래 Suspense 로 스트리밍.
+  const [product, departures] = await Promise.all([
+    getProductById(id),
+    getDeparturesByProduct(id),
+  ]);
 
   if (product === null) {
     notFound();
@@ -52,18 +45,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
         departures={departures}
         compareButton={<CompareToggleButton productId={id} size="md" />}
         reviewsSection={
-          <div className="space-y-4">
-            <ReviewStatsBar avg={reviewStats.avg} count={reviewStats.count} />
-            <RatingDistribution
-              distribution={ratingDist}
-              total={reviewStats.count}
-            />
-            <ReviewFeed
-              productId={id}
-              initialItems={reviewPage.items}
-              initialCursor={reviewPage.nextCursor}
-            />
-          </div>
+          <Suspense fallback={<ReviewsSkeleton />}>
+            <ProductReviewsSection productId={id} />
+          </Suspense>
         }
       />
       <FloatingCompareCart />

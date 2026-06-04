@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Suspense } from "react";
+import Link from "next/link";
 import { SortSelect } from "./SortSelect";
 
 type Destination = { code: string; label: string; count: number };
