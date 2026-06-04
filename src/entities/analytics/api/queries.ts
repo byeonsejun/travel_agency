@@ -11,6 +11,7 @@ import type {
 } from "../model/types";
 
 export const TAG_DASHBOARD = "analytics:dashboard";
+const CACHE_OPTS: { revalidate: number; tags: string[] } = { revalidate: 60, tags: [TAG_DASHBOARD] };
 
 // $queryRaw 는 SUM 을 bigint(또는 string) 으로 반환할 수 있어 Number() 정규화.
 const num = (v: unknown): number => (v == null ? 0 : Number(v));
@@ -20,7 +21,8 @@ async function _revenue(from: Date, to: Date): Promise<RevenueSummary> {
   const rows = await db.$queryRaw<{ paid: bigint; refunded: bigint }[]>(Prisma.sql`
     SELECT
       COALESCE((SELECT SUM(amount) FROM "Payment"
-                WHERE "paidAt" >= ${from} AND "paidAt" < ${to}), 0) AS paid,
+                WHERE "paidAt" >= ${from} AND "paidAt" < ${to}
+                  AND status IN ('PAID', 'PARTIAL_CANCELED', 'CANCELED')), 0) AS paid,
       COALESCE((SELECT SUM(amount) FROM "RefundJob"
                 WHERE status = 'SUCCEEDED'
                   AND "updatedAt" >= ${from} AND "updatedAt" < ${to}), 0) AS refunded
@@ -71,20 +73,23 @@ async function _occupancy(): Promise<SeatOccupancy> {
 }
 
 // ─── 차트 1: 매출 추이 (일/월 버킷) ─────────────────────────────
+// 주의: date_trunc 와 toISOString 모두 UTC 기준(parseRange today 도 setUTCHours).
+// KST 회계 기준이 필요해지면 date_trunc(unit, "paidAt" AT TIME ZONE 'Asia/Seoul') 로 일괄 전환.
 async function _trend(
   from: Date,
   to: Date,
   bucket: "day" | "month"
 ): Promise<RevenueTrendPoint[]> {
-  const unit = bucket === "month" ? "month" : "day";
+  // 시간 기준: paid=Payment.paidAt(결제 시점), refunded=RefundJob.updatedAt(cron 환불 처리 완료 시각).
+  // 두 기준이 달라 결제와 환불이 서로 다른 버킷/window에 떨어질 수 있음 — 의도된 설계(reporting 관행).
   const rows = await db.$queryRaw<{ date: Date; paid: bigint; refunded: bigint }[]>(Prisma.sql`
     WITH paid AS (
-      SELECT date_trunc(${unit}, "paidAt") AS d, SUM(amount) AS amt
+      SELECT date_trunc(${bucket}, "paidAt") AS d, SUM(amount) AS amt
       FROM "Payment" WHERE "paidAt" >= ${from} AND "paidAt" < ${to}
       GROUP BY 1
     ),
     ref AS (
-      SELECT date_trunc(${unit}, "updatedAt") AS d, SUM(amount) AS amt
+      SELECT date_trunc(${bucket}, "updatedAt") AS d, SUM(amount) AS amt
       FROM "RefundJob"
       WHERE status = 'SUCCEEDED' AND "updatedAt" >= ${from} AND "updatedAt" < ${to}
       GROUP BY 1
@@ -131,40 +136,20 @@ async function _statusDistribution(): Promise<StatusSlice[]> {
 // 주의: unstable_cache 는 Date 인자를 key 로 직렬화하지 못하므로
 // range.key 를 명시 key 파트로 넘긴다(키 충돌·stale 방지).
 export function getRevenueSummary(r: DateRange) {
-  return unstable_cache(() => _revenue(r.from, r.to), ["dash-revenue", r.key], {
-    revalidate: 60,
-    tags: [TAG_DASHBOARD],
-  })();
+  return unstable_cache(() => _revenue(r.from, r.to), ["dash-revenue", r.key], CACHE_OPTS)();
 }
 export function getPenaltyRevenue(r: DateRange) {
-  return unstable_cache(() => _penalty(r.from, r.to), ["dash-penalty", r.key], {
-    revalidate: 60,
-    tags: [TAG_DASHBOARD],
-  })();
+  return unstable_cache(() => _penalty(r.from, r.to), ["dash-penalty", r.key], CACHE_OPTS)();
 }
 export function getCancellationStats(r: DateRange) {
-  return unstable_cache(
-    () => _cancellation(r.from, r.to),
-    ["dash-cancel", r.key],
-    { revalidate: 60, tags: [TAG_DASHBOARD] }
-  )();
+  return unstable_cache(() => _cancellation(r.from, r.to), ["dash-cancel", r.key], CACHE_OPTS)();
 }
 export function getSeatOccupancy() {
-  return unstable_cache(() => _occupancy(), ["dash-occupancy"], {
-    revalidate: 60,
-    tags: [TAG_DASHBOARD],
-  })();
+  return unstable_cache(() => _occupancy(), ["dash-occupancy"], CACHE_OPTS)();
 }
 export function getRevenueTrend(r: DateRange) {
-  return unstable_cache(
-    () => _trend(r.from, r.to, r.bucket),
-    ["dash-trend", r.key],
-    { revalidate: 60, tags: [TAG_DASHBOARD] }
-  )();
+  return unstable_cache(() => _trend(r.from, r.to, r.bucket), ["dash-trend", r.key], CACHE_OPTS)();
 }
 export function getBookingStatusDistribution() {
-  return unstable_cache(() => _statusDistribution(), ["dash-status"], {
-    revalidate: 60,
-    tags: [TAG_DASHBOARD],
-  })();
+  return unstable_cache(() => _statusDistribution(), ["dash-status"], CACHE_OPTS)();
 }
