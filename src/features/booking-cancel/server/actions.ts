@@ -88,6 +88,7 @@ export async function cancelBookingAction(
         bookingId,
         actor: `user:${userId}`,
         reason,
+        applyPenalty: true, // 자가 취소 — 국외여행 표준약관 D-day 위약금 적용
       });
     } else {
       // 결제 전 취소: 단순 booking 전이 (좌석 환원은 transitionStatus 내부에서)

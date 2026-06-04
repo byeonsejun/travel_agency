@@ -12,6 +12,7 @@ import "server-only";
 import {
   REVIEW_PHOTO_BUCKET,
   buildReviewPhotoPath,
+  mimeToExt,
   type AllowedReviewPhotoMime,
 } from "./photoMime";
 import { createServerSupabase } from "./server";
@@ -53,6 +54,39 @@ export async function createReviewPhotoSignedUploadUrl(
   }
 
   return { path: data.path, signedUrl: data.signedUrl, token: data.token };
+}
+
+// admin이 상품 대표 이미지를 직접 업로드할 때 사용하는 단발성 URL 발급.
+// productId 없이 UUID 기반 경로를 사용해 create 모드(ID 미확정)와 edit 모드를 통합.
+export async function createProductHeroSignedUploadUrl(
+  mime: AllowedReviewPhotoMime,
+): Promise<CreateSignedUploadResult & { publicUrl: string }> {
+  const uuid = crypto.randomUUID();
+  const path = `product-hero/${uuid}.${mimeToExt(mime)}`;
+  const supabase = createServerSupabase();
+
+  const { data, error } = await supabase.storage
+    .from(REVIEW_PHOTO_BUCKET)
+    .createSignedUploadUrl(path);
+
+  if (error || !data) {
+    throw new Error(
+      `[supabase] createSignedUploadUrl(hero) failed for ${path}: ${
+        error?.message ?? "unknown"
+      }`,
+    );
+  }
+
+  const { data: urlData } = supabase.storage
+    .from(REVIEW_PHOTO_BUCKET)
+    .getPublicUrl(data.path);
+
+  return {
+    path: data.path,
+    signedUrl: data.signedUrl,
+    token: data.token,
+    publicUrl: urlData.publicUrl,
+  };
 }
 
 // 업로드 완료 후 PDP·마이페이지에 노출할 때 사용. 버킷이 public read이므로

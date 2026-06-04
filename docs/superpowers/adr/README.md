@@ -73,6 +73,14 @@
 | 0023  | [Rate Limit Fail-Open 강등 정책 (Upstash 부재/장애 시)](./0023-rate-limit-fail-open-policy.md) | Accepted | 2026-05-28   |
 | 0024  | [SENTRY_AUTH_TOKEN runtime 차단 invariant — Vercel 예외 분기](./0024-sentry-auth-token-vercel-runtime-relaxation.md) | Accepted | 2026-05-29   |
 | 0025  | [CSP nonce 경로별 분기 — ISR 캐시-nonce 미스매치 차단](./0025-csp-route-scoped-nonce.md) | Accepted | 2026-05-29   |
+| 0026  | [임베딩 파이프라인 — 비동기 EmbeddingJob 큐 + contentHash 멱등 + Cron Worker](./0026-async-embedding-job-pipeline.md) | Accepted | 2026-06-01   |
+| 0027  | [Departure CMS — 취소 cascade 범위 제외 + 가격 스냅샷 무결성 + admin 리터럴 CAS](./0027-departure-cancel-scope-and-literal-cas.md) | Accepted | 2026-06-02   |
+| 0028  | [출발 취소 Cascade — 부모 배치 오케스트레이션 + 부분 실패 복구](./0028-departure-cancel-cascade-batch.md) | Accepted | 2026-06-02   |
+| 0029  | [리뷰 시스템 경계 — client-safe URL 빌더 + 모더레이션 무효화 SSOT 재사용](./0029-review-system-boundaries.md) | Accepted | 2026-06-03   |
+| 0030  | [트랜잭셔널 아웃박스 단일 훅 + Resend 멱등키 effectively-once](./0030-email-outbox-and-idempotency.md) | Accepted | 2026-06-03   |
+| 0031  | [위약금 동결 스냅샷 + 부분취소 상태 모델 (Phase 5-B)](./0031-penalty-snapshot-partial-cancel.md) | Accepted | 2026-06-04   |
+| 0032  | [대시보드 집계 `entities/analytics` 통합 read-model 슬라이스 (Phase 6)](./0032-analytics-readmodel-slice.md) | Accepted | 2026-06-04   |
+| 0033  | [Recharts 채택 + `'use client'` 리프 격리 (Phase 6)](./0033-recharts-chart-library.md) | Accepted | 2026-06-04   |
 
 ## 향후 후보 (작성 대기)
 

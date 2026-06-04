@@ -347,8 +347,12 @@ describe("refund.ts — 관측성 훅", () => {
     errorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
     warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
 
-    // 기본: PAID 상태 정상 환불 셋업
-    mocks.db.booking.findUnique.mockResolvedValue({ id: BOOKING_ID, status: "PAID" });
+    // 기본: PAID 상태 정상 환불 셋업 (departure 포함 — refundBooking select에 departure 추가됨)
+    mocks.db.booking.findUnique.mockResolvedValue({
+      id: BOOKING_ID,
+      status: "PAID",
+      departure: { departureDate: new Date(Date.now() + 40 * 86_400_000) },
+    });
     mocks.db.payment.findFirst.mockResolvedValue(mockPaidPayment);
     mocks.tx.refundJob.findFirst.mockResolvedValue(null);
     mocks.tx.refundJob.create.mockResolvedValue(mockRefundJob);
@@ -367,7 +371,7 @@ describe("refund.ts — 관측성 훅", () => {
     mocks.db.booking.findUnique.mockResolvedValue({ id: BOOKING_ID, status: "RECEIVED" });
 
     await expect(
-      refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test" })
+      refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test", applyPenalty: false })
     ).rejects.toMatchObject({ code: "BOOKING_NOT_REFUNDABLE" });
 
     const { counters } = metrics.snapshot();
@@ -378,7 +382,7 @@ describe("refund.ts — 관측성 훅", () => {
     mocks.tossClient.cancel.mockRejectedValue(new Error("PG timeout"));
 
     await expect(
-      refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test" })
+      refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test", applyPenalty: false })
     ).rejects.toMatchObject({ code: "REFUND_DEFERRED" });
 
     const errCall = errorSpy.mock.calls.find((c) => c[0] === "payment.refund.pg_cancel_failed");
@@ -409,7 +413,7 @@ describe("refund.ts — 관측성 훅", () => {
     mocks.tx.refundJob.update.mockResolvedValue({});
     mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_r_1" });
 
-    await refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test" });
+    await refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test", applyPenalty: false });
 
     expect(metrics.snapshot().counters["payment.refund.success"]).toBe(1);
   });

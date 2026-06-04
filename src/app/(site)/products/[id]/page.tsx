@@ -4,9 +4,11 @@ import { getDeparturesByProduct } from "@/entities/departure";
 import {
   getProductReviewStats,
   listReviewsByProduct,
+  getReviewRatingDistribution,
 } from "@/entities/review";
 import { ProductDetail } from "@/widgets/product-detail/ui/ProductDetail";
-import { ReviewList, ReviewStatsBar } from "@/widgets/review-list";
+import { ReviewStatsBar, RatingDistribution } from "@/widgets/review-list";
+import { ReviewFeed } from "@/features/review-feed";
 import {
   CompareToggleButton,
   FloatingCompareCart,
@@ -30,12 +32,14 @@ type PageProps = {
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const [product, departures, reviewStats, reviewPage] = await Promise.all([
-    getProductById(id),
-    getDeparturesByProduct(id),
-    getProductReviewStats(id),
-    listReviewsByProduct(id, { limit: 10 }),
-  ]);
+  const [product, departures, reviewStats, reviewPage, ratingDist] =
+    await Promise.all([
+      getProductById(id),
+      getDeparturesByProduct(id),
+      getProductReviewStats(id),
+      listReviewsByProduct(id, { limit: 10 }),
+      getReviewRatingDistribution(id),
+    ]);
 
   if (product === null) {
     notFound();
@@ -50,7 +54,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
         reviewsSection={
           <div className="space-y-4">
             <ReviewStatsBar avg={reviewStats.avg} count={reviewStats.count} />
-            <ReviewList reviews={reviewPage.items} />
+            <RatingDistribution
+              distribution={ratingDist}
+              total={reviewStats.count}
+            />
+            <ReviewFeed
+              productId={id}
+              initialItems={reviewPage.items}
+              initialCursor={reviewPage.nextCursor}
+            />
           </div>
         }
       />

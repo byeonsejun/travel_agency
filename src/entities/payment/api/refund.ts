@@ -17,11 +17,14 @@ import { tossClient } from "@/shared/lib/toss";
 import { transitionStatus } from "@/entities/booking";
 import { logger, metrics, captureException } from "@/shared/lib/observability";
 import { PaymentError } from "./errors";
+import { computePenalty } from "../model/penaltyPolicy";
 
 interface RefundInput {
   bookingId: string;
   actor: string;
   reason?: string;
+  /** true = 표준약관 위약금 계산 후 부분 환불. false = 전액 환불 (admin 면제·cascade 경로). */
+  applyPenalty: boolean;
 }
 
 // ── 지수 백오프: 30s / 5m / 30m / 2h / 6h ────────────────────────
@@ -40,11 +43,15 @@ export function backoff(attempts: number): Date {
 
 const REFUNDABLE_STATUSES: BookingStatus[] = ["PAID", "READY"];
 
-export async function refundBooking({ bookingId, actor, reason }: RefundInput): Promise<void> {
+export async function refundBooking({ bookingId, actor, reason, applyPenalty }: RefundInput): Promise<void> {
   // ── 사전 검증 1: booking 조회 + 환불 가능 상태 확인 ──────────
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    select: { id: true, status: true },
+    select: {
+      id: true,
+      status: true,
+      departure: { select: { departureDate: true } },
+    },
   });
 
   if (!booking) throw new PaymentError("BOOKING_NOT_FOUND");
@@ -64,6 +71,16 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
     metrics.incr("payment.refund.rejected", { reason: "PAID_PAYMENT_NOT_FOUND" });
     throw new PaymentError("PAID_PAYMENT_NOT_FOUND");
   }
+
+  // ── 위약금 동결: applyPenalty면 표준약관 계산, 아니면 전액 환불 (spec §5.1) ──
+  // 취소 요청 시점에 단 한 번 계산 후 RefundJob에 스냅샷 저장 — 이후 재계산 금지.
+  const { penaltyAmount, refundAmount } = applyPenalty
+    ? computePenalty({
+        baseAmount: paidPayment.amount,
+        departureDate: booking.departure.departureDate,
+        now: new Date(),
+      })
+    : { penaltyAmount: 0, refundAmount: paidPayment.amount };
 
   // ── Phase 1: RefundJob 중복 검사 + IN_PROGRESS enqueue (DB Tx) ─
   // PENDING/IN_PROGRESS/SUCCEEDED 중 하나라도 있으면 이중 환불 차단
@@ -87,7 +104,8 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
       data: {
         bookingId,
         paymentId: paidPayment.id,
-        amount: paidPayment.amount,
+        amount: refundAmount,       // 위약금 차감 후 실제 환불액
+        penaltyAmount,              // 취소 시점 동결된 위약금 스냅샷
         reason: reason ?? null,
         // actor를 보존해서 worker가 booking 전이 시 user/agency를 정확히 분기.
         actor,
@@ -102,7 +120,7 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
     await tossClient.cancel({
       paymentKey: paidPayment.tossPaymentKey,
       cancelReason: reason ?? "사용자 환불 요청",
-      cancelAmount: paidPayment.amount,
+      cancelAmount: refundAmount,   // 위약금 차감 후 환불액 (전액 환불 시 paidPayment.amount 동일)
     });
   } catch (cancelErr) {
     // PG cancel 실패 → RefundJob PENDING 재적재 (지수 백오프)
@@ -122,11 +140,15 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
     throw new PaymentError("REFUND_DEFERRED", { cause: String(cancelErr) });
   }
 
-  // ── Phase 3: Payment CANCELED + RefundJob SUCCEEDED + PaymentEvent ─
+  // ── Phase 3: Payment CANCELED/PARTIAL_CANCELED + RefundJob SUCCEEDED + PaymentEvent ─
   await db.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: paidPayment.id },
-      data: { status: "CANCELED", canceledAt: new Date() },
+      data: {
+        // 위약금 > 0이면 부분 취소(PARTIAL_CANCELED), 아니면 전액 취소(CANCELED)
+        status: penaltyAmount > 0 ? "PARTIAL_CANCELED" : "CANCELED",
+        canceledAt: new Date(),
+      },
     });
 
     await tx.refundJob.update({
@@ -144,6 +166,10 @@ export async function refundBooking({ bookingId, actor, reason }: RefundInput): 
           bookingId,
           reason: reason ?? null,
           actor,
+          // 감사 추적: 위약금 산정 근거 3-tuple 보존 (spec §5.2)
+          baseAmount: paidPayment.amount,
+          penaltyAmount,
+          refundAmount,
         } as unknown as Prisma.InputJsonValue,
         result: "PROCESSED",
       },

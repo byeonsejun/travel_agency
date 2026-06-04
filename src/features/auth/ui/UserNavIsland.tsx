@@ -9,6 +9,7 @@ type SessionUser = {
   id?: string;
   name?: string | null;
   email?: string | null;
+  role?: string | null;
 };
 
 type SessionResponse = { user?: SessionUser } | null;
@@ -109,6 +110,14 @@ export function UserNavIsland() {
   return (
     <>
       <span className="text-sm text-gray-600">{user.name ?? user.email}</span>
+      {user.role === "ADMIN" && (
+        <Link
+          href="/admin/dashboard"
+          className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
+        >
+          관리자
+        </Link>
+      )}
       <Link
         href="/mypage"
         className="relative rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"

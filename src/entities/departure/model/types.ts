@@ -47,3 +47,8 @@ export type DepartureLiveSeat = {
   remainingSeats: number;
   capacity: number;
 };
+
+// admin CMS 목록·편집용 — 전 status(과거·CANCELED 포함) 노출.
+export type AdminDepartureRow = Departure & {
+  remainingSeats: number;
+};

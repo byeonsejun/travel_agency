@@ -5,6 +5,7 @@ export type {
   DepartureSummary,
   DepartureCheckoutInfo,
   DepartureLiveSeat,
+  AdminDepartureRow,
 } from "./model/types";
 
 export {
@@ -17,10 +18,31 @@ export { departureSchema } from "./model/schema";
 export type { DepartureFormData } from "./model/schema";
 
 export {
+  assertDepartureTransition,
+  allowedNextStatuses,
+  requiresEmptySeats,
+  ALLOWED_DEPARTURE_TRANSITIONS,
+  InvalidDepartureTransitionError,
+} from "./model/transitions";
+
+export {
+  createDeparture,
+  updateDeparture,
+  transitionDepartureStatus,
+  CapacityBelowBookedError,
+  DepartureDateConflictError,
+  DepartureHasBookingsError,
+  StaleDepartureStatusError,
+  DepartureNotFoundError,
+} from "./api/mutations";
+
+export {
   getDeparturesByProduct,
   getDepartureById,
   listDepartureSeats,
   tagDeparturesByProduct,
+  listAdminDepartures,
+  getAdminDepartureById,
 } from "./api/queries";
 export { computeRemainingSeats } from "./api/remainingSeats";
 

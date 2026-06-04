@@ -17,6 +17,7 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [waivePenalty, setWaivePenalty] = useState(false);
   const [state, dispatch, isPending] = useActionState(
     adminCancelBookingAction,
     null
@@ -34,7 +35,7 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
     e.preventDefault();
     if (submitDisabled) return;
     startTransition(() => {
-      dispatch({ bookingId, reason: trimmed });
+      dispatch({ bookingId, reason: trimmed, waivePenalty });
     });
   }
 
@@ -104,6 +105,17 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
                   {reason.length}/200
                 </p>
               </div>
+
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={waivePenalty}
+                  onChange={(e) => setWaivePenalty(e.target.checked)}
+                  disabled={isPending}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                위약금 면제 (여행사 귀책 취소)
+              </label>
 
               {state?.type === "error" && (
                 <p

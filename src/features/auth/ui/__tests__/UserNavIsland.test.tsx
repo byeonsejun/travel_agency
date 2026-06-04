@@ -222,6 +222,49 @@ describe("<UserNavIsland />", () => {
     expect(badge2?.textContent).toBe("7");
   });
 
+  // ── (i) ADMIN role → '관리자' 링크(/admin/dashboard) 노출 ───────────
+  it("(i) role ADMIN → '관리자' 링크(/admin/dashboard) 렌더", async () => {
+    vi.stubGlobal(
+      "fetch",
+      makeFetch({
+        session: {
+          user: { id: "a1", name: "관리자", email: "a@e.com", role: "ADMIN" },
+        },
+        count: 0,
+      }),
+    );
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<UserNavIsland />);
+    });
+
+    const adminLink = container.querySelector('a[href="/admin/dashboard"]');
+    expect(adminLink).not.toBeNull();
+    expect(adminLink?.textContent).toContain("관리자");
+  });
+
+  // ── (j) 비-ADMIN(CUSTOMER) → '관리자' 링크 미노출 ──────────────────
+  it("(j) role CUSTOMER → '관리자' 링크 미렌더", async () => {
+    vi.stubGlobal(
+      "fetch",
+      makeFetch({
+        session: {
+          user: { id: "u1", name: "Hong", email: "h@e.com", role: "CUSTOMER" },
+        },
+        count: 0,
+      }),
+    );
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<UserNavIsland />);
+    });
+
+    const adminLink = container.querySelector('a[href="/admin/dashboard"]');
+    expect(adminLink).toBeNull();
+  });
+
   // ── (h) unmount 후 wishlist-changed 이벤트는 무시 (listener cleanup) ─
   it("(h) unmount 후 wishlist-changed 이벤트는 fetch 재호출하지 않음", async () => {
     const fetchMock = vi.fn((url: string) => {

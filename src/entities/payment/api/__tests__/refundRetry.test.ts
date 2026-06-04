@@ -59,10 +59,13 @@ function setupClaimFails() {
 }
 
 function mockJobLoad(opts: {
-  paymentStatus?: "PAID" | "CANCELED";
+  paymentStatus?: "PAID" | "CANCELED" | "PARTIAL_CANCELED";
   tossPaymentKey?: string | null;
   actor?: string | null;
   attempts?: number;
+  amount?: number;
+  penaltyAmount?: number;
+  paymentAmount?: number;
 }) {
   // mockResolvedValue(not Once)로 덮어쓰기 — clearAllMocks가 mockResolvedValue
   // 큐를 비우지 않아 테스트 간 leak이 발생하기 때문.
@@ -70,11 +73,14 @@ function mockJobLoad(opts: {
   const actor = opts.actor === undefined ? "user:cluser0001" : opts.actor;
   const tossPaymentKey =
     opts.tossPaymentKey === undefined ? TOSS_PAYMENT_KEY : opts.tossPaymentKey;
+  const jobAmount = opts.amount ?? AMOUNT;
+  const paymentAmount = opts.paymentAmount ?? AMOUNT;
   mocks.db.refundJob.findUniqueOrThrow.mockResolvedValue({
     id: JOB_ID,
     bookingId: BOOKING_ID,
     paymentId: PAYMENT_ID,
-    amount: AMOUNT,
+    amount: jobAmount,
+    penaltyAmount: opts.penaltyAmount ?? 0,
     reason: "test refund",
     actor,
     status: "IN_PROGRESS",
@@ -82,7 +88,7 @@ function mockJobLoad(opts: {
     payment: {
       id: PAYMENT_ID,
       tossPaymentKey,
-      amount: AMOUNT,
+      amount: paymentAmount,
       status: opts.paymentStatus ?? "PAID",
     },
   });
@@ -256,5 +262,94 @@ describe("retryRefundJob", () => {
     expect(result.type).toBe("succeeded");
     // PaymentEvent까지 모두 append됨
     expect(mocks.tx.paymentEvent.create).toHaveBeenCalled();
+  });
+});
+
+describe("retryRefundJob — 부분 환불 스냅샷", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  // ── Case A: 위약금 있는 부분 환불 → cancelAmount=job.amount, Payment=PARTIAL_CANCELED ─
+  it("Case A: penaltyAmount>0이면 job.amount로 PG 취소 + Payment PARTIAL_CANCELED", async () => {
+    setupClaimSucceeds();
+    // Payment 원금 1_000_000, 환불금 700_000, 위약금 300_000
+    mockJobLoad({
+      paymentStatus: "PAID",
+      amount: 700_000,
+      penaltyAmount: 300_000,
+      paymentAmount: 1_000_000,
+    });
+    mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
+    mocks.transitionStatus.mockResolvedValue({} as never);
+
+    const result = await retryRefundJob(JOB_ID);
+
+    expect(result).toEqual({ type: "succeeded", jobId: JOB_ID });
+    // PG 취소 금액은 job.amount(700_000) — payment.amount(1_000_000)가 아님
+    expect(mocks.tossClient.cancel).toHaveBeenCalledWith({
+      paymentKey: TOSS_PAYMENT_KEY,
+      cancelReason: "test refund",
+      cancelAmount: 700_000,
+    });
+    // Payment 상태는 PARTIAL_CANCELED (위약금 존재)
+    expect(mocks.tx.payment.update).toHaveBeenCalledWith({
+      where: { id: PAYMENT_ID },
+      data: expect.objectContaining({ status: "PARTIAL_CANCELED" }),
+    });
+    // PaymentEvent audit fields 포함 확인
+    expect(mocks.tx.paymentEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        payload: expect.objectContaining({
+          penaltyAmount: 300_000,
+          refundAmount: 700_000,
+        }),
+      }),
+    });
+  });
+
+  // ── Case B: 위약금 없는 전액 환불 → Payment=CANCELED ─────────────
+  it("Case B: penaltyAmount=0이면 Payment CANCELED (전액 환불 / cascade 경로)", async () => {
+    setupClaimSucceeds();
+    mockJobLoad({
+      paymentStatus: "PAID",
+      amount: 500_000,
+      penaltyAmount: 0,
+      paymentAmount: 500_000,
+    });
+    mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
+    mocks.transitionStatus.mockResolvedValue({} as never);
+
+    const result = await retryRefundJob(JOB_ID);
+
+    expect(result).toEqual({ type: "succeeded", jobId: JOB_ID });
+    expect(mocks.tossClient.cancel).toHaveBeenCalledWith(
+      expect.objectContaining({ cancelAmount: 500_000 })
+    );
+    expect(mocks.tx.payment.update).toHaveBeenCalledWith({
+      where: { id: PAYMENT_ID },
+      data: expect.objectContaining({ status: "CANCELED" }),
+    });
+  });
+
+  // ── Case C: Payment가 이미 PARTIAL_CANCELED → skipped, PG 호출 0회 ─
+  it("Case C: Payment가 이미 PARTIAL_CANCELED면 job SUCCEEDED 정리 + PG 호출 0회", async () => {
+    setupClaimSucceeds();
+    mockJobLoad({
+      paymentStatus: "PARTIAL_CANCELED",
+      amount: 700_000,
+      penaltyAmount: 300_000,
+      paymentAmount: 1_000_000,
+    });
+
+    const result = await retryRefundJob(JOB_ID);
+
+    expect(result.type).toBe("skipped");
+    if (result.type === "skipped") {
+      expect(result.reason).toBe("payment_already_canceled");
+    }
+    expect(mocks.tossClient.cancel).not.toHaveBeenCalled();
+    expect(mocks.db.refundJob.update).toHaveBeenCalledWith({
+      where: { id: JOB_ID },
+      data: expect.objectContaining({ status: "SUCCEEDED" }),
+    });
   });
 });

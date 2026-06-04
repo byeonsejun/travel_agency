@@ -1,4 +1,4 @@
-import type { Booking } from "@prisma/client";
+import type { Booking, Prisma } from "@prisma/client";
 import { db } from "@/shared/lib/db";
 import { CreateBookingSchema } from "../model/schemas";
 import type { CreateBookingInput } from "../model/schemas";
@@ -7,6 +7,8 @@ import type { BookingStatus } from "@prisma/client";
 import { computeTotalPrice } from "./pricing";
 import { reserveSeats, releaseSeats } from "./seatLock";
 import { ForbiddenError, PriceMismatchError } from "./errors";
+import { emailJobForTransition } from "../model/emailPolicy";
+import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
 
 export async function createBooking(input: CreateBookingInput): Promise<Booking> {
   // R3-1: 입력 검증
@@ -92,51 +94,81 @@ interface TransitionStatusInput {
   reason?: string;
 }
 
-export async function transitionStatus({
-  bookingId,
-  to,
-  actor,
-  reason,
-}: TransitionStatusInput): Promise<Booking> {
-  return db.$transaction(async (tx) => {
-    const current = await tx.booking.findUniqueOrThrow({
-      where: { id: bookingId },
-    });
+/**
+ * tx 수용 코어 — 외부 트랜잭션(배치 fan-out 등)에 합류 가능. [ADR-0028]
+ * Prisma 인터랙티브 트랜잭션은 중첩 불가이므로, 배치 단일 tx 안에서 booking
+ * 전이를 수행하려면 자체 $transaction을 여는 transitionStatus 대신 이 코어를 쓴다.
+ */
+export async function transitionStatusTx(
+  tx: Prisma.TransactionClient,
+  { bookingId, to, actor, reason }: TransitionStatusInput
+): Promise<Booking> {
+  const current = await tx.booking.findUniqueOrThrow({
+    where: { id: bookingId },
+  });
 
-    // R5: 화이트리스트 검증 — 직접 할당 금지
-    assertTransition(current.status, to);
+  // R5: 화이트리스트 검증 — 직접 할당 금지
+  assertTransition(current.status, to);
 
-    // R7: 취소 전이 시 좌석 환원 (보상 트랜잭션)
-    if (shouldReturnSeats(current.status, to)) {
-      await releaseSeats(
-        tx,
-        current.departureId,
-        current.adultCount + current.childCount
-      );
-    }
+  // R7: 취소 전이 시 좌석 환원 (보상 트랜잭션)
+  if (shouldReturnSeats(current.status, to)) {
+    await releaseSeats(
+      tx,
+      current.departureId,
+      current.adultCount + current.childCount
+    );
+  }
 
-    const cancelData =
-      to === "CANCELED_BY_USER" || to === "CANCELED_BY_AGENCY"
-        ? { canceledAt: new Date(), cancelReason: reason ?? null }
-        : {};
+  const cancelData =
+    to === "CANCELED_BY_USER" || to === "CANCELED_BY_AGENCY"
+      ? { canceledAt: new Date(), cancelReason: reason ?? null }
+      : {};
 
-    const updated = await tx.booking.update({
-      where: { id: bookingId },
-      data: { status: to, ...cancelData },
-    });
+  const updated = await tx.booking.update({
+    where: { id: bookingId },
+    data: { status: to, ...cancelData },
+  });
 
-    // R8: BookingEvent append
-    await tx.bookingEvent.create({
-      data: {
-        bookingId,
-        fromState: current.status,
-        toState: to,
-        actor,
-        reason: reason ?? null,
-      },
-    });
+  // R8: BookingEvent append
+  await tx.bookingEvent.create({
+    data: {
+      bookingId,
+      fromState: current.status,
+      toState: to,
+      actor,
+      reason: reason ?? null,
+    },
+  });
 
-    return updated;
+  // 트랜잭셔널 아웃박스: 거래 종료 메일을 같은 Tx에 원자적으로 적재 (유실 0).
+  const emailDescriptor = emailJobForTransition(current.status, to, bookingId);
+  if (emailDescriptor) {
+    await enqueueEmailJob(tx, { ...emailDescriptor, bookingId });
+  }
+
+  return updated;
+}
+
+// 자체 트랜잭션 래퍼 — 단건 전이 기존 호출부 동작 불변(DRY).
+export async function transitionStatus(
+  input: TransitionStatusInput
+): Promise<Booking> {
+  return db.$transaction((tx) => transitionStatusTx(tx, input));
+}
+
+/**
+ * 배치 fan-out용 — 미결제 예약을 외부 tx 안에서 즉시 CANCELED_BY_AGENCY 전이.
+ * actor는 전체 문자열("admin:<id>")을 그대로 받는다(오케스트레이터가 구성).
+ */
+export async function cancelBookingByAgencyTx(
+  tx: Prisma.TransactionClient,
+  { bookingId, actor, reason }: { bookingId: string; actor: string; reason?: string }
+): Promise<Booking> {
+  return transitionStatusTx(tx, {
+    bookingId,
+    to: "CANCELED_BY_AGENCY",
+    actor,
+    reason,
   });
 }
 

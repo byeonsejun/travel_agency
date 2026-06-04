@@ -154,6 +154,7 @@ describe("cancelBookingAction", () => {
       bookingId: BOOKING_ID,
       actor: `user:${USER_ID}`,
       reason: "개인 사정으로 인한 취소",
+      applyPenalty: true,
     });
     expect(mocks.cancelBookingByUser).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/mypage");

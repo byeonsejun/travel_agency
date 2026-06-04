@@ -123,7 +123,7 @@ async function snapshot(bookingId: string) {
   });
   const jobs = await db.refundJob.findMany({
     where: { bookingId },
-    select: { id: true, status: true, amount: true, nextRunAt: true, attempts: true },
+    select: { id: true, status: true, amount: true, penaltyAmount: true, nextRunAt: true, attempts: true },
   });
   return { booking, payments, events, jobs };
 }
@@ -404,7 +404,7 @@ async function scenarioRefundSuccess() {
 
   log("refund-success.before", { ...(await snapshot(bookingId)), bookedSeats: depBefore?.bookedSeats });
 
-  await refundBooking({ bookingId, actor: `user:${userId}`, reason: "evidence test refund" });
+  await refundBooking({ bookingId, actor: `user:${userId}`, reason: "evidence test refund", applyPenalty: false });
 
   const depAfter = await db.departure.findUnique({
     where: { id: depBefore?.id ?? "" },
@@ -447,7 +447,7 @@ async function scenarioRefundPgFailureEnqueuesJob() {
 
   try {
     // mock 서버가 cancel에 400을 반환하면 RefundJob이 enqueue됨
-    await refundBooking({ bookingId, actor: `user:${userId}`, reason: "evidence fail test" });
+    await refundBooking({ bookingId, actor: `user:${userId}`, reason: "evidence fail test", applyPenalty: false });
     log("refund-pg-failure-enqueues-job.result", {
       UNEXPECTED: "refund succeeded — mock should be in fail mode",
     });
@@ -467,6 +467,68 @@ async function scenarioRefundPgFailureEnqueuesJob() {
   });
 }
 
+/** refund-partial: applyPenalty=true + 출발 임박(D≈3) → 부분환불(PARTIAL_CANCELED) + 위약금 30% 스냅샷
+ *  mock-toss-server.ts를 MOCK_TOSS_SCENARIO=success로 실행해야 함.
+ *  출발일을 D-3으로 임시 변경(국외여행 표준약관 30% 구간 유도) 후 finally에서 원복. */
+async function scenarioRefundPartial() {
+  const { userId, bookingId, amount } = await freshDepartureConfirmedBooking();
+  const orderId = buildOrderId(bookingId, 1);
+  const paymentKey = `ev_refund_partial_${Date.now()}`;
+
+  await confirmPayment({ userId, paymentKey, orderId, amount });
+
+  const dep = await db.departure.findFirst({
+    where: { bookings: { some: { id: bookingId } } },
+    select: { id: true, departureDate: true },
+  });
+  if (!dep) throw new Error("departure not found for partial-refund evidence");
+
+  const originalDate = dep.departureDate;
+  const near = new Date();
+  near.setUTCHours(0, 0, 0, 0);
+  near.setUTCDate(near.getUTCDate() + 3); // D-3 → 30% 위약금 구간
+
+  const expectedPenalty = Math.floor(amount * 0.3);
+  const expectedRefund = amount - expectedPenalty;
+
+  try {
+    await db.departure.update({ where: { id: dep.id }, data: { departureDate: near } });
+
+    log("refund-partial.before", {
+      ...(await snapshot(bookingId)),
+      departureDate: near.toISOString(),
+      amount,
+    });
+
+    await refundBooking({
+      bookingId,
+      actor: `user:${userId}`,
+      reason: "evidence partial refund",
+      applyPenalty: true,
+    });
+
+    const snap = await snapshot(bookingId);
+    const job = snap.jobs[0];
+    const payment = snap.payments[0];
+
+    log("refund-partial.after", snap);
+    log("refund-partial.result", {
+      expectedPenalty,
+      expectedRefund,
+      jobAmount: job?.amount,
+      jobPenalty: job?.penaltyAmount,
+      paymentStatus: payment?.status,
+      pass:
+        payment?.status === "PARTIAL_CANCELED" &&
+        job?.penaltyAmount === expectedPenalty &&
+        job?.amount === expectedRefund,
+    });
+  } finally {
+    // 공유 시드 departure 원복 (다른 시나리오/테스트 오염 방지)
+    await db.departure.update({ where: { id: dep.id }, data: { departureDate: originalDate } });
+  }
+}
+
 // ── 진입점 ──────────────────────────────────────────────────────────────────────
 
 const SCENARIOS: Record<string, () => Promise<void>> = {
@@ -481,6 +543,7 @@ const SCENARIOS: Record<string, () => Promise<void>> = {
   "webhook-unknown-order": scenarioWebhookUnknownOrder,
   "webhook-signed-end-to-end": scenarioWebhookSignedEndToEnd,
   "refund-success": scenarioRefundSuccess,
+  "refund-partial": scenarioRefundPartial,
   "refund-pg-failure-enqueues-job": scenarioRefundPgFailureEnqueuesJob,
 };
 

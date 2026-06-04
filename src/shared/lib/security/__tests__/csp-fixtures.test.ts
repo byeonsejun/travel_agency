@@ -13,13 +13,14 @@ describe("CSP directive 카탈로그 회귀 가드", () => {
     expect(out.value).toMatch(/connect-src[^;]*https:\/\/\*\.ingest\.sentry\.io/);
   });
 
-  it("Toss 결제 위젯 iframe 이 frame-src 에 포함", () => {
-    expect(out.value).toMatch(/frame-src[^;]*https:\/\/js\.tosspayments\.com/);
+  it("Toss 결제 iframe(payment-gateway-sandbox 등)이 frame-src 에 포함", () => {
+    // 와일드카드로 통일 — js.tosspayments.com(SDK) + payment-gateway-sandbox.tosspayments.com(iframe)
+    expect(out.value).toMatch(/frame-src[^;]*https:\/\/\*\.tosspayments\.com/);
   });
 
   it("Toss API 가 form-action + connect-src 에 포함", () => {
-    expect(out.value).toMatch(/connect-src[^;]*https:\/\/api\.tosspayments\.com/);
-    expect(out.value).toMatch(/form-action[^;]*https:\/\/api\.tosspayments\.com/);
+    expect(out.value).toMatch(/connect-src[^;]*https:\/\/\*\.tosspayments\.com/);
+    expect(out.value).toMatch(/form-action[^;]*https:\/\/\*\.tosspayments\.com/);
   });
 
   it("frame-ancestors 'none' 으로 Clickjacking 차단", () => {

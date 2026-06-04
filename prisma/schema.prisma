@@ -135,6 +135,7 @@ model Product {
   embedding     ProductEmbedding?
   wishlists     Wishlist[]
   reviews       Review[]
+  embeddingJobs EmbeddingJob[]
 
   @@index([status, destinationCode])
 }
@@ -218,6 +219,7 @@ model ProductEmbedding {
   productId    String                      @id
   vector       Unsupported("vector(1536)")
   modelVersion String // "claude-embed-v1" 등 — 모델 교체 시 일괄 재색인 키
+  contentHash  String? // 마지막으로 임베딩된 콘텐츠 해시 (재인덱싱 판단용, 기존 row 호환을 위해 nullable)
   updatedAt    DateTime                    @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -250,8 +252,9 @@ model Departure {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  product  Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  product       Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  bookings      Booking[]
+  cancellations DepartureCancellation[]
 
   @@unique([productId, departureDate])
   @@index([departureDate, status])
@@ -296,6 +299,7 @@ model Booking {
   events        BookingEvent[]
   paymentEvents PaymentEvent[]
   refundJobs    RefundJob[]
+  emailJobs     EmailJob[]
   review        Review?
 
   @@index([userId, status])
@@ -363,6 +367,7 @@ enum PaymentStatus {
   PENDING
   PAID
   CANCELED
+  PARTIAL_CANCELED
   FAILED
 }
 
@@ -419,6 +424,32 @@ model PaymentEvent {
   @@index([type, createdAt])
 }
 
+// Phase 4-B: 출발 취소 fan-out 배치 진행 상태 (RefundJob 상태에서 파생). [ADR-0028]
+enum DepartureCancellationStatus {
+  PROCESSING // 환불 job 일부 미종결
+  COMPLETED // 전 건 종결 + 실패 0
+  PARTIALLY_FAILED // 전 건 종결 but FAILED 1건 이상 (admin 재시도 필요)
+}
+
+// 출발 취소 1회 = 배치 1개. 결제 여부 무관 N건 예약 취소를 통합 추적. [ADR-0028]
+model DepartureCancellation {
+  id               String                      @id @default(cuid())
+  departureId      String
+  status           DepartureCancellationStatus @default(PROCESSING)
+  totalBookings    Int // 취소 시점 활성(좌석점유) 예약 수
+  immediateCancels Int                         @default(0) // 미결제 → 즉시 취소된 건수
+  actor            String // "admin:<id>"
+  reason           String?
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+
+  departure  Departure   @relation(fields: [departureId], references: [id], onDelete: Cascade)
+  refundJobs RefundJob[]
+
+  @@index([status])
+  @@index([departureId])
+}
+
 enum RefundJobStatus {
   PENDING
   IN_PROGRESS
@@ -430,7 +461,8 @@ model RefundJob {
   id        String          @id @default(cuid())
   bookingId String
   paymentId String
-  amount    Int // 원 단위 정수 (전액 환불)
+  amount    Int // 실제 환불액 = baseAmount − penaltyAmount (위약금 0이면 결제 전액)
+  penaltyAmount Int @default(0) // 취소 요청 시점 동결된 위약금 스냅샷 (spec §4)
   reason    String?
   // 환불을 트리거한 주체. worker가 재시도 시 booking transition(user vs agency)을
   // 정확히 분기하기 위해 필요. ex) "user:cluser...", "admin:...", "system:webhook"
@@ -443,10 +475,85 @@ model RefundJob {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
+  // Phase 4-B: 출발 취소 fan-out 배치 연결 (단일 사용자 환불은 null). [ADR-0028]
+  cancellationBatchId String?
+
   booking Booking @relation(fields: [bookingId], references: [id])
   payment Payment @relation(fields: [paymentId], references: [id])
+  cancellationBatch DepartureCancellation? @relation(fields: [cancellationBatchId], references: [id], onDelete: SetNull)
 
   @@index([status, nextRunAt])
+  @@index([cancellationBatchId])
+}
+
+enum EmbeddingJobStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+}
+
+// 상품 벡터 임베딩 비동기 워커 큐.
+// RefundJob 패턴과 동일한 status / attempts / nextRunAt / lastError / actor / version 구조.
+// 단 onDelete는 Cascade — RefundJob과 다름(RefundJob은 RESTRICT 디폴트). Product 하드 삭제 시
+// 잔존 job은 의미가 없으므로 같이 정리한다.
+// cron worker가 PENDING 행을 픽업하여 임베딩 생성 후 ProductEmbedding을 upsert.
+model EmbeddingJob {
+  id          String             @id @default(cuid())
+  productId   String
+  status      EmbeddingJobStatus @default(PENDING)
+  attempts    Int                @default(0)
+  lastError   String?            @db.Text
+  nextRunAt   DateTime           @default(now()) // exponential backoff
+  // enqueue 시 선택적. ex) "admin:cuid", "system:modelbump"
+  actor       String?
+  // worker가 완료 시점에 기록하는 콘텐츠 해시 (디버깅 추적용).
+  // 실제 재인덱싱 판단은 ProductEmbedding.contentHash와 비교.
+  contentHash String?
+  version     Int                @default(0) // 낙관적 락 보조 (RefundJob 패턴 동일)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRunAt]) // cron picker: WHERE status='PENDING' AND nextRunAt <= now()
+  @@index([productId, status]) // idempotent enqueue: 중복 PENDING 행 검사
+}
+
+enum EmailType {
+  BOOKING_CONFIRMATION // 예약 확정서 + 결제 영수증 (PAID 전이)
+  REFUND_COMPLETED // 환불 처리 완료 안내 (PAID/READY → CANCELED)
+}
+
+enum EmailJobStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+}
+
+// 거래 종료 알림 메일 비동기 큐. EmbeddingJob/RefundJob과 동형
+// (status/attempts/lastError/nextRunAt/@@index). 트랜잭셔널 아웃박스:
+// booking 상태전이 Tx 안에서 적재되어 유실 0. payload 컬럼 없음 —
+// bookingId만으로 워커가 발송 시점에 전체 데이터를 hydrate한다.
+model EmailJob {
+  id         String         @id @default(cuid())
+  type       EmailType
+  // 멱등 enqueue 키. ex) "booking-confirmation:<bookingId>" / "refund-completed:<bookingId>"
+  dedupeKey  String         @unique
+  bookingId  String
+  status     EmailJobStatus @default(PENDING)
+  attempts   Int            @default(0)
+  lastError  String?        @db.Text
+  nextRunAt  DateTime       @default(now()) // 지수 백오프
+  sentTo     String? // 발송 시점 수신 주소 스냅샷 (감사)
+  providerId String? // Resend 메시지 id (감사 + 멱등 추적)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRunAt]) // cron picker
 }
 
 // ─────────────────────────────────────────────────────────────

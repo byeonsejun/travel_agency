@@ -50,7 +50,7 @@ export async function adminCancelBookingAction(
     const first = parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요";
     return { type: "error", message: first };
   }
-  const { bookingId, reason } = parsed.data;
+  const { bookingId, reason, waivePenalty } = parsed.data;
 
   // 3. booking 존재 여부 + PAID payment + productId 단일 round-trip 조회
   //    (관리자라 소유권 검증은 불필요, 다만 booking 부재만 확인)
@@ -81,6 +81,7 @@ export async function adminCancelBookingAction(
         bookingId,
         actor: `admin:${adminId}`,
         reason,
+        applyPenalty: !waivePenalty, // 면제 토글 OFF면 위약금 부과
       });
     } else {
       // 결제 전 예약: 단순 booking 전이

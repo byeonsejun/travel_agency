@@ -29,6 +29,11 @@ const DYNAMIC_CSP_PREFIXES = [
 ] as const;
 
 export function isDynamicCspPath(pathname: string): boolean {
+  // 결제 페이지는 nested 경로(/products/[id]/checkout)라 prefix startsWith 로는
+  // 안 잡힌다. 결제는 force-dynamic 보안 도메인이므로 nonce CSP(strict-dynamic)를
+  // 받아야 토스 SDK 가 동적 삽입하는 script 가 propagation 으로 통과한다.
+  // (PDP `/products/[id]` 는 ISR 이라 static CSP 유지 — checkout segment 만 승격.)
+  if (pathname.endsWith("/checkout")) return true;
   return DYNAMIC_CSP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
@@ -58,10 +63,12 @@ export function buildCspHeader(input: CspBuildInput): CspBuildOutput {
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: https://*.supabase.co https://picsum.photos`,
     `font-src 'self' data:`,
-    `connect-src 'self' https://*.ingest.sentry.io https://api.tosspayments.com https://*.supabase.co`,
-    `frame-src 'self' https://js.tosspayments.com`,
+    // 토스 결제: SDK script(js.) + 결제 iframe(payment-gateway-sandbox.) + API 서브도메인을
+    // 와일드카드 하나로 통일 — enforce 모드 전환 시에도 결제 경로가 깨지지 않게 한다.
+    `connect-src 'self' https://*.ingest.sentry.io https://*.tosspayments.com https://*.supabase.co`,
+    `frame-src 'self' https://*.tosspayments.com`,
     `frame-ancestors 'none'`,
-    `form-action 'self' https://api.tosspayments.com`,
+    `form-action 'self' https://*.tosspayments.com`,
     `base-uri 'self'`,
     `object-src 'none'`,
     `upgrade-insecure-requests`,

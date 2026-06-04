@@ -33,8 +33,27 @@ const TOSS_PAYMENT_KEY = "tpayments_sk_test_refund_key";
 const AMOUNT = 200_000;
 const JOB_ID = "refundjob_testid_001";
 
-const mockPaidBooking = { id: BOOKING_ID, status: "PAID" as const };
-const mockReadyBooking = { id: BOOKING_ID, status: "READY" as const };
+/** 오늘 날짜 기준 N일 후 UTC 자정 Date (Prisma @db.Date 형식과 동일) */
+function futureDateUtcMidnight(daysFromNow: number): Date {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() + daysFromNow);
+  return d;
+}
+
+/** 기본 픽스처: departure.departureDate 포함 (기존 테스트 호환용 — 40일 후로 위약금 0%) */
+const DEPARTURE_DATE_FAR = futureDateUtcMidnight(40);
+
+const mockPaidBooking = {
+  id: BOOKING_ID,
+  status: "PAID" as const,
+  departure: { departureDate: DEPARTURE_DATE_FAR },
+};
+const mockReadyBooking = {
+  id: BOOKING_ID,
+  status: "READY" as const,
+  departure: { departureDate: DEPARTURE_DATE_FAR },
+};
 const mockPaidPayment = {
   id: PAYMENT_ID,
   amount: AMOUNT,
@@ -88,7 +107,7 @@ describe("refundBooking", () => {
 
   // ── 시나리오 1: PAID 정상 환불 → CANCELED_BY_USER ───────────
   it("PAID booking 정상 환불: Payment CANCELED, RefundJob SUCCEEDED, booking CANCELED_BY_USER", async () => {
-    await refundBooking({ bookingId: BOOKING_ID, actor: "user:test123", reason: "단순 변심" });
+    await refundBooking({ bookingId: BOOKING_ID, actor: "user:test123", reason: "단순 변심", applyPenalty: false });
 
     // Phase 3: Payment CANCELED
     expect(mocks.tx.payment.update).toHaveBeenCalledWith(
@@ -140,7 +159,7 @@ describe("refundBooking", () => {
   it("READY booking + admin actor: CANCELED_BY_AGENCY 전이", async () => {
     mocks.db.booking.findUnique.mockResolvedValue(mockReadyBooking);
 
-    await refundBooking({ bookingId: BOOKING_ID, actor: "admin:manager01" });
+    await refundBooking({ bookingId: BOOKING_ID, actor: "admin:manager01", applyPenalty: false });
 
     expect(mocks.transitionStatus).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -158,7 +177,7 @@ describe("refundBooking", () => {
     });
 
     await expect(
-      refundBooking({ bookingId: BOOKING_ID, actor: "user:test123" })
+      refundBooking({ bookingId: BOOKING_ID, actor: "user:test123", applyPenalty: false })
     ).rejects.toMatchObject({ code: "REFUND_ALREADY_REQUESTED" });
 
     expect(mocks.tossClient.cancel).not.toHaveBeenCalled();
@@ -171,7 +190,7 @@ describe("refundBooking", () => {
     mocks.tossClient.cancel.mockRejectedValue(new Error("Toss API 500 Internal Server Error"));
 
     await expect(
-      refundBooking({ bookingId: BOOKING_ID, actor: "user:test123" })
+      refundBooking({ bookingId: BOOKING_ID, actor: "user:test123", applyPenalty: false })
     ).rejects.toMatchObject({ code: "REFUND_DEFERRED" });
 
     // tx 밖 refundJob.update 호출 (R3: PG 호출과 같은 경로, tx 없음)
@@ -199,7 +218,7 @@ describe("refundBooking", () => {
     mocks.db.booking.findUnique.mockResolvedValue({ id: BOOKING_ID, status: "RECEIVED" });
 
     await expect(
-      refundBooking({ bookingId: BOOKING_ID, actor: "user:test123" })
+      refundBooking({ bookingId: BOOKING_ID, actor: "user:test123", applyPenalty: false })
     ).rejects.toMatchObject({ code: "BOOKING_NOT_REFUNDABLE" });
 
     expect(mocks.db.payment.findFirst).not.toHaveBeenCalled();
@@ -211,7 +230,7 @@ describe("refundBooking", () => {
     mocks.db.payment.findFirst.mockResolvedValue(null);
 
     await expect(
-      refundBooking({ bookingId: BOOKING_ID, actor: "user:test123" })
+      refundBooking({ bookingId: BOOKING_ID, actor: "user:test123", applyPenalty: false })
     ).rejects.toMatchObject({ code: "PAID_PAYMENT_NOT_FOUND" });
 
     expect(mocks.tossClient.cancel).not.toHaveBeenCalled();
@@ -219,10 +238,191 @@ describe("refundBooking", () => {
 
   // ── 시나리오 7: actor "system:" → CANCELED_BY_AGENCY ─────────
   it("system actor: CANCELED_BY_AGENCY 전이", async () => {
-    await refundBooking({ bookingId: BOOKING_ID, actor: "system:admin-cron" });
+    await refundBooking({ bookingId: BOOKING_ID, actor: "system:admin-cron", applyPenalty: false });
 
     expect(mocks.transitionStatus).toHaveBeenCalledWith(
       expect.objectContaining({ to: "CANCELED_BY_AGENCY" })
+    );
+  });
+});
+
+// ── 위약금 분기 테스트 ────────────────────────────────────────────
+describe("refundBooking — 부분 환불(위약금)", () => {
+  const PENALTY_JOB_ID = "refundjob_penalty_001";
+  const mockPenaltyRefundJob = { id: PENALTY_JOB_ID, attempts: 0 };
+
+  function setupPenaltyTransaction(): void {
+    mocks.db.$transaction.mockImplementation(
+      async (arg: ((tx: typeof mocks.tx) => unknown) | Array<Promise<unknown>>) => {
+        if (typeof arg === "function") return arg(mocks.tx);
+        if (Array.isArray(arg)) return Promise.all(arg);
+      }
+    );
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupPenaltyTransaction();
+
+    // Phase 1 tx 기본: 중복 없음
+    mocks.tx.refundJob.findFirst.mockResolvedValue(null);
+    mocks.tx.refundJob.create.mockResolvedValue(mockPenaltyRefundJob);
+
+    // Phase 3 tx 기본
+    mocks.tx.payment.update.mockResolvedValue({});
+    mocks.tx.refundJob.update.mockResolvedValue({});
+    mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_penalty_1" });
+
+    // Phase 2: cancel 성공
+    mocks.tossClient.cancel.mockResolvedValue({ status: "PARTIAL_CANCELED" });
+
+    // transitionStatus 기본
+    mocks.transitionStatus.mockResolvedValue({ id: BOOKING_ID, status: "CANCELED_BY_USER" });
+
+    // Phase 2 실패 경로 (tx 밖 refundJob update)
+    mocks.db.refundJob.update.mockResolvedValue({});
+  });
+
+  // ── Case A: applyPenalty=true, D≈3 → 30%, amount=1,000,000 ─────
+  it("Case A: D=3일(30% 위약금), amount=1000000 → PARTIAL_CANCELED", async () => {
+    const departureDate = futureDateUtcMidnight(3);
+    const paymentAmount = 1_000_000;
+
+    mocks.db.booking.findUnique.mockResolvedValue({
+      id: BOOKING_ID,
+      status: "PAID" as const,
+      departure: { departureDate },
+    });
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: PAYMENT_ID,
+      amount: paymentAmount,
+      tossPaymentKey: TOSS_PAYMENT_KEY,
+    });
+
+    await refundBooking({
+      bookingId: BOOKING_ID,
+      actor: "user:test123",
+      reason: "단순 변심",
+      applyPenalty: true,
+    });
+
+    // Phase 1: RefundJob 생성 — amount=700000, penaltyAmount=300000
+    expect(mocks.tx.refundJob.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          amount: 700_000,
+          penaltyAmount: 300_000,
+        }),
+      })
+    );
+
+    // Phase 2: Toss cancel — cancelAmount=700000 (위약금 차감 후 환불액)
+    expect(mocks.tossClient.cancel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentKey: TOSS_PAYMENT_KEY,
+        cancelAmount: 700_000,
+      })
+    );
+
+    // Phase 3: Payment PARTIAL_CANCELED (penaltyAmount > 0)
+    expect(mocks.tx.payment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: PAYMENT_ID },
+        data: expect.objectContaining({ status: "PARTIAL_CANCELED" }),
+      })
+    );
+  });
+
+  // ── Case B: applyPenalty=true, D=40일(0% 위약금), amount=500,000 ─
+  it("Case B: D=40일(0% 위약금), amount=500000 → CANCELED (전액 환불)", async () => {
+    const departureDate = futureDateUtcMidnight(40);
+    const paymentAmount = 500_000;
+
+    mocks.db.booking.findUnique.mockResolvedValue({
+      id: BOOKING_ID,
+      status: "PAID" as const,
+      departure: { departureDate },
+    });
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: PAYMENT_ID,
+      amount: paymentAmount,
+      tossPaymentKey: TOSS_PAYMENT_KEY,
+    });
+
+    await refundBooking({
+      bookingId: BOOKING_ID,
+      actor: "user:test123",
+      applyPenalty: true,
+    });
+
+    // Phase 1: RefundJob — penaltyAmount=0, amount=500000
+    expect(mocks.tx.refundJob.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          amount: 500_000,
+          penaltyAmount: 0,
+        }),
+      })
+    );
+
+    // Phase 2: Toss cancel — cancelAmount=500000 (전액)
+    expect(mocks.tossClient.cancel).toHaveBeenCalledWith(
+      expect.objectContaining({ cancelAmount: 500_000 })
+    );
+
+    // Phase 3: penaltyAmount=0 → CANCELED
+    expect(mocks.tx.payment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: PAYMENT_ID },
+        data: expect.objectContaining({ status: "CANCELED" }),
+      })
+    );
+  });
+
+  // ── Case C: applyPenalty=false, D=2일(위약금 면제), amount=500,000 ─
+  it("Case C: applyPenalty=false, D=2일이어도 위약금 0 → 전액 환불 + CANCELED", async () => {
+    const departureDate = futureDateUtcMidnight(2); // D-2, 적용 시 30%이지만 applyPenalty=false
+    const paymentAmount = 500_000;
+
+    mocks.db.booking.findUnique.mockResolvedValue({
+      id: BOOKING_ID,
+      status: "PAID" as const,
+      departure: { departureDate },
+    });
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: PAYMENT_ID,
+      amount: paymentAmount,
+      tossPaymentKey: TOSS_PAYMENT_KEY,
+    });
+
+    await refundBooking({
+      bookingId: BOOKING_ID,
+      actor: "admin:manager01",
+      reason: "관리자 면제",
+      applyPenalty: false,
+    });
+
+    // Phase 1: RefundJob — penaltyAmount=0, amount=500000 (전액)
+    expect(mocks.tx.refundJob.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          amount: 500_000,
+          penaltyAmount: 0,
+        }),
+      })
+    );
+
+    // Phase 2: Toss cancel — cancelAmount=500000 (전액)
+    expect(mocks.tossClient.cancel).toHaveBeenCalledWith(
+      expect.objectContaining({ cancelAmount: 500_000 })
+    );
+
+    // Phase 3: penaltyAmount=0 → CANCELED
+    expect(mocks.tx.payment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: PAYMENT_ID },
+        data: expect.objectContaining({ status: "CANCELED" }),
+      })
     );
   });
 });

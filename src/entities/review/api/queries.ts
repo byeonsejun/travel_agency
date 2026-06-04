@@ -1,7 +1,15 @@
+import type { ReviewStatus } from "@prisma/client";
+
 import { db } from "@/shared/lib/db";
 
 import { maskAuthorDisplayName } from "../model/displayName";
+import {
+  normalizeRatingDistribution,
+  type RatingDistribution,
+} from "../model/ratingDistribution";
 import type {
+  AdminReviewDetail,
+  AdminReviewListPage,
   ReviewListPage,
   ReviewStats,
   ReviewWithPhotos,
@@ -117,4 +125,102 @@ export async function getReviewByBooking(
     where: { bookingId },
     include: { photos: { orderBy: { order: "asc" } } },
   });
+}
+
+// PDP 별점 분포 그래프용. groupBy 단일 집계 — row 페치 0건. PUBLISHED 만.
+// 누락 별점(1~5 중 0건인 점수)은 normalizeRatingDistribution 가 0 으로 채운다.
+export async function getReviewRatingDistribution(
+  productId: string,
+): Promise<RatingDistribution> {
+  const rows = await db.review.groupBy({
+    by: ["rating"],
+    where: { productId, status: "PUBLISHED" },
+    _count: { _all: true },
+  });
+  return normalizeRatingDistribution(rows);
+}
+
+// admin 모더레이션 목록. status 무관(또는 단일 status 필터) — 숨김/신고도 노출.
+// 커서 (createdAt desc, id desc) — PDP 쿼리와 동일 안정 정렬.
+// raw email 은 maskAuthorDisplayName 으로 즉시 마스킹 — 호출부로 PII 미유출.
+export async function listReviewsForAdmin(
+  opts: {
+    status?: ReviewStatus;
+    cursor?: string;
+    limit?: number;
+  } = {},
+): Promise<AdminReviewListPage> {
+  const limit = Math.min(Math.max(opts.limit ?? 20, 1), 50);
+  const rows = await db.review.findMany({
+    where: opts.status ? { status: opts.status } : {},
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
+    ...(opts.cursor && { cursor: { id: opts.cursor }, skip: 1 }),
+    select: {
+      id: true,
+      rating: true,
+      status: true,
+      createdAt: true,
+      productId: true,
+      product: { select: { title: true } },
+      user: { select: { name: true, email: true } },
+      _count: { select: { photos: true } },
+    },
+  });
+
+  const hasMore = rows.length > limit;
+  const sliced = hasMore ? rows.slice(0, limit) : rows;
+  const items = sliced.map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    status: r.status,
+    createdAt: r.createdAt,
+    productId: r.productId,
+    productTitle: r.product.title,
+    authorDisplayName: maskAuthorDisplayName({
+      email: r.user.email,
+      name: r.user.name,
+    }),
+    photoCount: r._count.photos,
+  }));
+
+  return { items, nextCursor: hasMore ? items[items.length - 1].id : null };
+}
+
+// admin 상세 — 단건 + 사진 전체 + 상품 컨텍스트.
+export async function getReviewForAdmin(
+  id: string,
+): Promise<AdminReviewDetail | null> {
+  const r = await db.review.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      rating: true,
+      status: true,
+      content: true,
+      createdAt: true,
+      productId: true,
+      product: { select: { title: true } },
+      user: { select: { name: true, email: true } },
+      photos: {
+        orderBy: { order: "asc" },
+        select: { id: true, storagePath: true, order: true },
+      },
+    },
+  });
+  if (!r) return null;
+  return {
+    id: r.id,
+    rating: r.rating,
+    status: r.status,
+    content: r.content,
+    createdAt: r.createdAt,
+    productId: r.productId,
+    productTitle: r.product.title,
+    authorDisplayName: maskAuthorDisplayName({
+      email: r.user.email,
+      name: r.user.name,
+    }),
+    photos: r.photos,
+  };
 }
