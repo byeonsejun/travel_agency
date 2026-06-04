@@ -31,6 +31,12 @@ export default async function AdminLayout({
             </Link>
             <nav className="flex items-center gap-4 text-sm">
               <Link
+                href="/admin/dashboard"
+                className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
+              >
+                대시보드
+              </Link>
+              <Link
                 href="/admin/bookings"
                 className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
               >

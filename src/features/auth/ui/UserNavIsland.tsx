@@ -112,7 +112,7 @@ export function UserNavIsland() {
       <span className="text-sm text-gray-600">{user.name ?? user.email}</span>
       {user.role === "ADMIN" && (
         <Link
-          href="/admin/products"
+          href="/admin/dashboard"
           className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
         >
           관리자
