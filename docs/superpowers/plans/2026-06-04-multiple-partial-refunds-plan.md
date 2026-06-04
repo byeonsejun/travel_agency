@@ -1,6 +1,6 @@
 # Multiple Partial Refunds (Phase 8) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 하나의 `Payment`에 다회 부분 환불(여행자별 구조적 취소 + 관리자 재량 금액 환불)을 race-free·멱등으로 누적하는 Ledger 시스템 구축.
 
@@ -47,7 +47,7 @@
 **Files:**
 - Modify: `prisma/schema.prisma` (Payment, RefundJob, Traveler models; new enums)
 
-- [ ] **Step 1: PaxType / RefundKind enum 추가**
+- [x] **Step 1: PaxType / RefundKind enum 추가**
 
 `prisma/schema.prisma`에 enum 2개 추가(기존 enum 블록 근처):
 
@@ -65,7 +65,7 @@ enum RefundKind {
 }
 ```
 
-- [ ] **Step 2: Payment.refundedAmount 추가**
+- [x] **Step 2: Payment.refundedAmount 추가**
 
 `model Payment`에 추가:
 
@@ -73,7 +73,7 @@ enum RefundKind {
   refundedAmount Int @default(0) // 예약된 환불 총액. 불변식: 0 ≤ refundedAmount ≤ amount
 ```
 
-- [ ] **Step 3: RefundJob 4필드 추가**
+- [x] **Step 3: RefundJob 4필드 추가**
 
 `model RefundJob`에 추가:
 
@@ -84,7 +84,7 @@ enum RefundKind {
   idempotencyKey String?    @unique
 ```
 
-- [ ] **Step 4: Traveler 4필드 추가**
+- [x] **Step 4: Traveler 4필드 추가**
 
 `model Traveler`에 추가:
 
@@ -95,12 +95,12 @@ enum RefundKind {
   canceledByRefundJobId String?
 ```
 
-- [ ] **Step 5: 스키마 포맷 검증**
+- [x] **Step 5: 스키마 포맷 검증**
 
 Run: `npx prisma format && npx prisma validate`
 Expected: `The schema ... is valid 🚀`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add prisma/schema.prisma
@@ -114,17 +114,17 @@ git commit -m "feat(payment): add Ledger schema for multiple partial refunds"
 **Files:**
 - Create: `prisma/migrations/<timestamp>_phase8_ledger/migration.sql` (수동)
 
-- [ ] **Step 1: DB에 스키마 push**
+- [x] **Step 1: DB에 스키마 push**
 
 Run: `npx prisma db push`
 Expected: `Your database is now in sync with your Prisma schema.` (신규 컬럼 전부 nullable/default라 데이터 손실 경고 없음)
 
-- [ ] **Step 2: Prisma Client 재생성 확인**
+- [x] **Step 2: Prisma Client 재생성 확인**
 
 Run: `npx prisma generate && npm run typecheck`
 Expected: typecheck PASS (신규 필드가 Client 타입에 반영, 기존 코드 미사용이라 에러 0)
 
-- [ ] **Step 3: 수동 마이그레이션 SQL 기록 (migrate resolve용)**
+- [x] **Step 3: 수동 마이그레이션 SQL 기록 (migrate resolve용)**
 
 Create `prisma/migrations/20260604000000_phase8_ledger/migration.sql`:
 
@@ -144,12 +144,12 @@ ALTER TABLE "Traveler" ADD COLUMN IF NOT EXISTS "canceledAt" TIMESTAMP(3);
 ALTER TABLE "Traveler" ADD COLUMN IF NOT EXISTS "canceledByRefundJobId" TEXT;
 ```
 
-- [ ] **Step 4: migrate resolve로 적용 처리**
+- [x] **Step 4: migrate resolve로 적용 처리**
 
 Run: `npx prisma migrate resolve --applied 20260604000000_phase8_ledger`
 Expected: `Migration ... marked as applied.`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add prisma/migrations/
@@ -164,7 +164,7 @@ git commit -m "chore(db): apply phase8 ledger migration (db push workaround)"
 - Create: `src/entities/booking/model/paxAssignment.ts`
 - Test: `src/entities/booking/model/__tests__/paxAssignment.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `src/entities/booking/model/__tests__/paxAssignment.test.ts`:
 
@@ -222,12 +222,12 @@ describe("assignPaxTypes", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- paxAssignment`
 Expected: FAIL ("Cannot find module ../paxAssignment")
 
-- [ ] **Step 3: 구현 작성**
+- [x] **Step 3: 구현 작성**
 
 Create `src/entities/booking/model/paxAssignment.ts`:
 
@@ -300,12 +300,12 @@ export function assignPaxTypes(input: PaxAssignmentInput): PaxAssignment[] {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test -- paxAssignment`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/booking/model/paxAssignment.ts src/entities/booking/model/__tests__/paxAssignment.test.ts
@@ -409,7 +409,7 @@ git commit -m "feat(payment): idempotency key generators + refundable helper"
 - Create: `src/entities/payment/api/ledger.ts`
 - Test: `src/entities/payment/api/__tests__/ledger.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성 (mock tx)**
+- [x] **Step 1: 실패 테스트 작성 (mock tx)**
 
 Create `src/entities/payment/api/__tests__/ledger.test.ts`:
 
@@ -455,12 +455,12 @@ describe("releaseRefund", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- ledger`
 Expected: FAIL ("Cannot find module ../ledger")
 
-- [ ] **Step 3: 구현 작성**
+- [x] **Step 3: 구현 작성**
 
 Create `src/entities/payment/api/ledger.ts`:
 
@@ -499,12 +499,12 @@ export async function releaseRefund(
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test -- ledger`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/payment/api/ledger.ts src/entities/payment/api/__tests__/ledger.test.ts
@@ -519,7 +519,7 @@ git commit -m "feat(payment): ledger reserve/release conditional decrement (race
 - Modify: `src/entities/booking/api/mutations.ts:102-150`
 - Test: `src/entities/booking/api/__tests__/transitionSkipSeats.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `src/entities/booking/api/__tests__/transitionSkipSeats.test.ts`:
 
@@ -567,12 +567,12 @@ describe("transitionStatusTx skipSeatReturn", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- transitionSkipSeats`
 Expected: FAIL (skipSeatReturn 미지원 → 두 케이스 모두 releaseSeats 호출)
 
-- [ ] **Step 3: 구현 — TransitionStatusInput에 옵션 추가**
+- [x] **Step 3: 구현 — TransitionStatusInput에 옵션 추가**
 
 `src/entities/booking/api/mutations.ts`의 `TransitionStatusInput` 인터페이스(90-95)와 `transitionStatusTx`(102-120) 수정:
 
@@ -609,12 +609,12 @@ export async function transitionStatusTx(
 ): Promise<Booking> {
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test -- transitionSkipSeats && npm run typecheck`
 Expected: PASS (2 tests), typecheck PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/booking/api/mutations.ts src/entities/booking/api/__tests__/transitionSkipSeats.test.ts
@@ -741,7 +741,7 @@ git commit -m "feat(booking): populate Traveler paxType/unitPrice on createBooki
 - Create: `scripts/backfill-phase8.ts`
 - Test: `scripts/__tests__/backfill-phase8.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성 (순수 로직 추출 검증)**
+- [x] **Step 1: 실패 테스트 작성 (순수 로직 추출 검증)**
 
 Create `scripts/__tests__/backfill-phase8.test.ts`:
 
@@ -762,12 +762,12 @@ describe("computeRefundedFromJobs", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- backfill-phase8`
 Expected: FAIL ("Cannot find module ../backfill-phase8")
 
-- [ ] **Step 3: 구현 작성**
+- [x] **Step 3: 구현 작성**
 
 Create `scripts/backfill-phase8.ts`:
 
@@ -844,12 +844,12 @@ if (process.env.NODE_ENV !== "test") {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test -- backfill-phase8`
 Expected: PASS (1 test)
 
-- [ ] **Step 5: 실제 backfill 실행 + 불변식 검증**
+- [x] **Step 5: 실제 backfill 실행 + 불변식 검증**
 
 Run: `npx tsx scripts/backfill-phase8.ts`
 Expected: `✓ ...` 로그 + `Phase 8 backfill done.`
@@ -860,7 +860,7 @@ npx tsx -e "import {db} from './src/shared/lib/db'; (async()=>{const bad=await d
 ```
 Expected: `mismatch rows: 0`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/backfill-phase8.ts scripts/__tests__/backfill-phase8.test.ts
