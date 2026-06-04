@@ -8,20 +8,36 @@
  * 트랜잭션 격리 (Domain R3, ADR-0003):
  *   - 외부 PG 호출(Phase 2)은 DB Tx 바깥
  *   - Phase 3는 단일 Tx (Payment + RefundJob + PaymentEvent)
- *   - booking 상태 전이는 transitionStatus가 단일 Tx로 책임 (좌석 환원 자동)
+ *   - booking 상태 전이는 transitionStatusTx가 kind별 후처리 Tx 안에서 처리 (좌석 환원 skipSeatReturn)
  */
 
-import type { BookingStatus, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/shared/lib/db";
 import { tossClient } from "@/shared/lib/toss";
-import { transitionStatus, InvalidTransitionError } from "@/entities/booking";
+import {
+  transitionStatusTx,
+  releaseSeats,
+  InvalidTransitionError,
+} from "@/entities/booking";
 import { logger, metrics, captureException } from "@/shared/lib/observability";
 import { PaymentError } from "./errors";
 import { backoff } from "./refund";
+import { releaseRefund } from "./ledger";
 
 // IN_PROGRESS인 채로 멈춰 있는 job을 stuck으로 판정하는 임계 시간.
 // worker death / 배포 도중 중단 등으로 인한 영구 lock 회복용.
 const STALE_IN_PROGRESS_MS = 10 * 60_000; // 10분
+
+// PG 재시도 한계치 — 이 횟수 이상이면 영구 실패(FAILED)로 판정하고 ledger 예약 해제.
+const MAX_ATTEMPTS = 8;
+
+/**
+ * 영구 실패 여부 판정. attempts >= MAX_ATTEMPTS이면 PG 재시도를 포기하고
+ * reserveRefund로 잡아둔 ledger 예약을 releaseRefund로 환원한다.
+ */
+export function isPermanentFailure(attempts: number): boolean {
+  return attempts >= MAX_ATTEMPTS;
+}
 
 export type RetryRefundResult =
   | { type: "succeeded"; jobId: string }
@@ -86,18 +102,6 @@ async function claimRefundJob(
   return result.count > 0;
 }
 
-/**
- * actor 문자열에서 booking 전이 대상을 도출.
- * - "user:..." → CANCELED_BY_USER
- * - "admin:...", "system:..." 등 → CANCELED_BY_AGENCY
- *
- * actor가 null(기존 row, migration 전 생성)이면 CANCELED_BY_USER로 fallback —
- * 보수적 선택(대부분 사용자 자가 취소가 환불 대상).
- */
-function deriveCancelStatus(actor: string | null): BookingStatus {
-  if (actor && actor.startsWith("user:")) return "CANCELED_BY_USER";
-  return "CANCELED_BY_AGENCY";
-}
 
 /**
  * 단일 RefundJob을 재시도. 한 job의 실패가 다른 job에 영향을 주지 않도록
@@ -110,7 +114,7 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
     return { type: "skipped", jobId, reason: "not_claimable" };
   }
 
-  // ── Load job + related payment ────────────────────────────────────
+  // ── Load job + related payment + booking ─────────────────────────
   const job = await db.refundJob.findUniqueOrThrow({
     where: { id: jobId },
     include: {
@@ -120,8 +124,10 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
           tossPaymentKey: true,
           amount: true,
           status: true,
+          refundedAmount: true,
         },
       },
+      booking: { select: { departureId: true } },
     },
   });
 
@@ -163,8 +169,28 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
     });
   } catch (cancelErr) {
     const newAttempts = job.attempts + 1;
-    const nextRunAt = backoff(newAttempts);
     const lastError = String(cancelErr);
+
+    // 영구 실패: ledger 예약 해제 후 FAILED 종료
+    if (isPermanentFailure(newAttempts)) {
+      await db.$transaction(async (tx) => {
+        await tx.refundJob.update({
+          where: { id: jobId },
+          data: { status: "FAILED", attempts: { increment: 1 }, lastError },
+        });
+        await releaseRefund(tx, { paymentId: job.paymentId, amount: job.amount });
+      });
+      metrics.incr("payment.refund.retry.permanent_failed");
+      captureException(cancelErr, {
+        bookingId: job.bookingId,
+        paymentId: job.paymentId,
+        extras: { jobId, permanent: true },
+      });
+      return { type: "failed", jobId, reason: "permanent_failure" };
+    }
+
+    // 일시 실패: 재시도 스케줄링
+    const nextRunAt = backoff(newAttempts);
     await db.refundJob.update({
       where: { id: jobId },
       data: {
@@ -195,13 +221,16 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
   }
 
   // ── Phase 3: Payment 상태 갱신 + RefundJob SUCCEEDED + PaymentEvent ─
-  // penaltyAmount > 0이면 부분 환불 → PARTIAL_CANCELED, 아니면 전액 → CANCELED.
-  // 재연산 금지: job.penaltyAmount / job.amount는 enqueue 시점에 동결된 스냅샷.
+  // refundedAmount >= amount면 전액 환불 → CANCELED, 아니면 부분 환불 → PARTIAL_CANCELED.
+  // refundedAmount는 Phase 1 reserveRefund에서 이미 increment된 동결 스냅샷 — 재계산 금지.
   await db.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: job.paymentId },
       data: {
-        status: job.penaltyAmount > 0 ? "PARTIAL_CANCELED" : "CANCELED",
+        status:
+          job.payment.refundedAmount >= job.payment.amount
+            ? "CANCELED"
+            : "PARTIAL_CANCELED",
         canceledAt: new Date(),
       },
     });
@@ -228,28 +257,40 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
     });
   });
 
-  // ── booking 상태 전이 (좌석 환원은 shouldReturnSeats 자동 처리) ───
-  // 이미 다른 경로로 CANCELED 되었다면 InvalidTransitionError가 발생할 수 있다.
-  // 그 경우 환불은 성공했으므로 결과는 그대로 succeeded — silent ignore.
-  const targetStatus = deriveCancelStatus(job.actor);
-  try {
-    await transitionStatus({
-      bookingId: job.bookingId,
-      to: targetStatus,
-      actor: job.actor ?? "system:refund-retry",
-      reason: job.reason ?? "환불 처리 완료 (재시도)",
+  // ── kind별 후처리: traveler 표식 + 좌석 환원 + FULL_CANCEL terminal 전이 ──
+  // DISCRETIONARY는 후처리 없음.
+  // TRAVELER_CANCEL / FULL_CANCEL: 최초 enqueue(refundTraveler) 단계에서
+  //   onSettled가 실행되지 못한 경우(PG 실패→재시도 경로)를 cron이 여기서 보정.
+  //   canceledAt IS NULL 가드로 멱등 — 이미 처리됐으면 marked.count=0 → skip.
+  if (job.kind === "TRAVELER_CANCEL" || job.kind === "FULL_CANCEL") {
+    await db.$transaction(async (tx) => {
+      const marked = await tx.traveler.updateMany({
+        where: { canceledByRefundJobId: job.id, canceledAt: null },
+        data: { canceledAt: new Date() },
+      });
+      if (marked.count > 0 && job.seatsReleased > 0 && job.booking) {
+        await releaseSeats(tx, job.booking.departureId, job.seatsReleased);
+      }
+      if (job.kind === "FULL_CANCEL") {
+        await transitionStatusTx(tx, {
+          bookingId: job.bookingId,
+          to: job.actor?.startsWith("user:")
+            ? "CANCELED_BY_USER"
+            : "CANCELED_BY_AGENCY",
+          actor: job.actor ?? "system:cron",
+          skipSeatReturn: true,
+        }).catch((e: unknown) => {
+          if (!(e instanceof InvalidTransitionError)) {
+            logger.error(
+              "payment.refund.retry.transition_failed",
+              e instanceof Error ? e : new Error(String(e)),
+              { jobId }
+            );
+          }
+          // booking이 이미 종료 상태인 경우는 정상 — silent ignore
+        });
+      }
     });
-  } catch (transitionErr) {
-    if (!(transitionErr instanceof InvalidTransitionError)) {
-      logger.error(
-        "payment.refund.retry.transition_failed",
-        transitionErr instanceof Error
-          ? transitionErr
-          : new Error(String(transitionErr)),
-        { jobId, bookingId: job.bookingId, targetStatus }
-      );
-    }
-    // booking이 이미 종료 상태인 경우는 정상 — refund 자체는 완료됨
   }
 
   metrics.incr("payment.refund.retry.success");

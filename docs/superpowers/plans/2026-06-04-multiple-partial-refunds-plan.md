@@ -1253,11 +1253,11 @@ git commit -m "feat(payment): refundTraveler partial cancel + refundBooking as F
 - Modify: `src/entities/payment/api/refundRetry.ts`
 - Test: `src/entities/payment/api/__tests__/refundRetryLedger.test.ts`
 
-- [ ] **Step 1: 기존 refundRetry 읽기**
+- [x] **Step 1: 기존 refundRetry 읽기**
 
 Run: `cat src/entities/payment/api/refundRetry.ts`로 현재 재시도 로직 파악(동결 스냅샷 `amount`/`penaltyAmount`만 읽고 재계산 0 — [ADR-0031] 유지 확인).
 
-- [ ] **Step 2: 실패 테스트 작성 (영구 실패 → 예약 해제)**
+- [x] **Step 2: 실패 테스트 작성 (영구 실패 → 예약 해제)**
 
 Create `src/entities/payment/api/__tests__/refundRetryLedger.test.ts`:
 
@@ -1273,12 +1273,12 @@ describe("isPermanentFailure", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실패 확인**
+- [x] **Step 3: 테스트 실패 확인**
 
 Run: `npm run test -- refundRetryLedger`
 Expected: FAIL ("isPermanentFailure is not exported")
 
-- [ ] **Step 4: 구현 — 영구 실패 판별 + releaseRefund 호출**
+- [x] **Step 4: 구현 — 영구 실패 판별 + releaseRefund 호출**
 
 `src/entities/payment/api/refundRetry.ts`에 추가/수정:
 
@@ -1293,7 +1293,7 @@ export function isPermanentFailure(attempts: number): boolean {
 
 재시도 루프에서 PG cancel이 또 실패하고 `isPermanentFailure(attempts)`면: `RefundJob.status=FAILED` + `releaseRefund(tx, { paymentId, amount: job.amount })`로 예약 해제. 성공 시 기존대로 SUCCEEDED + Payment status 갱신(`refundedAmount >= amount ? CANCELED : PARTIAL_CANCELED`). 부분 환불(TRAVELER_CANCEL) 재시도 성공 시 traveler 표식/좌석 환원이 이미 settle 전에 안 됐다면 후처리 필요 — 단 현재 설계상 settle 후처리는 refundTraveler의 onSettled에서만 실행되므로, cron 재시도가 settle을 완료시킬 땐 traveler/좌석 후처리가 누락된다. → **cron 재시도 성공 경로에도 kind별 후처리 적용**(아래 Step 5).
 
-- [ ] **Step 5: cron 재시도 성공 시 kind별 후처리**
+- [x] **Step 5: cron 재시도 성공 시 kind별 후처리**
 
 refundRetry의 성공 경로에서 `job.kind`로 분기:
 - `DISCRETIONARY`: 후처리 없음.
@@ -1316,12 +1316,12 @@ if (job.kind === "TRAVELER_CANCEL" || job.kind === "FULL_CANCEL") {
 
 > 주의: `RefundJob`에 `departureId`가 없으므로 booking join으로 가져오거나 job 조회 시 include. 구현 시 `db.refundJob.findUnique({ include: { booking: { select: { departureId: true } } } })`.
 
-- [ ] **Step 6: 테스트 통과 확인**
+- [x] **Step 6: 테스트 통과 확인**
 
 Run: `npm run test -- refundRetryLedger refundRetry && npm run typecheck`
 Expected: PASS, typecheck PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/entities/payment/api/refundRetry.ts src/entities/payment/api/__tests__/refundRetryLedger.test.ts

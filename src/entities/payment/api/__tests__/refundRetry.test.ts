@@ -4,8 +4,9 @@ import { InvalidTransitionError } from "@/entities/booking";
 const mocks = vi.hoisted(() => {
   const tx = {
     refundJob: { updateMany: vi.fn(), update: vi.fn() },
-    payment: { update: vi.fn() },
+    payment: { update: vi.fn(), updateMany: vi.fn() },
     paymentEvent: { create: vi.fn() },
+    traveler: { updateMany: vi.fn() },
   };
   return {
     tx,
@@ -18,7 +19,8 @@ const mocks = vi.hoisted(() => {
       },
     },
     tossClient: { cancel: vi.fn() },
-    transitionStatus: vi.fn(),
+    transitionStatusTx: vi.fn(),
+    releaseSeats: vi.fn(),
   };
 });
 
@@ -26,7 +28,11 @@ vi.mock("@/shared/lib/db", () => ({ db: mocks.db }));
 vi.mock("@/shared/lib/toss", () => ({ tossClient: mocks.tossClient }));
 vi.mock("@/entities/booking", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/entities/booking")>();
-  return { ...actual, transitionStatus: mocks.transitionStatus };
+  return {
+    ...actual,
+    transitionStatusTx: mocks.transitionStatusTx,
+    releaseSeats: mocks.releaseSeats,
+  };
 });
 
 import { listDueRefundJobs, retryRefundJob } from "../refundRetry";
@@ -46,6 +52,8 @@ function setupClaimSucceeds() {
     }
   );
   mocks.tx.refundJob.updateMany.mockResolvedValue({ count: 1 });
+  // traveler.updateMany 기본값: count=0 (이미 처리됨 → 멱등 skip)
+  mocks.tx.traveler.updateMany.mockResolvedValue({ count: 0 });
 }
 
 function setupClaimFails() {
@@ -58,6 +66,8 @@ function setupClaimFails() {
   mocks.tx.refundJob.updateMany.mockResolvedValue({ count: 0 });
 }
 
+const DEPARTURE_ID = "departure_retry_test_id_001";
+
 function mockJobLoad(opts: {
   paymentStatus?: "PAID" | "CANCELED" | "PARTIAL_CANCELED";
   tossPaymentKey?: string | null;
@@ -66,6 +76,10 @@ function mockJobLoad(opts: {
   amount?: number;
   penaltyAmount?: number;
   paymentAmount?: number;
+  /** payment.refundedAmount — 기본값은 paymentAmount(전액 환불 → CANCELED) */
+  refundedAmount?: number;
+  kind?: "FULL_CANCEL" | "TRAVELER_CANCEL" | "DISCRETIONARY";
+  seatsReleased?: number;
 }) {
   // mockResolvedValue(not Once)로 덮어쓰기 — clearAllMocks가 mockResolvedValue
   // 큐를 비우지 않아 테스트 간 leak이 발생하기 때문.
@@ -75,6 +89,8 @@ function mockJobLoad(opts: {
     opts.tossPaymentKey === undefined ? TOSS_PAYMENT_KEY : opts.tossPaymentKey;
   const jobAmount = opts.amount ?? AMOUNT;
   const paymentAmount = opts.paymentAmount ?? AMOUNT;
+  // refundedAmount 기본값: paymentAmount (전액 환불 → CANCELED)
+  const refundedAmount = opts.refundedAmount ?? paymentAmount;
   mocks.db.refundJob.findUniqueOrThrow.mockResolvedValue({
     id: JOB_ID,
     bookingId: BOOKING_ID,
@@ -85,12 +101,16 @@ function mockJobLoad(opts: {
     actor,
     status: "IN_PROGRESS",
     attempts: opts.attempts ?? 1,
+    kind: opts.kind ?? "FULL_CANCEL",
+    seatsReleased: opts.seatsReleased ?? 0,
     payment: {
       id: PAYMENT_ID,
       tossPaymentKey,
       amount: paymentAmount,
       status: opts.paymentStatus ?? "PAID",
+      refundedAmount,
     },
+    booking: { departureId: DEPARTURE_ID },
   });
 }
 
@@ -174,15 +194,15 @@ describe("retryRefundJob", () => {
     });
     // Phase 3는 진행 안 됨
     expect(mocks.tx.payment.update).not.toHaveBeenCalled();
-    expect(mocks.transitionStatus).not.toHaveBeenCalled();
+    expect(mocks.transitionStatusTx).not.toHaveBeenCalled();
   });
 
-  // ── 성공 경로 (user actor) → succeeded + booking CANCELED_BY_USER ─
+  // ── 성공 경로 (user actor, FULL_CANCEL) → succeeded + booking CANCELED_BY_USER ─
   it("성공 시 Payment CANCELED + RefundJob SUCCEEDED + booking CANCELED_BY_USER", async () => {
     setupClaimSucceeds();
-    mockJobLoad({ actor: "user:cluser0001" });
+    mockJobLoad({ actor: "user:cluser0001", kind: "FULL_CANCEL" });
     mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
-    mocks.transitionStatus.mockResolvedValue({} as never);
+    mocks.transitionStatusTx.mockResolvedValue({} as never);
 
     const result = await retryRefundJob(JOB_ID);
 
@@ -207,42 +227,46 @@ describe("retryRefundJob", () => {
         providerEventId: expect.stringMatching(/^refund-retry:/),
       }),
     });
-    // booking 전이는 user actor → CANCELED_BY_USER
-    expect(mocks.transitionStatus).toHaveBeenCalledWith(
+    // kind=FULL_CANCEL이면 kind 후처리 Tx 내 transitionStatusTx → CANCELED_BY_USER
+    expect(mocks.transitionStatusTx).toHaveBeenCalledWith(
+      mocks.tx,
       expect.objectContaining({
         bookingId: BOOKING_ID,
         to: "CANCELED_BY_USER",
+        skipSeatReturn: true,
       })
     );
   });
 
-  // ── 성공 경로 (admin/system actor) → booking CANCELED_BY_AGENCY ───
+  // ── 성공 경로 (admin/system actor, FULL_CANCEL) → booking CANCELED_BY_AGENCY ───
   it("admin actor면 booking CANCELED_BY_AGENCY로 전이", async () => {
     setupClaimSucceeds();
-    mockJobLoad({ actor: "admin:adm0001" });
+    mockJobLoad({ actor: "admin:adm0001", kind: "FULL_CANCEL" });
     mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
-    mocks.transitionStatus.mockResolvedValue({} as never);
+    mocks.transitionStatusTx.mockResolvedValue({} as never);
 
     await retryRefundJob(JOB_ID);
 
-    expect(mocks.transitionStatus).toHaveBeenCalledWith(
+    expect(mocks.transitionStatusTx).toHaveBeenCalledWith(
+      mocks.tx,
       expect.objectContaining({ to: "CANCELED_BY_AGENCY" })
     );
   });
 
-  // ── actor null (legacy row) → CANCELED_BY_AGENCY fallback ────────
+  // ── actor null (legacy row, FULL_CANCEL) → CANCELED_BY_AGENCY fallback ────────
   it("actor null이면 보수적으로 CANCELED_BY_AGENCY (외부 시스템 추정)", async () => {
     setupClaimSucceeds();
-    mockJobLoad({ actor: null });
+    mockJobLoad({ actor: null, kind: "FULL_CANCEL" });
     mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
-    mocks.transitionStatus.mockResolvedValue({} as never);
+    mocks.transitionStatusTx.mockResolvedValue({} as never);
 
     await retryRefundJob(JOB_ID);
 
-    expect(mocks.transitionStatus).toHaveBeenCalledWith(
+    expect(mocks.transitionStatusTx).toHaveBeenCalledWith(
+      mocks.tx,
       expect.objectContaining({
         to: "CANCELED_BY_AGENCY",
-        actor: "system:refund-retry",
+        actor: "system:cron",
       })
     );
   });
@@ -250,9 +274,9 @@ describe("retryRefundJob", () => {
   // ── booking이 이미 CANCELED 상태 (InvalidTransitionError) — silent ─
   it("booking이 이미 종료 상태(InvalidTransitionError)면 환불 자체는 success 유지", async () => {
     setupClaimSucceeds();
-    mockJobLoad({});
+    mockJobLoad({ kind: "FULL_CANCEL" });
     mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
-    mocks.transitionStatus.mockRejectedValue(
+    mocks.transitionStatusTx.mockRejectedValue(
       new InvalidTransitionError("CANCELED_BY_USER", "CANCELED_BY_USER")
     );
 
@@ -268,8 +292,9 @@ describe("retryRefundJob", () => {
 describe("retryRefundJob — 부분 환불 스냅샷", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ── Case A: 위약금 있는 부분 환불 → cancelAmount=job.amount, Payment=PARTIAL_CANCELED ─
-  it("Case A: penaltyAmount>0이면 job.amount로 PG 취소 + Payment PARTIAL_CANCELED", async () => {
+  // ── Case A: 부분 환불 → cancelAmount=job.amount, Payment=PARTIAL_CANCELED ─
+  // refundedAmount(700_000) < paymentAmount(1_000_000) → PARTIAL_CANCELED
+  it("Case A: refundedAmount < paymentAmount이면 job.amount로 PG 취소 + Payment PARTIAL_CANCELED", async () => {
     setupClaimSucceeds();
     // Payment 원금 1_000_000, 환불금 700_000, 위약금 300_000
     mockJobLoad({
@@ -277,9 +302,11 @@ describe("retryRefundJob — 부분 환불 스냅샷", () => {
       amount: 700_000,
       penaltyAmount: 300_000,
       paymentAmount: 1_000_000,
+      refundedAmount: 700_000, // < 1_000_000 → PARTIAL_CANCELED
+      kind: "FULL_CANCEL",
     });
     mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
-    mocks.transitionStatus.mockResolvedValue({} as never);
+    mocks.transitionStatusTx.mockResolvedValue({} as never);
 
     const result = await retryRefundJob(JOB_ID);
 
@@ -290,7 +317,7 @@ describe("retryRefundJob — 부분 환불 스냅샷", () => {
       cancelReason: "test refund",
       cancelAmount: 700_000,
     });
-    // Payment 상태는 PARTIAL_CANCELED (위약금 존재)
+    // Payment 상태는 PARTIAL_CANCELED (refundedAmount < amount)
     expect(mocks.tx.payment.update).toHaveBeenCalledWith({
       where: { id: PAYMENT_ID },
       data: expect.objectContaining({ status: "PARTIAL_CANCELED" }),
@@ -306,17 +333,20 @@ describe("retryRefundJob — 부분 환불 스냅샷", () => {
     });
   });
 
-  // ── Case B: 위약금 없는 전액 환불 → Payment=CANCELED ─────────────
-  it("Case B: penaltyAmount=0이면 Payment CANCELED (전액 환불 / cascade 경로)", async () => {
+  // ── Case B: 전액 환불 → Payment=CANCELED ─────────────
+  // refundedAmount(500_000) >= paymentAmount(500_000) → CANCELED
+  it("Case B: refundedAmount >= paymentAmount이면 Payment CANCELED (전액 환불 / cascade 경로)", async () => {
     setupClaimSucceeds();
     mockJobLoad({
       paymentStatus: "PAID",
       amount: 500_000,
       penaltyAmount: 0,
       paymentAmount: 500_000,
+      refundedAmount: 500_000, // >= 500_000 → CANCELED
+      kind: "FULL_CANCEL",
     });
     mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
-    mocks.transitionStatus.mockResolvedValue({} as never);
+    mocks.transitionStatusTx.mockResolvedValue({} as never);
 
     const result = await retryRefundJob(JOB_ID);
 
