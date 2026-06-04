@@ -61,6 +61,9 @@ export type { EnqueueRefundJobArgs } from "./api/enqueueRefundJob";
 export { computePenalty, OVERSEAS_PENALTY_TIERS } from "./model/penaltyPolicy";
 export type { PenaltyResult, PenaltyInput } from "./model/penaltyPolicy";
 
+// ── 잔여 환불가능액 (순수) ─────────────────────────────────────
+export { refundableAmount } from "./model/refundable";
+
 // ── UI ──────────────────────────────────────────────────────────
 export { PaymentStatusBadge, PAYMENT_STATUS_LABEL } from "./ui/PaymentStatusBadge";
 

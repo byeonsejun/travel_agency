@@ -1436,7 +1436,7 @@ git commit -m "feat(admin): traveler-cancel + discretionary-refund server action
 - Modify: `src/widgets/booking-detail/ui/BookingDetailView.tsx`
 - Create: `src/widgets/booking-detail/ui/TravelerCancelPanel.tsx`, `DiscretionaryRefundPanel.tsx` (`'use client'` islands)
 
-- [ ] **Step 1: 잔여 환불가능액 표시 (server 조립)**
+- [x] **Step 1: 잔여 환불가능액 표시 (server 조립)**
 
 `BookingDetailView.tsx`에 잔여액 표시 추가 — payment에서 `amount - refundedAmount` 계산해 표기. `refundableAmount` 헬퍼 재사용:
 
@@ -1448,7 +1448,7 @@ import { refundableAmount } from "@/entities/payment";
 
 (`refundable.ts`를 `entities/payment/index.ts` 배럴에 export.)
 
-- [ ] **Step 2: TravelerCancelPanel island (`'use client'`)**
+- [x] **Step 2: TravelerCancelPanel island (`'use client'`)**
 
 Create `src/widgets/booking-detail/ui/TravelerCancelPanel.tsx`: 활성 여행자(canceledAt=null) 체크박스 목록 + 위약금 적용 토글 + 제출. `useTransition`으로 pending 처리, `travelerCancelAction` 호출. 취소된 여행자는 비활성 표기.
 
@@ -1484,7 +1484,7 @@ export function TravelerCancelPanel({ bookingId, travelers }: { bookingId: strin
 }
 ```
 
-- [ ] **Step 3: DiscretionaryRefundPanel island**
+- [x] **Step 3: DiscretionaryRefundPanel island**
 
 Create `src/widgets/booking-detail/ui/DiscretionaryRefundPanel.tsx`: 금액 입력 + requestId(`useRef(crypto.randomUUID())` 마운트 시 1회 생성) + 잔여액 초과 클라 가드 + 제출. 좌석 미변동 경고 배너(spec R3).
 
@@ -1510,16 +1510,16 @@ export function DiscretionaryRefundPanel({ bookingId, paymentId, refundable }: {
 }
 ```
 
-- [ ] **Step 4: BookingDetailView에 두 패널 조립**
+- [x] **Step 4: BookingDetailView에 두 패널 조립**
 
 `BookingDetailView.tsx`에서 payment가 PAID/PARTIAL_CANCELED일 때 두 island 렌더. travelers/refundable를 props로 전달.
 
-- [ ] **Step 5: 빌드/타입 검증**
+- [x] **Step 5: 빌드/타입 검증**
 
 Run: `npm run typecheck && npm run lint`
 Expected: PASS. `grep -rn "use client" src/widgets/booking-detail/ui/`로 island만 client인지 확인(`entities/**/ui` 금지 규칙 무관 — widgets 레이어).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/widgets/booking-detail/
