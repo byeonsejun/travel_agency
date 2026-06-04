@@ -222,8 +222,8 @@ describe("<UserNavIsland />", () => {
     expect(badge2?.textContent).toBe("7");
   });
 
-  // ── (i) ADMIN role → '관리자' 링크(/admin/products) 노출 ───────────
-  it("(i) role ADMIN → '관리자' 링크(/admin/products) 렌더", async () => {
+  // ── (i) ADMIN role → '관리자' 링크(/admin/dashboard) 노출 ───────────
+  it("(i) role ADMIN → '관리자' 링크(/admin/dashboard) 렌더", async () => {
     vi.stubGlobal(
       "fetch",
       makeFetch({
@@ -239,7 +239,7 @@ describe("<UserNavIsland />", () => {
       root.render(<UserNavIsland />);
     });
 
-    const adminLink = container.querySelector('a[href="/admin/products"]');
+    const adminLink = container.querySelector('a[href="/admin/dashboard"]');
     expect(adminLink).not.toBeNull();
     expect(adminLink?.textContent).toContain("관리자");
   });
@@ -261,7 +261,7 @@ describe("<UserNavIsland />", () => {
       root.render(<UserNavIsland />);
     });
 
-    const adminLink = container.querySelector('a[href="/admin/products"]');
+    const adminLink = container.querySelector('a[href="/admin/dashboard"]');
     expect(adminLink).toBeNull();
   });
 
