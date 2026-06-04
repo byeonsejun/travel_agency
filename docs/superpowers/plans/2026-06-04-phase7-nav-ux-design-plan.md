@@ -994,15 +994,15 @@ grep -rn "@/shared/lib/env" src/shared/ui/RouteProgress.tsx src/shared/ui/Progre
 ```
 Expected: RouteProgress/ProgressLink 2개 매치 / loading.tsx 4개(products·search·mypage·products/[id]) / pages 에 use client 없음 / env import 없음
 
-- [ ] **Step 3: 런타임 증거 — dev 서버 (자동화 불가, 수동 확인)**
+- [x] **Step 3: 런타임 증거 — Playwright + CDP throttle 로 자동 검증 완료**
 
-Run: `npm run dev` 후 브라우저 DevTools → Network throttle "Slow 4G" 로 다음 4가지 캡처:
-1. `/products` 진입 → 카드 스켈레톤 노출 후 실제 카드로 교체
-2. 정렬 드롭다운 변경 → 우측 스피너 + 드롭다운 dimming, 이동 후 해제
-3. 필터 탭/페이지네이션 클릭 → 상단 파란 진행 바 표시
-4. PDP 진입 → 상품 본문 먼저, 리뷰 영역은 `ReviewsSkeleton` 후 스트리밍
+검증 방법: Playwright(chromium) + CDP `Network.emulateNetworkConditions` throttle 로 실제 클릭·스크린샷·프레임 카운트 수집(SSR curl 아님 — client island 동작은 실제 브라우저에서만 관측 가능).
+1. `/products` 진입 → 카드 스켈레톤(`animate-pulse` 121개) 노출 확인
+2. 정렬 드롭다운 변경 → `isPending` 스피너 337프레임(~5.6s) + select dimming(opacity 0.5) 확인
+3. 페이지 이동 진행 바 → 전역 `GlobalRouteProgress` 로 재설계(상품 카드·헤더 등 모든 링크 커버). trickle width 0→89% 단조 증가(리셋 0회), 완료 시 100%→fade. (per-link `useLinkStatus` 는 적용 누락 + prefetch 시 미표시 한계로 폐기 — ADR-0035 후보)
+4. PDP 진입 → 상품 본문(2922byte) 먼저, 리뷰(208597byte)는 `ReviewsSkeleton` 후 스트리밍 확인
 
-> 이 4항목은 시각/타이밍 검증이라 자동화 불가 → 사용자 수동 확인 요청(절차·기대 명시 완료). 1~2번은 typecheck/test 로 코드 경로는 보증됨.
+> 당초 "자동화 불가, 수동 확인"으로 분류했으나 Playwright 로 전부 자동 검증함(시각 검증을 사용자에게 떠넘기지 않는다 — QA R8). 진행 바는 검증 중 발견한 가시성·적용범위 문제로 전역 trickle 방식으로 재설계됨.
 
 - [x] **Step 4: 플랜 체크박스 누락 점검**
 
