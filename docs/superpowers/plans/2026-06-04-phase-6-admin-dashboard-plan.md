@@ -49,17 +49,17 @@ package.json                               # recharts 의존성 (modify)
 **Files:**
 - Modify: `package.json`
 
-- [ ] **Step 1: recharts 설치**
+- [x] **Step 1: recharts 설치**
 
 Run: `npm install recharts@^2.13.0`
 Expected: `package.json` dependencies에 `"recharts"` 추가, 설치 성공.
 
-- [ ] **Step 2: 타입 동반 확인**
+- [x] **Step 2: 타입 동반 확인**
 
 Run: `node -e "require.resolve('recharts')"`
 Expected: 에러 없이 경로 출력 (recharts는 자체 타입 번들 — `@types` 불요).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add package.json package-lock.json
@@ -77,7 +77,7 @@ git commit -m "build(dashboard): add recharts for admin dashboard charts"
 - Create: `src/entities/analytics/model/range.ts`
 - Test: `src/entities/analytics/model/__tests__/range.test.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 `src/entities/analytics/model/types.ts`:
 ```typescript
@@ -133,7 +133,7 @@ export interface DashboardData {
 }
 ```
 
-- [ ] **Step 2: 실패하는 테스트 작성**
+- [x] **Step 2: 실패하는 테스트 작성**
 
 `src/entities/analytics/model/__tests__/range.test.ts`:
 ```typescript
@@ -185,12 +185,12 @@ describe("parseRange", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실패 확인**
+- [x] **Step 3: 테스트 실패 확인**
 
 Run: `npm run test -- src/entities/analytics/model/__tests__/range.test.ts`
 Expected: FAIL — `parseRange is not a function` (range.ts 미존재).
 
-- [ ] **Step 4: 최소 구현**
+- [x] **Step 4: 최소 구현** (리뷰: today 분기 to=now 스펙 복원, fix `fc52d33`)
 
 `src/entities/analytics/model/range.ts`:
 ```typescript
@@ -237,12 +237,12 @@ export function parseRange(raw: unknown): DateRange {
 }
 ```
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 Run: `npm run test -- src/entities/analytics/model/__tests__/range.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/entities/analytics/model
@@ -259,7 +259,7 @@ git commit -m "feat(analytics): parseRange pure function for URL-based date filt
 - Create: `src/entities/analytics/api/queries.ts`
 - Create: `src/entities/analytics/index.ts`
 
-- [ ] **Step 1: 집계 함수 구현**
+- [x] **Step 1: 집계 함수 구현** (code-review fix `94e1af5`: Payment status 가드 + 시간기준 주석 + CACHE_OPTS 상수화)
 
 `src/entities/analytics/api/queries.ts`:
 ```typescript
@@ -435,7 +435,7 @@ export function getBookingStatusDistribution() {
 }
 ```
 
-- [ ] **Step 2: barrel export**
+- [x] **Step 2: barrel export**
 
 `src/entities/analytics/index.ts`:
 ```typescript
@@ -461,12 +461,12 @@ export {
 } from "./api/queries";
 ```
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS (no errors in analytics 모듈).
 
-- [ ] **Step 4: 런타임 증거 — seed 기준 집계 실행**
+- [x] **Step 4: 런타임 증거 — seed 기준 집계 실행** (revenue net=900, occupancy rate=0.28, cancel rate=0.28, trend len=2 — 정상)
 
 Run:
 ```bash
@@ -484,7 +484,7 @@ import { getRevenueSummary, getSeatOccupancy } from './src/entities/analytics/ap
 ```
 Expected: 객체 출력(`{ paid, refunded, net }`, `{ booked, capacity, rate }`) — 음수 net 없으면 정상. 에러 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/analytics
@@ -501,7 +501,7 @@ git commit -m "feat(analytics): dashboard aggregation read-model ($queryRaw + 60
 - Create: `src/widgets/admin-dashboard/ui/format.ts`
 - Test: `src/widgets/admin-dashboard/ui/__tests__/format.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트**
+- [x] **Step 1: 실패하는 테스트**
 
 `src/widgets/admin-dashboard/ui/__tests__/format.test.ts`:
 ```typescript
@@ -533,12 +533,12 @@ describe("formatPercent", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- src/widgets/admin-dashboard/ui/__tests__/format.test.ts`
 Expected: FAIL — 모듈 미존재.
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/widgets/admin-dashboard/ui/format.ts`:
 ```typescript
@@ -554,12 +554,12 @@ export function formatPercent(ratio: number): string {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test -- src/widgets/admin-dashboard/ui/__tests__/format.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/format.ts src/widgets/admin-dashboard/ui/__tests__/format.test.ts
