@@ -384,7 +384,7 @@ git commit -m "feat(pdp): route loading skeleton (ISR on-demand miss safety net)
 - Create: `src/widgets/product-detail/ui/ProductReviewsSection.tsx`
 - Modify: `src/app/(site)/products/[id]/page.tsx`
 
-- [ ] **Step 1: Create ReviewsSkeleton**
+- [x] **Step 1: Create ReviewsSkeleton**
 
 `src/widgets/product-detail/ui/ReviewsSkeleton.tsx`:
 
@@ -405,7 +405,7 @@ export function ReviewsSkeleton() {
 }
 ```
 
-- [ ] **Step 2: Create ProductReviewsSection (async RSC, 리뷰 3쿼리 이동)**
+- [x] **Step 2: Create ProductReviewsSection (async RSC, 리뷰 3쿼리 이동)**
 
 `src/widgets/product-detail/ui/ProductReviewsSection.tsx`:
 
@@ -449,7 +449,7 @@ export async function ProductReviewsSection({
 }
 ```
 
-- [ ] **Step 3: Rewrite page.tsx — 본문만 await, 리뷰는 Suspense**
+- [x] **Step 3: Rewrite page.tsx — 본문만 await, 리뷰는 Suspense**
 
 `src/app/(site)/products/[id]/page.tsx` 의 import 블록에서 리뷰 엔티티 import 3개와 `ReviewStatsBar`/`RatingDistribution`/`ReviewFeed` import 를 제거하고, 대신 추가:
 
@@ -495,17 +495,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
 }
 ```
 
-- [ ] **Step 4: Verify typecheck + lint (unused import 0 확인)**
+- [x] **Step 4: Verify typecheck + lint (unused import 0 확인)**
 
 Run: `npm run typecheck && npm run lint`
 Expected: PASS — 제거한 리뷰 import 가 page.tsx 에서 더 이상 참조되지 않아 unused 경고 없음.
 
-- [ ] **Step 5: Verify existing PDP tests still pass**
+- [x] **Step 5: Verify existing PDP tests still pass**
 
 Run: `npx vitest run src/widgets/product-detail src/features/review-feed`
 Expected: PASS (리뷰 렌더 트리만 이동, 동작 동일)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "src/app/(site)/products/[id]/page.tsx" src/widgets/product-detail/ui/ProductReviewsSection.tsx src/widgets/product-detail/ui/ReviewsSkeleton.tsx
