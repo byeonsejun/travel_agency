@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { UserNavIsland } from "@/features/auth";
+import { GlobalRouteProgress } from "@/shared/ui/GlobalRouteProgress";
 
 export default function SiteLayout({
   children,
@@ -11,6 +13,11 @@ export default function SiteLayout({
   // (특히 /products/[id] 가 ISR `●` 표기로 승격).
   return (
     <>
+      {/* 전역 라우트 진행 바 — useSearchParams 사용으로 Suspense 경계 필수
+          (정적 prerender 시 fallback=null 로 페이지 dynamic 강등 방지). */}
+      <Suspense fallback={null}>
+        <GlobalRouteProgress />
+      </Suspense>
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link

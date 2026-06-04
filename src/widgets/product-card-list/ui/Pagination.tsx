@@ -1,4 +1,4 @@
-import { ProgressLink } from "@/shared/ui/ProgressLink";
+import Link from "next/link";
 
 type PaginationProps = {
   total: number;
@@ -39,12 +39,12 @@ export function Pagination({
     >
       {/* Previous button */}
       {currentPage > 1 ? (
-        <ProgressLink
+        <Link
           href={buildHref(currentPage - 1)}
           className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
         >
           이전
-        </ProgressLink>
+        </Link>
       ) : (
         <button
           disabled
@@ -58,12 +58,12 @@ export function Pagination({
       <div className="flex gap-1">
         {rangeStart > 1 && (
           <>
-            <ProgressLink
+            <Link
               href={buildHref(1)}
               className="rounded border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
               1
-            </ProgressLink>
+            </Link>
             {rangeStart > 2 && (
               <span className="px-2 py-2 text-sm text-gray-600">...</span>
             )}
@@ -71,7 +71,7 @@ export function Pagination({
         )}
 
         {pageNumbers.map((page) => (
-          <ProgressLink
+          <Link
             key={page}
             href={buildHref(page)}
             className={`rounded px-3 py-2 text-sm font-medium transition-colors ${
@@ -81,7 +81,7 @@ export function Pagination({
             }`}
           >
             {page}
-          </ProgressLink>
+          </Link>
         ))}
 
         {rangeEnd < totalPages && (
@@ -89,24 +89,24 @@ export function Pagination({
             {rangeEnd < totalPages - 1 && (
               <span className="px-2 py-2 text-sm text-gray-600">...</span>
             )}
-            <ProgressLink
+            <Link
               href={buildHref(totalPages)}
               className="rounded border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
               {totalPages}
-            </ProgressLink>
+            </Link>
           </>
         )}
       </div>
 
       {/* Next button */}
       {currentPage < totalPages ? (
-        <ProgressLink
+        <Link
           href={buildHref(currentPage + 1)}
           className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
         >
           다음
-        </ProgressLink>
+        </Link>
       ) : (
         <button
           disabled

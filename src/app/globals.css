@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 라우트 네비게이션 진행 바(RouteProgress) — 좌→우로 흐르는 indeterminate 애니메이션 */
+/* 라우트 네비게이션 진행 바(GlobalRouteProgress) — 좌→우로 흐르는 indeterminate 애니메이션 */
 @keyframes route-progress-slide {
   0% {
     transform: translateX(-100%);
