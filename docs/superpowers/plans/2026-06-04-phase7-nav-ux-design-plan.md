@@ -194,7 +194,7 @@ git commit -m "feat(widgets): ProductCard/BookingRow skeleton shapes"
 - Create: `src/app/(site)/products/loading.tsx`
 - Modify: `src/app/(site)/search/loading.tsx`
 
-- [ ] **Step 1: Create products/loading.tsx**
+- [x] **Step 1: Create products/loading.tsx**
 
 `src/app/(site)/products/loading.tsx`:
 
@@ -227,7 +227,7 @@ export default function ProductsLoading() {
 }
 ```
 
-- [ ] **Step 2: Refactor search/loading.tsx to reuse ProductCardSkeleton**
+- [x] **Step 2: Refactor search/loading.tsx to reuse ProductCardSkeleton**
 
 `src/app/(site)/search/loading.tsx` 전체 교체:
 
@@ -255,12 +255,12 @@ export default function SearchLoading() {
 }
 ```
 
-- [ ] **Step 3: Verify typecheck + lint**
+- [x] **Step 3: Verify typecheck + lint**
 
 Run: `npm run typecheck && npm run lint`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add "src/app/(site)/products/loading.tsx" "src/app/(site)/search/loading.tsx"
