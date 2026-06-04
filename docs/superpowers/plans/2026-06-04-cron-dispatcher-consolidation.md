@@ -37,7 +37,7 @@ vercel.json                                      # modify: dispatcher 1개 daily
 - Create: `src/shared/lib/cron/authorize.ts`
 - Test: `src/shared/lib/cron/__tests__/authorize.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트**
+- [x] **Step 1: 실패하는 테스트**
 
 `src/shared/lib/cron/__tests__/authorize.test.ts`:
 ```typescript
@@ -70,12 +70,12 @@ describe("isCronAuthorized", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- src/shared/lib/cron/__tests__/authorize.test.ts`
 Expected: FAIL — `../authorize` 모듈 미존재.
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/shared/lib/cron/authorize.ts`:
 ```typescript
@@ -91,12 +91,12 @@ export function isCronAuthorized(req: NextRequest): boolean {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test -- src/shared/lib/cron/__tests__/authorize.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/shared/lib/cron
@@ -116,7 +116,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Create: `src/shared/lib/refund-job/index.ts`
 - Test: `src/shared/lib/refund-job/__tests__/worker.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트** (기존 batch-recompute 검증을 워커 대상으로 이전 + 격리 케이스 추가)
+- [x] **Step 1: 실패하는 테스트** (기존 batch-recompute 검증을 워커 대상으로 이전 + 격리 케이스 추가)
 
 `src/shared/lib/refund-job/__tests__/worker.test.ts`:
 ```typescript
@@ -191,12 +191,12 @@ describe("processRefundJobBatch", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- src/shared/lib/refund-job/__tests__/worker.test.ts`
 Expected: FAIL — `../worker` 미존재.
 
-- [ ] **Step 3: 워커 구현** (route 인라인 로직 그대로 이전)
+- [x] **Step 3: 워커 구현** (route 인라인 로직 그대로 이전)
 
 `src/shared/lib/refund-job/worker.ts`:
 ```typescript
@@ -283,7 +283,7 @@ export async function processRefundJobBatch(opts: {
 }
 ```
 
-- [ ] **Step 4: barrel**
+- [x] **Step 4: barrel**
 
 `src/shared/lib/refund-job/index.ts`:
 ```typescript
@@ -291,12 +291,12 @@ export { processRefundJobBatch } from "./worker";
 export type { RefundBatchResult } from "./worker";
 ```
 
-- [ ] **Step 5: 테스트 통과 + typecheck**
+- [x] **Step 5: 테스트 통과 + typecheck**
 
 Run: `npm run test -- src/shared/lib/refund-job/__tests__/worker.test.ts && npm run typecheck`
 Expected: PASS (3 tests) + typecheck clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/shared/lib/refund-job
@@ -316,7 +316,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `src/app/api/cron/email-job/route.ts`
 - Modify: `src/app/api/cron/embedding-job/route.ts`
 
-- [ ] **Step 1: process-refunds 라우트를 얇은 래퍼로 교체**
+- [x] **Step 1: process-refunds 라우트를 얇은 래퍼로 교체**
 
 `src/app/api/cron/process-refunds/route.ts` 전체를 다음으로 교체:
 ```typescript
@@ -351,7 +351,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 ```
 
-- [ ] **Step 2: 기존 batch-recompute 테스트 삭제 + 얇은 래퍼 테스트 생성**
+- [x] **Step 2: 기존 batch-recompute 테스트 삭제 + 얇은 래퍼 테스트 생성**
 
 Run: `git rm src/app/api/cron/process-refunds/__tests__/batch-recompute.test.ts`
 (배치 recompute 검증은 Task 2 워커 테스트로 이전됨.)
@@ -405,7 +405,7 @@ describe("GET /api/cron/process-refunds (얇은 래퍼)", () => {
 });
 ```
 
-- [ ] **Step 3: email-job 라우트를 공통 가드로 교체**
+- [x] **Step 3: email-job 라우트를 공통 가드로 교체**
 
 `src/app/api/cron/email-job/route.ts`에서 로컬 `isAuthorized` 함수를 제거하고 공통 가드를 import. import 블록과 호출부를 다음과 같이 변경:
 - import 추가: `import { isCronAuthorized } from "@/shared/lib/cron/authorize";`
@@ -446,7 +446,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 ```
 
-- [ ] **Step 4: embedding-job 라우트를 공통 가드로 교체**
+- [x] **Step 4: embedding-job 라우트를 공통 가드로 교체**
 
 `src/app/api/cron/embedding-job/route.ts`에서 로컬 `isAuthorized` 제거 + 공통 가드 사용. 변경 후 전체:
 ```typescript
@@ -487,12 +487,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 ```
 
-- [ ] **Step 5: 테스트 + typecheck**
+- [x] **Step 5: 테스트 + typecheck**
 
 Run: `npm run test -- src/app/api/cron && npm run typecheck`
 Expected: PASS — process-refunds route.test(2) + email route.test(2) + embedding route.test(기존) 모두 그린. email/embedding 테스트는 `@/shared/lib/env` mock으로 `isCronAuthorized`가 통과(가드가 env 읽음).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/api/cron/process-refunds src/app/api/cron/email-job/route.ts src/app/api/cron/embedding-job/route.ts
@@ -509,7 +509,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Create: `src/app/api/cron/dispatcher/route.ts`
 - Test: `src/app/api/cron/dispatcher/__tests__/route.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트**
+- [x] **Step 1: 실패하는 테스트**
 
 `src/app/api/cron/dispatcher/__tests__/route.test.ts`:
 ```typescript
@@ -591,12 +591,12 @@ describe("GET /api/cron/dispatcher", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- src/app/api/cron/dispatcher/__tests__/route.test.ts`
 Expected: FAIL — `../route` 미존재.
 
-- [ ] **Step 3: dispatcher 구현**
+- [x] **Step 3: dispatcher 구현**
 
 `src/app/api/cron/dispatcher/route.ts`:
 ```typescript
@@ -646,12 +646,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 + typecheck**
+- [x] **Step 4: 테스트 통과 + typecheck**
 
 Run: `npm run test -- src/app/api/cron/dispatcher/__tests__/route.test.ts && npm run typecheck`
 Expected: PASS (3 tests) + typecheck clean. (`...s.value` union spread는 strict에서 허용 — `any` 불요. 만약 spread 타입 오류가 나면 `...(s.value as Record<string, unknown>)` 대신 명시적으로 `result: s.value` 중첩으로 변경하되 `any` 금지.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/api/cron/dispatcher
@@ -667,7 +667,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 **Files:**
 - Modify: `vercel.json`
 
-- [ ] **Step 1: crons 배열 교체**
+- [x] **Step 1: crons 배열 교체**
 
 `vercel.json`의 `"crons"` 배열을 다음 단일 항목으로 교체(다른 키는 보존):
 ```json
@@ -677,12 +677,12 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 (기존 process-refunds/embedding-job/email-job 3개 항목 제거. Vercel Hobby: cron ≤2개 + 1일1회 제약 충족 → 배포 통과. 실시간 2분 주기는 외부 트리거가 dispatcher 또는 개별 래퍼 라우트를 호출.)
 
-- [ ] **Step 2: JSON 유효성 + cron 1개 확인**
+- [x] **Step 2: JSON 유효성 + cron 1개 확인**
 
 Run: `node -e "const c=require('./vercel.json'); console.log('crons:', JSON.stringify(c.crons)); if(c.crons.length!==1) process.exit(1); if(c.crons[0].schedule!=='0 0 * * *') process.exit(1); console.log('OK')"`
 Expected: `crons: [{"path":"/api/cron/dispatcher","schedule":"0 0 * * *"}]` + `OK`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add vercel.json
@@ -697,12 +697,12 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Files:** 없음(검증 전용).
 
-- [ ] **Step 1: 전체 게이트**
+- [x] **Step 1: 전체 게이트**
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: typecheck clean · 전체 test PASS(신규 authorize 3 + refund worker 3 + dispatcher 3 + process-refunds route 2 포함) · lint 신규 오류 0.
 
-- [ ] **Step 2: 로컬 통합 검증 — dispatcher가 3개 워커 모두 실행 (Mock/seed 데이터)**
+- [x] **Step 2: 로컬 통합 검증 — dispatcher가 3개 워커 모두 실행 (Mock/seed 데이터)**
 
 Run:
 ```bash
@@ -718,7 +718,7 @@ pkill -f "next dev" || true
 Expected: 미인증 401. 인증 응답 JSON에 `"workers"` 3개(refund/email/embedding) 모두 포함, 각 `status:"fulfilled"`(pending job 없으면 processed:0). 500 아님.
 판정: `node -e "const r=require('/tmp/cron-dispatch.json'); const n=r.workers.map(w=>w.worker).sort().join(','); console.log(n); if(n!=='email,embedding,refund') process.exit(1); console.log('3 workers OK')"`
 
-- [ ] **Step 3: 개별 래퍼 라우트 생존 확인 (외부 트리거 진입점)**
+- [x] **Step 3: 개별 래퍼 라우트 생존 확인 (외부 트리거 진입점)**
 
 Run:
 ```bash
@@ -730,12 +730,12 @@ pkill -f "next dev" || true
 ```
 Expected: 3개 모두 200(인증 통과, 워커 위임). 라우트가 삭제되지 않고 얇은 래퍼로 살아있음 확인.
 
-- [ ] **Step 4: 미체크 박스 잔존 점검**
+- [x] **Step 4: 미체크 박스 잔존 점검**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-04-cron-dispatcher-consolidation.md`
 Expected: 완료 시 헤더 prose 줄 외 출력 없음.
 
-- [ ] **Step 5: 최종 커밋/상태 확인**
+- [x] **Step 5: 최종 커밋/상태 확인**
 
 Run: `git log --oneline -7 && git status --short`
 Expected: Task 1~5 커밋 존재, working tree clean.
