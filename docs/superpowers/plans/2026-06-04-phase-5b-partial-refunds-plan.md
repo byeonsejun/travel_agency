@@ -42,7 +42,7 @@
 - Create: `src/entities/payment/model/penaltyPolicy.ts`
 - Test: `src/entities/payment/model/__tests__/penaltyPolicy.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // src/entities/payment/model/__tests__/penaltyPolicy.test.ts
@@ -121,12 +121,12 @@ describe("computePenalty — 국외여행 표준약관 구간", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm run test -- penaltyPolicy`
 Expected: FAIL — `computePenalty` is not defined / module not found.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 // src/entities/payment/model/penaltyPolicy.ts
@@ -186,12 +186,12 @@ export function computePenalty(input: PenaltyInput): PenaltyResult {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm run test -- penaltyPolicy`
 Expected: PASS (모든 케이스). 만약 D-day 경계가 어긋나면 `daysUntil`의 KST 보정과 테스트 `at()`의 정오 오프셋을 확인.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/payment/model/penaltyPolicy.ts src/entities/payment/model/__tests__/penaltyPolicy.test.ts
@@ -208,7 +208,7 @@ git commit -m "feat(payment): add overseas-travel penalty policy engine (pure fn
 
 > shadow DB(pgvector) 제약으로 `migrate dev` 불가 → db push + 수동 SQL + resolve 3-step ([[project_prisma_migration_workaround]]).
 
-- [ ] **Step 1: Edit `prisma/schema.prisma` — enum 값 추가**
+- [x] **Step 1: Edit `prisma/schema.prisma` — enum 값 추가**
 
 `PaymentStatus`에 `PARTIAL_CANCELED` 추가 (CANCELED 다음 줄):
 
@@ -222,7 +222,7 @@ enum PaymentStatus {
 }
 ```
 
-- [ ] **Step 2: Edit `prisma/schema.prisma` — RefundJob.penaltyAmount 추가**
+- [x] **Step 2: Edit `prisma/schema.prisma` — RefundJob.penaltyAmount 추가**
 
 `RefundJob` 모델의 `amount Int` 줄 주석을 갱신하고 바로 아래 `penaltyAmount` 추가:
 
@@ -231,12 +231,12 @@ enum PaymentStatus {
   penaltyAmount Int @default(0) // 취소 요청 시점 동결된 위약금 스냅샷 (spec §4)
 ```
 
-- [ ] **Step 3: dev DB에 반영 + 클라이언트 재생성**
+- [x] **Step 3: dev DB에 반영 + 클라이언트 재생성**
 
 Run: `npx prisma db push && npx prisma generate`
 Expected: "Your database is now in sync" + Prisma Client 재생성. 데이터 손실 경고 없음(추가만).
 
-- [ ] **Step 4: 수동 마이그레이션 SQL 작성**
+- [x] **Step 4: 수동 마이그레이션 SQL 작성**
 
 디렉터리 생성 후 파일 작성 (`<ts>`는 `date +%Y%m%d%H%M%S`):
 
@@ -248,17 +248,17 @@ ALTER TYPE "PaymentStatus" ADD VALUE IF NOT EXISTS 'PARTIAL_CANCELED';
 ALTER TABLE "RefundJob" ADD COLUMN IF NOT EXISTS "penaltyAmount" INTEGER NOT NULL DEFAULT 0;
 ```
 
-- [ ] **Step 5: 마이그레이션 히스토리 정합**
+- [x] **Step 5: 마이그레이션 히스토리 정합**
 
 Run: `npx prisma migrate resolve --applied <ts>_phase5b_partial_refund`
 Expected: "Migration marked as applied".
 
-- [ ] **Step 6: typecheck 통과 확인**
+- [x] **Step 6: typecheck 통과 확인**
 
 Run: `npm run typecheck`
 Expected: PASS — 생성된 타입에 `PARTIAL_CANCELED`, `penaltyAmount` 반영.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add prisma/schema.prisma prisma/migrations/
@@ -273,7 +273,7 @@ git commit -m "feat(payment): add PARTIAL_CANCELED status + RefundJob.penaltyAmo
 - Modify: `src/entities/payment/api/refund.ts`
 - Test: `src/entities/payment/api/__tests__/refund.test.ts`
 
-- [ ] **Step 1: Write the failing test (기존 파일에 추가)**
+- [x] **Step 1: Write the failing test (기존 파일에 추가)**
 
 기존 테스트의 `refundBooking` 호출에 `applyPenalty` 인자가 추가되어야 한다. 신규 케이스 추가:
 
@@ -329,12 +329,12 @@ describe("refundBooking — 부분 환불(위약금)", () => {
 
 > 셋업 헬퍼 `seedPaidBooking`이 기존 테스트에 없으면, 기존 테스트가 쓰는 픽스처 패턴을 그대로 따라 departureDate를 파라미터화해 추가한다. tossClient.cancel은 기존 테스트의 mock(`tossCancelSpy`) 방식을 재사용.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm run test -- refund.test`
 Expected: FAIL — `applyPenalty` 미지원 / `penaltyAmount` 미저장 / Payment 항상 CANCELED.
 
-- [ ] **Step 3: Implement — `refund.ts` 수정**
+- [x] **Step 3: Implement — `refund.ts` 수정**
 
 (a) import 추가:
 
@@ -429,12 +429,12 @@ interface RefundInput {
     });
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm run test -- refund.test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/payment/api/refund.ts src/entities/payment/api/__tests__/refund.test.ts
@@ -449,7 +449,7 @@ git commit -m "feat(payment): apply penalty + partial cancel in refundBooking en
 - Modify: `src/entities/payment/api/refundRetry.ts`
 - Test: `src/entities/payment/api/__tests__/refundRetry.test.ts`
 
-- [ ] **Step 1: Write the failing test (추가)**
+- [x] **Step 1: Write the failing test (추가)**
 
 ```ts
 describe("retryRefundJob — 부분 환불 스냅샷", () => {
@@ -483,12 +483,12 @@ describe("retryRefundJob — 부분 환불 스냅샷", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm run test -- refundRetry.test`
 Expected: FAIL — Payment 항상 CANCELED / PARTIAL_CANCELED short-circuit 없음.
 
-- [ ] **Step 3: Implement — `refundRetry.ts` 수정**
+- [x] **Step 3: Implement — `refundRetry.ts` 수정**
 
 (a) Short-circuit 1 보강 — `payment.status` 비교에 PARTIAL_CANCELED 포함:
 
@@ -538,12 +538,12 @@ Expected: FAIL — Payment 항상 CANCELED / PARTIAL_CANCELED short-circuit 없�
         } as unknown as Prisma.InputJsonValue,
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm run test -- refundRetry.test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/payment/api/refundRetry.ts src/entities/payment/api/__tests__/refundRetry.test.ts
@@ -559,7 +559,7 @@ git commit -m "feat(payment): partial-cancel aware retry worker (snapshot, no re
 - Modify: `src/features/admin-booking-cancel/model/schemas.ts` (`waivePenalty`)
 - Modify: `src/features/admin-booking-cancel/server/actions.ts` (`applyPenalty: !waivePenalty`)
 
-- [ ] **Step 1: 자가취소 — `applyPenalty: true` 전달**
+- [x] **Step 1: 자가취소 — `applyPenalty: true` 전달**
 
 `cancelBookingAction`의 `refundBooking` 호출(현 line ~87)에 인자 추가:
 
@@ -572,7 +572,7 @@ git commit -m "feat(payment): partial-cancel aware retry worker (snapshot, no re
       });
 ```
 
-- [ ] **Step 2: admin 스키마에 `waivePenalty` 추가**
+- [x] **Step 2: admin 스키마에 `waivePenalty` 추가**
 
 `AdminCancelBookingSchema`에 필드 추가 (기본 false=부과):
 
@@ -585,7 +585,7 @@ export const AdminCancelBookingSchema = z.object({
 });
 ```
 
-- [ ] **Step 3: admin 액션에서 분기 전달**
+- [x] **Step 3: admin 액션에서 분기 전달**
 
 `adminCancelBookingAction`에서 parsed 구조분해에 `waivePenalty` 추가 후 호출:
 
@@ -600,12 +600,12 @@ export const AdminCancelBookingSchema = z.object({
       });
 ```
 
-- [ ] **Step 4: typecheck + 관련 테스트**
+- [x] **Step 4: typecheck + 관련 테스트**
 
 Run: `npm run typecheck && npm run test -- admin-booking-cancel booking-cancel`
 Expected: PASS. 기존 액션 테스트가 `refundBooking` mock 인자를 검증한다면 `applyPenalty` 기대값 반영.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/booking-cancel/server/actions.ts src/features/admin-booking-cancel/
@@ -621,7 +621,7 @@ git commit -m "feat(cancel): wire applyPenalty (user=true, admin=waive toggle)"
 - Modify: `src/widgets/booking-detail/ui/BookingDetailView.tsx` (미리보기 계산·주입)
 - Modify: `src/features/booking-cancel/ui/CancelBookingButton.tsx` (미리보기 표시)
 
-- [ ] **Step 1: barrel에 `computePenalty` 노출**
+- [x] **Step 1: barrel에 `computePenalty` 노출**
 
 `src/entities/payment/index.ts`에 추가 (도메인 타입 섹션 근처):
 
@@ -631,7 +631,7 @@ export { computePenalty, OVERSEAS_PENALTY_TIERS } from "./model/penaltyPolicy";
 export type { PenaltyResult, PenaltyInput } from "./model/penaltyPolicy";
 ```
 
-- [ ] **Step 2: 위젯에서 미리보기 계산 + props 주입**
+- [x] **Step 2: 위젯에서 미리보기 계산 + props 주입**
 
 `BookingDetailView.tsx`:
 - import 추가: `import { PaymentStatusBadge, computePenalty } from "@/entities/payment";`
@@ -656,7 +656,7 @@ export type { PenaltyResult, PenaltyInput } from "./model/penaltyPolicy";
           <CancelBookingButton bookingId={booking.id} refundPreview={refundPreview} />
 ```
 
-- [ ] **Step 3: `CancelBookingButton`에 미리보기 표시**
+- [x] **Step 3: `CancelBookingButton`에 미리보기 표시**
 
 Props 타입 + 다이얼로그 본문에 미리보기 블록 추가:
 
@@ -695,7 +695,7 @@ export function CancelBookingButton({ bookingId, refundPreview }: Props) {
             )}
 ```
 
-- [ ] **Step 4: admin 취소 폼에 위약금 면제 토글 (해당 UI 존재 시)**
+- [x] **Step 4: admin 취소 폼에 위약금 면제 토글 (해당 UI 존재 시)**
 
 admin 단건취소 UI 컴포넌트(`features/admin-booking-cancel/ui/*`)에 체크박스 추가하고 dispatch payload에 `waivePenalty` 포함. 컴포넌트가 아직 없으면 이 스텝은 액션 스키마 기본값(false=부과)으로 동작하므로 후속 처리 — 존재 여부를 `ls src/features/admin-booking-cancel/ui` 로 먼저 확인.
 
@@ -713,12 +713,12 @@ ls src/features/admin-booking-cancel/ui 2>/dev/null
 ```
 그리고 `dispatch({ bookingId, reason, waivePenalty })`.
 
-- [ ] **Step 5: typecheck + 빌드 확인**
+- [x] **Step 5: typecheck + 빌드 확인**
 
 Run: `npm run typecheck`
 Expected: PASS — `PenaltyResult` import·props 타입 일치.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/entities/payment/index.ts src/widgets/booking-detail/ src/features/booking-cancel/ui/ src/features/admin-booking-cancel/
@@ -735,7 +735,7 @@ git commit -m "feat(cancel): refund/penalty preview in cancel dialog + admin wai
 - Modify: `src/shared/email/templates/RefundCompletedEmail.tsx` (조건부 라인)
 - Test: `src/entities/payment/api/__tests__/getRefundCompletedEmailData.test.ts`
 
-- [ ] **Step 1: Write the failing test (추가)**
+- [x] **Step 1: Write the failing test (추가)**
 
 ```ts
 describe("getRefundCompletedEmailData — 부분 환불", () => {
@@ -764,12 +764,12 @@ describe("getRefundCompletedEmailData — 부분 환불", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm run test -- getRefundCompletedEmailData`
 Expected: FAIL — PARTIAL_CANCELED 필터 누락으로 null / penaltyAmount 미존재.
 
-- [ ] **Step 3: Implement — `getRefundCompletedEmailData.ts` 수정**
+- [x] **Step 3: Implement — `getRefundCompletedEmailData.ts` 수정**
 
 쿼리를 RefundJob 출처로 변경:
 
@@ -812,7 +812,7 @@ Expected: FAIL — PARTIAL_CANCELED 필터 누락으로 null / penaltyAmount 미
   };
 ```
 
-- [ ] **Step 4: `RefundCompletedEmailProps`에 `penaltyAmount` 추가**
+- [x] **Step 4: `RefundCompletedEmailProps`에 `penaltyAmount` 추가**
 
 ```ts
 // src/shared/email/templates/types.ts
@@ -826,7 +826,7 @@ export interface RefundCompletedEmailProps {
 }
 ```
 
-- [ ] **Step 5: 템플릿에 위약금 라인 조건부 추가**
+- [x] **Step 5: 템플릿에 위약금 라인 조건부 추가**
 
 `RefundCompletedEmail.tsx` 구조분해에 `penaltyAmount` 추가하고, "환불 금액 강조" Section 위에 조건부 라인:
 
@@ -846,12 +846,12 @@ export function RefundCompletedEmail({
             )}
 ```
 
-- [ ] **Step 6: Run tests + typecheck**
+- [x] **Step 6: Run tests + typecheck**
 
 Run: `npm run test -- getRefundCompletedEmailData && npm run typecheck`
 Expected: PASS. (render.ts가 props 타입을 참조하므로 typecheck로 누락 감지.)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/entities/payment/api/getRefundCompletedEmailData.ts src/shared/email/ src/entities/payment/api/__tests__/getRefundCompletedEmailData.test.ts
@@ -865,7 +865,7 @@ git commit -m "fix(email): report actual refund/penalty amount for partial cance
 **Files:**
 - Modify(선택): `scripts/qa/mock-toss-server.ts`
 
-- [ ] **Step 1: (선택) Mock이 부분취소 시 PARTIAL_CANCELED 반환**
+- [x] **Step 1: (선택) Mock이 부분취소 시 PARTIAL_CANCELED 반환**
 
 `handleCancel`에서 요청 본문에 원금액 힌트가 없으므로, 환경변수/시나리오로 분기하거나 `cancelAmount`를 그대로 echo하며 status만 시나리오로 토글. 우리 사가는 응답 status를 신뢰하지 않으므로(로컬 penaltyAmount로 분기) **로직 불변** — 충실도 목적만:
 
@@ -875,7 +875,7 @@ git commit -m "fix(email): report actual refund/penalty amount for partial cance
   send(res, 200, { paymentKey, status, cancels: [{ cancelAmount, canceledAt: isoNow(), transactionKey: `mock_txn_${Date.now()}` }] });
 ```
 
-- [ ] **Step 2: 런타임 e2e — Mock Toss로 부분취소 검증**
+- [x] **Step 2: 런타임 e2e — Mock Toss로 부분취소 검증**
 
 Mock 서버 기동 후, D-3 PAID booking을 자가취소하고 DB 상태를 증거 수집:
 
@@ -890,12 +890,12 @@ npx prisma studio  # 또는 아래 쿼리
 검증 쿼리(예): RefundJob.amount/penaltyAmount, Payment.status=PARTIAL_CANCELED, PaymentEvent.payload에 금액 감사.
 Expected: 700000/300000, PARTIAL_CANCELED, payload에 baseAmount/penaltyAmount/refundAmount.
 
-- [ ] **Step 3: 전체 게이트**
+- [x] **Step 3: 전체 게이트**
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: 전부 PASS. 출력 인용해 보고.
 
-- [ ] **Step 4: Commit (Mock 수정 시)**
+- [x] **Step 4: Commit (Mock 수정 시)**
 
 ```bash
 git add scripts/qa/mock-toss-server.ts
@@ -911,7 +911,7 @@ git commit -m "test(qa): mock toss partial-cancel fidelity"
 - Modify: `docs/superpowers/adr/README.md` (인덱스 한 줄)
 - Modify: `CLAUDE.md` §8 (혼란 방지 노트 1~2줄)
 
-- [ ] **Step 1: ADR 작성 (template.md 복사 후 4섹션)**
+- [x] **Step 1: ADR 작성 (template.md 복사 후 4섹션)**
 
 `Context / Decision / Consequences / Alternatives Considered`. 핵심 박제:
 - 위약금을 actor 추론이 아닌 명시적 `applyPenalty` 플래그로 받은 이유(호출자 의도 명확·cascade 면제 분기).
@@ -919,11 +919,11 @@ git commit -m "test(qa): mock toss partial-cancel fidelity"
 - `RefundJob.amount` 의미를 "환불액"으로 재정의 + `penaltyAmount` 컬럼 채택.
 - **Alternatives Considered**: (a) 별도 `Refund` 원장 테이블 — 모델+쿼리+배치 연동 재설계로 거부 (b) Booking에 금액 필드 — 레이어 책임 결합으로 거부 (c) cron 재시도 시 재계산 — D-day 변동으로 금액 불일치 위험 거부.
 
-- [ ] **Step 2: README 인덱스 + CLAUDE.md 노트 추가**
+- [x] **Step 2: README 인덱스 + CLAUDE.md 노트 추가**
 
 CLAUDE.md §8에 한 줄: "부분환불 위약금은 어디서? → [ADR-0031]. 자가취소만 적용(국외여행 표준약관 D-day 정률), enqueue 시점 동결, retry 무재계산. cascade는 위약금 0 유지."
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/superpowers/adr/ CLAUDE.md
@@ -934,9 +934,9 @@ git commit -m "docs(adr): 0031 penalty snapshot & partial-cancel state model"
 
 ## 완료 체크리스트 (최종 QA — 🔬 R1/R8 증거 기반)
 
-- [ ] `npm run typecheck` PASS (출력 인용)
-- [ ] `npm run test` PASS — penaltyPolicy/refund/refundRetry/email 전부 (출력 인용)
-- [ ] `npm run lint` PASS
-- [ ] `grep -n "\- \[ \]"` 로 이 플랜의 미체크 항목 0 확인 (§4.1)
-- [ ] Mock Toss 부분취소 런타임 증거(RefundJob.amount=환불액 / penaltyAmount / Payment.status=PARTIAL_CANCELED)
-- [ ] 🛑 NO-REAL-MONEY: 전 과정 Mock/sandbox, live 키 0 (§5 재확인)
+- [x] `npm run typecheck` PASS (출력 인용)
+- [x] `npm run test` PASS — penaltyPolicy/refund/refundRetry/email 전부 (출력 인용)
+- [x] `npm run lint` PASS
+- [x] `grep -n "\- \[ \]"` 로 이 플랜의 미체크 항목 0 확인 (§4.1)
+- [x] Mock Toss 부분취소 런타임 증거(RefundJob.amount=환불액 / penaltyAmount / Payment.status=PARTIAL_CANCELED)
+- [x] 🛑 NO-REAL-MONEY: 전 과정 Mock/sandbox, live 키 0 (§5 재확인)
