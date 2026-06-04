@@ -312,6 +312,18 @@ enum TravelerRole {
   TRAVELER // 실제 탑승자
 }
 
+enum PaxType {
+  ADULT
+  CHILD
+  INFANT
+}
+
+enum RefundKind {
+  FULL_CANCEL
+  TRAVELER_CANCEL
+  DISCRETIONARY
+}
+
 model Traveler {
   id          String       @id @default(cuid())
   bookingId   String
@@ -324,6 +336,12 @@ model Traveler {
   expireDate  DateTime?    @db.Date
   phone       String?
   email       String?
+
+  // Phase 8: 여행자 단위 부분 환불 Ledger 필드
+  paxType               PaxType?
+  unitPrice             Int       @default(0)
+  canceledAt            DateTime?
+  canceledByRefundJobId String?
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
@@ -384,6 +402,8 @@ model Payment {
   failureMessage String?
   paidAt         DateTime?
   canceledAt     DateTime?
+  // Phase 8: 여러 부분 환불 누적 총액. 불변식: 0 ≤ refundedAmount ≤ amount
+  refundedAmount Int           @default(0)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -458,28 +478,33 @@ enum RefundJobStatus {
 }
 
 model RefundJob {
-  id        String          @id @default(cuid())
-  bookingId String
-  paymentId String
-  amount    Int // 실제 환불액 = baseAmount − penaltyAmount (위약금 0이면 결제 전액)
-  penaltyAmount Int @default(0) // 취소 요청 시점 동결된 위약금 스냅샷 (spec §4)
-  reason    String?
+  id             String          @id @default(cuid())
+  bookingId      String
+  paymentId      String
+  amount         Int // 실제 환불액 = baseAmount − penaltyAmount (위약금 0이면 결제 전액)
+  penaltyAmount  Int             @default(0) // 취소 요청 시점 동결된 위약금 스냅샷 (spec §4)
+  reason         String?
   // 환불을 트리거한 주체. worker가 재시도 시 booking transition(user vs agency)을
   // 정확히 분기하기 위해 필요. ex) "user:cluser...", "admin:...", "system:webhook"
   // nullable: 기존 row 호환. 신규 enqueue부터 채움.
-  actor     String?
-  status    RefundJobStatus @default(PENDING)
-  attempts  Int             @default(0)
-  lastError String?
-  nextRunAt DateTime        @default(now()) // exponential backoff
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  actor          String?
+  // Phase 8: 여러 부분 환불 Ledger 필드
+  kind           RefundKind      @default(FULL_CANCEL)
+  baseAmount     Int             @default(0)
+  seatsReleased  Int             @default(0)
+  idempotencyKey String?         @unique
+  status         RefundJobStatus @default(PENDING)
+  attempts       Int             @default(0)
+  lastError      String?
+  nextRunAt      DateTime        @default(now()) // exponential backoff
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   // Phase 4-B: 출발 취소 fan-out 배치 연결 (단일 사용자 환불은 null). [ADR-0028]
   cancellationBatchId String?
 
-  booking Booking @relation(fields: [bookingId], references: [id])
-  payment Payment @relation(fields: [paymentId], references: [id])
+  booking           Booking                @relation(fields: [bookingId], references: [id])
+  payment           Payment                @relation(fields: [paymentId], references: [id])
   cancellationBatch DepartureCancellation? @relation(fields: [cancellationBatchId], references: [id], onDelete: SetNull)
 
   @@index([status, nextRunAt])
