@@ -81,6 +81,7 @@
 | 0031  | [위약금 동결 스냅샷 + 부분취소 상태 모델 (Phase 5-B)](./0031-penalty-snapshot-partial-cancel.md) | Accepted | 2026-06-04   |
 | 0032  | [대시보드 집계 `entities/analytics` 통합 read-model 슬라이스 (Phase 6)](./0032-analytics-readmodel-slice.md) | Accepted | 2026-06-04   |
 | 0033  | [Recharts 채택 + `'use client'` 리프 격리 (Phase 6)](./0033-recharts-chart-library.md) | Accepted | 2026-06-04   |
+| 0034  | [단일 Cron Dispatcher + Vercel daily + 외부 트리거로 실시간성 분리](./0034-cron-dispatcher-consolidation.md) | Accepted | 2026-06-04   |
 
 ## 향후 후보 (작성 대기)
 

@@ -1,8 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/process-refunds", "schedule": "*/2 * * * *" },
-    { "path": "/api/cron/embedding-job", "schedule": "*/2 * * * *" },
-    { "path": "/api/cron/email-job", "schedule": "*/2 * * * *" }
+    { "path": "/api/cron/dispatcher", "schedule": "0 0 * * *" }
   ]
 }
