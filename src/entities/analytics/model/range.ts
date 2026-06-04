@@ -33,10 +33,7 @@ export function parseRange(raw: unknown): DateRange {
   if (key === "today") {
     const from = new Date(to);
     from.setUTCHours(0, 0, 0, 0);
-    // to는 오늘 자정 이후이므로, 자정에 호출된 경우에도 from < to 를 보장하기 위해
-    // 상한을 내일 자정(= 오늘 범위의 미포함 상한)으로 설정한다.
-    const tomorrowMidnight = new Date(from.getTime() + 86_400_000);
-    return { from, to: tomorrowMidnight, key, bucket: "day" };
+    return { from, to, key, bucket: "day" };
   }
 
   const from = new Date(to.getTime() - DAYS[key] * 86_400_000);

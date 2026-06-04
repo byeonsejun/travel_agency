@@ -4,8 +4,8 @@ import { parseRange } from "../range";
 describe("parseRange", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // 고정 기준 시각: 2026-06-04T09:00:00+09:00 (UTC 00:00)
-    vi.setSystemTime(new Date("2026-06-04T00:00:00.000Z"));
+    // 고정 기준 시각: 2026-06-04T05:30:00Z
+    vi.setSystemTime(new Date("2026-06-04T05:30:00.000Z"));
   });
   afterEach(() => vi.useRealTimers());
 
