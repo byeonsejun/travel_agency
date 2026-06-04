@@ -630,7 +630,7 @@ git commit -m "feat(booking): transitionStatusTx skipSeatReturn option"
 - Modify: `prisma/seed.ts`
 - Test: `src/entities/booking/api/__tests__/createBookingPax.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성 (assignPaxTypes 연동 검증)**
+- [x] **Step 1: 실패 테스트 작성 (assignPaxTypes 연동 검증)**
 
 Create `src/entities/booking/api/__tests__/createBookingPax.test.ts`:
 
@@ -658,12 +658,12 @@ describe("createBooking pax mapping contract", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인 (import 경로 정상이면 PASS 가능 — 먼저 RED 보장 위해 구현 전 실행)**
+- [x] **Step 2: 테스트 실패 확인 (import 경로 정상이면 PASS 가능 — 먼저 RED 보장 위해 구현 전 실행)**
 
 Run: `npm run test -- createBookingPax`
 Expected: PASS (assignPaxTypes는 Task 3에서 구현됨 — 이 테스트는 매핑 계약 회귀 가드). 계약이 깨지면 FAIL.
 
-- [ ] **Step 3: createBooking 수정 — paxType/unitPrice 주입**
+- [x] **Step 3: createBooking 수정 — paxType/unitPrice 주입**
 
 `src/entities/booking/api/mutations.ts`의 createBooking에서 departure select에 이미 priceAdult/Child/Infant 있음(20-24). 좌석 차감 직전(39 근처)에 배정 계산 추가하고, travelers.create 매핑(54-64)을 수정:
 
@@ -708,14 +708,14 @@ travelers.create 매핑:
 import { assignPaxTypes } from "../model/paxAssignment";
 ```
 
-- [ ] **Step 4: seed.ts — booking 생성 경로가 createBooking을 거치므로 자동 반영 확인**
+- [x] **Step 4: seed.ts — booking 생성 경로가 createBooking을 거치므로 자동 반영 확인**
 
 `prisma/seed.ts`는 `createBooking`을 호출(1125 근처)하므로 paxType/unitPrice가 자동 채워진다. 별도 수정 불필요 — 단 seed 재실행으로 검증.
 
 Run: `npm run db:seed` (또는 `npx tsx prisma/seed.ts`)
 Expected: `✅ Booking seed: ...` 출력, 에러 0.
 
-- [ ] **Step 5: seed booking의 Traveler unitPrice 합 == totalPrice 검증**
+- [x] **Step 5: seed booking의 Traveler unitPrice 합 == totalPrice 검증**
 
 Run:
 ```bash
@@ -723,7 +723,7 @@ npx tsx -e "import {db} from './src/shared/lib/db'; (async()=>{const b=await db.
 ```
 Expected: `... OK`
 
-- [ ] **Step 6: typecheck + commit**
+- [x] **Step 6: typecheck + commit**
 
 Run: `npm run typecheck && npm run test -- createBookingPax`
 Expected: PASS
@@ -875,7 +875,7 @@ git commit -m "feat(db): idempotent phase8 backfill (traveler unitPrice + paymen
 - Modify: `src/entities/payment/api/refund.ts` (대수술)
 - Test: `src/entities/payment/api/__tests__/refundLedger.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성 (DISCRETIONARY + 부분 TRAVELER + 멱등 + 한도초과)**
+- [x] **Step 1: 실패 테스트 작성 (DISCRETIONARY + 부분 TRAVELER + 멱등 + 한도초과)**
 
 Create `src/entities/payment/api/__tests__/refundLedger.test.ts`:
 
@@ -943,12 +943,12 @@ describe("refundDiscretionary", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- refundLedger`
 Expected: FAIL ("refundDiscretionary is not exported")
 
-- [ ] **Step 3: 구현 — refund.ts에 종류별 함수 추가**
+- [x] **Step 3: 구현 — refund.ts에 종류별 함수 추가**
 
 `src/entities/payment/api/refund.ts`에 공통 헬퍼 + `refundDiscretionary` 추가(기존 `refundBooking`은 Task 10에서 FULL_CANCEL 경유로 정리). 신규 코드:
 
@@ -1070,18 +1070,18 @@ export async function refundDiscretionary(input: DiscretionaryInput): Promise<vo
 
 > 주의: 기존 `refundBooking`의 `findFirst({ status: "PAID" })`는 PARTIAL_CANCELED 재진입을 막으므로, 신규 경로는 `status: { in: ["PAID","PARTIAL_CANCELED"] }`로 조회. tossClient.cancel 시그니처에 `idempotencyKey` 추가 필요(다음 스텝).
 
-- [ ] **Step 4: tossClient.cancel에 idempotencyKey 파라미터 추가**
+- [x] **Step 4: tossClient.cancel에 idempotencyKey 파라미터 추가**
 
 `src/shared/lib/toss/`의 cancel 구현에 `idempotencyKey?: string`를 받아 HTTP 헤더 `Idempotency-Key`로 전달(Mock 서버는 무시해도 무방). 기존 호출부 호환 위해 optional.
 
 Run: `grep -rn "cancel" src/shared/lib/toss/`로 시그니처 위치 확인 후 인터페이스에 `idempotencyKey?: string` 추가.
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 Run: `npm run test -- refundLedger && npm run typecheck`
 Expected: PASS (3 tests), typecheck PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/entities/payment/api/refund.ts src/shared/lib/toss/ src/entities/payment/api/__tests__/refundLedger.test.ts

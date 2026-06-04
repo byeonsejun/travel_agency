@@ -11,13 +11,165 @@
  * booking 전이(좌석 환원)는 transitionStatus 내 shouldReturnSeats가 자동 처리.
  */
 
-import type { BookingStatus, Prisma } from "@prisma/client";
+import type { BookingStatus, Prisma, RefundKind } from "@prisma/client";
 import { db } from "@/shared/lib/db";
 import { tossClient } from "@/shared/lib/toss";
 import { transitionStatus } from "@/entities/booking";
 import { logger, metrics, captureException } from "@/shared/lib/observability";
 import { PaymentError } from "./errors";
 import { computePenalty } from "../model/penaltyPolicy";
+import { reserveRefund } from "./ledger";
+import { discretionaryKey } from "../model/refundKeys";
+
+interface SagaCore {
+  bookingId: string;
+  paymentId: string;
+  tossPaymentKey: string;
+  amount: number;              // payment 총액
+  prevRefundedAmount: number;  // reserve 전 refundedAmount (status 결정용)
+  refundAmount: number;        // 이번 환불 실액
+  penaltyAmount: number;
+  baseAmount: number;
+  seatsReleased: number;
+  kind: RefundKind;
+  idempotencyKey: string;
+  actor: string;
+  reason?: string;
+}
+
+/**
+ * 공통 3-phase 환불 사가.
+ * Phase1 멱등+예약(reserve) → Phase2 PG(Tx 밖) → Phase3 정산(settle).
+ * onSettled: 정산 후 booking 전이·좌석·traveler 표식 등 부가 처리를 호출자가 주입.
+ */
+async function runRefundSaga(
+  core: SagaCore,
+  onSettled?: () => Promise<void>
+): Promise<void> {
+  // Phase 1: 멱등 검사 + reserve (DB Tx)
+  const created = await db.$transaction(async (tx) => {
+    const existing = await tx.refundJob.findUnique({
+      where: { idempotencyKey: core.idempotencyKey },
+      select: { id: true },
+    });
+    if (existing) return null; // 멱등 no-op
+
+    const ok = await reserveRefund(tx, {
+      paymentId: core.paymentId,
+      amount: core.amount,
+      requestedRefund: core.refundAmount,
+    });
+    if (!ok) throw new PaymentError("REFUND_EXCEEDS_REFUNDABLE", { requestedRefund: core.refundAmount });
+
+    return tx.refundJob.create({
+      data: {
+        bookingId: core.bookingId,
+        paymentId: core.paymentId,
+        amount: core.refundAmount,
+        penaltyAmount: core.penaltyAmount,
+        baseAmount: core.baseAmount,
+        seatsReleased: core.seatsReleased,
+        kind: core.kind,
+        idempotencyKey: core.idempotencyKey,
+        reason: core.reason ?? null,
+        actor: core.actor,
+        status: "IN_PROGRESS",
+      },
+      select: { id: true, attempts: true },
+    });
+  });
+  if (!created) return; // 멱등 종료
+
+  // Phase 2: 외부 PG 취소 (Tx 밖 — ADR-0003)
+  try {
+    await tossClient.cancel({
+      paymentKey: core.tossPaymentKey,
+      cancelReason: core.reason ?? "환불 요청",
+      cancelAmount: core.refundAmount,
+      idempotencyKey: created.id,
+    });
+  } catch (err) {
+    await db.refundJob.update({
+      where: { id: created.id },
+      data: {
+        status: "PENDING",
+        attempts: { increment: 1 },
+        nextRunAt: backoff(created.attempts),
+        lastError: String(err),
+      },
+    });
+    metrics.incr("payment.refund.deferred");
+    captureException(err, { bookingId: core.bookingId });
+    throw new PaymentError("REFUND_DEFERRED", { cause: String(err) });
+  }
+
+  // Phase 3: 정산 (DB Tx)
+  const newRefundedAmount = core.prevRefundedAmount + core.refundAmount;
+  await db.$transaction(async (tx) => {
+    await tx.payment.update({
+      where: { id: core.paymentId },
+      data: {
+        status: newRefundedAmount >= core.amount ? "CANCELED" : "PARTIAL_CANCELED",
+        canceledAt: new Date(),
+      },
+    });
+    await tx.refundJob.update({ where: { id: created.id }, data: { status: "SUCCEEDED" } });
+    await tx.paymentEvent.create({
+      data: {
+        providerEventId: `refund:${created.id}`,
+        bookingId: core.bookingId,
+        paymentId: core.paymentId,
+        type: "REFUND_REQUEST",
+        payload: {
+          kind: core.kind,
+          baseAmount: core.baseAmount,
+          penaltyAmount: core.penaltyAmount,
+          refundAmount: core.refundAmount,
+          actor: core.actor,
+        } as unknown as Prisma.InputJsonValue,
+        result: "PROCESSED",
+      },
+    });
+  });
+  metrics.incr("payment.refund.success");
+
+  if (onSettled) await onSettled();
+}
+
+interface DiscretionaryInput {
+  bookingId: string;
+  paymentId: string;
+  amount: number;        // 환불 요청액
+  actor: string;
+  requestId: string;     // UI 생성 멱등 토큰
+  reason?: string;
+}
+
+/** 관리자 재량 환불 — 좌석/booking/traveler 불변, 순수 금액 환불. */
+export async function refundDiscretionary(input: DiscretionaryInput): Promise<void> {
+  const payment = await db.payment.findFirst({
+    where: { id: input.paymentId, status: { in: ["PAID", "PARTIAL_CANCELED"] } },
+    select: { id: true, amount: true, refundedAmount: true, tossPaymentKey: true },
+  });
+  if (!payment?.tossPaymentKey) throw new PaymentError("PAID_PAYMENT_NOT_FOUND");
+
+  await runRefundSaga({
+    bookingId: input.bookingId,
+    paymentId: payment.id,
+    tossPaymentKey: payment.tossPaymentKey,
+    amount: payment.amount,
+    prevRefundedAmount: payment.refundedAmount,
+    refundAmount: input.amount,
+    penaltyAmount: 0,
+    baseAmount: 0,
+    seatsReleased: 0,
+    kind: "DISCRETIONARY",
+    idempotencyKey: discretionaryKey(input.bookingId, input.requestId),
+    actor: input.actor,
+    reason: input.reason,
+  });
+  // onSettled 없음 — 좌석/booking 전이 불필요
+}
 
 interface RefundInput {
   bookingId: string;
