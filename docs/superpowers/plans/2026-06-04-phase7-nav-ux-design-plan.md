@@ -975,12 +975,12 @@ git commit -m "feat(product-list): ProgressLink top bar on filter tabs + paginat
 
 **Files:** (없음 — 검증 전용)
 
-- [ ] **Step 1: 정적 검증 3종**
+- [x] **Step 1: 정적 검증 3종**
 
 Run: `npm run typecheck && npm run lint && npm run test`
 Expected: 전부 PASS
 
-- [ ] **Step 2: 경계 회귀 grep (FSD / client island)**
+- [x] **Step 2: 경계 회귀 grep (FSD / client island)**
 
 ```bash
 # shared client island 은 정확히 2개만 'use client'
@@ -1004,12 +1004,12 @@ Run: `npm run dev` 후 브라우저 DevTools → Network throttle "Slow 4G" 로 
 
 > 이 4항목은 시각/타이밍 검증이라 자동화 불가 → 사용자 수동 확인 요청(절차·기대 명시 완료). 1~2번은 typecheck/test 로 코드 경로는 보증됨.
 
-- [ ] **Step 4: 플랜 체크박스 누락 점검**
+- [x] **Step 4: 플랜 체크박스 누락 점검**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-04-phase7-nav-ux-design-plan.md`
 Expected: 완료된 Task 의 미체크 항목 0 (남아있으면 즉시 처리 후 진행)
 
-- [ ] **Step 5: 최종 커밋 (잔여 변경 시)**
+- [x] **Step 5: 최종 커밋 (잔여 변경 시)**
 
 ```bash
 git add -A && git commit -m "chore(phase7): verification evidence + checkbox close-out"
