@@ -944,25 +944,25 @@ git commit -m "feat(shared-ui): RouteProgress + ProgressLink via native useLinkS
 - Modify: `src/widgets/product-card-list/ui/ProductFilterBar.tsx`
 - Modify: `src/widgets/product-card-list/ui/Pagination.tsx`
 
-- [ ] **Step 1: ProductFilterBar 의 탭 Link → ProgressLink**
+- [x] **Step 1: ProductFilterBar 의 탭 Link → ProgressLink**
 
 `src/widgets/product-card-list/ui/ProductFilterBar.tsx`:
 - import 변경: `import Link from "next/link";` → `import { ProgressLink } from "@/shared/ui/ProgressLink";`
 - destination 탭의 두 `<Link ...>` ... `</Link>` 를 각각 `<ProgressLink ...>` ... `</ProgressLink>` 로 교체(props 동일, href·className 그대로).
 - `Suspense` / `SortSelect` import 와 사용은 그대로 유지.
 
-- [ ] **Step 2: Pagination 의 모든 Link → ProgressLink**
+- [x] **Step 2: Pagination 의 모든 Link → ProgressLink**
 
 `src/widgets/product-card-list/ui/Pagination.tsx`:
 - import 변경: `import Link from "next/link";` → `import { ProgressLink } from "@/shared/ui/ProgressLink";`
 - 파일 내 모든 `<Link ... >` ... `</Link>`(이전/다음 버튼 + 페이지 번호 링크)를 `<ProgressLink>` 로 교체. href·className·기타 props 동일.
 
-- [ ] **Step 3: Verify typecheck + lint + full test**
+- [x] **Step 3: Verify typecheck + lint + full test**
 
 Run: `npm run typecheck && npm run lint && npm run test`
 Expected: PASS — 기존 product-card-list 관련 테스트 그린 유지.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/widgets/product-card-list/ui/ProductFilterBar.tsx src/widgets/product-card-list/ui/Pagination.tsx

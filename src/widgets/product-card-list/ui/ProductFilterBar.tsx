@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Suspense } from "react";
+import { ProgressLink } from "@/shared/ui/ProgressLink";
 import { SortSelect } from "./SortSelect";
 
 type Destination = { code: string; label: string; count: number };
@@ -30,7 +30,7 @@ export function ProductFilterBar({
     <div className="space-y-4 border-b border-gray-200 pb-6">
       {/* Destination tabs */}
       <div className="flex gap-2 overflow-x-auto">
-        <Link
+        <ProgressLink
           href={buildHref()}
           className={`whitespace-nowrap pb-2 text-sm font-medium transition-colors ${
             isAllActive
@@ -39,9 +39,9 @@ export function ProductFilterBar({
           }`}
         >
           전체
-        </Link>
+        </ProgressLink>
         {destinations.map((dest) => (
-          <Link
+          <ProgressLink
             key={dest.code}
             href={buildHref(dest.code)}
             className={`whitespace-nowrap pb-2 text-sm font-medium transition-colors ${
@@ -51,7 +51,7 @@ export function ProductFilterBar({
             }`}
           >
             {dest.label} ({dest.count})
-          </Link>
+          </ProgressLink>
         ))}
       </div>
 
