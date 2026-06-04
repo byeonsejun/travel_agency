@@ -320,7 +320,7 @@ git commit -m "feat(booking): assignPaxTypes pure fn with totalPrice invariant"
 - Create: `src/entities/payment/model/refundKeys.ts`, `src/entities/payment/model/refundable.ts`
 - Test: `src/entities/payment/model/__tests__/refundKeys.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `src/entities/payment/model/__tests__/refundKeys.test.ts`:
 
@@ -354,12 +354,12 @@ describe("refundableAmount", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- refundKeys`
 Expected: FAIL ("Cannot find module ../refundKeys")
 
-- [ ] **Step 3: 구현 작성**
+- [x] **Step 3: 구현 작성**
 
 Create `src/entities/payment/model/refundKeys.ts`:
 
@@ -389,12 +389,12 @@ export function refundableAmount(p: { amount: number; refundedAmount: number }):
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test -- refundKeys`
 Expected: PASS (5 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/payment/model/refundKeys.ts src/entities/payment/model/refundable.ts src/entities/payment/model/__tests__/refundKeys.test.ts
