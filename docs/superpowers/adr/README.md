@@ -79,6 +79,8 @@
 | 0029  | [리뷰 시스템 경계 — client-safe URL 빌더 + 모더레이션 무효화 SSOT 재사용](./0029-review-system-boundaries.md) | Accepted | 2026-06-03   |
 | 0030  | [트랜잭셔널 아웃박스 단일 훅 + Resend 멱등키 effectively-once](./0030-email-outbox-and-idempotency.md) | Accepted | 2026-06-03   |
 | 0031  | [위약금 동결 스냅샷 + 부분취소 상태 모델 (Phase 5-B)](./0031-penalty-snapshot-partial-cancel.md) | Accepted | 2026-06-04   |
+| 0032  | [대시보드 집계 `entities/analytics` 통합 read-model 슬라이스 (Phase 6)](./0032-analytics-readmodel-slice.md) | Accepted | 2026-06-04   |
+| 0033  | [Recharts 채택 + `'use client'` 리프 격리 (Phase 6)](./0033-recharts-chart-library.md) | Accepted | 2026-06-04   |
 
 ## 향후 후보 (작성 대기)
 
