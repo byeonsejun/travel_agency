@@ -23,6 +23,7 @@ export type PaymentErrorCode =
   | "REFUND_DEFERRED"
   | "PAID_PAYMENT_NOT_FOUND"
   | "BOOKING_NOT_REFUNDABLE"
+  | "NO_ACTIVE_TRAVELERS"
   | "WEBHOOK_AMOUNT_MISMATCH"
   // 외부 PG(Toss) 통신 에러 → compensateCancel / RefundJob 트리거 판단 기준
   | "PG_NETWORK_ERROR"

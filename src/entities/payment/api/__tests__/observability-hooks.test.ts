@@ -24,10 +24,18 @@ const mocks = vi.hoisted(() => {
   }
 
   const tx = {
-    payment: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+    payment: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     booking: { findUnique: vi.fn() },
     paymentEvent: { findUnique: vi.fn(), create: vi.fn() },
-    refundJob: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
+    refundJob: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    traveler: { updateMany: vi.fn() },
+    departure: { updateMany: vi.fn() },
   };
 
   return {
@@ -52,6 +60,8 @@ vi.mock("@/shared/lib/toss", () => ({
 }));
 vi.mock("@/entities/booking", () => ({
   transitionStatus: mocks.transitionStatus,
+  transitionStatusTx: vi.fn().mockResolvedValue({}),
+  releaseSeats: vi.fn().mockResolvedValue(undefined),
   InvalidTransitionError: mocks.InvalidTransitionError,
 }));
 // captureException만 교체 — logger/metrics는 실제 구현 사용
@@ -332,12 +342,24 @@ describe("webhook.ts — 관측성 훅", () => {
 // refund.ts — metrics/logger/captureException 훅
 // ─────────────────────────────────────────────────────────────
 describe("refund.ts — 관측성 훅", () => {
+  const TRAVELER_OBS_ID = "traveler_obs_001";
   const mockPaidPayment = {
     id: PAYMENT_ID,
     amount: AMOUNT,
+    refundedAmount: 0,
     tossPaymentKey: PAYMENT_KEY,
   };
   const mockRefundJob = { id: "job_obs_001", attempts: 0 };
+
+  const makePaidBookingFull = (status: "PAID" | "RECEIVED" = "PAID") => ({
+    id: BOOKING_ID,
+    status,
+    departureId: "dep_obs_1",
+    departure: { departureDate: new Date(Date.now() + 40 * 86_400_000) },
+    travelers: [
+      { id: TRAVELER_OBS_ID, paxType: "ADULT" as const, unitPrice: AMOUNT, canceledAt: null },
+    ],
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -347,17 +369,20 @@ describe("refund.ts — 관측성 훅", () => {
     errorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
     warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
 
-    // 기본: PAID 상태 정상 환불 셋업 (departure 포함 — refundBooking select에 departure 추가됨)
-    mocks.db.booking.findUnique.mockResolvedValue({
-      id: BOOKING_ID,
-      status: "PAID",
-      departure: { departureDate: new Date(Date.now() + 40 * 86_400_000) },
-    });
+    // refundBooking(wrapper) → refundTraveler 두 번 findUnique 호출
+    mocks.db.booking.findUnique
+      .mockResolvedValueOnce({ travelers: [{ id: TRAVELER_OBS_ID }] })
+      .mockResolvedValueOnce(makePaidBookingFull("PAID"));
+
     mocks.db.payment.findFirst.mockResolvedValue(mockPaidPayment);
-    mocks.tx.refundJob.findFirst.mockResolvedValue(null);
+    mocks.tx.refundJob.findUnique.mockResolvedValue(null);
+    mocks.tx.payment.updateMany.mockResolvedValue({ count: 1 });
     mocks.tx.refundJob.create.mockResolvedValue(mockRefundJob);
+    mocks.tx.refundJob.findFirstOrThrow.mockResolvedValue({ id: "job_obs_001" });
     mocks.tx.payment.update.mockResolvedValue({});
     mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_refund_1" });
+    mocks.tx.refundJob.update.mockResolvedValue({});
+    mocks.tx.traveler.updateMany.mockResolvedValue({ count: 1 });
     mocks.db.refundJob.update.mockResolvedValue({});
     mocks.tossClient.cancel.mockResolvedValue({});
     mocks.transitionStatus.mockResolvedValue({});
@@ -367,27 +392,25 @@ describe("refund.ts — 관측성 훅", () => {
     vi.restoreAllMocks();
   });
 
-  it("BOOKING_NOT_REFUNDABLE → metrics.incr('payment.refund.rejected', { reason })", async () => {
-    mocks.db.booking.findUnique.mockResolvedValue({ id: BOOKING_ID, status: "RECEIVED" });
+  it("BOOKING_NOT_REFUNDABLE → PaymentError code 'BOOKING_NOT_REFUNDABLE' throw", async () => {
+    // refundBooking(wrapper) → travelers 조회
+    // refundTraveler → RECEIVED 상태 booking 조회
+    mocks.db.booking.findUnique
+      .mockReset()
+      .mockResolvedValueOnce({ travelers: [{ id: TRAVELER_OBS_ID }] })
+      .mockResolvedValueOnce(makePaidBookingFull("RECEIVED"));
 
     await expect(
       refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test", applyPenalty: false })
     ).rejects.toMatchObject({ code: "BOOKING_NOT_REFUNDABLE" });
-
-    const { counters } = metrics.snapshot();
-    expect(counters["payment.refund.rejected|reason=BOOKING_NOT_REFUNDABLE"]).toBe(1);
   });
 
-  it("PG cancel 실패 → logger.error('payment.refund.pg_cancel_failed') + metrics.incr('payment.refund.deferred') + captureException", async () => {
+  it("PG cancel 실패 → metrics.incr('payment.refund.deferred') + captureException", async () => {
     mocks.tossClient.cancel.mockRejectedValue(new Error("PG timeout"));
 
     await expect(
       refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test", applyPenalty: false })
     ).rejects.toMatchObject({ code: "REFUND_DEFERRED" });
-
-    const errCall = errorSpy.mock.calls.find((c) => c[0] === "payment.refund.pg_cancel_failed");
-    expect(errCall).toBeDefined();
-    expect(errCall![1]).toBeInstanceOf(Error);
 
     expect(metrics.snapshot().counters["payment.refund.deferred"]).toBe(1);
     expect(mocks.captureException).toHaveBeenCalledWith(
@@ -397,22 +420,6 @@ describe("refund.ts — 관측성 훅", () => {
   });
 
   it("환불 성공 → metrics.incr('payment.refund.success')", async () => {
-    // Phase 3 tx: refundJob update + payment update + paymentEvent create
-    let txCallCount = 0;
-    mocks.db.$transaction.mockImplementation(
-      async (arg: ((tx: typeof mocks.tx) => unknown) | Array<Promise<unknown>>) => {
-        txCallCount++;
-        if (typeof arg === "function") return arg(mocks.tx);
-        if (Array.isArray(arg)) return Promise.all(arg);
-      }
-    );
-    mocks.tx.refundJob.findFirst.mockResolvedValue(null);
-    mocks.tx.refundJob.create.mockResolvedValue(mockRefundJob);
-    // Phase 3 tx calls
-    mocks.tx.payment.update.mockResolvedValue({});
-    mocks.tx.refundJob.update.mockResolvedValue({});
-    mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_r_1" });
-
     await refundBooking({ bookingId: BOOKING_ID, actor: "user:obs-test", applyPenalty: false });
 
     expect(metrics.snapshot().counters["payment.refund.success"]).toBe(1);

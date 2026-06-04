@@ -34,7 +34,7 @@ export type { ConfirmResult } from "./api/confirm";
 
 export { handleTossWebhook } from "./api/webhook";
 
-export { refundBooking, refundDiscretionary } from "./api/refund";
+export { refundBooking, refundDiscretionary, refundTraveler, computeCanceledBase } from "./api/refund";
 export { listDueRefundJobs, retryRefundJob } from "./api/refundRetry";
 export type { RetryRefundResult } from "./api/refundRetry";
 

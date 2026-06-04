@@ -1097,7 +1097,7 @@ git commit -m "feat(payment): runRefundSaga core + refundDiscretionary (ledger, 
 - Create: `src/entities/booking/api/travelerCancel.ts`
 - Test: `src/entities/payment/api/__tests__/refundTraveler.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `src/entities/payment/api/__tests__/refundTraveler.test.ts`:
 
@@ -1118,12 +1118,12 @@ describe("computeCanceledBase", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- refundTraveler`
 Expected: FAIL ("computeCanceledBase is not exported")
 
-- [ ] **Step 3: 구현 — computeCanceledBase + refundTraveler + refundBooking 재작성**
+- [x] **Step 3: 구현 — computeCanceledBase + refundTraveler + refundBooking 재작성**
 
 `src/entities/payment/api/refund.ts`에 추가:
 
@@ -1229,16 +1229,16 @@ export async function refundBooking({ bookingId, actor, reason, applyPenalty }: 
 }
 ```
 
-- [ ] **Step 4: 배럴 export 갱신**
+- [x] **Step 4: 배럴 export 갱신**
 
 `src/entities/payment/index.ts`에 `refundTraveler`, `refundDiscretionary`, `computeCanceledBase` export 추가. `src/entities/booking/index.ts`에 `releaseSeats` export 확인(이미 57행에 존재).
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 Run: `npm run test -- refundTraveler refundLedger && npm run typecheck`
 Expected: PASS, typecheck PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/entities/payment/api/refund.ts src/entities/payment/index.ts src/entities/payment/api/__tests__/refundTraveler.test.ts
