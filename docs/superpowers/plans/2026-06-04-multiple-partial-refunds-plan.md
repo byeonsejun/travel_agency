@@ -1534,12 +1534,12 @@ git commit -m "feat(booking-detail): traveler-cancel + discretionary-refund UI i
 - Create: `docs/superpowers/adr/0036-ledger-multiple-partial-refunds.md`
 - Modify: `docs/superpowers/adr/README.md`
 
-- [ ] **Step 1: 전체 테스트 + typecheck + lint**
+- [x] **Step 1: 전체 테스트 + typecheck + lint**
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: 전부 PASS. 신규 테스트(paxAssignment, refundKeys, ledger, transitionSkipSeats, refundLedger, refundTraveler, refundRetryLedger, admin-discretionary) 모두 GREEN.
 
-- [ ] **Step 2: 동시성 런타임 증거 — 동시 부분환불 2건 합 ≤ amount**
+- [x] **Step 2: 동시성 런타임 증거 — 동시 부분환불 2건 합 ≤ amount**
 
 Mock 서버(localhost:4242) 기동 후 동일 payment에 동시 환불 2건을 쏴서 `refundedAmount ≤ amount` 확인:
 ```bash
@@ -1547,7 +1547,7 @@ npx tsx -e "import {db} from './src/shared/lib/db'; import {refundDiscretionary}
 ```
 Expected: `... OK` (한 건만 성공, 합이 amount 미초과).
 
-- [ ] **Step 3: ADR-0036 작성**
+- [x] **Step 3: ADR-0036 작성**
 
 `docs/superpowers/adr/template.md` 복사해 `0036-ledger-multiple-partial-refunds.md` 작성. 4섹션:
 - **Context:** 단일-취소 모델 한계, 다회 부분환불 필요.
@@ -1555,11 +1555,11 @@ Expected: `... OK` (한 건만 성공, 합이 amount 미초과).
 - **Consequences:** 좌석 이중환원 스킵 옵션 도입, 부분환불 메일 비범위, DISCRETIONARY 좌석 불변.
 - **Alternatives Considered:** 순수-파생 SUM(거부: 락+왕복), explicit version 락(거부: 조건부 차감이 원자적이라 잉여), Departure 현재가 복원(거부: ADR-0027 D2 위반), 전체액 기준 위약금(거부: 부분취소 과징).
 
-- [ ] **Step 4: README 인덱스 + CLAUDE.md 갱신**
+- [x] **Step 4: README 인덱스 + CLAUDE.md 갱신**
 
 `docs/superpowers/adr/README.md`에 ADR-0036 한 줄 추가. `CLAUDE.md` §8에 Phase 8 완료 + "다음 작업자 혼란 방지" 노트 추가(부분환불 메일 비범위, DISCRETIONARY 좌석 불변, 좌석 이중환원 스킵 옵션 이유).
 
-- [ ] **Step 5: 체크박스 누락 점검 + 최종 커밋**
+- [x] **Step 5: 체크박스 누락 점검 + 최종 커밋**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-04-multiple-partial-refunds-plan.md`
 Expected: 완료된 태스크에 미체크 0건.
