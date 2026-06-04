@@ -118,7 +118,7 @@ git commit -m "feat(shared-ui): domain-agnostic Skeleton pulse primitive"
 - Create: `src/widgets/booking-list/ui/BookingRowSkeleton.tsx`
 - Modify: `src/widgets/booking-list/index.ts`
 
-- [ ] **Step 1: Create ProductCardSkeleton**
+- [x] **Step 1: Create ProductCardSkeleton**
 
 `src/widgets/product-card-list/ui/ProductCardSkeleton.tsx`:
 
@@ -144,7 +144,7 @@ export function ProductCardSkeleton() {
 }
 ```
 
-- [ ] **Step 2: Create BookingRowSkeleton**
+- [x] **Step 2: Create BookingRowSkeleton**
 
 `src/widgets/booking-list/ui/BookingRowSkeleton.tsx`:
 
@@ -166,7 +166,7 @@ export function BookingRowSkeleton() {
 }
 ```
 
-- [ ] **Step 3: Add barrel export**
+- [x] **Step 3: Add barrel export**
 
 `src/widgets/booking-list/index.ts` — 기존 export 아래에 한 줄 추가:
 
@@ -174,12 +174,12 @@ export function BookingRowSkeleton() {
 export { BookingRowSkeleton } from "./ui/BookingRowSkeleton";
 ```
 
-- [ ] **Step 4: Verify typecheck**
+- [x] **Step 4: Verify typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS (no errors)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/widgets/product-card-list/ui/ProductCardSkeleton.tsx src/widgets/booking-list/ui/BookingRowSkeleton.tsx src/widgets/booking-list/index.ts
