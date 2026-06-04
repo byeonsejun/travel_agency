@@ -3,7 +3,13 @@
  * 외부 IO 0. now를 주입받아 테스트 결정성을 보장한다. (spec §3)
  */
 
-/** 출발일까지 남은 일수(minDaysBefore) 하한 이상이면 해당 rate. 내림차순 첫 매칭. */
+/**
+ * 출발일까지 남은 일수(minDaysBefore) 하한 이상이면 해당 rate. 내림차순 첫 매칭.
+ *
+ * 불변식: 최대 rate가 0.5(50%)라 refundAmount는 항상 baseAmount의 50% 이상 > 0.
+ * 이 덕분에 사가가 `tossClient.cancel({ cancelAmount: 0 })`(Toss 거부)을 보낼 일이 없다.
+ * 향후 100% 위약금 tier를 추가하려면 refund.ts/refundRetry.ts에 refundAmount===0 가드를 먼저 넣을 것.
+ */
 export const OVERSEAS_PENALTY_TIERS = [
   { minDaysBefore: 30, rate: 0.0 },
   { minDaysBefore: 20, rate: 0.1 },
