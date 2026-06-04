@@ -92,6 +92,8 @@ interface TransitionStatusInput {
   to: BookingStatus;
   actor: string;
   reason?: string;
+  /** 사가가 좌석을 이미 정밀 환원한 경우 true — terminal 전이의 전체 환원 이중집행 방지. */
+  skipSeatReturn?: boolean;
 }
 
 /**
@@ -101,7 +103,7 @@ interface TransitionStatusInput {
  */
 export async function transitionStatusTx(
   tx: Prisma.TransactionClient,
-  { bookingId, to, actor, reason }: TransitionStatusInput
+  { bookingId, to, actor, reason, skipSeatReturn }: TransitionStatusInput
 ): Promise<Booking> {
   const current = await tx.booking.findUniqueOrThrow({
     where: { id: bookingId },
@@ -110,8 +112,8 @@ export async function transitionStatusTx(
   // R5: 화이트리스트 검증 — 직접 할당 금지
   assertTransition(current.status, to);
 
-  // R7: 취소 전이 시 좌석 환원 (보상 트랜잭션)
-  if (shouldReturnSeats(current.status, to)) {
+  // R7: 취소 전이 시 좌석 환원 (보상 트랜잭션). 사가가 정밀 환원했으면 스킵(이중환원 방지).
+  if (!skipSeatReturn && shouldReturnSeats(current.status, to)) {
     await releaseSeats(
       tx,
       current.departureId,
