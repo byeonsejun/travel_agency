@@ -808,7 +808,7 @@ git commit -m "feat(search-box): useTransition pending spinner on submit"
 - Create: `src/shared/ui/ProgressLink.tsx`
 - Test: `src/shared/ui/__tests__/RouteProgress.test.tsx`
 
-- [ ] **Step 1: Write the failing test (mock useLinkStatus)**
+- [x] **Step 1: Write the failing test (mock useLinkStatus)**
 
 `src/shared/ui/__tests__/RouteProgress.test.tsx`:
 
@@ -857,12 +857,12 @@ describe("<RouteProgress />", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/shared/ui/__tests__/RouteProgress.test.tsx`
 Expected: FAIL — `Cannot find module '../RouteProgress'`
 
-- [ ] **Step 3: Implement RouteProgress**
+- [x] **Step 3: Implement RouteProgress**
 
 `src/shared/ui/RouteProgress.tsx`:
 
@@ -891,12 +891,12 @@ export function RouteProgress() {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/shared/ui/__tests__/RouteProgress.test.tsx`
 Expected: PASS (both cases)
 
-- [ ] **Step 5: Implement ProgressLink wrapper**
+- [x] **Step 5: Implement ProgressLink wrapper**
 
 `src/shared/ui/ProgressLink.tsx`:
 
@@ -924,12 +924,12 @@ export function ProgressLink({ children, ...props }: ProgressLinkProps) {
 }
 ```
 
-- [ ] **Step 6: Verify typecheck**
+- [x] **Step 6: Verify typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/shared/ui/RouteProgress.tsx src/shared/ui/ProgressLink.tsx src/shared/ui/__tests__/RouteProgress.test.tsx
