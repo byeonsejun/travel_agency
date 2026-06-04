@@ -1124,14 +1124,14 @@ Expected: 완료된 Task 범위에 미체크 항목 0 (전 Task 완료 시 출�
 Run: `grep -rn "use client" src/widgets/admin-dashboard/ui/`
 Expected: `RevenueTrendChart.tsx`·`BookingStatusDonut.tsx` 2개만. KPI/필터/조립/format 은 server.
 
-- [ ] **Step 4: 각 range 육안 확인 (자동화 불가 — 수동)**
+- [x] **Step 4: 각 range 육안 확인 (자동화 불가 — 수동)** (비주얼 동반 도구로 목업 대비 실 seed 집계 대조 + 사용자 admin 로그인 렌더 확인 완료)
 
 절차: admin 매직링크(`npm run dev` 콘솔 `📧 [DEV] Magic link`)로 로그인 →
 `/admin/dashboard?range=today|7d|30d|90d|all` 순회.
 기대: KPI 4 카드 + 막대/도넛 차트 렌더, 활성 탭 강조 전환, 데이터 0 구간은 빈 상태 메시지.
 실패 시: 콘솔 에러·스크린샷 첨부.
 
-- [ ] **Step 5: 최종 커밋 확인**
+- [x] **Step 5: 최종 커밋 확인**
 
 Run: `git log --oneline -12 && git status`
 Expected: Task 1~10 커밋 존재, working tree clean.
