@@ -274,7 +274,7 @@ git commit -m "feat(products,search): route loading skeletons (dedupe via Produc
 **Files:**
 - Create: `src/app/(site)/mypage/loading.tsx`
 
-- [ ] **Step 1: Create mypage/loading.tsx**
+- [x] **Step 1: Create mypage/loading.tsx**
 
 `src/app/(site)/mypage/loading.tsx`:
 
@@ -314,12 +314,12 @@ export default function MyPageLoading() {
 }
 ```
 
-- [ ] **Step 2: Verify typecheck**
+- [x] **Step 2: Verify typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add "src/app/(site)/mypage/loading.tsx"
@@ -333,7 +333,7 @@ git commit -m "feat(mypage): route loading skeleton"
 **Files:**
 - Create: `src/app/(site)/products/[id]/loading.tsx`
 
-- [ ] **Step 1: Create PDP loading.tsx**
+- [x] **Step 1: Create PDP loading.tsx**
 
 `src/app/(site)/products/[id]/loading.tsx`:
 
@@ -363,12 +363,12 @@ export default function ProductDetailLoading() {
 }
 ```
 
-- [ ] **Step 2: Verify typecheck**
+- [x] **Step 2: Verify typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add "src/app/(site)/products/[id]/loading.tsx"
