@@ -652,7 +652,7 @@ git commit -m "feat(sort-select): useTransition pending spinner on navigation"
 - Modify: `src/features/search/ui/SearchBox.tsx`
 - Test: `src/features/search/ui/__tests__/SearchBox.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/features/search/ui/__tests__/SearchBox.test.tsx`:
 
@@ -715,12 +715,12 @@ describe("<SearchBox />", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails/passes baseline**
+- [x] **Step 2: Run test to verify it fails/passes baseline**
 
 Run: `npx vitest run src/features/search/ui/__tests__/SearchBox.test.tsx`
 Expected: PASS (현재 컴포넌트도 이 동작은 만족). 이 테스트는 Step 3 의 useTransition 추가 후에도 동작이 보존됨을 보증하는 회귀 가드.
 
-- [ ] **Step 3: Add useTransition pending feedback**
+- [x] **Step 3: Add useTransition pending feedback**
 
 `src/features/search/ui/SearchBox.tsx` 전체 교체:
 
@@ -787,12 +787,12 @@ export function SearchBox({
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/features/search/ui/__tests__/SearchBox.test.tsx`
 Expected: PASS (both cases)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/search/ui/SearchBox.tsx src/features/search/ui/__tests__/SearchBox.test.tsx
