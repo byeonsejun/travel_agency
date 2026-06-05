@@ -92,7 +92,7 @@ git commit -m "feat(analytics): replace DateRange/RangeKey with DashboardFilter 
 - Create: `src/entities/analytics/model/filter.ts`
 - Test: `src/entities/analytics/model/__tests__/filter.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/entities/analytics/model/__tests__/filter.test.ts
@@ -170,12 +170,12 @@ describe("parseFilter", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test -- filter.test`
 Expected: FAIL — `Cannot find module '../filter'`.
 
-- [ ] **Step 3: parseFilter 구현**
+- [x] **Step 3: parseFilter 구현**
 
 ```ts
 // src/entities/analytics/model/filter.ts
@@ -273,12 +273,12 @@ export function parseFilter(input: DashboardFilterInput): DashboardFilter {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test -- filter.test`
 Expected: PASS (9 케이스). 만약 productId 케이스가 모호하면 단언을 `expect(parseFilter({ productId: "clabc123" }).productId).toBe("clabc123")` 로 단순화.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/analytics/model/filter.ts src/entities/analytics/model/__tests__/filter.test.ts
