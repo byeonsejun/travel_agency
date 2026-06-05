@@ -40,7 +40,7 @@
 - Create: `src/shared/lib/csv/toCsv.ts`
 - Test: `src/shared/lib/csv/__tests__/toCsv.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // src/shared/lib/csv/__tests__/toCsv.test.ts
@@ -73,12 +73,12 @@ describe("toCsv", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/shared/lib/csv/__tests__/toCsv.test.ts`
 Expected: FAIL — `Cannot find module '../toCsv'`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 // src/shared/lib/csv/toCsv.ts
@@ -103,12 +103,12 @@ export function toCsv<T>(rows: readonly T[], columns: readonly CsvColumn<T>[]): 
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/shared/lib/csv/__tests__/toCsv.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/shared/lib/csv/
