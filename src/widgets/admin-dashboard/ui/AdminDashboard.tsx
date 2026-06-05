@@ -1,16 +1,10 @@
 import type { DashboardData, RangeKey } from "@/entities/analytics";
-import { DashboardKpiCards } from "./DashboardKpiCards";
+import { KpiDrilldownGrid } from "@/features/admin-dashboard-drilldown";
 import { DashboardRangeFilter } from "./DashboardRangeFilter";
 import { RevenueTrendChart } from "./RevenueTrendChart";
 import { BookingStatusDonut } from "./BookingStatusDonut";
 
-export function AdminDashboard({
-  data,
-  range,
-}: {
-  data: DashboardData;
-  range: RangeKey;
-}) {
+export function AdminDashboard({ data, range }: { data: DashboardData; range: RangeKey }) {
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">
@@ -18,19 +12,18 @@ export function AdminDashboard({
         <DashboardRangeFilter active={range} />
       </div>
 
-      <DashboardKpiCards
+      <KpiDrilldownGrid
         revenue={data.revenue}
         penaltyRevenue={data.penaltyRevenue}
         cancellation={data.cancellation}
         occupancy={data.occupancy}
+        range={range}
       />
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.7fr_1fr]">
         <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <h3 className="text-sm font-bold text-gray-900">매출 추이</h3>
-          <p className="mb-3 text-[11.5px] text-gray-400">
-            일별 결제액 vs 환불액
-          </p>
+          <p className="mb-3 text-[11.5px] text-gray-400">일별 결제액 vs 환불액</p>
           <RevenueTrendChart data={data.trend} />
         </section>
         <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">

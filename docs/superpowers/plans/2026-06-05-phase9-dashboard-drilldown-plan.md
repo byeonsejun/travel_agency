@@ -487,7 +487,7 @@ git commit -m "feat(analytics): drill-down raw-SQL queries (5000 cap, window tot
 - Create: `src/features/admin-dashboard-drilldown/server/actions.ts`
 - Test: `src/features/admin-dashboard-drilldown/server/__tests__/actions.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // src/features/admin-dashboard-drilldown/server/__tests__/actions.test.ts
@@ -536,12 +536,12 @@ describe("loadDrilldownAction", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/features/admin-dashboard-drilldown/server/__tests__/actions.test.ts`
 Expected: FAIL — `Cannot find module '../actions'`.
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 ```ts
 // src/features/admin-dashboard-drilldown/server/actions.ts
@@ -595,12 +595,12 @@ export async function loadDrilldownAction(input: DrilldownInput): Promise<Drilld
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/features/admin-dashboard-drilldown/server/__tests__/actions.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/admin-dashboard-drilldown/server/
@@ -699,7 +699,7 @@ git commit -m "feat(drilldown): client Blob CSV download (BOM + revokeObjectURL)
 
 > client island. db/env import 0. 메모리 누수 방어: stale 토큰 가드 + ESC 리스너 cleanup + revoke(Task6).
 
-- [ ] **Step 1: Implement the Sheet**
+- [x] **Step 1: Implement the Sheet**
 
 ```tsx
 // src/features/admin-dashboard-drilldown/ui/DrilldownSheet.tsx
@@ -832,14 +832,14 @@ export function DrilldownSheet({
 }
 ```
 
-- [ ] **Step 2: Verify typecheck**
+- [x] **Step 2: Verify typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
 > 참고: `RangeKey` 가 barrel 에 type export 되어 있는지 확인(Task 4 에서 포함). 누락 시 `@/entities/analytics` 에 추가.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/features/admin-dashboard-drilldown/ui/DrilldownSheet.tsx
@@ -854,7 +854,7 @@ git commit -m "feat(drilldown): Sheet panel with preview table + CSV (stale-toke
 - Create: `src/features/admin-dashboard-drilldown/ui/KpiDrilldownGrid.tsx`
 - Create: `src/features/admin-dashboard-drilldown/index.ts`
 
-- [ ] **Step 1: Implement the grid**
+- [x] **Step 1: Implement the grid**
 
 ```tsx
 // src/features/admin-dashboard-drilldown/ui/KpiDrilldownGrid.tsx
@@ -920,21 +920,21 @@ export function KpiDrilldownGrid({ revenue, penaltyRevenue, cancellation, occupa
 }
 ```
 
-- [ ] **Step 2: Create barrel**
+- [x] **Step 2: Create barrel**
 
 ```ts
 // src/features/admin-dashboard-drilldown/index.ts
 export { KpiDrilldownGrid } from "./ui/KpiDrilldownGrid";
 ```
 
-- [ ] **Step 3: Verify typecheck**
+- [x] **Step 3: Verify typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
 > 참고: `formatKRW`/`formatPercent` 가 `widgets/admin-dashboard/ui/format` 에서 export 되는지 확인(현재 둘 다 export 됨). client island 이 widget util 을 import 하는 것은 순수 포맷 함수라 무방(db/env 0).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/features/admin-dashboard-drilldown/ui/KpiDrilldownGrid.tsx src/features/admin-dashboard-drilldown/index.ts
@@ -948,7 +948,7 @@ git commit -m "feat(drilldown): clickable KPI grid island + barrel"
 **Files:**
 - Modify: `src/widgets/admin-dashboard/ui/AdminDashboard.tsx`
 
-- [ ] **Step 1: Swap KPI cards for drill-down grid**
+- [x] **Step 1: Swap KPI cards for drill-down grid**
 
 `AdminDashboard.tsx` 를 아래로 교체(`DashboardKpiCards` import 제거, `KpiDrilldownGrid` 사용, range 전달):
 
@@ -992,23 +992,23 @@ export function AdminDashboard({ data, range }: { data: DashboardData; range: Ra
 }
 ```
 
-- [ ] **Step 2: Remove the now-unused DashboardKpiCards**
+- [x] **Step 2: Remove the now-unused DashboardKpiCards**
 
 `DashboardKpiCards.tsx` 는 더 이상 참조되지 않으므로 삭제(presentational 로직은 `KpiDrilldownGrid` 의 `Card` 로 흡수됨).
 
 Run: `git rm src/widgets/admin-dashboard/ui/DashboardKpiCards.tsx`
 
-- [ ] **Step 3: Verify typecheck + tests + lint**
+- [x] **Step 3: Verify typecheck + tests + lint**
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: 전부 PASS, 901+신규 테스트 GREEN.
 
-- [ ] **Step 4: Verify client-leaf isolation (Architect 회귀 가드)**
+- [x] **Step 4: Verify client-leaf isolation (Architect 회귀 가드)**
 
 Run: `grep -rl "use client" src/widgets/admin-dashboard/ui/ src/features/admin-dashboard-drilldown/ui/`
 Expected: 정확히 4개 — `RevenueTrendChart.tsx`, `BookingStatusDonut.tsx`, `DrilldownSheet.tsx`, `KpiDrilldownGrid.tsx`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A src/widgets/admin-dashboard/
