@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import type { RevenueTrendPoint } from "@/entities/analytics";
-import { formatKRW } from "./format";
+import { formatKRW } from "@/shared/lib/format";
 
 // 차트는 window/ResizeObserver 의존 → 클라이언트 리프로 격리.
 // 집계(서버)된 plain 배열만 props 로 받는다. DB·env import 없음.

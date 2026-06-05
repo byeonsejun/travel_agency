@@ -1,6 +1,6 @@
 // src/widgets/admin-dashboard/ui/AdminDashboard.tsx
 import type { DashboardData, ProductOption } from "@/entities/analytics";
-import { DashboardKpiCards } from "./DashboardKpiCards";
+import { KpiDrilldownGrid } from "@/features/admin-dashboard-drilldown";
 import { DateRangePicker } from "./DateRangePicker";
 import { ProductSelect } from "./ProductSelect";
 import { RevenueTrendChart } from "./RevenueTrendChart";
@@ -29,11 +29,14 @@ export function AdminDashboard({
         </div>
       </div>
 
-      <DashboardKpiCards
+      <KpiDrilldownGrid
         revenue={data.revenue}
         penaltyRevenue={data.penaltyRevenue}
         cancellation={data.cancellation}
         occupancy={data.occupancy}
+        start={start}
+        end={end}
+        productId={productId}
       />
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.7fr_1fr]">

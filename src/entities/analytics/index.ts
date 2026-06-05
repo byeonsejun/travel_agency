@@ -22,3 +22,20 @@ export {
   getProductOptions,
   TAG_DASHBOARD,
 } from "./api/queries";
+export type {
+  DrilldownMetric,
+  DrilldownData,
+  DrilldownResult,
+  RevenueRow,
+  PenaltyRow,
+  CancellationRow,
+  OccupancyRow,
+  DrilldownRowMap,
+} from "./model/types";
+export { DRILLDOWN_COLUMNS, DRILLDOWN_LABEL } from "./model/columns";
+export {
+  getRevenueRows,
+  getPenaltyRows,
+  getCancellationRows,
+  getOccupancyRows,
+} from "./api/drilldown";
