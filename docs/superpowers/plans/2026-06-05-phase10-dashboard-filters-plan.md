@@ -665,7 +665,7 @@ git commit -m "feat(analytics): add productId dimension + quantized cache keys t
 **Files:**
 - Modify: `src/entities/analytics/index.ts`
 
-- [ ] **Step 1: barrel 교체**
+- [x] **Step 1: barrel 교체**
 
 전체를 아래로 교체:
 
@@ -696,19 +696,19 @@ export {
 } from "./api/queries";
 ```
 
-- [ ] **Step 2: 구식 range.ts 제거**
+- [x] **Step 2: 구식 range.ts 제거**
 
 Run:
 ```bash
 git rm src/entities/analytics/model/range.ts src/entities/analytics/model/__tests__/range.test.ts
 ```
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npm run typecheck`
 Expected: 남은 에러는 `page.tsx`·`AdminDashboard.tsx`·`DashboardRangeFilter.tsx` 뿐(Task 6~10). analytics 슬라이스 내부 에러 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/entities/analytics/index.ts
