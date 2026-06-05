@@ -293,7 +293,7 @@ git commit -m "feat(analytics): parseFilter with day-quantized cache keys"
 - Create: `src/entities/analytics/model/presets.ts`
 - Test: `src/entities/analytics/model/__tests__/presets.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/entities/analytics/model/__tests__/presets.test.ts
@@ -339,12 +339,12 @@ describe("presetRange", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm run test -- presets.test`
 Expected: FAIL — `Cannot find module '../presets'`.
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 ```ts
 // src/entities/analytics/model/presets.ts
@@ -380,12 +380,12 @@ export function presetRange(key: PresetKey, now: Date = new Date()): PresetRange
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm run test -- presets.test`
 Expected: PASS (6 케이스).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/analytics/model/presets.ts src/entities/analytics/model/__tests__/presets.test.ts
