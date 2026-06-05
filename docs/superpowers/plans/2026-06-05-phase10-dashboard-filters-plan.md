@@ -723,7 +723,7 @@ git commit -m "feat(analytics): export parseFilter/presets/getProductOptions, dr
 - Create: `src/widgets/admin-dashboard/ui/ProductSelect.tsx`
 - Test: `src/widgets/admin-dashboard/ui/__tests__/ProductSelect.test.tsx`
 
-- [ ] **Step 1: 실패 테스트 작성 (URL 갱신 + start/end 보존)**
+- [x] **Step 1: 실패 테스트 작성 (URL 갱신 + start/end 보존)**
 
 ```tsx
 // src/widgets/admin-dashboard/ui/__tests__/ProductSelect.test.tsx
@@ -773,12 +773,12 @@ describe("ProductSelect", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm run test -- ProductSelect.test`
 Expected: FAIL — `Cannot find module '../ProductSelect'`.
 
-- [ ] **Step 3: 구현 (SortSelect 패턴)**
+- [x] **Step 3: 구현 (SortSelect 패턴)**
 
 ```tsx
 // src/widgets/admin-dashboard/ui/ProductSelect.tsx
@@ -839,12 +839,12 @@ export function ProductSelect({
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm run test -- ProductSelect.test`
 Expected: PASS (2 케이스).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/ProductSelect.tsx src/widgets/admin-dashboard/ui/__tests__/ProductSelect.test.tsx
@@ -859,7 +859,7 @@ git commit -m "feat(admin-dashboard): ProductSelect island (productId URL sync, 
 - Create: `src/widgets/admin-dashboard/ui/DateRangePicker.tsx`
 - Test: `src/widgets/admin-dashboard/ui/__tests__/DateRangePicker.test.tsx`
 
-- [ ] **Step 1: 실패 테스트 작성 (적용 시 start/end 갱신 + productId 보존)**
+- [x] **Step 1: 실패 테스트 작성 (적용 시 start/end 갱신 + productId 보존)**
 
 ```tsx
 // src/widgets/admin-dashboard/ui/__tests__/DateRangePicker.test.tsx
@@ -907,12 +907,12 @@ describe("DateRangePicker", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm run test -- DateRangePicker.test`
 Expected: FAIL — `Cannot find module '../DateRangePicker'`.
 
-- [ ] **Step 3: 구현 (네이티브 date input + 프리셋 칩)**
+- [x] **Step 3: 구현 (네이티브 date input + 프리셋 칩)**
 
 ```tsx
 // src/widgets/admin-dashboard/ui/DateRangePicker.tsx
@@ -1006,12 +1006,12 @@ export function DateRangePicker({
 
 > 참고: `value`+`onChange`로 제어하지만 SSOT는 URL이다. 로컬 state는 "적용 전 편집 버퍼"일 뿐 — 적용 시 URL push로 RSC 재요청, 마운트 시 props(`start`/`end`)가 초기값. 타이머/리스너 없음 → cleanup 불요.
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm run test -- DateRangePicker.test`
 Expected: PASS (2 케이스).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/DateRangePicker.tsx src/widgets/admin-dashboard/ui/__tests__/DateRangePicker.test.tsx
@@ -1026,7 +1026,7 @@ git commit -m "feat(admin-dashboard): DateRangePicker island (native date inputs
 - Modify: `src/widgets/admin-dashboard/ui/AdminDashboard.tsx`
 - Delete: `src/widgets/admin-dashboard/ui/DashboardRangeFilter.tsx`
 
-- [ ] **Step 1: 구식 DashboardRangeFilter 제거**
+- [x] **Step 1: 구식 DashboardRangeFilter 제거**
 
 Run:
 ```bash
@@ -1035,7 +1035,7 @@ git rm src/widgets/admin-dashboard/ui/DashboardRangeFilter.tsx
 
 (프리셋은 DateRangePicker 내부 칩으로 흡수됨 — 별도 컴포넌트 불요.)
 
-- [ ] **Step 2: AdminDashboard 교체 (island 2개 조립)**
+- [x] **Step 2: AdminDashboard 교체 (island 2개 조립)**
 
 ```tsx
 // src/widgets/admin-dashboard/ui/AdminDashboard.tsx
@@ -1097,12 +1097,12 @@ export function AdminDashboard({
 }
 ```
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npm run typecheck`
 Expected: 남은 에러는 `page.tsx`(Task 9)뿐.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/AdminDashboard.tsx
@@ -1116,7 +1116,7 @@ git commit -m "feat(admin-dashboard): compose ProductSelect + DateRangePicker, d
 **Files:**
 - Modify: `src/app/(admin)/admin/dashboard/page.tsx`
 
-- [ ] **Step 1: page 교체**
+- [x] **Step 1: page 교체**
 
 ```tsx
 // src/app/(admin)/admin/dashboard/page.tsx
@@ -1186,12 +1186,12 @@ export default async function AdminDashboardPage({
 }
 ```
 
-- [ ] **Step 2: 전체 typecheck 통과**
+- [x] **Step 2: 전체 typecheck 통과**
 
 Run: `npm run typecheck`
 Expected: 에러 0 (전 슬라이스 정합).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add "src/app/(admin)/admin/dashboard/page.tsx"
@@ -1204,7 +1204,7 @@ git commit -m "feat(admin-dashboard): wire parseFilter + product options into pa
 
 **Files:** 없음 (검증 전용)
 
-- [ ] **Step 1: 전체 테스트·타입·린트**
+- [x] **Step 1: 전체 테스트·타입·린트**
 
 Run:
 ```bash
@@ -1212,7 +1212,7 @@ npm run typecheck && npm run test && npm run lint
 ```
 Expected: 모두 통과. `filter.test`/`presets.test`/`ProductSelect.test`/`DateRangePicker.test` 포함 green.
 
-- [ ] **Step 2: client 경계 회귀 확인 (정확히 4개)**
+- [x] **Step 2: client 경계 회귀 확인 (정확히 4개)**
 
 Run:
 ```bash
@@ -1240,7 +1240,7 @@ npx prisma studio  # 또는 psql 로 특정 productId 의 Payment 합 확인
 
 같은 `?start=2026-05-01&end=2026-05-15` 를 60초 내 2회 조회 → 서버 로그에 `_revenue` SQL 이 1회만(캐시 적중). `to` 가 ms 가 아닌 일 경계라 키 동일.
 
-- [ ] **Step 5: 플랜 체크박스 최종 확인**
+- [x] **Step 5: 플랜 체크박스 최종 확인**
 
 Run:
 ```bash
@@ -1248,7 +1248,7 @@ grep -n "\- \[ \]" docs/superpowers/plans/2026-06-05-phase10-dashboard-filters-p
 ```
 Expected: Task 10까지 완료 시 출력 없음(전부 `[x]`). 남으면 미완료 항목 처리 후 진행.
 
-- [ ] **Step 6: Commit (검증 로그 + 체크박스 동기화)**
+- [x] **Step 6: Commit (검증 로그 + 체크박스 동기화)**
 
 ```bash
 git add docs/superpowers/plans/2026-06-05-phase10-dashboard-filters-plan.md
@@ -1291,15 +1291,15 @@ git commit -m "docs(adr): 0037 dashboard quantized cache keys + preset shortcuts
 
 ## 최종 체크리스트
 
-- [ ] `parseFilter` 양자화·폴백·클램프·스왑·레거시 매핑 단위 테스트 green
-- [ ] `presetRange` 5종 단위 테스트 green
-- [ ] 6 집계 함수 productId 차원 + 양자화 키 적용, productId=null 시 하위호환
-- [ ] `getProductOptions` 드롭다운 소스 (5m 캐시)
-- [ ] `ProductSelect`/`DateRangePicker` island URL 동기화 + start/end·productId 상호 보존 테스트 green
-- [ ] `AdminDashboard` island 2개 조립, `DashboardRangeFilter` 제거
-- [ ] `page.tsx` 7쿼리 병렬 + 레거시 range 호환
-- [ ] client 경계 정확히 4개 (grep 증거)
+- [x] `parseFilter` 양자화·폴백·클램프·스왑·레거시 매핑 단위 테스트 green
+- [x] `presetRange` 5종 단위 테스트 green
+- [x] 6 집계 함수 productId 차원 + 양자화 키 적용, productId=null 시 하위호환
+- [x] `getProductOptions` 드롭다운 소스 (5m 캐시)
+- [x] `ProductSelect`/`DateRangePicker` island URL 동기화 + start/end·productId 상호 보존 테스트 green
+- [x] `AdminDashboard` island 2개 조립, `DashboardRangeFilter` 제거
+- [x] `page.tsx` 7쿼리 병렬 + 레거시 range 호환
+- [x] client 경계 정확히 4개 (grep 증거)
 - [ ] 런타임 상품 스코핑 + 미존재 productId=0 증거
-- [ ] `npm run typecheck && npm run test && npm run lint` 전부 green
+- [x] `npm run typecheck && npm run test && npm run lint` 전부 green
 - [ ] ADR-0037 발행 + README 인덱스
 ```
