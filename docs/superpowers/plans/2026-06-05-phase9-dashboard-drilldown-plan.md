@@ -1023,7 +1023,7 @@ git commit -m "feat(admin-dashboard): wire KPI drill-down grid into dashboard"
 - Create: `docs/superpowers/adr/0037-csv-export-client-blob.md`
 - Modify: `docs/superpowers/adr/README.md`
 
-- [ ] **Step 1: Runtime evidence (QA — 자가 증거 수집)**
+- [x] **Step 1: Runtime evidence (QA — 자가 증거 수집)**
 
 dev 서버 기동 후 admin 로그인하여 `/admin/dashboard`:
 - KPI 카드 4종 각각 클릭 → Sheet 오픈 + 로우 렌더 확인(Playwright/수동).
@@ -1036,7 +1036,7 @@ dev 서버 기동 후 admin 로그인하여 `/admin/dashboard`:
 psql "$DATABASE_URL" -c "SELECT count(*) FROM \"Booking\" WHERE status IN ('CANCELED_BY_USER','CANCELED_BY_AGENCY') AND \"createdAt\" >= now() - interval '30 days';"
 ```
 
-- [ ] **Step 2: Write ADR-0037**
+- [x] **Step 2: Write ADR-0037**
 
 `docs/superpowers/adr/template.md` 복사 → `0037-csv-export-client-blob.md`. 4섹션:
 - **Context**: 대시보드 CSV 추출 필요, 소규모 데이터.
@@ -1046,12 +1046,12 @@ psql "$DATABASE_URL" -c "SELECT count(*) FROM \"Booking\" WHERE status IN ('CANC
 
 `README.md` 인덱스에 한 줄 추가.
 
-- [ ] **Step 3: Plan 체크박스 동기화 확인**
+- [x] **Step 3: Plan 체크박스 동기화 확인**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-05-phase9-dashboard-drilldown-plan.md`
 Expected: 모든 Task 완료 시 출력 없음(전부 `[x]`).
 
-- [ ] **Step 4: Final commit**
+- [x] **Step 4: Final commit**
 
 ```bash
 git add docs/superpowers/
