@@ -69,6 +69,9 @@ export function parseFilter(input: DashboardFilterInput): DashboardFilter {
     endDay = t;
   }
 
+  // 스왑으로 endDay 가 미래가 됐을 수 있으므로 재클램프
+  if (endDay.getTime() > todayMidnight.getTime()) endDay = todayMidnight;
+
   const from = startDay;
   const to = new Date(endDay.getTime() + DAY_MS); // endDay 포함 → 미포함 상한
 

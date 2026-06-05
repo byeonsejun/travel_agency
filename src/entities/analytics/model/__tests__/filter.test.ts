@@ -70,4 +70,15 @@ describe("parseFilter", () => {
     const f2 = parseFilter({ range: "7d", start: "2026-01-01", end: "2026-01-10" });
     expect(f2.cacheKey.startDay).toBe("2026-01-01");
   });
+
+  it("미래 start + end 미지정 → endDay는 오늘로 유지, start도 오늘로 수렴", () => {
+    const f = parseFilter({ start: "2099-01-01" });
+    expect(f.cacheKey.endDay).toBe("2026-06-05");
+    expect(f.cacheKey.startDay).toBe("2026-06-05");
+  });
+
+  it("레거시 range=all → bucket=month", () => {
+    const f = parseFilter({ range: "all" });
+    expect(f.bucket).toBe("month");
+  });
 });
