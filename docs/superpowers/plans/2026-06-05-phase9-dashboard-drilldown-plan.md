@@ -322,7 +322,7 @@ git commit -m "feat(analytics): per-metric drill-down column defs (table/CSV SSO
 
 > 테스트: raw-SQL 은 DB 의존이라 단위 테스트 대신 Task 10 런타임 QA(프리즈마/curl) 로 검증. cap/매핑 순수 로직은 자명.
 
-- [ ] **Step 1: Implement queries**
+- [x] **Step 1: Implement queries**
 
 ```ts
 // src/entities/analytics/api/drilldown.ts
@@ -443,7 +443,7 @@ export function getOccupancyRows() {
 }
 ```
 
-- [ ] **Step 2: Update analytics barrel**
+- [x] **Step 2: Update analytics barrel**
 
 `src/entities/analytics/index.ts` 의 타입 export 블록에 추가:
 
@@ -467,12 +467,12 @@ export {
 } from "./api/drilldown";
 ```
 
-- [ ] **Step 3: Verify typecheck**
+- [x] **Step 3: Verify typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/entities/analytics/api/drilldown.ts src/entities/analytics/index.ts
