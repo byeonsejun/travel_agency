@@ -48,3 +48,61 @@ export interface DashboardData {
   trend: RevenueTrendPoint[];
   statusDistribution: StatusSlice[];
 }
+
+// ─── Phase 9: 드릴다운 ───────────────────────────────────────────
+export type DrilldownMetric = "revenue" | "penalty" | "cancellation" | "occupancy";
+
+export interface RevenueRow {
+  paidAt: string;        // YYYY-MM-DD
+  orderId: string;
+  productTitle: string;
+  customer: string;
+  amount: number;        // 결제액(원)
+  refundedAmount: number;
+  status: string;
+}
+export interface PenaltyRow {
+  processedAt: string;   // RefundJob.updatedAt
+  productTitle: string;
+  customer: string;
+  kind: string;          // FULL_CANCEL | TRAVELER_CANCEL | DISCRETIONARY
+  baseAmount: number;
+  penaltyAmount: number;
+  refundedAmount: number; // RefundJob.amount(실환불액)
+}
+export interface CancellationRow {
+  createdAt: string;
+  canceledAt: string;    // 없으면 ""
+  productTitle: string;
+  customer: string;
+  status: string;        // CANCELED_BY_USER | CANCELED_BY_AGENCY
+  cancelReason: string;  // 없으면 ""
+  totalPrice: number;
+}
+export interface OccupancyRow {
+  departureDate: string;
+  productTitle: string;
+  capacity: number;
+  bookedSeats: number;
+  occupancyPct: number;  // 0~100 정수
+  status: string;        // DepartureStatus
+}
+
+/** 메트릭별 row 타입 매핑. */
+export interface DrilldownRowMap {
+  revenue: RevenueRow;
+  penalty: PenaltyRow;
+  cancellation: CancellationRow;
+  occupancy: OccupancyRow;
+}
+
+export interface DrilldownResult<T> {
+  rows: T[];
+  total: number;     // WHERE 매칭 전체 건수(cap 무시)
+  capped: boolean;   // total > 5000
+}
+
+/** Server Action 반환 — metric 으로 태깅된 판별 유니온(any 회피). */
+export type DrilldownData = {
+  [M in DrilldownMetric]: { metric: M; result: DrilldownResult<DrilldownRowMap[M]> };
+}[DrilldownMetric];

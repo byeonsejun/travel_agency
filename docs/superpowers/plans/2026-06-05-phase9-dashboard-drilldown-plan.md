@@ -122,7 +122,7 @@ git commit -m "feat(csv): RFC4180 pure toCsv serializer (no external deps)"
 **Files:**
 - Modify: `src/entities/analytics/model/types.ts` (파일 끝에 추가)
 
-- [ ] **Step 1: Append drill-down types**
+- [x] **Step 1: Append drill-down types**
 
 기존 `types.ts` 끝에 아래를 추가한다(기존 export 는 유지).
 
@@ -186,12 +186,12 @@ export type DrilldownData = {
 }[DrilldownMetric];
 ```
 
-- [ ] **Step 2: Verify typecheck**
+- [x] **Step 2: Verify typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS (타입만 추가, 미사용이라 에러 없음).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/entities/analytics/model/types.ts
