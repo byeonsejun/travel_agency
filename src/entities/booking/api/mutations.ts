@@ -9,6 +9,7 @@ import { reserveSeats, releaseSeats } from "./seatLock";
 import { ForbiddenError, PriceMismatchError } from "./errors";
 import { emailJobForTransition } from "../model/emailPolicy";
 import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
+import { assignPaxTypes } from "../model/paxAssignment";
 
 export async function createBooking(input: CreateBookingInput): Promise<Booking> {
   // R3-1: 입력 검증
@@ -35,6 +36,19 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
     throw new PriceMismatchError(totalPrice, data.expectedTotalPrice);
   }
 
+  // pax 배정 — index를 key로 assignPaxTypes 호출 후 역매핑
+  const assignments = assignPaxTypes({
+    travelers: data.travelers.map((t, i) => ({ key: String(i), birthDate: t.birthDate })),
+    adultCount: data.adultCount,
+    childCount: data.childCount,
+    infantCount: data.infantCount,
+    priceAdult: departure.priceAdult,
+    priceChild: departure.priceChild,
+    priceInfant: departure.priceInfant,
+    totalPrice,
+  });
+  const assignByIndex = new Map(assignments.map((a) => [a.key, a]));
+
   // R1: 좌석 차감 + booking + travelers + event를 단일 트랜잭션
   const totalSeats = data.adultCount + data.childCount; // infant는 좌석 미차감
   return db.$transaction(async (tx) => {
@@ -51,7 +65,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
         status: "RECEIVED",
         notes: data.notes,
         travelers: {
-          create: data.travelers.map((t) => ({
+          create: data.travelers.map((t, i) => ({
             role: t.role ?? "TRAVELER",
             lastNameEn: t.lastNameEn,
             firstNameEn: t.firstNameEn,
@@ -61,6 +75,8 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
             expireDate: t.expireDate,
             phone: t.phone,
             email: t.email,
+            paxType: assignByIndex.get(String(i))!.paxType,
+            unitPrice: assignByIndex.get(String(i))!.unitPrice,
           })),
         },
         terms: {
@@ -92,6 +108,8 @@ interface TransitionStatusInput {
   to: BookingStatus;
   actor: string;
   reason?: string;
+  /** 사가가 좌석을 이미 정밀 환원한 경우 true — terminal 전이의 전체 환원 이중집행 방지. */
+  skipSeatReturn?: boolean;
 }
 
 /**
@@ -101,7 +119,7 @@ interface TransitionStatusInput {
  */
 export async function transitionStatusTx(
   tx: Prisma.TransactionClient,
-  { bookingId, to, actor, reason }: TransitionStatusInput
+  { bookingId, to, actor, reason, skipSeatReturn }: TransitionStatusInput
 ): Promise<Booking> {
   const current = await tx.booking.findUniqueOrThrow({
     where: { id: bookingId },
@@ -110,8 +128,8 @@ export async function transitionStatusTx(
   // R5: 화이트리스트 검증 — 직접 할당 금지
   assertTransition(current.status, to);
 
-  // R7: 취소 전이 시 좌석 환원 (보상 트랜잭션)
-  if (shouldReturnSeats(current.status, to)) {
+  // R7: 취소 전이 시 좌석 환원 (보상 트랜잭션). 사가가 정밀 환원했으면 스킵(이중환원 방지).
+  if (!skipSeatReturn && shouldReturnSeats(current.status, to)) {
     await releaseSeats(
       tx,
       current.departureId,

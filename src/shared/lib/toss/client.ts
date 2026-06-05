@@ -97,16 +97,18 @@ export const tossClient = {
     paymentKey,
     cancelReason,
     cancelAmount,
+    idempotencyKey,
   }: {
     paymentKey: string;
     cancelReason: string;
     cancelAmount: number;
+    idempotencyKey?: string;
   }): Promise<TossCancelResponse> {
     assertInteger(cancelAmount, "cancelAmount");
     return tossRequest<TossCancelResponse>(
       `${env.TOSS_API_BASE_URL}/v1/payments/${paymentKey}/cancel`,
       { cancelReason, cancelAmount },
-      `cancel:${paymentKey}`
+      idempotencyKey ?? `cancel:${paymentKey}`
     );
   },
 

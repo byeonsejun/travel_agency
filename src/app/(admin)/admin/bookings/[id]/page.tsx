@@ -8,8 +8,9 @@ import {
   BookingEventTimeline,
   ALLOWED_TRANSITIONS,
 } from "@/entities/booking";
-import { PaymentStatusBadge, findActiveRefundJob } from "@/entities/payment";
+import { PaymentStatusBadge, findActiveRefundJob, refundableAmount } from "@/entities/payment";
 import { AdminCancelBookingButton } from "@/features/admin-booking-cancel";
+import { TravelerCancelPanel, DiscretionaryRefundPanel } from "@/widgets/booking-detail";
 
 export const dynamic = "force-dynamic";
 
@@ -144,6 +145,12 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
                         ? `결제 ${formatDateTime(p.paidAt)}`
                         : `요청 ${formatDateTime(p.createdAt)}`}
                   </p>
+                  {(p.status === "PAID" || p.status === "PARTIAL_CANCELED") && (
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      환불됨: {p.refundedAmount.toLocaleString("ko-KR")}원 /
+                      잔여: {refundableAmount(p).toLocaleString("ko-KR")}원
+                    </p>
+                  )}
                 </div>
                 <PaymentStatusBadge status={p.status} />
               </li>
@@ -159,6 +166,27 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
         </h2>
         <BookingEventTimeline events={booking.events} />
       </section>
+
+      {/* ── 다회 부분 환불 패널 (Phase 8) ── */}
+      {(() => {
+        const paidPayment = payments.find(
+          (p) => p.status === "PAID" || p.status === "PARTIAL_CANCELED"
+        );
+        if (!paidPayment) return null;
+        return (
+          <div className="space-y-4">
+            <TravelerCancelPanel
+              bookingId={booking.id}
+              travelers={booking.travelers}
+            />
+            <DiscretionaryRefundPanel
+              bookingId={booking.id}
+              paymentId={paidPayment.id}
+              refundable={refundableAmount(paidPayment)}
+            />
+          </div>
+        );
+      })()}
 
       {/* 관리자 직권 취소 */}
       {cancelableByAgency && (

@@ -64,11 +64,15 @@ async function main() {
 
   // Cleanup in FK reverse order
   await prisma.$transaction([
+    prisma.emailJob.deleteMany(),
+    prisma.refundJob.deleteMany(),
+    prisma.departureCancellation.deleteMany(),
     prisma.payment.deleteMany(),
     prisma.bookingEvent.deleteMany(),
     prisma.bookingTerms.deleteMany(),
     prisma.traveler.deleteMany(),
     prisma.booking.deleteMany(),
+    prisma.embeddingJob.deleteMany(),
     prisma.itineraryStop.deleteMany(),
     prisma.itineraryDay.deleteMany(),
     prisma.inclusion.deleteMany(),
