@@ -399,7 +399,7 @@ git commit -m "feat(analytics): preset shortcut range computation"
 **Files:**
 - Modify: `src/entities/analytics/api/queries.ts`
 
-- [ ] **Step 1: productId 필터 헬퍼 + 6 집계 함수 시그니처 변경**
+- [x] **Step 1: productId 필터 헬퍼 + 6 집계 함수 시그니처 변경**
 
 `queries.ts`의 import·헬퍼 영역을 갱신하고, 각 `_fn`이 `productId: string | null`을 받아 조건부 `Prisma.sql` 조각을 합성하도록 수정한다. 아래로 파일 전체를 교체:
 
@@ -646,12 +646,12 @@ export function getProductOptions() {
 }
 ```
 
-- [ ] **Step 2: typecheck (queries.ts 단독 통과 확인)**
+- [x] **Step 2: typecheck (queries.ts 단독 통과 확인)**
 
 Run: `npm run typecheck`
 Expected: `queries.ts` 관련 에러 0. 남은 에러는 `index.ts`/`page.tsx`/위젯(Task 5~10) 뿐. `DateRange` import 잔존 에러가 queries.ts에 없어야 함.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/entities/analytics/api/queries.ts
