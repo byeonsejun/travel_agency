@@ -206,7 +206,7 @@ git commit -m "feat(analytics): drill-down row DTOs + DrilldownData union"
 - Create: `src/entities/analytics/model/columns.ts`
 - Test: `src/entities/analytics/model/__tests__/columns.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // src/entities/analytics/model/__tests__/columns.test.ts
@@ -231,12 +231,12 @@ describe("DRILLDOWN_COLUMNS", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/entities/analytics/model/__tests__/columns.test.ts`
 Expected: FAIL — `Cannot find module '../columns'`.
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 ```ts
 // src/entities/analytics/model/columns.ts
@@ -300,12 +300,12 @@ export const DRILLDOWN_LABEL: Record<DrilldownMetric, string> = {
 };
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/entities/analytics/model/__tests__/columns.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/analytics/model/columns.ts src/entities/analytics/model/__tests__/columns.test.ts
