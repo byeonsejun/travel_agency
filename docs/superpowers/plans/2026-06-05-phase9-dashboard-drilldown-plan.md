@@ -615,7 +615,7 @@ git commit -m "feat(drilldown): loadDrilldownAction with Zod + admin guard"
 - Create: `src/features/admin-dashboard-drilldown/lib/downloadCsv.ts`
 - Test: `src/features/admin-dashboard-drilldown/lib/__tests__/downloadCsv.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // src/features/admin-dashboard-drilldown/lib/__tests__/downloadCsv.test.ts
@@ -644,12 +644,12 @@ describe("downloadCsv", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/features/admin-dashboard-drilldown/lib/__tests__/downloadCsv.test.ts`
 Expected: FAIL — `Cannot find module '../downloadCsv'`.
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 ```ts
 // src/features/admin-dashboard-drilldown/lib/downloadCsv.ts
@@ -678,12 +678,12 @@ export function downloadCsv<T>(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/features/admin-dashboard-drilldown/lib/__tests__/downloadCsv.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/admin-dashboard-drilldown/lib/
