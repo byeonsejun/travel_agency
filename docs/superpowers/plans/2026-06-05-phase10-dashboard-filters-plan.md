@@ -1265,7 +1265,7 @@ git commit -m "test(admin-dashboard): Phase 10 verification evidence + plan chec
 
 > ⚠️ 넘버링: 저장소 실제 최신 ADR은 **0036**이다. (지시상 언급된 "Phase 9 ADR-0037"은 저장소에 부재 — 0038로 가면 0037 갭 발생.) 따라서 **0037**로 발행해 시퀀스 연속성 유지. 발행 전 `ls docs/superpowers/adr/ | tail -3` 로 재확인.
 
-- [ ] **Step 1: template 복사 후 작성**
+- [x] **Step 1: template 복사 후 작성**
 
 `docs/superpowers/adr/template.md` 를 복사해 `0037-dashboard-quantized-cache-keys.md` 작성. 4섹션 고정:
 - **Context**: enum(`range.key`) 키 → 임의 start/end 전환 시 `to=now`(ms) 가 매 요청 유니크해 `unstable_cache` 영구 미스. 상품 차원까지 추가되면 키 카디널리티 폭발.
@@ -1273,14 +1273,14 @@ git commit -m "test(admin-dashboard): Phase 10 verification evidence + plan chec
 - **Consequences**: (+) 과거 고정구간·동일일 동시조회 캐시 적중, 60s TTL 의미 보존. (+) 상품 스코프 6쿼리 일관. (−) 자정 경과 시 "오늘" 키 변경(의도된 신선화). (−) 키 카디널리티 = 구간수×상품수 (TTL 60s 로 흡수).
 - **Alternatives Considered**: (a) 커스텀 비캐시 — 동시/반복 조회 보호막 상실로 거부. (b) `unstable_cache` 전면 제거 — DB 부하 + force-dynamic 매요청 재집계로 거부. (c) `react-day-picker` 등 캘린더 라이브러리 — 무의존성·RSC 친화 위배(네이티브 `<input type="date">` 충분)로 거부.
 
-- [ ] **Step 2: README 인덱스 한 줄 추가**
+- [x] **Step 2: README 인덱스 한 줄 추가**
 
 `docs/superpowers/adr/README.md` 표 끝(0036 행 다음)에 추가:
 ```markdown
 | 0037  | [대시보드 start/end 일 양자화 캐시 키 + 프리셋=숏컷 (Phase 10)](./0037-dashboard-quantized-cache-keys.md) | Accepted | 2026-06-05   |
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/superpowers/adr/0037-dashboard-quantized-cache-keys.md docs/superpowers/adr/README.md
@@ -1301,5 +1301,5 @@ git commit -m "docs(adr): 0037 dashboard quantized cache keys + preset shortcuts
 - [x] client 경계 정확히 4개 (grep 증거)
 - [ ] 런타임 상품 스코핑 + 미존재 productId=0 증거
 - [x] `npm run typecheck && npm run test && npm run lint` 전부 green
-- [ ] ADR-0037 발행 + README 인덱스
+- [x] ADR-0037 발행 + README 인덱스
 ```
