@@ -86,6 +86,8 @@
 | 0036  | [Ledger 다회 부분 환불 — refundedAmount 물질화 카운터 + 조건부 차감](./0036-ledger-multiple-partial-refunds.md) | Accepted | 2026-06-04   |
 | 0037  | [대시보드 start/end 일 양자화 캐시 키 + 프리셋=숏컷 (Phase 10)](./0037-dashboard-quantized-cache-keys.md) | Accepted | 2026-06-05   |
 | 0038  | [Client-side Blob CSV 추출 + 5,000건 상한 (Phase 9 드릴다운)](./0038-csv-export-client-blob.md) | Accepted | 2026-06-05   |
+| 0039  | [정적 보안 헤더 7종(`next.config`) + CSP report-only→enforce 롤아웃 게이트 (Phase 11)](./0039-static-security-headers-and-csp-rollout.md) | Accepted | 2026-06-06   |
+| 0040  | [`mutation` tier 신설 + Server Action 미들웨어 우회 갭 봉합(`onBlock` 반환모드) (Phase 11)](./0040-mutation-tier-server-action-rate-limit.md) | Accepted | 2026-06-06   |
 
 ## 향후 후보 (작성 대기)
 
