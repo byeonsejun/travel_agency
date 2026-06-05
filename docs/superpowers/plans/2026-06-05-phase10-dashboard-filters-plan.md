@@ -42,7 +42,7 @@
 **Files:**
 - Modify: `src/entities/analytics/model/types.ts`
 
-- [ ] **Step 1: `DateRange`/`RangeKey` 제거, 새 타입 추가**
+- [x] **Step 1: `DateRange`/`RangeKey` 제거, 새 타입 추가**
 
 `types.ts` 상단 `RangeKey`·`DateRange` 블록(1~11행)을 아래로 교체:
 
@@ -72,12 +72,12 @@ export interface ProductOption {
 
 나머지 인터페이스(`RevenueSummary` … `DashboardData`)는 그대로 유지.
 
-- [ ] **Step 2: typecheck (의도된 빨강 확인)**
+- [x] **Step 2: typecheck (의도된 빨강 확인)**
 
 Run: `npm run typecheck`
 Expected: `range.ts`/`queries.ts`/`page.tsx` 등에서 `DateRange`/`RangeKey` 참조 에러 발생 — Task 2~10에서 순차 해소. (이 시점 빨강은 정상)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/entities/analytics/model/types.ts
