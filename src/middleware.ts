@@ -1,6 +1,11 @@
 import { auth } from "@/features/auth/server/auth";
 import { NextResponse } from "next/server";
-import { buildCspHeader, CSP_NONCE_HEADER, isDynamicCspPath } from "@/shared/lib/security";
+import {
+  buildCspHeader,
+  CSP_NONCE_HEADER,
+  isDynamicCspPath,
+  safeCallbackPath,
+} from "@/shared/lib/security";
 import {
   buildRateLimitHeaders,
   enforce,
@@ -49,9 +54,15 @@ export default auth(async (req) => {
     }
   }
 
-  // ─── Auth redirects (unchanged) ───────────────────────────────────────────
+  // ─── Auth redirects ────────────────────────────────────────────────────────
+  // 이미 인증된 사용자가 /login 에 진입하면 복귀시킨다. 단, `?callbackUrl=` 가
+  // 있으면 그 목적지로 정확히 돌려보낸다(없으면 홈). 과거엔 무조건 `/` 로 보내
+  // callbackUrl 을 유실 → 페이지의 세션 가드가 /login 으로 보낸 사용자가 원래
+  // 목적지 대신 홈으로 떨어지는 데이터 연속성 누수가 있었다. open-redirect 는
+  // safeCallbackPath 가 내부 절대경로만 통과시켜 차단.
   if (pathname.startsWith("/login") && isAuthenticated) {
-    const res = NextResponse.redirect(new URL("/", req.url));
+    const target = safeCallbackPath(req.nextUrl.searchParams.get("callbackUrl"));
+    const res = NextResponse.redirect(new URL(target, req.url));
     res.headers.set("x-trace-id", traceId);
     return res;
   }

@@ -1,6 +1,7 @@
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, OAuthLoginButtons } from "@/features/auth";
+import { safeCallbackPath } from "@/shared/lib/security";
 
 interface Props {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
@@ -15,10 +16,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default async function LoginPage({ searchParams }: Props) {
-  const { callbackUrl = "/", error } = await searchParams;
-  const safeCallback = callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
-    ? callbackUrl
-    : "/";
+  const { callbackUrl, error } = await searchParams;
+  const safeCallback = safeCallbackPath(callbackUrl);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
