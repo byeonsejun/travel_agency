@@ -1,5 +1,4 @@
 "use server";
-import { z } from "zod";
 import { auth } from "@/features/auth/server/auth";
 import {
   parseFilter,
@@ -9,18 +8,12 @@ import {
   getOccupancyRows,
   type DrilldownData,
 } from "@/entities/analytics";
+import { DrilldownInputSchema, type DrilldownInput } from "./schema";
 
 // 대시보드와 동일 필터 차원(productId + start/end)을 받아 KPI 카드와 동일
 // 코호트로 드릴다운한다. 날짜·productId 형식 검증·window 재도출은 모두 서버의
 // parseFilter 가 담당 — 클라이언트가 보낸 값을 신뢰하지 않는다.
-export const DrilldownInputSchema = z.object({
-  metric: z.enum(["revenue", "penalty", "cancellation", "occupancy"]),
-  start: z.string().optional(),
-  end: z.string().optional(),
-  productId: z.string().optional(),
-});
-export type DrilldownInput = z.infer<typeof DrilldownInputSchema>;
-
+// 입력 스키마는 ./schema 로 분리 — "use server" 파일은 async 함수만 export 가능.
 export type DrilldownState =
   | { type: "success"; data: DrilldownData }
   | { type: "error"; message: string };

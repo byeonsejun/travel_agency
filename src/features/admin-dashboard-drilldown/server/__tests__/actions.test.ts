@@ -17,7 +17,8 @@ vi.mock("@/entities/analytics", () => ({
 }));
 
 import { auth } from "@/features/auth/server/auth";
-import { DrilldownInputSchema, loadDrilldownAction } from "../actions";
+import { loadDrilldownAction } from "../actions";
+import { DrilldownInputSchema } from "../schema";
 
 const asAdmin = () => (auth as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: "a1", role: "ADMIN" } });
 
