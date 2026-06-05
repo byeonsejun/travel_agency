@@ -10,6 +10,7 @@ import {
 import { buildOrderId } from "@/entities/payment";
 import { tagDeparturesByProduct } from "@/entities/departure";
 import { db } from "@/shared/lib/db";
+import { withRateLimitAction } from "@/shared/lib/rate-limit";
 import { CheckoutFormSchema } from "../model/schemas";
 import type { CheckoutFormInput } from "../model/schemas";
 import { nextOrderSeq } from "./orderSeq";
@@ -32,8 +33,8 @@ export type CheckoutActionError = {
 
 export type CheckoutActionState = CheckoutActionSuccess | CheckoutActionError;
 
-// ── Server Action ───────────────────────────────────────────────
-export async function createCheckoutBooking(
+// ── Server Action (구현체) ──────────────────────────────────────
+async function createCheckoutBookingImpl(
   _prevState: CheckoutActionState | null,
   input: CheckoutFormInput
 ): Promise<CheckoutActionState> {
@@ -141,3 +142,23 @@ export async function createCheckoutBooking(
     customerEmail,
   };
 }
+
+// ── Rate-limit 래퍼 ─────────────────────────────────────────────
+// payment tier (10 req / 1 min).
+// idStrategy를 userFirst로 재정의: 액션 자체에 auth 가드가 있어 미인증 시
+// 우아한 에러를 반환한다. userOnly는 미인증 시 THROW → 500 이므로 사용 불가.
+export const createCheckoutBooking = withRateLimitAction<
+  [CheckoutActionState | null, CheckoutFormInput],
+  CheckoutActionState
+>(
+  {
+    tier: "payment",
+    idStrategy: "userFirst",
+    resolveUserId: async () => (await auth())?.user?.id ?? null,
+    onBlock: (): CheckoutActionState => ({
+      type: "error",
+      message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+    }),
+  },
+  createCheckoutBookingImpl,
+);

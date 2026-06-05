@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import { db } from "@/shared/lib/db";
 import { passportProfileSchema } from "@/entities/user";
+import { withRateLimitAction } from "@/shared/lib/rate-limit";
 
 export type PassportActionState =
   | { success: true }
   | { success: false; error: string }
   | null;
 
-export async function updatePassportProfile(
+async function updatePassportProfileImpl(
   _prev: PassportActionState,
   formData: FormData
 ): Promise<PassportActionState> {
@@ -46,3 +47,20 @@ export async function updatePassportProfile(
   revalidatePath("/mypage");
   return { success: true };
 }
+
+// ── Rate-limit 래퍼 ─────────────────────────────────────────────
+// mutation tier (20 req / 1 min, userFirst).
+export const updatePassportProfile = withRateLimitAction<
+  [PassportActionState, FormData],
+  PassportActionState
+>(
+  {
+    tier: "mutation",
+    resolveUserId: async () => (await auth())?.user?.id ?? null,
+    onBlock: (): PassportActionState => ({
+      success: false,
+      error: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+    }),
+  },
+  updatePassportProfileImpl,
+);

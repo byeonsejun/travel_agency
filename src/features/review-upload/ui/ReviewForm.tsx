@@ -32,6 +32,7 @@ const ERROR_MESSAGES: Record<ReviewActionError, string> = {
   ALREADY_REVIEWED: "이미 후기가 작성된 예약입니다.",
   INVALID: "입력값을 다시 확인해 주세요.",
   UNAUTHORIZED: "로그인이 필요합니다.",
+  RATE_LIMITED: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
 };
 
 export function ReviewForm({ bookingId }: Props) {

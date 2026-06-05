@@ -11,6 +11,18 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
+// withRateLimitAction을 투명 passthrough로 처리 — 액션 로직 단위 테스트에서 rate-limit 계층 분리
+vi.mock("@/shared/lib/rate-limit", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared/lib/rate-limit")>();
+  return {
+    ...actual,
+    withRateLimitAction: <Args extends unknown[], R>(
+      _opts: unknown,
+      handler: (...args: Args) => Promise<R>,
+    ) => handler,
+  };
+});
+
 vi.mock("@/features/auth/server/auth", () => ({ auth: mocks.auth }));
 vi.mock("@/entities/booking", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/entities/booking")>();

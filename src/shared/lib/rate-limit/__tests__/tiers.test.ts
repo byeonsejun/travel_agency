@@ -6,11 +6,12 @@ import {
 } from "../tiers";
 
 describe("RATE_LIMIT_TIERS catalogue", () => {
-  it("contains exactly 4 tiers", () => {
+  it("contains exactly 5 tiers (mutation 추가)", () => {
     expect(Object.keys(RATE_LIMIT_TIERS).sort()).toEqual([
       "ai-search",
       "auth",
       "global",
+      "mutation",
       "payment",
     ]);
   });
@@ -37,6 +38,14 @@ describe("RATE_LIMIT_TIERS catalogue", () => {
     expect(RATE_LIMIT_TIERS.auth).toMatchObject({ limit: 5, window: "1 m" });
     expect(RATE_LIMIT_TIERS.payment).toMatchObject({ limit: 10, window: "1 m" });
     expect(RATE_LIMIT_TIERS["ai-search"]).toMatchObject({ limit: 20, window: "1 m" });
+  });
+
+  it("mutation tier: limit=20, window='1 m', idStrategy='userFirst'", () => {
+    expect(RATE_LIMIT_TIERS.mutation).toMatchObject({
+      limit: 20,
+      window: "1 m",
+      idStrategy: "userFirst",
+    });
   });
 });
 

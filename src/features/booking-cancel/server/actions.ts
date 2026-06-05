@@ -10,6 +10,7 @@ import {
 import { refundBooking, PaymentError } from "@/entities/payment";
 import { tagDeparturesByProduct } from "@/entities/departure";
 import { db } from "@/shared/lib/db";
+import { withRateLimitAction } from "@/shared/lib/rate-limit";
 import { CancelBookingSchema } from "../model/schemas";
 import type { CancelBookingInput } from "../model/schemas";
 
@@ -19,7 +20,7 @@ export type CancelBookingState =
   | { type: "error"; message: string };
 
 /**
- * 사용자 자가 예약 취소 Server Action.
+ * 사용자 자가 예약 취소 Server Action (구현체).
  *
  * 보안 책임 (CLAUDE.md §5 — Backend/Domain Booking):
  *   1) 세션 인증 — 미로그인 거부.
@@ -39,7 +40,7 @@ export type CancelBookingState =
  *   RefundJob만 PENDING으로 남아 backoff 재시도된다. 즉, 사용자가
  *   "취소했다"는 의도와 DB 상태가 절대 어긋나지 않는다.
  */
-export async function cancelBookingAction(
+async function cancelBookingActionImpl(
   _prev: CancelBookingState | null,
   input: CancelBookingInput
 ): Promise<CancelBookingState> {
@@ -149,3 +150,23 @@ export async function cancelBookingAction(
 
   return { type: "success", bookingId };
 }
+
+// ── Rate-limit 래퍼 ─────────────────────────────────────────────
+// payment tier (10 req / 1 min).
+// idStrategy를 userFirst로 재정의: 액션 자체에 auth 가드가 있어 미인증 시
+// 우아한 에러를 반환한다. userOnly는 미인증 시 THROW → 500 이므로 사용 불가.
+export const cancelBookingAction = withRateLimitAction<
+  [CancelBookingState | null, CancelBookingInput],
+  CancelBookingState
+>(
+  {
+    tier: "payment",
+    idStrategy: "userFirst",
+    resolveUserId: async () => (await auth())?.user?.id ?? null,
+    onBlock: (): CancelBookingState => ({
+      type: "error",
+      message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+    }),
+  },
+  cancelBookingActionImpl,
+);

@@ -11,6 +11,7 @@ import {
   ALLOWED_REVIEW_PHOTO_MIMES,
   createReviewPhotoSignedUploadUrl,
 } from "@/shared/lib/supabase/storage";
+import { withRateLimitAction } from "@/shared/lib/rate-limit";
 
 import { MAX_REVIEW_PHOTOS } from "../model/photoSlots";
 
@@ -56,7 +57,8 @@ export type ReviewActionError =
   | "NOT_COMPLETED"
   | "ALREADY_REVIEWED"
   | "INVALID"
-  | "UNAUTHORIZED";
+  | "UNAUTHORIZED"
+  | "RATE_LIMITED";
 
 export type SignSlot = {
   idx: number;
@@ -120,7 +122,7 @@ async function checkReviewGate(
 //
 // photoMetas 비어 있으면 Supabase 호출 없이 pendingReviewId 만 반환 — 사진 없는
 // 후기 케이스의 round-trip 최소화.
-export async function signReviewPhotoUploads(input: {
+async function signReviewPhotoUploadsImpl(input: {
   bookingId: string;
   photoMetas: Array<{ idx: number; mime: string }>;
 }): Promise<SignResult> {
@@ -180,7 +182,7 @@ export async function signReviewPhotoUploads(input: {
 // prefix 인지 확인 — Storage signed URL 자체가 path 별 단일 토큰이라 임의 경로로
 // 업로드는 못 하지만, DB 에 거짓 path 를 저장해 타 리뷰 사진을 가리키는 표시
 // 위조 공격은 차단해야 한다.
-export async function submitReview(input: {
+async function submitReviewImpl(input: {
   pendingReviewId: string;
   bookingId: string;
   rating: number;
@@ -265,3 +267,33 @@ export async function submitReview(input: {
     throw e;
   }
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Rate-limit 래퍼 — mutation tier (20 req / 1 min, userFirst).
+// 인증 여부를 이 레이어에서 알 수 없으므로 userFirst(IP 폴백)로 idStrategy를
+// 내린다. 미인증 사용자는 내부 auth() 가드에서 UNAUTHORIZED를 반환.
+// ───────────────────────────────────────────────────────────────────────────
+
+export const signReviewPhotoUploads = withRateLimitAction<
+  [Parameters<typeof signReviewPhotoUploadsImpl>[0]],
+  SignResult
+>(
+  {
+    tier: "mutation",
+    resolveUserId: async () => (await auth())?.user?.id ?? null,
+    onBlock: (): SignResult => ({ ok: false, error: "RATE_LIMITED" as const }),
+  },
+  signReviewPhotoUploadsImpl,
+);
+
+export const submitReview = withRateLimitAction<
+  [Parameters<typeof submitReviewImpl>[0]],
+  SubmitResult
+>(
+  {
+    tier: "mutation",
+    resolveUserId: async () => (await auth())?.user?.id ?? null,
+    onBlock: (): SubmitResult => ({ ok: false, error: "RATE_LIMITED" as const }),
+  },
+  submitReviewImpl,
+);

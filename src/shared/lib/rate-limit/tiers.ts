@@ -1,4 +1,4 @@
-export type RateLimitTier = "global" | "auth" | "payment" | "ai-search";
+export type RateLimitTier = "global" | "auth" | "payment" | "ai-search" | "mutation";
 export type IdStrategy = "userFirst" | "ipOnly" | "userOnly";
 
 export interface TierConfig {
@@ -13,6 +13,8 @@ export const RATE_LIMIT_TIERS = {
   auth: { limit: 5, window: "1 m", idStrategy: "ipOnly" },
   payment: { limit: 10, window: "1 m", idStrategy: "userOnly" },
   "ai-search": { limit: 20, window: "1 m", idStrategy: "userFirst" },
+  /** 고위험 뮤테이션(체크아웃·리뷰·여권 등) — 인증 유저 우선, IP 폴백. */
+  mutation: { limit: 20, window: "1 m", idStrategy: "userFirst" },
 } as const satisfies Record<RateLimitTier, TierConfig>;
 
 /**
