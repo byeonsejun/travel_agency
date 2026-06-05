@@ -1,11 +1,13 @@
+// src/app/(admin)/admin/dashboard/page.tsx
 import {
-  parseRange,
+  parseFilter,
   getRevenueSummary,
   getPenaltyRevenue,
   getCancellationStats,
   getSeatOccupancy,
   getRevenueTrend,
   getBookingStatusDistribution,
+  getProductOptions,
 } from "@/entities/analytics";
 import { AdminDashboard } from "@/widgets/admin-dashboard";
 
@@ -15,12 +17,17 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{
+    start?: string;
+    end?: string;
+    productId?: string;
+    range?: string; // 레거시 북마크 호환
+  }>;
 }) {
-  const { range: rangeParam } = await searchParams;
-  const range = parseRange(rangeParam);
+  const sp = await searchParams;
+  const filter = parseFilter(sp);
 
-  // 독립 집계 6종 병렬 (N+1 0).
+  // 독립 집계 6종 + 상품 옵션 병렬 (N+1 0).
   const [
     revenue,
     penaltyRevenue,
@@ -28,18 +35,23 @@ export default async function AdminDashboardPage({
     occupancy,
     trend,
     statusDistribution,
+    productOptions,
   ] = await Promise.all([
-    getRevenueSummary(range),
-    getPenaltyRevenue(range),
-    getCancellationStats(range),
-    getSeatOccupancy(),
-    getRevenueTrend(range),
-    getBookingStatusDistribution(),
+    getRevenueSummary(filter),
+    getPenaltyRevenue(filter),
+    getCancellationStats(filter),
+    getSeatOccupancy(filter),
+    getRevenueTrend(filter),
+    getBookingStatusDistribution(filter),
+    getProductOptions(),
   ]);
 
   return (
     <AdminDashboard
-      range={range.key}
+      start={filter.cacheKey.startDay}
+      end={filter.cacheKey.endDay}
+      productId={filter.productId}
+      productOptions={productOptions}
       data={{
         revenue,
         penaltyRevenue,

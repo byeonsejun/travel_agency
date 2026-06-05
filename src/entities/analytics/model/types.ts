@@ -1,13 +1,23 @@
-export type RangeKey = "today" | "7d" | "30d" | "90d" | "all";
-
-export interface DateRange {
-  /** 집계 하한(포함). all 이면 epoch(1970-01-01). */
+export interface DashboardFilter {
+  /** 집계 하한(포함), UTC 일 경계 00:00:00.000Z. */
   from: Date;
-  /** 집계 상한(미포함) = 지금. */
+  /** 집계 상한(미포함), endDay + 1일의 UTC 00:00. */
   to: Date;
-  key: RangeKey;
-  /** 추이 차트 버킷 단위. all=월별, 그 외 일별. */
+  /** 추이 버킷. span ≤ 92일 = day, 초과 = month. */
   bucket: "day" | "month";
+  /** null = 전체 상품. */
+  productId: string | null;
+  /** unstable_cache 키 파트 (직렬화 가능 string). */
+  cacheKey: {
+    startDay: string; // "YYYY-MM-DD"
+    endDay: string; // "YYYY-MM-DD"
+    product: string; // productId | "all"
+  };
+}
+
+export interface ProductOption {
+  id: string;
+  title: string;
 }
 
 export interface RevenueSummary {

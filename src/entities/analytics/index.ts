@@ -1,7 +1,10 @@
-export { parseRange } from "./model/range";
+export { parseFilter } from "./model/filter";
+export type { DashboardFilterInput } from "./model/filter";
+export { presetRange, PRESETS } from "./model/presets";
+export type { PresetKey, PresetRange } from "./model/presets";
 export type {
-  DateRange,
-  RangeKey,
+  DashboardFilter,
+  ProductOption,
   RevenueSummary,
   CancellationStats,
   SeatOccupancy,
@@ -16,5 +19,6 @@ export {
   getSeatOccupancy,
   getRevenueTrend,
   getBookingStatusDistribution,
+  getProductOptions,
   TAG_DASHBOARD,
 } from "./api/queries";

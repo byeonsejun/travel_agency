@@ -84,6 +84,7 @@
 | 0034  | [단일 Cron Dispatcher + Vercel daily + 외부 트리거로 실시간성 분리](./0034-cron-dispatcher-consolidation.md) | Accepted | 2026-06-04   |
 | 0035  | [전역 클릭 기반 trickle 진행 바 (useLinkStatus per-link 폐기, Phase 7)](./0035-global-route-progress.md) | Accepted | 2026-06-04   |
 | 0036  | [Ledger 다회 부분 환불 — refundedAmount 물질화 카운터 + 조건부 차감](./0036-ledger-multiple-partial-refunds.md) | Accepted | 2026-06-04   |
+| 0037  | [대시보드 start/end 일 양자화 캐시 키 + 프리셋=숏컷 (Phase 10)](./0037-dashboard-quantized-cache-keys.md) | Accepted | 2026-06-05   |
 
 ## 향후 후보 (작성 대기)
 
