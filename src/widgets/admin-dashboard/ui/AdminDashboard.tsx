@@ -25,7 +25,7 @@ export function AdminDashboard({
         <h1 className="text-2xl font-bold text-gray-900">운영 대시보드</h1>
         <div className="flex flex-wrap items-center gap-2">
           <ProductSelect options={productOptions} current={productId} />
-          <DateRangePicker start={start} end={end} />
+          <DateRangePicker key={start + end} start={start} end={end} />
         </div>
       </div>
 
