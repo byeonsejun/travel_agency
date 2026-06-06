@@ -61,9 +61,9 @@
 
 ## 최종 검증 (QA Engineer)
 
-- [ ] `npm run typecheck` 전체 통과
-- [ ] `npm run test` 전체 통과
-- [ ] `npm run lint` 통과
-- [ ] `grep -rn "use client" src/shared/lib/crypto` → 없음 (server-only 경계)
-- [ ] `git diff docs/superpowers/plans/` 체크박스 반영 확인
-- [ ] ADR 작성 제안 (키 관리 + lazy 마이그레이션 결정 박제)
+- [x] `npm run typecheck` 전체 통과
+- [x] `npm run test` 전체 통과 (981/981, env+backfill 보강 후)
+- [x] `npm run lint` 통과 (Phase 12 변경분 무경고; 기존 checkout 2건 무관)
+- [x] `grep -rn "use client" src/shared/lib/crypto` → 없음 (server-only 경계)
+- [x] `git diff docs/superpowers/plans/` 체크박스 반영 확인
+- [x] ADR 작성 — [ADR-0041] 키 관리 + lazy 마이그레이션 결정 박제
