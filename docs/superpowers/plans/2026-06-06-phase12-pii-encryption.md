@@ -35,12 +35,12 @@
 
 ## Task 2 — PassportProfile 쓰기/읽기 경로 연동
 
-- [ ] `src/features/passport-profile/server/__tests__/actions.test.ts` 갱신 (TDD):
-  - [ ] upsert에 전달되는 `passportNo`가 `isEncrypted` true임을 검증 (create·update 양쪽)
-- [ ] `src/features/passport-profile/server/actions.ts`: upsert 전 `passportNo`를 `encrypt()` (평문 TODO 주석 제거)
-- [ ] `src/entities/user/api/queries.ts` `getPassportProfile`: `maskPassportNo(decrypt(row.passportNo))`로 변경 (복호화 후 마스킹)
-- [ ] queries 테스트: 암호화 row → 복호화 후 올바른 마스킹 / 평문 row(레거시) → 동일 마스킹 (하위 호환)
-- [ ] `npm run test` 관련 스위트 / `npm run typecheck` 통과 증거
+- [x] `src/features/passport-profile/server/__tests__/actions.test.ts` 갱신 (TDD):
+  - [x] upsert에 전달되는 `passportNo`가 `isEncrypted` true임을 검증 (create·update 양쪽)
+- [x] `src/features/passport-profile/server/actions.ts`: upsert 전 `passportNo`를 `encrypt()` (평문 TODO 주석 제거)
+- [x] `src/entities/user/api/queries.ts` `getPassportProfile`: `maskPassportNo(decrypt(row.passportNo))`로 변경 (복호화 후 마스킹)
+- [x] queries 테스트: 암호화 row → 복호화 후 올바른 마스킹 / 평문 row(레거시) → 동일 마스킹 (하위 호환)
+- [x] `npm run test` 관련 스위트 / `npm run typecheck` 통과 증거
 
 ## Task 3 — Traveler 쓰기 경로 연동 (예약 도메인)
 

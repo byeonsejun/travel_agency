@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { isEncrypted, decrypt } from "@/shared/lib/crypto";
 
 const authMock = vi.fn();
 const upsertMock = vi.fn();
@@ -80,5 +81,20 @@ describe("updatePassportProfile", () => {
     const call = upsertMock.mock.calls[0][0];
     expect(call.where).toEqual({ userId: "user_abc" });
     expect(call.create).toMatchObject({ userId: "user_abc", lastNameEn: "HONG" });
+  });
+
+  it("encrypts passportNo in both create and update payloads", async () => {
+    authMock.mockResolvedValue({ user: { id: "user_1" } });
+    upsertMock.mockResolvedValue({});
+    await updatePassportProfile(null, makeFormData());
+    const call = upsertMock.mock.calls[0][0];
+
+    // create.passportNo가 암호화되어야 한다
+    expect(isEncrypted(call.create.passportNo)).toBe(true);
+    // update.passportNo가 암호화되어야 한다
+    expect(isEncrypted(call.update.passportNo)).toBe(true);
+    // 복호화하면 원래 입력값과 일치해야 한다 (정합성 검증)
+    expect(decrypt(call.create.passportNo)).toBe("M12345678");
+    expect(decrypt(call.update.passportNo)).toBe("M12345678");
   });
 });
