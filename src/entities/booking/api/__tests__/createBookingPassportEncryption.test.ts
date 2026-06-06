@@ -48,7 +48,9 @@ import { createBooking } from "../mutations";
 import { decrypt, isEncrypted } from "@/shared/lib/crypto";
 
 // 테스트용 공통 input builder
-function makeInput(passportNo?: string | null) {
+// CreateBooking input 타입상 passportNo는 string | undefined (Zod .optional(), .nullable() 아님).
+// "미입력"의 정형 표현은 undefined(생략된 optional 필드)다.
+function makeInput(passportNo?: string) {
   return {
     departureId: "cldev00000000000001",
     userId: "cluse00000000000001",
@@ -62,7 +64,7 @@ function makeInput(passportNo?: string | null) {
         firstNameEn: "MINHO",
         gender: "MALE" as const,
         birthDate: new Date("1990-05-15"),
-        passportNo: passportNo ?? undefined,
+        passportNo,
       },
     ],
     termKeys: ["term-privacy", "term-usage"],
@@ -94,7 +96,8 @@ describe("createBooking — passportNo 암호화", () => {
     expect(decrypt(storedPassportNo!)).toBe(originalPassportNo);
   });
 
-  it("passportNo가 없을 때(undefined) — null/undefined 그대로 유지 (enc:v1: wrapper 없음)", async () => {
+  it("passportNo가 미입력(undefined)일 때 — undefined 그대로 유지 (enc:v1: wrapper 없음)", async () => {
+    // optional 필드를 생략한 traveler. 미입력의 정형 표현은 undefined다 (타입상 null 불가).
     await createBooking(makeInput(undefined));
 
     expect(mocks.tx.booking.create).toHaveBeenCalledOnce();
@@ -103,24 +106,12 @@ describe("createBooking — passportNo 암호화", () => {
     };
     const storedPassportNo = callArg.data.travelers.create[0].passportNo;
 
-    // null/undefined 그대로여야 한다
+    // 미입력이면 nullish 그대로여야 한다 (암호화 대상 아님)
     expect(storedPassportNo == null).toBe(true);
-    // 절대 암호화된 형태가 아니어야 한다
+    // 절대 암호화된 형태(enc:v1: wrapper)가 아니어야 한다
+    expect(storedPassportNo?.startsWith("enc:v1:")).not.toBe(true);
     if (storedPassportNo != null) {
       expect(isEncrypted(storedPassportNo)).toBe(false);
     }
-  });
-
-  it("passportNo가 null일 때 — null 그대로 유지", async () => {
-    // TravelerSchema에서 passportNo는 optional이므로 null은 스키마 통과를 위해 undefined처럼 취급
-    // 하지만 API 레이어에서 null이 들어올 수 있으므로 null-safe 처리 검증
-    await createBooking(makeInput(undefined));
-
-    const callArg = mocks.tx.booking.create.mock.calls[0][0] as {
-      data: { travelers: { create: Array<{ passportNo?: string | null }> } };
-    };
-    const storedPassportNo = callArg.data.travelers.create[0].passportNo;
-
-    expect(storedPassportNo).toBeUndefined();
   });
 });
