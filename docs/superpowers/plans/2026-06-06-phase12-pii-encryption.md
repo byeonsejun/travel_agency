@@ -51,13 +51,13 @@
 
 ## Task 4 — 백필 스크립트
 
-- [ ] `scripts/encrypt-passports.ts` 작성:
-  - [ ] `PassportProfile` 전체 조회 → `isEncrypted` 아닌 row만 `encrypt` 후 update (멱등)
-  - [ ] `Traveler` passportNo not-null 조회 → `isEncrypted` 아닌 row만 `encrypt` 후 update (멱등)
-  - [ ] `if (process.env.NODE_ENV !== "test")` 가드 + `db.$disconnect()` finally
-  - [ ] 진행 로그 (`✓ ...`)
-- [ ] `scripts/encrypt-passports.test.ts`: 멱등성(2회 실행해도 이중 암호화 없음) + 평문→암호화 전환 단위 검증 (순수 헬퍼 분리)
-- [ ] `npm run test` 스크립트 스위트 통과 증거
+- [x] `scripts/encrypt-passports.ts` 작성:
+  - [x] `PassportProfile` 전체 조회 → `isEncrypted` 아닌 row만 `encrypt` 후 update (멱등)
+  - [x] `Traveler` passportNo not-null 조회 → `isEncrypted` 아닌 row만 `encrypt` 후 update (멱등)
+  - [x] `if (process.env.NODE_ENV !== "test")` 가드 + `db.$disconnect()` finally
+  - [x] 진행 로그 (`✓ ...`)
+- [x] `scripts/encrypt-passports.test.ts`: 멱등성(2회 실행해도 이중 암호화 없음) + 평문→암호화 전환 단위 검증 (순수 헬퍼 분리)
+- [x] `npm run test` 스크립트 스위트 통과 증거 (5/5 pass)
 
 ## 최종 검증 (QA Engineer)
 
