@@ -382,3 +382,47 @@ describe("envSchema — SENTRY_AUTH_TOKEN runtime exposure 차단 (build-only in
     expect(result.success).toBe(true);
   });
 });
+
+describe("envSchema — ENCRYPTION_KEY 가드 (Phase 12 PII 암호화)", () => {
+  // AES-256 = 32바이트. base64 인코딩된 32바이트 키만 허용.
+  const validKey = Buffer.from("x".repeat(32)).toString("base64");
+
+  it("유효한 base64 32바이트 키 → parse 통과", () => {
+    const result = envSchema.safeParse({ ...validBase, ENCRYPTION_KEY: validKey });
+    expect(result.success).toBe(true);
+  });
+
+  it("ENCRYPTION_KEY 부재 → 비-production 에선 통과 (optional)", () => {
+    const result = envSchema.safeParse(validBase);
+    expect(result.success).toBe(true);
+  });
+
+  it("base64 디코드 길이 != 32바이트 → ENCRYPTION_KEY 이슈로 차단", () => {
+    // "short" → 5바이트
+    const result = envSchema.safeParse({
+      ...validBase,
+      ENCRYPTION_KEY: Buffer.from("short").toString("base64"),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "ENCRYPTION_KEY")).toBe(true);
+    }
+  });
+
+  it("production 환경에서 ENCRYPTION_KEY 부재 → required 이슈 포함", () => {
+    const result = envSchema.safeParse({
+      ...validBase,
+      NODE_ENV: "production",
+      // production-required 키들을 채워 ENCRYPTION_KEY 누락만 격리
+      TOSS_CLIENT_KEY: "test_ck_x",
+      TOSS_SECRET_KEY: "test_sk_x",
+      CRON_SECRET: "y".repeat(32),
+      RESEND_API_KEY: "re_x",
+      RESEND_FROM_EMAIL: "no-reply@nextour.test",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "ENCRYPTION_KEY")).toBe(true);
+    }
+  });
+});

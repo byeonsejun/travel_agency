@@ -175,9 +175,18 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
         if (!paidPayment) return null;
         return (
           <div className="space-y-4">
+            {/* 민감 필드(passportNo 암호문·birthDate·phone·email)가 client island
+                RSC 페이로드로 직렬화되지 않도록, 패널이 실제로 쓰는 안전 필드만 추려서 전달한다. */}
             <TravelerCancelPanel
               bookingId={booking.id}
-              travelers={booking.travelers}
+              travelers={booking.travelers.map((t) => ({
+                id: t.id,
+                firstNameEn: t.firstNameEn,
+                lastNameEn: t.lastNameEn,
+                paxType: t.paxType,
+                unitPrice: t.unitPrice,
+                canceledAt: t.canceledAt,
+              }))}
             />
             <DiscretionaryRefundPanel
               bookingId={booking.id}
