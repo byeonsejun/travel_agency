@@ -87,6 +87,10 @@ export const envSchema = z
       (v) => (v === "" ? undefined : v),
       z.enum(["shadow", "enforce"]).optional()
     ),
+    // Phase 12 — PII 암호화 키 (AES-256-GCM).
+    // base64 인코딩된 32바이트 키. production에서 superRefine으로 required.
+    // 존재 시 디코드 후 32바이트인지 검증(포맷 가드).
+    ENCRYPTION_KEY: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     // 빌드 phase(NEXT_PHASE=phase-production-build)는 실 runtime이 아니다.
@@ -103,6 +107,7 @@ export const envSchema = z
         "CRON_SECRET",
         "RESEND_API_KEY",
         "RESEND_FROM_EMAIL",
+        "ENCRYPTION_KEY",
       ] as const) {
         if (!env[key]) {
           ctx.addIssue({
@@ -111,6 +116,20 @@ export const envSchema = z
             message: `${key} is required in production`,
           });
         }
+      }
+    }
+
+    // Phase 12 — ENCRYPTION_KEY 포맷 가드: 존재 시 base64 디코드 후 32바이트 검증.
+    // 잘못된 키는 런타임 암호화 실패 대신 부팅에서 즉시 차단.
+    if (env.ENCRYPTION_KEY) {
+      const decoded = Buffer.from(env.ENCRYPTION_KEY, "base64");
+      if (decoded.length !== 32) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["ENCRYPTION_KEY"],
+          message:
+            "ENCRYPTION_KEY must be base64-encoded 32 bytes (AES-256).",
+        });
       }
     }
 
