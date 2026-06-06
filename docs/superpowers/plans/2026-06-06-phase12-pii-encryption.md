@@ -44,10 +44,10 @@
 
 ## Task 3 — Traveler 쓰기 경로 연동 (예약 도메인)
 
-- [ ] `src/entities/booking/api/mutations.ts:74`: `passportNo: t.passportNo ? encrypt(t.passportNo) : t.passportNo` (optional null 통과)
-- [ ] booking mutations 테스트: traveler 생성 시 passportNo가 암호화되어 저장됨 검증 (null이면 null 유지)
-- [ ] 💳 Domain Booking 자가점검: 좌석/금액/멱등성/트랜잭션 무손상 (암호화는 순수 문자열 변환, 트랜잭션 내 외부 IO 추가 없음)
-- [ ] `npm run test` booking 스위트 / `npm run typecheck` 통과 증거
+- [x] `src/entities/booking/api/mutations.ts:74`: `passportNo: t.passportNo ? encrypt(t.passportNo) : t.passportNo` (optional null 통과)
+- [x] booking mutations 테스트: traveler 생성 시 passportNo가 암호화되어 저장됨 검증 (null이면 null 유지)
+- [x] 💳 Domain Booking 자가점검: 좌석/금액/멱등성/트랜잭션 무손상 (암호화는 순수 문자열 변환, 트랜잭션 내 외부 IO 추가 없음)
+- [x] `npm run test` booking 스위트 / `npm run typecheck` 통과 증거
 
 ## Task 4 — 백필 스크립트
 
