@@ -6,7 +6,7 @@
  * 정책:
  *  - 민감 키(`password`, `token`, `authorization`, `cookie`, `secret`,
  *    `tossPaymentKey`, `paymentKey`, `apiKey`, `accessToken`, `refreshToken`,
- *    `cardNumber`, `ssn`, `*_SECRET` suffix)는 대소문자 무시로 `[REDACTED]` 치환
+ *    `cardNumber`, `ssn`, `passportNo`, `*_SECRET` suffix)는 대소문자 무시로 `[REDACTED]` 치환
  *  - 문자열 값에 이메일·전화·카드번호 패턴이 보이면 해당 부분만 마스킹
  *  - 원본 mutate 금지 (공통 절대 규칙 — 입력 배열·객체 변이 금지)
  *  - maxDepth 초과 시 `[MAX_DEPTH]` 마커, 순환 참조는 `[CIRCULAR]` 마커
@@ -28,6 +28,7 @@ const SENSITIVE_KEY_PATTERNS: RegExp[] = [
   /^refreshtoken$/i,
   /^cardnumber$/i,
   /^ssn$/i,
+  /^passportno$/i,
 ];
 
 function isSensitiveKey(key: string): boolean {

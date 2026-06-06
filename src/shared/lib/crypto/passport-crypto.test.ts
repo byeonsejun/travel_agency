@@ -113,6 +113,23 @@ describe("passport-crypto — AES-256-GCM 유틸", () => {
     });
   });
 
+  describe("encrypt 멱등성 — 이미 암호화된 값은 그대로 반환", () => {
+    it("encrypt(alreadyEncrypted) === alreadyEncrypted (identity passthrough)", () => {
+      const plaintext = "IDEM12345";
+      const ciphertext = encrypt(plaintext);
+      // 이미 enc:v1: 로 시작하는 값을 다시 encrypt 하면 동일 참조가 반환되어야 함
+      expect(encrypt(ciphertext)).toBe(ciphertext);
+    });
+
+    it("double-encrypt가 방지되어 decrypt(encrypt(encrypt(x))) === x", () => {
+      const plaintext = "DOUBLE789";
+      const once = encrypt(plaintext);
+      const twice = encrypt(once); // 멱등성 가드 → once 그대로
+      // twice === once 이므로 한 번만 decrypt하면 원문 복원
+      expect(decrypt(twice)).toBe(plaintext);
+    });
+  });
+
   describe("키 부재/무효 — 명확한 에러 경로", () => {
     // getKey()는 모듈 메모이즈되고 env도 import 시점에 1회 parse되므로,
     // ENCRYPTION_KEY 부재 시나리오는 vi.resetModules()로 모듈 그래프를 비우고

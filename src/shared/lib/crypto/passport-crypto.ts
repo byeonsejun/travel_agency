@@ -45,8 +45,15 @@ function getKey(): Buffer {
 /**
  * 평문을 AES-256-GCM으로 암호화한다.
  * 출력 형식: `enc:v1:` + base64(iv(12) || authTag(16) || ciphertext)
+ *
+ * 멱등성 가드: 이미 `enc:v1:` 로 시작하는 값이 전달되면 재암호화 없이
+ * 그대로 반환한다. 이중 암호화(doubly-encrypted blob)가 생성되면 두 번째
+ * decrypt 시 GCM 인증 실패로 throw 되므로, 이 가드가 백필·마이그레이션
+ * 경로의 실수에 대한 안전망 역할을 한다.
  */
 export function encrypt(plaintext: string): string {
+  if (isEncrypted(plaintext)) return plaintext;
+
   const key = getKey();
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, key, iv, { authTagLength: TAG_LENGTH });

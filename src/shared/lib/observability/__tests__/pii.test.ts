@@ -181,3 +181,20 @@ describe("maskPii — primitive·null·undefined", () => {
     expect(maskPii([])).toEqual([]);
   });
 });
+
+describe("maskPii — 여권번호(passportNo) 마스킹", () => {
+  it("passportNo 키를 [REDACTED]로 치환", () => {
+    const out = maskPii({ passportNo: "M12345678" });
+    expect(out).toEqual({ passportNo: "[REDACTED]" });
+  });
+
+  it("이미 enc:v1: 로 암호화된 passportNo 값도 [REDACTED]로 치환", () => {
+    const out = maskPii({ passportNo: "enc:v1:dGVzdA==" });
+    expect(out).toEqual({ passportNo: "[REDACTED]" });
+  });
+
+  it("passportNo 키 매칭은 대소문자 무시 (PassportNo, PASSPORTNO)", () => {
+    const out = maskPii({ PassportNo: "AB1234567", PASSPORTNO: "XY9999999" });
+    expect(out).toEqual({ PassportNo: "[REDACTED]", PASSPORTNO: "[REDACTED]" });
+  });
+});
