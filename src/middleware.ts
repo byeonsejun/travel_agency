@@ -60,7 +60,11 @@ export default auth(async (req) => {
   // callbackUrl 을 유실 → 페이지의 세션 가드가 /login 으로 보낸 사용자가 원래
   // 목적지 대신 홈으로 떨어지는 데이터 연속성 누수가 있었다. open-redirect 는
   // safeCallbackPath 가 내부 절대경로만 통과시켜 차단.
-  if (pathname.startsWith("/login") && isAuthenticated) {
+  // `=== "/login"` (startsWith 아님): 매직링크 완료 플로우의 하위 경로
+  // (`/login/success` 창 닫기 안내, `/login/verify` 폴링)는 검증 직후 인증
+  // 상태로 진입하므로, startsWith 면 success 페이지가 홈으로 바운스되어
+  // window.close() 가 영영 실행되지 않는다. 바운스는 *로그인 폼* 한정.
+  if (pathname === "/login" && isAuthenticated) {
     const target = safeCallbackPath(req.nextUrl.searchParams.get("callbackUrl"));
     const res = NextResponse.redirect(new URL(target, req.url));
     res.headers.set("x-trace-id", traceId);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 interface Props {
   callbackUrl: string;
@@ -15,8 +14,6 @@ interface SessionResponse {
 const POLL_INTERVAL_MS = 2500;
 
 export function SessionPoll({ callbackUrl, email }: Props) {
-  const router = useRouter();
-
   useEffect(() => {
     // email prop이 없으면 폴링 자체를 시작하지 않음. 의도하지 않은 위치에서
     // 마운트되거나 verify에 email query 없이 직접 진입한 경우의 안전장치.
@@ -45,11 +42,13 @@ export function SessionPoll({ callbackUrl, email }: Props) {
         if (cancelled) return;
         if (data?.user) {
           stop();
-          router.replace(callbackUrl);
-          // 공유 레이아웃((site)/layout.tsx)의 auth()는 Router Cache에
-          // 묶여 클라이언트 네비게이션만으로 재실행되지 않는다. refresh로
-          // RSC 페이로드를 무효화해 헤더가 즉시 로그인 상태로 갱신되게 한다.
-          router.refresh();
+          // 하드 내비게이션(SPA replace 아님): 헤더의 UserNavIsland 는
+          // mount 시 1회만 /api/auth/session 을 fetch 하는 client island 라,
+          // router.replace + router.refresh(RSC 재실행)로는 재mount/재fetch
+          // 되지 않아 헤더가 로그아웃 상태로 고착된다(ADR-0018 격리의 부작용).
+          // 전체 페이지 이동으로 island 를 재mount → 세션 재fetch → 로그인
+          // 헤더가 정확히 반영된다. callbackUrl 은 항상 내부 경로(safeCallback).
+          window.location.assign(callbackUrl);
         }
       } catch {
         // 일시적 네트워크 오류는 다음 폴링에서 재시도
@@ -59,7 +58,7 @@ export function SessionPoll({ callbackUrl, email }: Props) {
     intervalId = setInterval(check, POLL_INTERVAL_MS);
 
     return stop;
-  }, [callbackUrl, router, email]);
+  }, [callbackUrl, email]);
 
   if (!email) return null;
 
