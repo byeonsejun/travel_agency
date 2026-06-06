@@ -27,6 +27,15 @@ describe("planEncryption (백필 순수 헬퍼)", () => {
     expect(plan).toHaveLength(0);
   });
 
+  it("passportNo가 빈 문자열(손상 row)이면 스킵된다 (corrupt 값 launder 방지)", () => {
+    const plan = planEncryption([
+      { id: "p1", passportNo: "" },
+      { id: "p2", passportNo: "   " },
+    ]);
+
+    expect(plan).toHaveLength(0);
+  });
+
   it("혼합 배치 — 평문 row만 출력되고 개수가 정확하다", () => {
     const already = encrypt("E00000000");
     const plan = planEncryption([
