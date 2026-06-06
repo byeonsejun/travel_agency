@@ -121,6 +121,9 @@ export const envSchema = z
 
     // Phase 12 — ENCRYPTION_KEY 포맷 가드: 존재 시 base64 디코드 후 32바이트 검증.
     // 잘못된 키는 런타임 암호화 실패 대신 부팅에서 즉시 차단.
+    // ⚠️ 이 검증은 Node `Buffer`에 의존한다 → Edge runtime에서 실행 금지
+    //    (repo의 "middleware에서 Prisma 금지" Edge 제약과 동일 계열).
+    //    이 env 모듈은 server-only 경로(Node)에서만 평가되어야 한다.
     if (env.ENCRYPTION_KEY) {
       const decoded = Buffer.from(env.ENCRYPTION_KEY, "base64");
       if (decoded.length !== 32) {

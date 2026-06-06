@@ -12,8 +12,9 @@ import { env } from "@/shared/lib/env";
 export const ENC_PREFIX = "enc:v1:";
 
 const ALGORITHM = "aes-256-gcm";
-const IV_LENGTH = 12;     // AES-GCM 권장 96비트
-const TAG_LENGTH = 16;    // GCM auth tag 128비트
+// 테스트(정밀 변조 오프셋 계산)에서 참조하므로 export.
+export const IV_LENGTH = 12;     // AES-GCM 권장 96비트
+export const TAG_LENGTH = 16;    // GCM auth tag 128비트
 
 /** lazy memoized 키 로더 — 첫 호출 시 env.ENCRYPTION_KEY 검증 */
 let _cachedKey: Buffer | null = null;
