@@ -106,12 +106,9 @@ describe("createBooking — passportNo 암호화", () => {
     };
     const storedPassportNo = callArg.data.travelers.create[0].passportNo;
 
-    // 미입력이면 nullish 그대로여야 한다 (암호화 대상 아님)
-    expect(storedPassportNo == null).toBe(true);
+    // 미입력의 정형 표현은 undefined다 (Zod .optional(), null 불가) — 암호화 대상 아님
+    expect(storedPassportNo).toBe(undefined);
     // 절대 암호화된 형태(enc:v1: wrapper)가 아니어야 한다
     expect(storedPassportNo?.startsWith("enc:v1:")).not.toBe(true);
-    if (storedPassportNo != null) {
-      expect(isEncrypted(storedPassportNo)).toBe(false);
-    }
   });
 });
