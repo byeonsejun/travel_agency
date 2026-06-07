@@ -1,10 +1,14 @@
-// 🔒 server-only 가드. 이 모듈은 node:crypto + 서버 전용 env(AES 키)에 의존하므로
-// 클라이언트 번들에 절대 들어가면 안 된다. 부수효과 전용 import라 트리셰이킹에서
-// 제거되지 않으므로, 클라이언트 컴포넌트가 (배럴 등을 통해) 이 모듈에 도달하면
-// Next 빌드가 즉시 실패해 누수를 잡는다. 그래서 server API 배럴(`@/entities/booking`,
-// `@/entities/user`)의 client-safe surface 는 `*/client.ts` 로 분리되어 있다.
-import "server-only";
-
+// ⚠️ 의도적으로 `import "server-only"` 를 쓰지 않는다 (프로젝트 컨벤션 — db.ts / env.ts 동일).
+//  이유 1) `server-only` 는 Next/webpack(빌드) 와 vitest(alias)에서만 해석되는 패키지라,
+//          이 모듈을 bare `tsx`(Node)로 실행하는 운영 스크립트(scripts/encrypt-passports.ts)가
+//          `Cannot find module 'server-only'` 로 죽는다. db.ts/env.ts 가 server 전용임에도
+//          server-only 를 안 붙이는 것과 동일한 이유(스크립트·배럴 호환).
+//  이유 2) `import "server-only"` 는 부수효과 전용 import라 트리셰이킹에서 제거되지 않아,
+//          fat barrel 을 통해 'use client' 그래프로 끌려가면 빌드를 깬다.
+//  클라이언트 누수 차단은 (a) booking 슬라이스의 client-safe 서브배럴(`./client.ts`)로 server
+//  코드를 분리, (b) 잘못 import 시 아래 `@/shared/lib/env` 가 브라우저에서 server 전용 env 를
+//  parse 하다 ZodError 로 즉시 터지는 트립와이어 — 두 겹으로 유지된다(db.ts/env.ts 와 동형).
+//  node:crypto / env 모두 서버 전용이므로 이 모듈은 server 모듈에서만 import 할 것.
 import {
   createCipheriv,
   createDecipheriv,
