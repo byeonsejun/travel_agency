@@ -9,7 +9,7 @@
 | 분류 | 기술 |
 |------|------|
 | Frontend / Backend | Next.js 15 (App Router) + TypeScript |
-| Database | PostgreSQL (Supabase) + Prisma ORM |
+| Database | PostgreSQL + pgvector + Prisma ORM (운영: Supabase / 로컬: Docker 격리) |
 | AI | Anthropic Claude API + pgvector |
 | 인증 | Auth.js v5 (이메일 매직링크 + 카카오) |
 | 결제 | 토스페이먼츠 |
@@ -17,27 +17,77 @@
 
 ## 빠른 시작
 
+> 🛑 **운영 DB 직결 금지.** 로컬 개발은 **반드시** 아래 Docker 로컬 PostgreSQL(샌드박스)에 연결한다.
+> 운영(Supabase) 자격증명은 Vercel 환경변수가 SSOT이며, 로컬 `.env` 의 `DATABASE_URL` 은
+> 절대 운영 호스트(`*.pooler.supabase.com`)를 가리켜선 안 된다. 마이그레이션·시드·`db push` 가
+> 운영 데이터를 파괴할 수 있다. 자세한 이유와 셋업은 ▶ [로컬 개발 DB 셋업](#로컬-개발-db-셋업-docker--pgvector).
+
 ```bash
-# 의존성 설치
+# 1) 의존성 설치
 npm install
 
-# 환경변수 설정
-cp .env.example .env.local
-# .env.local 편집 후 필수 키 입력
+# 2) 로컬 개발 DB(Docker, pgvector) 기동
+docker compose up -d
 
-# DB 마이그레이션 + 시드
-npm run db:migrate
+# 3) 환경변수: .env 생성 후 DATABASE_URL/DIRECT_URL 을 로컬 docker 로 지정
+cp .env.example .env
+#   DATABASE_URL="postgresql://nextour:nextour_local_dev@localhost:5432/nextour"
+#   DIRECT_URL="postgresql://nextour:nextour_local_dev@localhost:5432/nextour"
+#   ENCRYPTION_KEY 등 나머지 키 입력 (아래 셋업 섹션 참고)
+
+# 4) 스키마 동기화 + 벡터 인덱스 + 시드
+npm run db:push
+docker exec -i nextour-local-db psql -U nextour -d nextour \
+  < prisma/migrations/20260519000000_product_embedding_pgvector/migration.sql
 npm run db:seed
 
-# 개발 서버 실행
+# 5) 개발 서버 실행
 npm run dev
 ```
+
+## 로컬 개발 DB 셋업 (Docker / pgvector)
+
+로컬 개발은 운영 Supabase 와 **완전히 격리된** Docker PostgreSQL 컨테이너를 사용한다.
+구성은 [`docker-compose.yml`](./docker-compose.yml) 에 정의돼 있다.
+
+**왜 Docker pgvector 인가?**
+- 스키마가 `ProductEmbedding.vector = Unsupported("vector(1536)")` + ivfflat 인덱스를 쓰므로
+  `pg_available_extensions` 에 `vector` 가 있는 **`pgvector/pgvector` 이미지**가 필수다.
+  (순정 `postgres` 이미지로는 `CREATE EXTENSION vector` 가 실패한다.)
+- 운영 DB 직결 시 실수 한 번(`db push --force-reset`, `migrate dev`)으로 실데이터가 날아간다.
+  로컬 격리는 이 사고를 구조적으로 차단한다.
+
+**마이그레이션 방식 주의 — `migrate deploy` 가 아니라 `db push`:**
+이 프로젝트는 베이스라인 마이그레이션이 없는 `db push` 워크플로우다
+(`prisma/migrations/` 에는 베이스 스키마 *이후* 변경분만 존재). 따라서 빈 DB 에
+`prisma migrate deploy` 를 돌리면 `relation "Product" does not exist` 로 실패한다.
+신규 로컬 환경은 위 빠른 시작 4단계(`db:push` → 인덱스 SQL → seed)를 따른다.
+필요 시 `npx prisma migrate resolve --applied <name>` 으로 마이그레이션 히스토리를 baseline 할 수 있다.
+
+| 작업 | 명령어 |
+|------|--------|
+| DB 기동 | `docker compose up -d` |
+| DB 중지(데이터 유지) | `docker compose down` |
+| DB 완전 초기화(볼륨 삭제) | `docker compose down -v` |
+| 헬스 확인 | `docker inspect --format '{{.State.Health.Status}}' nextour-local-db` |
+| psql 접속 | `docker exec -it nextour-local-db psql -U nextour -d nextour` |
+
+| 로컬 DB 접속 정보 | 값 |
+|------|------|
+| host:port | `localhost:5432` |
+| database | `nextour` |
+| user / password | `nextour` / `nextour_local_dev` |
+
+> `ENCRYPTION_KEY` 는 **로컬 전용 난수**를 쓴다 (운영 키와 격리 — 운영 암호문과 호환되지 않는 것이 정상).
+> 생성: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
 ## 필수 환경변수
 
 | 변수 | 설명 |
 |------|------|
-| `DATABASE_URL` | Supabase PostgreSQL 연결 URL |
+| `DATABASE_URL` | PostgreSQL 연결 URL — **로컬은 반드시 Docker(`localhost:5432`)**, 운영 직결 금지 |
+| `DIRECT_URL` | 마이그레이션용 직결 URL (로컬은 `DATABASE_URL` 과 동일) |
+| `ENCRYPTION_KEY` | PII 암호화 키(base64 32B). 로컬은 운영과 격리된 전용 난수 사용 |
 | `AUTH_SECRET` | Auth.js 시크릿 (`openssl rand -base64 32`) |
 | `RESEND_API_KEY` | 이메일 발송용 Resend API 키 |
 | `RESEND_FROM_EMAIL` | 발신자 이메일 주소 |

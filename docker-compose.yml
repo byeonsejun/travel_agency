@@ -1,0 +1,30 @@
+# 로컬 개발 전용 PostgreSQL (pgvector 포함).
+# ⚠️ 이 컨테이너는 로컬 샌드박스다. 운영(Supabase) DB와 완전히 격리되어 있다.
+# 기동:   docker compose up -d
+# 중지:   docker compose down          (데이터 유지)
+# 초기화: docker compose down -v        (볼륨까지 삭제 — 데이터 전부 소거)
+#
+# 이미지는 반드시 pgvector 번들 이미지여야 한다. (schema.prisma 의
+# ProductEmbedding.vector = Unsupported("vector(1536)") + ivfflat 인덱스가
+# CREATE EXTENSION vector 를 요구하기 때문.)
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: nextour-local-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nextour
+      POSTGRES_PASSWORD: nextour_local_dev
+      POSTGRES_DB: nextour
+    ports:
+      - "5432:5432"
+    volumes:
+      - nextour-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextour -d nextour"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  nextour-pgdata:
