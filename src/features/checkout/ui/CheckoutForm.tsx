@@ -2,7 +2,7 @@
 
 import { startTransition, useActionState, useState } from "react";
 import { createCheckoutBooking } from "../server/actions";
-import { TERM_KEYS } from "@/entities/booking";
+import { TERM_KEYS } from "@/entities/booking/client";
 import { PaymentWidget } from "./PaymentWidget";
 
 // ── Props (RSC → client 직렬화 가능 타입만) ─────────────────────
