@@ -27,6 +27,7 @@ import {
   travelerCancelKey,
   fullCancelKey,
 } from "../model/refundKeys";
+import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
 
 interface SagaCore {
   bookingId: string;
@@ -137,6 +138,16 @@ async function runRefundSaga(
         result: "PROCESSED",
       },
     });
+    // 부분 환불(DISCRETIONARY/TRAVELER_CANCEL) 완료 메일 — 트랜잭셔널 아웃박스 적재.
+    // FULL_CANCEL 은 onSettled 의 booking 전이가 REFUND_COMPLETED 를 적재하므로 제외(중복 방지).
+    if (core.kind !== "FULL_CANCEL") {
+      await enqueueEmailJob(tx, {
+        type: "PARTIAL_REFUND_COMPLETED",
+        dedupeKey: `partial-refund-completed:${created.id}`,
+        bookingId: core.bookingId,
+        refundJobId: created.id,
+      });
+    }
   });
   metrics.incr("payment.refund.success");
 

@@ -14,10 +14,10 @@
  */
 
 import { EmailJobStatus } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
+import type { EmailType, Prisma } from "@prisma/client";
 import { db } from "@/shared/lib/db";
 import { getBookingConfirmationEmailData } from "@/entities/booking";
-import { getRefundCompletedEmailData } from "@/entities/payment";
+import { getRefundCompletedEmailData, getPartialRefundCompletedEmailData } from "@/entities/payment";
 import { renderEmail, sendEmail } from "@/shared/email";
 import { logger, metrics, captureException } from "@/shared/lib/observability";
 
@@ -73,13 +73,19 @@ async function claimEmailJob(
 }
 
 async function hydrate(
-  type: "BOOKING_CONFIRMATION" | "REFUND_COMPLETED",
+  type: EmailType,
   bookingId: string,
+  refundJobId: string | null,
 ): Promise<{ recipientEmail: string; props: unknown } | null> {
   if (type === "BOOKING_CONFIRMATION") {
     return getBookingConfirmationEmailData(bookingId);
   }
-  return getRefundCompletedEmailData(bookingId);
+  if (type === "REFUND_COMPLETED") {
+    return getRefundCompletedEmailData(bookingId);
+  }
+  // PARTIAL_REFUND_COMPLETED — refundJobId 없으면 hydration 불가 → null
+  if (refundJobId === null) return null;
+  return getPartialRefundCompletedEmailData(refundJobId);
 }
 
 async function processOneJob(
@@ -90,10 +96,10 @@ async function processOneJob(
 
   const job = await db.emailJob.findUniqueOrThrow({
     where: { id: jobId },
-    select: { id: true, type: true, dedupeKey: true, bookingId: true, attempts: true },
+    select: { id: true, type: true, dedupeKey: true, bookingId: true, refundJobId: true, attempts: true },
   });
 
-  const data = await hydrate(job.type, job.bookingId);
+  const data = await hydrate(job.type, job.bookingId, job.refundJobId);
   if (!data) {
     await db.emailJob.update({
       where: { id: jobId },

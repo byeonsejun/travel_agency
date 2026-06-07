@@ -548,6 +548,7 @@ model EmbeddingJob {
 enum EmailType {
   BOOKING_CONFIRMATION // 예약 확정서 + 결제 영수증 (PAID 전이)
   REFUND_COMPLETED // 환불 처리 완료 안내 (PAID/READY → CANCELED)
+  PARTIAL_REFUND_COMPLETED // 부분 환불 완료 안내 (TRAVELER_CANCEL/DISCRETIONARY)
 }
 
 enum EmailJobStatus {
@@ -567,6 +568,10 @@ model EmailJob {
   // 멱등 enqueue 키. ex) "booking-confirmation:<bookingId>" / "refund-completed:<bookingId>"
   dedupeKey  String         @unique
   bookingId  String
+  // PARTIAL_REFUND_COMPLETED 타입일 때만 설정. 이 메일이 보고하는 RefundJob의 id.
+  // (예약 한 건에 부분 환불이 여러 번 발생할 수 있으므로 bookingId만으로 식별 불가)
+  // 워커가 hydration 시점에 RefundJob을 id로 직접 조회 — back-relation 없이 스칼라만 저장.
+  refundJobId String?
   status     EmailJobStatus @default(PENDING)
   attempts   Int            @default(0)
   lastError  String?        @db.Text

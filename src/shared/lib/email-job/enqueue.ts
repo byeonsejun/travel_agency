@@ -15,11 +15,13 @@ export interface EnqueueEmailJobArgs {
   type: EmailType;
   dedupeKey: string;
   bookingId: string;
+  /** PARTIAL_REFUND_COMPLETED 타입일 때만 설정. 워커가 hydration 시 RefundJob을 직접 조회. */
+  refundJobId?: string;
 }
 
 export async function enqueueEmailJob(
   tx: Prisma.TransactionClient,
-  { type, dedupeKey, bookingId }: EnqueueEmailJobArgs,
+  { type, dedupeKey, bookingId, refundJobId }: EnqueueEmailJobArgs,
 ): Promise<void> {
   const existing = await tx.emailJob.findUnique({
     where: { dedupeKey },
@@ -28,6 +30,6 @@ export async function enqueueEmailJob(
   if (existing) return; // 멱등 no-op
 
   await tx.emailJob.create({
-    data: { type, dedupeKey, bookingId, status: "PENDING" },
+    data: { type, dedupeKey, bookingId, refundJobId: refundJobId ?? null, status: "PENDING" },
   });
 }

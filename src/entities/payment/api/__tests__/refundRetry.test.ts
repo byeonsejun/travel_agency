@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => {
     payment: { update: vi.fn(), updateMany: vi.fn() },
     paymentEvent: { create: vi.fn() },
     traveler: { updateMany: vi.fn() },
+    emailJob: { findUnique: vi.fn(), create: vi.fn() },
   };
   return {
     tx,
@@ -21,6 +22,7 @@ const mocks = vi.hoisted(() => {
     tossClient: { cancel: vi.fn() },
     transitionStatusTx: vi.fn(),
     releaseSeats: vi.fn(),
+    enqueueEmailJob: vi.fn(),
   };
 });
 
@@ -34,6 +36,9 @@ vi.mock("@/entities/booking", async (importOriginal) => {
     releaseSeats: mocks.releaseSeats,
   };
 });
+vi.mock("@/shared/lib/email-job/enqueue", () => ({
+  enqueueEmailJob: mocks.enqueueEmailJob,
+}));
 
 import { listDueRefundJobs, retryRefundJob } from "../refundRetry";
 
@@ -54,6 +59,8 @@ function setupClaimSucceeds() {
   mocks.tx.refundJob.updateMany.mockResolvedValue({ count: 1 });
   // traveler.updateMany 기본값: count=0 (이미 처리됨 → 멱등 skip)
   mocks.tx.traveler.updateMany.mockResolvedValue({ count: 0 });
+  // enqueueEmailJob 기본: 성공
+  mocks.enqueueEmailJob.mockResolvedValue(undefined);
 }
 
 function setupClaimFails() {
@@ -381,5 +388,65 @@ describe("retryRefundJob — 부분 환불 스냅샷", () => {
       where: { id: JOB_ID },
       data: expect.objectContaining({ status: "SUCCEEDED" }),
     });
+  });
+});
+
+// ── 부분 환불 이메일 아웃박스 enqueue (retry 경로) ──────────────────────────
+describe("retryRefundJob — PARTIAL_REFUND_COMPLETED enqueue", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  // ── TRAVELER_CANCEL retry 성공 → enqueueEmailJob 호출 ────────────
+  it("TRAVELER_CANCEL retry 성공 시 enqueueEmailJob(PARTIAL_REFUND_COMPLETED) + dedupeKey=jobId", async () => {
+    setupClaimSucceeds();
+    mockJobLoad({ kind: "TRAVELER_CANCEL", actor: "admin:mgr01" });
+    mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
+
+    const result = await retryRefundJob(JOB_ID);
+
+    expect(result).toEqual({ type: "succeeded", jobId: JOB_ID });
+    expect(mocks.enqueueEmailJob).toHaveBeenCalledOnce();
+    expect(mocks.enqueueEmailJob).toHaveBeenCalledWith(
+      expect.anything(), // tx
+      expect.objectContaining({
+        type: "PARTIAL_REFUND_COMPLETED",
+        dedupeKey: `partial-refund-completed:${JOB_ID}`,
+        bookingId: BOOKING_ID,
+        refundJobId: JOB_ID,
+      })
+    );
+  });
+
+  // ── DISCRETIONARY retry 성공 → enqueueEmailJob 호출 ──────────────
+  it("DISCRETIONARY retry 성공 시 enqueueEmailJob(PARTIAL_REFUND_COMPLETED) 호출", async () => {
+    setupClaimSucceeds();
+    mockJobLoad({ kind: "DISCRETIONARY", actor: "admin:mgr01" });
+    mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
+
+    const result = await retryRefundJob(JOB_ID);
+
+    expect(result).toEqual({ type: "succeeded", jobId: JOB_ID });
+    expect(mocks.enqueueEmailJob).toHaveBeenCalledOnce();
+    expect(mocks.enqueueEmailJob).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        type: "PARTIAL_REFUND_COMPLETED",
+        dedupeKey: `partial-refund-completed:${JOB_ID}`,
+        bookingId: BOOKING_ID,
+        refundJobId: JOB_ID,
+      })
+    );
+  });
+
+  // ── FULL_CANCEL retry 성공 → enqueueEmailJob 미호출 ──────────────
+  it("FULL_CANCEL retry 성공 시 enqueueEmailJob 미호출 (FULL_CANCEL 제외)", async () => {
+    setupClaimSucceeds();
+    mockJobLoad({ kind: "FULL_CANCEL", actor: "user:usr001" });
+    mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
+    mocks.transitionStatusTx.mockResolvedValue({} as never);
+
+    const result = await retryRefundJob(JOB_ID);
+
+    expect(result).toEqual({ type: "succeeded", jobId: JOB_ID });
+    expect(mocks.enqueueEmailJob).not.toHaveBeenCalled();
   });
 });

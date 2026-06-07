@@ -5,4 +5,5 @@ export type { SendEmailInput, SendEmailResult } from "./provider";
 export type {
   BookingConfirmationEmailProps,
   RefundCompletedEmailProps,
+  PartialRefundCompletedEmailProps,
 } from "./templates/types";

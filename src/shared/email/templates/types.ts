@@ -18,3 +18,13 @@ export interface RefundCompletedEmailProps {
   penaltyAmount: number; // 위약금 (0이면 템플릿에서 라인 숨김)
   paymentMethod: string; // "카드"
 }
+
+export interface PartialRefundCompletedEmailProps {
+  customerName: string;
+  bookingId: string;
+  productTitle: string;
+  originalAmount: number; // 원결제 금액 (payment.amount, 원)
+  penaltyAmount: number; // 공제된 위약금 (원, 0이면 라인 숨김)
+  refundAmount: number; // 최종 환불 금액 (원)
+  paymentMethod: string; // "카드"
+}

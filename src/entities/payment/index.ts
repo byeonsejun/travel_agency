@@ -69,3 +69,6 @@ export { PaymentStatusBadge, PAYMENT_STATUS_LABEL } from "./ui/PaymentStatusBadg
 
 export { getRefundCompletedEmailData } from "./api/getRefundCompletedEmailData";
 export type { RefundCompletedEmailData } from "./api/getRefundCompletedEmailData";
+
+export { getPartialRefundCompletedEmailData } from "./api/getPartialRefundCompletedEmailData";
+export type { PartialRefundCompletedEmailData } from "./api/getPartialRefundCompletedEmailData";
