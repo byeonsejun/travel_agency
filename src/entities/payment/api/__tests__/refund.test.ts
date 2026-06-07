@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
     paymentEvent: { create: vi.fn() },
     traveler: { updateMany: vi.fn() },
     departure: { updateMany: vi.fn() },
+    emailJob: { findUnique: vi.fn(), create: vi.fn() },
   };
   return {
     tx,
@@ -28,6 +29,7 @@ const mocks = vi.hoisted(() => {
     tossClient: { cancel: vi.fn() },
     transitionStatusTx: vi.fn(),
     releaseSeats: vi.fn(),
+    enqueueEmailJob: vi.fn(),
   };
 });
 
@@ -41,6 +43,9 @@ vi.mock("@/shared/lib/observability", () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
   metrics: { incr: vi.fn() },
   captureException: vi.fn(),
+}));
+vi.mock("@/shared/lib/email-job/enqueue", () => ({
+  enqueueEmailJob: mocks.enqueueEmailJob,
 }));
 
 import { refundBooking, backoff } from "../refund";
@@ -142,6 +147,9 @@ describe("refundBooking", () => {
 
     // Phase 2 실패 경로 (tx 밖 refundJob update)
     mocks.db.refundJob.update.mockResolvedValue({});
+
+    // enqueueEmailJob 기본: 성공
+    mocks.enqueueEmailJob.mockResolvedValue(undefined);
   });
 
   // ── 시나리오 1: PAID 정상 환불 → CANCELED_BY_USER ───────────
@@ -504,6 +512,150 @@ describe("refundBooking — 부분 환불(위약금)", () => {
         data: expect.objectContaining({ status: "CANCELED" }),
       })
     );
+  });
+});
+
+// ── 부분 환불 이메일 아웃박스 enqueue 테스트 ──────────────────────────────────
+describe("runRefundSaga — PARTIAL_REFUND_COMPLETED enqueue", () => {
+  const DISC_JOB_ID = "refundjob_disc_email_001";
+  const DISC_BOOKING_ID = "booking_disc_email_001";
+  const DISC_PAYMENT_ID = "payment_disc_email_001";
+
+  function setupEmailTransaction(): void {
+    mocks.db.$transaction.mockImplementation(
+      async (arg: ((tx: typeof mocks.tx) => unknown) | Array<Promise<unknown>>) => {
+        if (typeof arg === "function") return arg(mocks.tx);
+        if (Array.isArray(arg)) return Promise.all(arg);
+      }
+    );
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupEmailTransaction();
+
+    mocks.tx.refundJob.findUnique.mockResolvedValue(null);
+    mocks.tx.payment.updateMany.mockResolvedValue({ count: 1 });
+    mocks.tx.refundJob.create.mockResolvedValue({ id: DISC_JOB_ID, attempts: 0 });
+    mocks.tx.payment.update.mockResolvedValue({});
+    mocks.tx.refundJob.update.mockResolvedValue({});
+    mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_disc_1" });
+    mocks.tx.traveler.updateMany.mockResolvedValue({ count: 0 });
+    mocks.tx.emailJob.findUnique.mockResolvedValue(null);
+    mocks.tx.emailJob.create.mockResolvedValue({ id: "emailjob_disc_1" });
+    mocks.db.refundJob.update.mockResolvedValue({});
+    mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
+    mocks.releaseSeats.mockResolvedValue(undefined);
+    mocks.transitionStatusTx.mockResolvedValue({});
+    mocks.enqueueEmailJob.mockResolvedValue(undefined);
+  });
+
+  // ── DISCRETIONARY: enqueueEmailJob 호출됨 ─────────────────────────
+  it("DISCRETIONARY 환불 성공 시 enqueueEmailJob(PARTIAL_REFUND_COMPLETED) 호출", async () => {
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: DISC_PAYMENT_ID,
+      amount: 100_000,
+      refundedAmount: 0,
+      tossPaymentKey: "tpayments_test_disc_key",
+    });
+
+    const { refundDiscretionary } = await import("../refund");
+    await refundDiscretionary({
+      bookingId: DISC_BOOKING_ID,
+      paymentId: DISC_PAYMENT_ID,
+      amount: 50_000,
+      actor: "admin:mgr01",
+      requestId: "req_disc_001",
+    });
+
+    expect(mocks.enqueueEmailJob).toHaveBeenCalledOnce();
+    expect(mocks.enqueueEmailJob).toHaveBeenCalledWith(
+      expect.anything(), // tx
+      expect.objectContaining({
+        type: "PARTIAL_REFUND_COMPLETED",
+        dedupeKey: `partial-refund-completed:${DISC_JOB_ID}`,
+        bookingId: DISC_BOOKING_ID,
+        refundJobId: DISC_JOB_ID,
+      })
+    );
+  });
+
+  // ── TRAVELER_CANCEL (not-last): enqueueEmailJob 호출됨 ────────────
+  it("TRAVELER_CANCEL(not-last) 성공 시 enqueueEmailJob(PARTIAL_REFUND_COMPLETED) 호출", async () => {
+    const TRAV_JOB_ID = "refundjob_trav_email_001";
+    mocks.tx.refundJob.create.mockResolvedValue({ id: TRAV_JOB_ID, attempts: 0 });
+    mocks.tx.refundJob.findFirstOrThrow.mockResolvedValue({ id: TRAV_JOB_ID });
+
+    mocks.db.booking.findUnique.mockResolvedValue({
+      id: DISC_BOOKING_ID,
+      status: "PAID",
+      departureId: "dep_trav_1",
+      departure: { departureDate: futureDateUtcMidnight(40) },
+      travelers: [
+        { id: "traveler_A", paxType: "ADULT", unitPrice: 100_000, canceledAt: null },
+        { id: "traveler_B", paxType: "ADULT", unitPrice: 100_000, canceledAt: null },
+      ],
+    });
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: DISC_PAYMENT_ID,
+      amount: 200_000,
+      refundedAmount: 0,
+      tossPaymentKey: "tpayments_test_trav_key",
+    });
+
+    const { refundTraveler } = await import("../refund");
+    await refundTraveler({
+      bookingId: DISC_BOOKING_ID,
+      travelerIds: ["traveler_A"],  // not-last (traveler_B remains)
+      actor: "admin:mgr01",
+      applyPenalty: false,
+    });
+
+    expect(mocks.enqueueEmailJob).toHaveBeenCalledOnce();
+    expect(mocks.enqueueEmailJob).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        type: "PARTIAL_REFUND_COMPLETED",
+        dedupeKey: `partial-refund-completed:${TRAV_JOB_ID}`,
+        bookingId: DISC_BOOKING_ID,
+        refundJobId: TRAV_JOB_ID,
+      })
+    );
+  });
+
+  // ── FULL_CANCEL: enqueueEmailJob 호출되지 않음 ────────────────────
+  it("FULL_CANCEL(refundBooking) 성공 시 enqueueEmailJob 미호출 (FULL_CANCEL 제외)", async () => {
+    const FC_JOB_ID = "refundjob_fc_email_001";
+    mocks.tx.refundJob.create.mockResolvedValue({ id: FC_JOB_ID, attempts: 0 });
+    mocks.tx.refundJob.findFirstOrThrow.mockResolvedValue({ id: FC_JOB_ID });
+
+    mocks.db.booking.findUnique
+      .mockResolvedValueOnce({ travelers: [{ id: "traveler_A" }] })  // refundBooking 래퍼
+      .mockResolvedValueOnce({
+        id: DISC_BOOKING_ID,
+        status: "PAID",
+        departureId: "dep_fc_1",
+        departure: { departureDate: futureDateUtcMidnight(40) },
+        travelers: [
+          { id: "traveler_A", paxType: "ADULT", unitPrice: 100_000, canceledAt: null },
+        ],
+      });
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: DISC_PAYMENT_ID,
+      amount: 100_000,
+      refundedAmount: 0,
+      tossPaymentKey: "tpayments_test_fc_key",
+    });
+
+    const { refundBooking: refundBookingFn } = await import("../refund");
+    await refundBookingFn({
+      bookingId: DISC_BOOKING_ID,
+      actor: "user:usr001",
+      applyPenalty: false,
+    });
+
+    // FULL_CANCEL이므로 partial 메일 enqueue 없음
+    expect(mocks.enqueueEmailJob).not.toHaveBeenCalled();
   });
 });
 

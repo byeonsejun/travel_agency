@@ -23,6 +23,7 @@ import { logger, metrics, captureException } from "@/shared/lib/observability";
 import { PaymentError } from "./errors";
 import { backoff } from "./refund";
 import { releaseRefund } from "./ledger";
+import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
 
 // IN_PROGRESS인 채로 멈춰 있는 job을 stuck으로 판정하는 임계 시간.
 // worker death / 배포 도중 중단 등으로 인한 영구 lock 회복용.
@@ -255,6 +256,14 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
         result: "PROCESSED",
       },
     });
+    if (job.kind !== "FULL_CANCEL") {
+      await enqueueEmailJob(tx, {
+        type: "PARTIAL_REFUND_COMPLETED",
+        dedupeKey: `partial-refund-completed:${jobId}`,
+        bookingId: job.bookingId,
+        refundJobId: jobId,
+      });
+    }
   });
 
   // ── kind별 후처리: traveler 표식 + 좌석 환원 + FULL_CANCEL terminal 전이 ──

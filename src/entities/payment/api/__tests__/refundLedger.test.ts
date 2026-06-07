@@ -7,6 +7,7 @@ vi.mock("@/entities/booking", () => ({ transitionStatus: (...a: unknown[]) => tr
 vi.mock("@/shared/lib/observability", () => ({
   logger: { error: vi.fn() }, metrics: { incr: vi.fn() }, captureException: vi.fn(),
 }));
+vi.mock("@/shared/lib/email-job/enqueue", () => ({ enqueueEmailJob: vi.fn().mockResolvedValue(undefined) }));
 
 const reserveCount = { value: 1 };
 const existingJob = { value: null as null | { id: string } };
