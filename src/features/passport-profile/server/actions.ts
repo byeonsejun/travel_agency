@@ -5,6 +5,7 @@ import { auth } from "@/features/auth/server/auth";
 import { db } from "@/shared/lib/db";
 import { passportProfileSchema } from "@/entities/user";
 import { withRateLimitAction } from "@/shared/lib/rate-limit";
+import { encrypt } from "@/shared/lib/crypto";
 
 export type PassportActionState =
   | { success: true }
@@ -36,12 +37,12 @@ async function updatePassportProfileImpl(
     return { success: false, error: first?.message ?? "입력값을 확인해주세요." };
   }
 
-  // passportNo는 민감 정보 — 운영 전 암호화 레이어 추가 필요 (ADR 예정).
-  // 현재는 평문 저장. Phase 2 보안 강화 시 encrypted_passport_no 컬럼으로 마이그레이션.
+  // passportNo는 AES-256-GCM으로 암호화하여 저장한다 (lazy 마이그레이션, enc:v1: prefix).
+  const data = { ...parsed.data, passportNo: encrypt(parsed.data.passportNo) };
   await db.passportProfile.upsert({
     where: { userId: session.user.id },
-    create: { ...parsed.data, userId: session.user.id },
-    update: parsed.data,
+    create: { ...data, userId: session.user.id },
+    update: data,
   });
 
   revalidatePath("/mypage");

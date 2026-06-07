@@ -12,3 +12,7 @@ process.env.PAYMENT_FORCE_REAL ??= "0";
 // 모듈 부팅 시점에 default인 https://api.tosspayments.com이 발동하지 않도록
 // 로컬 Mock 도메인으로 폴백 주입.
 process.env.TOSS_API_BASE_URL ??= "http://localhost:4242";
+// Phase 12 — AES-256 암호화 키 더미 주입.
+// Buffer.from("x".repeat(32))는 정확히 32바이트 → envSchema 포맷 가드 통과.
+// 실제 테스트에서 vi.mock 없이 real env 모듈을 사용하는 crypto 테스트를 위해 필요.
+process.env.ENCRYPTION_KEY ??= Buffer.from("x".repeat(32)).toString("base64");

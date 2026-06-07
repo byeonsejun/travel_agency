@@ -88,6 +88,7 @@
 | 0038  | [Client-side Blob CSV 추출 + 5,000건 상한 (Phase 9 드릴다운)](./0038-csv-export-client-blob.md) | Accepted | 2026-06-05   |
 | 0039  | [정적 보안 헤더 7종(`next.config`) + CSP report-only→enforce 롤아웃 게이트 (Phase 11)](./0039-static-security-headers-and-csp-rollout.md) | Accepted | 2026-06-06   |
 | 0040  | [`mutation` tier 신설 + Server Action 미들웨어 우회 갭 봉합(`onBlock` 반환모드) (Phase 11)](./0040-mutation-tier-server-action-rate-limit.md) | Accepted | 2026-06-06   |
+| 0041  | [여권번호 PII AES-256-GCM 암호화 + `enc:v1:` envelope lazy 마이그레이션 (Phase 12)](./0041-passport-pii-encryption.md) | Accepted | 2026-06-06   |
 
 ## 향후 후보 (작성 대기)
 

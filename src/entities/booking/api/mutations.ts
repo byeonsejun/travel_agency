@@ -10,6 +10,7 @@ import { ForbiddenError, PriceMismatchError } from "./errors";
 import { emailJobForTransition } from "../model/emailPolicy";
 import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
 import { assignPaxTypes } from "../model/paxAssignment";
+import { encrypt } from "@/shared/lib/crypto";
 
 export async function createBooking(input: CreateBookingInput): Promise<Booking> {
   // R3-1: 입력 검증
@@ -71,7 +72,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
             firstNameEn: t.firstNameEn,
             gender: t.gender,
             birthDate: t.birthDate,
-            passportNo: t.passportNo,
+            passportNo: t.passportNo ? encrypt(t.passportNo) : t.passportNo,
             expireDate: t.expireDate,
             phone: t.phone,
             email: t.email,
