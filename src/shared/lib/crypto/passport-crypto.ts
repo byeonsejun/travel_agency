@@ -1,3 +1,8 @@
+// 🔒 server-only 가드. 이 모듈은 node:crypto + 서버 전용 env(AES 키)에 의존하므로
+// 클라이언트 번들에 절대 들어가면 안 된다. 부수효과 전용 import라 트리셰이킹에서
+// 제거되지 않으므로, 클라이언트 컴포넌트가 (배럴 등을 통해) 이 모듈에 도달하면
+// Next 빌드가 즉시 실패해 누수를 잡는다. 그래서 server API 배럴(`@/entities/booking`,
+// `@/entities/user`)의 client-safe surface 는 `*/client.ts` 로 분리되어 있다.
 import "server-only";
 
 import {
