@@ -73,12 +73,13 @@ async function claimEmailJob(
 }
 
 async function hydrate(
-  type: "BOOKING_CONFIRMATION" | "REFUND_COMPLETED",
+  type: "BOOKING_CONFIRMATION" | "REFUND_COMPLETED" | "PARTIAL_REFUND_COMPLETED",
   bookingId: string,
 ): Promise<{ recipientEmail: string; props: unknown } | null> {
   if (type === "BOOKING_CONFIRMATION") {
     return getBookingConfirmationEmailData(bookingId);
   }
+  // NOTE: PARTIAL_REFUND_COMPLETED hydration loader is wired in Task 3.
   return getRefundCompletedEmailData(bookingId);
 }
 

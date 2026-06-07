@@ -7,9 +7,11 @@ import { render } from "@react-email/render";
 import type { EmailType } from "@prisma/client";
 import { BookingConfirmationEmail } from "./templates/BookingConfirmationEmail";
 import { RefundCompletedEmail } from "./templates/RefundCompletedEmail";
+import { PartialRefundCompletedEmail } from "./templates/PartialRefundCompletedEmail";
 import type {
   BookingConfirmationEmailProps,
   RefundCompletedEmailProps,
+  PartialRefundCompletedEmailProps,
 } from "./templates/types";
 
 export interface RenderedEmail {
@@ -21,6 +23,7 @@ export interface RenderedEmail {
 export type EmailPropsByType = {
   BOOKING_CONFIRMATION: BookingConfirmationEmailProps;
   REFUND_COMPLETED: RefundCompletedEmailProps;
+  PARTIAL_REFUND_COMPLETED: PartialRefundCompletedEmailProps;
 };
 
 export async function renderEmail<T extends EmailType>(
@@ -37,10 +40,20 @@ export async function renderEmail<T extends EmailType>(
     };
   }
 
-  const p = props as RefundCompletedEmailProps;
-  const node = RefundCompletedEmail(p);
+  if (type === "REFUND_COMPLETED") {
+    const p = props as RefundCompletedEmailProps;
+    const node = RefundCompletedEmail(p);
+    return {
+      subject: `[Nextour] 환불이 완료되었습니다 — ${p.productTitle}`,
+      html: await render(node),
+      text: await render(node, { plainText: true }),
+    };
+  }
+
+  const p = props as PartialRefundCompletedEmailProps;
+  const node = PartialRefundCompletedEmail(p);
   return {
-    subject: `[Nextour] 환불이 완료되었습니다 — ${p.productTitle}`,
+    subject: `[Nextour] 부분 환불이 완료되었습니다 — ${p.productTitle}`,
     html: await render(node),
     text: await render(node, { plainText: true }),
   };

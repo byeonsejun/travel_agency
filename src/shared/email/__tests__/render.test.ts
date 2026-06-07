@@ -32,4 +32,38 @@ describe("renderEmail", () => {
     expect(out.html).toContain("880,000");
     expect(out.html).toContain("다낭 4박5일");
   });
+
+  describe("PARTIAL_REFUND_COMPLETED", () => {
+    it("penaltyAmount > 0: subject + 세 금액 모두 포함", async () => {
+      const out = await renderEmail("PARTIAL_REFUND_COMPLETED", {
+        customerName: "이부분",
+        bookingId: "clbk3",
+        productTitle: "방콕 5박6일",
+        originalAmount: 1500000,
+        penaltyAmount: 300000,
+        refundAmount: 1200000,
+        paymentMethod: "카드",
+      });
+      expect(out.subject).toContain("부분 환불");
+      expect(out.html).toContain("방콕 5박6일");
+      expect(out.html).toContain("1,500,000");
+      expect(out.html).toContain("300,000");
+      expect(out.html).toContain("1,200,000");
+    });
+
+    it("penaltyAmount === 0: 위약금 행 미노출", async () => {
+      const out = await renderEmail("PARTIAL_REFUND_COMPLETED", {
+        customerName: "이부분",
+        bookingId: "clbk4",
+        productTitle: "발리 7박8일",
+        originalAmount: 2000000,
+        penaltyAmount: 0,
+        refundAmount: 2000000,
+        paymentMethod: "카드",
+      });
+      expect(out.subject).toContain("부분 환불");
+      expect(out.html).toContain("발리 7박8일");
+      expect(out.html).not.toContain("공제 위약금");
+    });
+  });
 });
