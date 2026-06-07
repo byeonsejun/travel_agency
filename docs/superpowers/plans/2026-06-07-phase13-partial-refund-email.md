@@ -62,9 +62,9 @@
 
 ## 최종 검증 (종합)
 
-- [ ] `npm run typecheck` 통과
-- [ ] `npm run test` 통과 (신규 테스트 포함)
-- [ ] `npm run lint` 통과
-- [ ] `npm run build` 통과 (server-only/배럴/클라경계 회귀 차단 — 메모리 규칙)
-- [ ] 런타임 증거: dev 환경에서 부분 환불 시 `📧 [DEV] Email to ...` 콘솔 폴백에 partial 메일 출력 확인 (또는 워커 단위 테스트로 페이로드 검증)
-- [ ] ADR 후보 기록: PARTIAL_REFUND_COMPLETED 아웃박스 + refundJobId 식별 + FULL_CANCEL 중복 방지 결정
+- [x] `npx tsc --noEmit` 통과 (EXIT 0)
+- [x] `npx vitest run` 통과 — 996 passed (129 files), 신규 케이스 포함
+- [x] `npm run lint` 통과 (잔존 경고 2건은 features/checkout 기존분, 본 작업 무관)
+- [x] `npm run build` 통과 (server-only/배럴/클라경계 회귀 없음 — 메모리 규칙)
+- [x] 런타임 증거: worker 단위 테스트가 PARTIAL_REFUND_COMPLETED hydrate→send 페이로드(idempotencyKey=`partial-refund-completed:<refundJobId>`) 검증; render 테스트가 세 금액 + 위약금 0 라인 숨김 검증
+- [ ] ADR 후보 기록: PARTIAL_REFUND_COMPLETED 아웃박스 + refundJobId 식별 + FULL_CANCEL 중복 방지 결정 (사용자 승인 시 발행)
