@@ -25,7 +25,7 @@ describe("enqueueEmailJob", () => {
     mocks.tx.emailJob.create.mockResolvedValue({ id: "clej_new" });
   });
 
-  it("기존 dedupeKey 없으면 PENDING 행 생성", async () => {
+  it("기존 dedupeKey 없으면 PENDING 행 생성 (refundJobId 미지정 → null)", async () => {
     mocks.tx.emailJob.findUnique.mockResolvedValue(null);
     await enqueueEmailJob(tx, ARGS);
     expect(mocks.tx.emailJob.create).toHaveBeenCalledWith({
@@ -33,6 +33,26 @@ describe("enqueueEmailJob", () => {
         type: "BOOKING_CONFIRMATION",
         dedupeKey: "booking-confirmation:clbk1",
         bookingId: "clbk1",
+        refundJobId: null,
+        status: "PENDING",
+      },
+    });
+  });
+
+  it("refundJobId 지정 시 그대로 반영 (PARTIAL_REFUND_COMPLETED)", async () => {
+    mocks.tx.emailJob.findUnique.mockResolvedValue(null);
+    await enqueueEmailJob(tx, {
+      type: "PARTIAL_REFUND_COMPLETED",
+      dedupeKey: "partial-refund-completed:clrj1",
+      bookingId: "clbk1",
+      refundJobId: "clrj1",
+    });
+    expect(mocks.tx.emailJob.create).toHaveBeenCalledWith({
+      data: {
+        type: "PARTIAL_REFUND_COMPLETED",
+        dedupeKey: "partial-refund-completed:clrj1",
+        bookingId: "clbk1",
+        refundJobId: "clrj1",
         status: "PENDING",
       },
     });
