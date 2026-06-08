@@ -42,6 +42,24 @@ const KEYWORD_WEIGHT = 0.2;
 const GEO_WEIGHT = 0.2;
 const THEME_WEIGHT = 0.1;
 
+/**
+ * 테마 부스트 점수 (graduated soft boost, 공식 SSOT).
+ *
+ * 요청 태그 커버리지 비율에 천장(THEME_WEIGHT)을 곱한다:
+ *   requested === 0 ? 0 : THEME_WEIGHT × (matchCount / requested)
+ *
+ * matchCount ∈ [0, requested]가 보장되므로(ProductTag @@unique([productId,tag]))
+ * 반환값은 항상 [0, THEME_WEIGHT] 범위 — cap 불필요.
+ *
+ * ⚠️ buildThemeScore의 SQL 산술이 이 공식을 미러한다. 한쪽을 바꾸면
+ *    반드시 다른 쪽도 갱신할 것(drift 방지).
+ */
+export function themeBoost(matchCount: number, requested: number): number {
+  // !(requested > 0)는 0·음수·NaN을 모두 차단 → 반환값 [0, THEME_WEIGHT] 불변식 보장.
+  if (!(requested > 0)) return 0;
+  return THEME_WEIGHT * (matchCount / requested);
+}
+
 // 부팅 1회 가용성 캐시 (spec §5.1). null = 미확인.
 let pgvectorAvailable: boolean | null = null;
 

@@ -21,6 +21,7 @@ vi.mock("@/shared/lib/db", () => ({ db: mockDb }));
 
 import {
   searchProductsByVector,
+  themeBoost,
   __resetPgvectorCacheForTest,
 } from "../searchByVector";
 
@@ -183,5 +184,41 @@ describe("searchProductsByVector — graceful degradation (D5)", () => {
 
     const res = await searchProductsByVector(qVec, {}, MODEL, "온천");
     expect(res).toEqual([]);
+  });
+});
+
+describe("themeBoost — graduated 커버리지 비율 (순수 함수 invariant)", () => {
+  it("요청 태그를 모두 매칭하면 천장 0.1을 반환한다", () => {
+    expect(themeBoost(3, 3)).toBeCloseTo(0.1, 10);
+    expect(themeBoost(1, 1)).toBeCloseTo(0.1, 10);
+  });
+
+  it("매칭이 0이면 0을 반환한다", () => {
+    expect(themeBoost(0, 3)).toBe(0);
+  });
+
+  it("요청 태그가 0이면 0을 반환한다(division-by-zero 가드)", () => {
+    expect(themeBoost(0, 0)).toBe(0);
+    expect(themeBoost(2, 0)).toBe(0);
+  });
+
+  it("matchCount가 늘면 score는 비감소(단조 증가)", () => {
+    expect(themeBoost(2, 3)).toBeGreaterThan(themeBoost(1, 3));
+    expect(themeBoost(3, 3)).toBeGreaterThan(themeBoost(2, 3));
+  });
+
+  it("부분 매칭은 요청 대비 비율값이다", () => {
+    expect(themeBoost(1, 3)).toBeCloseTo(0.1 / 3, 10); // ≈ 0.0333
+    expect(themeBoost(2, 4)).toBeCloseTo(0.05, 10);
+  });
+
+  it("score는 항상 [0, 0.1] 범위 안이다", () => {
+    for (let req = 1; req <= 5; req++) {
+      for (let m = 0; m <= req; m++) {
+        const s = themeBoost(m, req);
+        expect(s).toBeGreaterThanOrEqual(0);
+        expect(s).toBeLessThanOrEqual(0.1);
+      }
+    }
   });
 });
