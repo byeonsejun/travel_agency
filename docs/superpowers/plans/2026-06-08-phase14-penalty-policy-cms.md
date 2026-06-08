@@ -1027,23 +1027,23 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: 매핑 저장 Server Action(기존 상품/출발 수정 action 확장 또는 신규)
 - Modify: admin nav 컴포넌트 — "위약금 정책" 링크
 
-- [ ] **Step 1: 활성 정책 목록 제공**
+- [x] **Step 1: 활성 정책 목록 제공**
 
 드롭다운 옵션은 `getActivePenaltyPolicies()` 결과(key + name). 상품용: "기본값(시스템 표준)" + 각 정책. 출발용: "상품 정책 상속(빈 값)" + 각 정책.
 
-- [ ] **Step 2: 상품 수정 action에 penaltyPolicyKey 반영**
+- [x] **Step 2: 상품 수정 action에 penaltyPolicyKey 반영**
 
 기존 상품 update 입력 스키마/액션에 `penaltyPolicyKey: z.string().nullable().optional()` 추가, `product.update` data에 반영. 출발일도 동일(`departure.update`).
 
-- [ ] **Step 3: admin nav 링크 추가**
+- [x] **Step 3: admin nav 링크 추가**
 
 admin 셸 nav 컴포넌트(예: `(admin)/layout.tsx` 또는 nav 컴포넌트)에 "위약금 정책"(`/admin/penalty-policies`) 항목 추가.
 
-- [ ] **Step 4: 매핑 동작 검증 (수동/통합)**
+- [x] **Step 4: 매핑 동작 검증 (수동/통합)**
 
 dev에서: 정책 생성 → 상품에 할당 → 그 상품으로 예약 생성 → `Booking.penaltyPolicyKey/Version`이 스냅샷됐는지 `prisma db execute`로 확인. 출발일 오버라이드 → 해당 출발 예약이 출발 정책으로 스냅샷되는지 확인.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1056,10 +1056,10 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## 최종 검증 (종합)
 
-- [ ] `npx tsc --noEmit` 통과
-- [ ] `npx vitest run` 통과 (신규 테스트 포함)
-- [ ] `npm run lint` 통과
-- [ ] `npm run build` 통과 (server-only/배럴/클라경계 회귀 차단 — 메모리 규칙)
-- [ ] 런타임 증거: 정책 생성→상품 할당→예약(스냅샷)→100% 정책 취소(Toss skip + 전이) e2e를 dev에서 `prisma db execute`/콘솔로 확인
-- [ ] ADR 후보 발행 제안: 정책 CMS 스냅샷 전략(불변 버전 + reference-snapshot) + 3단계 폴백 + 100% `refundAmount===0` 가드
-- [ ] plan 체크박스 전수 `[x]` 반영 확인(`grep -n "\- \[ \]"`)
+- [x] `npx tsc --noEmit` 통과
+- [x] `npx vitest run` 통과 (신규 테스트 포함)
+- [x] `npm run lint` 통과
+- [x] `npm run build` 통과 (server-only/배럴/클라경계 회귀 차단 — 메모리 규칙)
+- [x] 런타임 증거: 정책 생성→상품 할당→예약(스냅샷)→100% 정책 취소(Toss skip + 전이) e2e를 dev에서 `prisma db execute`/콘솔로 확인
+- [x] ADR 후보 발행 제안: 정책 CMS 스냅샷 전략(불변 버전 + reference-snapshot) + 3단계 폴백 + 100% `refundAmount===0` 가드
+- [x] plan 체크박스 전수 `[x]` 반영 확인(`grep -n "\- \[ \]"`)

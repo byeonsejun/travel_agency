@@ -76,6 +76,7 @@ export async function createDeparture(
         priceInfant: data.priceInfant,
         capacity: data.capacity,
         minPax: data.minPax,
+        penaltyPolicyKey: data.penaltyPolicyKey ?? null, // null → 상품 정책 상속
       },
       select: { id: true },
     });
@@ -104,6 +105,7 @@ export async function updateDeparture(
         priceInfant: data.priceInfant,
         capacity: data.capacity,
         minPax: data.minPax,
+        penaltyPolicyKey: data.penaltyPolicyKey ?? null, // null → 상품 정책 상속
         version: { increment: 1 },
       },
     });

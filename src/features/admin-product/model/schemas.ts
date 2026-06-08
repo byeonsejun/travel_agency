@@ -9,12 +9,25 @@ import { productSchema } from "@/entities/product";
  * - productIdSchema: publish/archive 단건 ID 입력
  */
 
-// create 입력은 entities/product의 productSchema와 동일 (status 포함)
-export const productInputSchema = productSchema;
+// 위약금 정책 key (Phase 14) — "" / 미지정은 null(시스템 기본 폴백)로 정규화.
+// optional 로 두어 기존 입력(미지정)도 하위호환.
+const penaltyPolicyKeyField = z
+  .preprocess(
+    (v) => (v === "" || v == null ? null : v),
+    z.string().min(1).nullable(),
+  )
+  .optional();
+
+// create 입력은 productSchema + 위약금 정책 key
+const productWithPolicySchema = productSchema.extend({
+  penaltyPolicyKey: penaltyPolicyKeyField,
+});
+
+export const productInputSchema = productWithPolicySchema;
 export type ProductInput = z.infer<typeof productInputSchema>;
 
 // update 입력은 productId(cuid)를 추가
-export const updateProductInputSchema = productSchema.extend({
+export const updateProductInputSchema = productWithPolicySchema.extend({
   productId: z.string().cuid("올바른 상품 ID를 입력하세요"),
 });
 export type UpdateProductInput = z.infer<typeof updateProductInputSchema>;

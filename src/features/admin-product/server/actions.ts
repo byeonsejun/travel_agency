@@ -123,6 +123,7 @@ export async function createProductAction(
           heroImageUrl: data.heroImageUrl ?? null,
           basePriceAdult: data.basePriceAdult,
           status: data.status,
+          penaltyPolicyKey: data.penaltyPolicyKey ?? null, // null → 시스템 기본 폴백
           tags: {
             create: data.tags.map((tag) => ({ tag })),
           },
@@ -294,6 +295,7 @@ export async function updateProductAction(
           heroImageUrl: data.heroImageUrl ?? null,
           basePriceAdult: data.basePriceAdult,
           status: data.status,
+          penaltyPolicyKey: data.penaltyPolicyKey ?? null, // null → 시스템 기본 폴백
         },
       });
 

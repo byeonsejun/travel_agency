@@ -13,10 +13,13 @@ import { getHeroUploadUrl } from "../server/uploadHero";
 import { ItineraryEditor } from "./ItineraryEditor";
 import type { ItineraryDayInput } from "./ItineraryEditor";
 
-// Props 
+// 위약금 정책 드롭다운 옵션 (page에서 getActivePenaltyPolicies로 주입).
+export type PenaltyPolicyOption = { key: string; name: string };
+
+// Props
 type ProductFormProps =
-  | { mode: "create"; initial?: undefined }
-  | { mode: "edit"; initial: ProductDetail };
+  | { mode: "create"; initial?: undefined; policies: PenaltyPolicyOption[] }
+  | { mode: "edit"; initial: ProductDetail; policies: PenaltyPolicyOption[] };
 
 // 초기화 헬퍼 
 
@@ -31,6 +34,7 @@ function emptyProductInput(): ProductInput {
     heroImageUrl: undefined,
     basePriceAdult: 0,
     status: "DRAFT",
+    penaltyPolicyKey: null,
     tags: [],
     inclusions: [],
     itineraryDays: [],
@@ -52,6 +56,7 @@ export function productDetailToInput(d: ProductDetail): ProductInput {
     heroImageUrl: d.heroImageUrl ?? undefined,
     basePriceAdult: d.basePriceAdult,
     status: d.status,
+    penaltyPolicyKey: d.penaltyPolicyKey ?? null,
     tags: d.tags.map((t) => t.tag),
     inclusions: d.inclusions.map((inc) => ({
       kind: inc.kind,
@@ -91,10 +96,11 @@ type FormBodyProps = {
   onSubmit: (payload: ProductInput) => void;
   initial: ProductDetail | undefined;
   mode: "create" | "edit";
+  policies: PenaltyPolicyOption[];
 };
 
-// FormBody: 두 모드에서 재사용하는 실제 렌더링 
-function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) {
+// FormBody: 두 모드에서 재사용하는 실제 렌더링
+function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormBodyProps) {
   const [form, setForm] = useState<ProductInput>(() =>
     initial ? productDetailToInput(initial) : emptyProductInput(),
   );
@@ -411,6 +417,30 @@ function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) 
             <option value="CLOSED">CLOSED (보관)</option>
           </select>
         </div>
+
+        {/* 위약금 정책 (Phase 14) */}
+        <div>
+          <label className={labelCls} htmlFor="penaltyPolicyKey">
+            위약금 정책
+          </label>
+          <select
+            id="penaltyPolicyKey"
+            value={form.penaltyPolicyKey ?? ""}
+            onChange={(e) => setField("penaltyPolicyKey", e.target.value || null)}
+            className={inputCls}
+          >
+            <option value="">기본값 (시스템 표준약관)</option>
+            {policies.map((p) => (
+              <option key={p.key} value={p.key}>
+                {p.name} ({p.key})
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-400">
+            미지정 시 시스템 표준약관이 적용됩니다. 출발일별로 다시 오버라이드할 수
+            있습니다.
+          </p>
+        </div>
       </section>
 
       {/* ══ 태그 ══ */}
@@ -569,7 +599,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode }: FormBodyProps) 
 }
 
 // CreateForm — create 모드 전용 (useActionState 타입을 분리)
-function CreateForm() {
+function CreateForm({ policies }: { policies: PenaltyPolicyOption[] }) {
   const router = useRouter();
   const [state, dispatch, isPending] = useActionState(createProductAction, null);
 
@@ -602,12 +632,19 @@ function CreateForm() {
       onSubmit={handleSubmit}
       initial={undefined}
       mode="create"
+      policies={policies}
     />
   );
 }
 
 // EditForm — edit 모드 전용 (productId 포함 payload)
-function EditForm({ initial }: { initial: ProductDetail }) {
+function EditForm({
+  initial,
+  policies,
+}: {
+  initial: ProductDetail;
+  policies: PenaltyPolicyOption[];
+}) {
   const router = useRouter();
   const [state, dispatch, isPending] = useActionState(updateProductAction, null);
 
@@ -639,6 +676,7 @@ function EditForm({ initial }: { initial: ProductDetail }) {
       onSubmit={handleSubmit}
       initial={initial}
       mode="edit"
+      policies={policies}
     />
   );
 }
@@ -646,7 +684,7 @@ function EditForm({ initial }: { initial: ProductDetail }) {
 // 공개 API: ProductForm (mode에 따라 분기)
 export function ProductForm(props: ProductFormProps) {
   if (props.mode === "edit") {
-    return <EditForm initial={props.initial} />;
+    return <EditForm initial={props.initial} policies={props.policies} />;
   }
-  return <CreateForm />;
+  return <CreateForm policies={props.policies} />;
 }
