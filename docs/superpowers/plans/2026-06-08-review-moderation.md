@@ -179,7 +179,7 @@ git commit -m "feat(review): add ReviewReport model + ReportReason/ReportStatus 
 - Modify: `src/entities/review/api/mutations.ts`
 - Test: `src/entities/review/api/__tests__/mutations.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/entities/review/api/__tests__/mutations.test.ts` 의 상단 `mocks` 객체에 `create`/`updateMany`/`findFirst` 핸들을 추가하고(reviewReport 용), 파일 하단에 describe 추가. 먼저 mock 확장:
 
@@ -274,12 +274,12 @@ describe("createReviewReport", () => {
 
 `Prisma` import 가 테스트 파일에 없으면 상단에 추가: `import { Prisma } from "@prisma/client";`
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/entities/review/api/__tests__/mutations.test.ts`
 Expected: FAIL — `createReviewReport is not a function`.
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/entities/review/api/mutations.ts` 상단 import 를 다음으로 교체/보강:
 
@@ -331,12 +331,12 @@ export async function createReviewReport(input: {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/entities/review/api/__tests__/mutations.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/review/api/mutations.ts src/entities/review/api/__tests__/mutations.test.ts
@@ -349,7 +349,7 @@ git commit -m "feat(review): createReviewReport idempotent mutation"
 - Modify: `src/entities/review/api/mutations.ts`
 - Test: `src/entities/review/api/__tests__/mutations.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `mutations.test.ts` 에 describe 추가:
 
@@ -402,12 +402,12 @@ describe("dismissReports", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 Run: `npx vitest run src/entities/review/api/__tests__/mutations.test.ts`
 Expected: FAIL — `resolveReportsByHiding is not a function`.
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `mutations.ts` 하단에 추가:
 
@@ -453,12 +453,12 @@ export async function dismissReports(
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 Run: `npx vitest run src/entities/review/api/__tests__/mutations.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/review/api/mutations.ts src/entities/review/api/__tests__/mutations.test.ts
@@ -472,7 +472,7 @@ git commit -m "feat(review): resolveReportsByHiding + dismissReports mutations"
 - Modify: `src/entities/review/api/queries.ts`
 - Test: `src/entities/review/api/__tests__/adminQueries.test.ts`
 
-- [ ] **Step 1: 타입 추가**
+- [x] **Step 1: 타입 추가**
 
 `src/entities/review/model/types.ts` 상단 import 에 enum 추가:
 
@@ -519,7 +519,7 @@ export type ReviewReportSummary = {
 };
 ```
 
-- [ ] **Step 2: 실패 테스트 작성**
+- [x] **Step 2: 실패 테스트 작성**
 
 `adminQueries.test.ts` 의 `mocks` 와 `vi.mock` 을 reviewReport 핸들 포함하도록 확장:
 
@@ -611,12 +611,12 @@ describe("getReportsForReview", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실패 확인**
+- [x] **Step 3: 테스트 실패 확인**
 
 Run: `npx vitest run src/entities/review/api/__tests__/adminQueries.test.ts`
 Expected: FAIL — `listReviewsWithOpenReports is not a function`.
 
-- [ ] **Step 4: 구현**
+- [x] **Step 4: 구현**
 
 `src/entities/review/api/queries.ts` 상단 import 에 타입 추가(기존 import 목록에 병합):
 
@@ -747,12 +747,12 @@ export async function getReportsForReview(
 }
 ```
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 Run: `npx vitest run src/entities/review/api/__tests__/adminQueries.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/entities/review/model/types.ts src/entities/review/api/queries.ts src/entities/review/api/__tests__/adminQueries.test.ts
@@ -766,7 +766,7 @@ git commit -m "feat(review): admin report queue queries + types"
 - Modify: `src/entities/review/api/queries.ts`
 - Test: `src/entities/review/api/__tests__/queries.test.ts` (없으면 생성)
 
-- [ ] **Step 1: 타입에 isOwn 추가**
+- [x] **Step 1: 타입에 isOwn 추가**
 
 `types.ts` 의 `ReviewListItem` 에 필드 추가(`content` 아래 등):
 
@@ -774,7 +774,7 @@ git commit -m "feat(review): admin report queue queries + types"
   isOwn: boolean; // 뷰어 본인 작성 여부. viewerId 미전달 시 false.
 ```
 
-- [ ] **Step 2: 실패 테스트 작성**
+- [x] **Step 2: 실패 테스트 작성**
 
 `src/entities/review/api/__tests__/queries.test.ts` 생성(없을 때):
 
@@ -817,12 +817,12 @@ describe("listReviewsByProduct isOwn", () => {
 
 > 만약 `queries.test.ts` 가 이미 존재하면 위 describe 만 append 하고 mock 에 `userId` select 가 포함되도록 조정.
 
-- [ ] **Step 3: 테스트 실패 확인**
+- [x] **Step 3: 테스트 실패 확인**
 
 Run: `npx vitest run src/entities/review/api/__tests__/queries.test.ts`
 Expected: FAIL — `isOwn` undefined 또는 옵션 타입 불일치.
 
-- [ ] **Step 4: 구현**
+- [x] **Step 4: 구현**
 
 `queries.ts` 의 `listReviewsByProduct` 시그니처와 본문 수정:
 - opts 에 `viewerId?: string` 추가.
@@ -886,12 +886,12 @@ export async function listReviewsByProduct(
 
 > 기존 매핑 코드(라인 62~83 근처)를 위 내용으로 교체. `displayName` 매핑이 기존과 동일한지 확인하고 차이가 있으면 기존 마스킹 호출 형태를 유지.
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 Run: `npx vitest run src/entities/review/api/__tests__/queries.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/entities/review/model/types.ts src/entities/review/api/queries.ts src/entities/review/api/__tests__/queries.test.ts
@@ -903,7 +903,7 @@ git commit -m "feat(review): listReviewsByProduct viewerId -> isOwn flag"
 **Files:**
 - Modify: `src/entities/review/index.ts`
 
-- [ ] **Step 1: export 추가**
+- [x] **Step 1: export 추가**
 
 `mutations` export 블록을 확장:
 
@@ -932,12 +932,12 @@ export {
   ReviewReportSummary,
 ```
 
-- [ ] **Step 2: 타입체크**
+- [x] **Step 2: 타입체크**
 
 Run: `npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/entities/review/index.ts
@@ -951,7 +951,7 @@ git commit -m "feat(review): export report mutations + admin queries from barrel
 - Create: `src/features/review-feed/server/reportReview.ts`
 - Test: `src/features/review-feed/server/__tests__/reportReview.test.ts`
 
-- [ ] **Step 1: Zod 스키마 작성 (pure 모듈)**
+- [x] **Step 1: Zod 스키마 작성 (pure 모듈)**
 
 Create `src/features/review-feed/model/reportSchema.ts`:
 
@@ -987,7 +987,7 @@ export const ReportInputSchema = z.object({
 export type ReportInput = z.infer<typeof ReportInputSchema>;
 ```
 
-- [ ] **Step 2: 실패 테스트 작성**
+- [x] **Step 2: 실패 테스트 작성**
 
 Create `src/features/review-feed/server/__tests__/reportReview.test.ts`:
 
@@ -1058,12 +1058,12 @@ describe("reportReviewAction", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실패 확인**
+- [x] **Step 3: 테스트 실패 확인**
 
 Run: `npx vitest run src/features/review-feed/server/__tests__/reportReview.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 4: 구현**
+- [x] **Step 4: 구현**
 
 Create `src/features/review-feed/server/reportReview.ts`:
 
@@ -1123,12 +1123,12 @@ export const reportReviewAction = withRateLimitAction<[ReportInput], ReportResul
 );
 ```
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 Run: `npx vitest run src/features/review-feed/server/__tests__/reportReview.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/features/review-feed/model/reportSchema.ts src/features/review-feed/server/reportReview.ts src/features/review-feed/server/__tests__/reportReview.test.ts
@@ -1142,7 +1142,7 @@ git commit -m "feat(review-feed): reportReviewAction (rate-limited, idempotent)"
 - Modify: `src/features/admin-review-moderation/server/actions.ts`
 - Test: `src/features/admin-review-moderation/server/__tests__/actions.test.ts`
 
-- [ ] **Step 1: 입력 스키마 추가**
+- [x] **Step 1: 입력 스키마 추가**
 
 `schemas.ts` 하단에 추가:
 
@@ -1154,7 +1154,7 @@ export const ReportModerationSchema = z.object({
 export type ReportModerationInput = z.infer<typeof ReportModerationSchema>;
 ```
 
-- [ ] **Step 2: 실패 테스트 작성**
+- [x] **Step 2: 실패 테스트 작성**
 
 `actions.test.ts` 의 `mocks`/`vi.mock("@/entities/review", ...)` 를 확장(resolve/dismiss 추가):
 
@@ -1209,12 +1209,12 @@ describe("dismissReportsAction", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실패 확인**
+- [x] **Step 3: 테스트 실패 확인**
 
 Run: `npx vitest run src/features/admin-review-moderation/server/__tests__/actions.test.ts`
 Expected: FAIL — `resolveReportsAction is not a function`.
 
-- [ ] **Step 4: 구현**
+- [x] **Step 4: 구현**
 
 `actions.ts` 상단 import 확장:
 
@@ -1293,12 +1293,12 @@ export async function dismissReportsAction(
 }
 ```
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 Run: `npx vitest run src/features/admin-review-moderation/server/__tests__/actions.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/features/admin-review-moderation/model/schemas.ts src/features/admin-review-moderation/server/actions.ts src/features/admin-review-moderation/server/__tests__/actions.test.ts
@@ -1307,12 +1307,12 @@ git commit -m "feat(admin-review): resolveReports + dismissReports actions"
 
 ### Task 2.8: 백엔드 종합 검증
 
-- [ ] **Step 1: 전체 타입체크 + 테스트**
+- [x] **Step 1: 전체 타입체크 + 테스트**
 
 Run: `npm run typecheck && npm run test`
 Expected: PASS (신규 + 기존 테스트 전부).
 
-- [ ] **Step 2: Commit (이미 커밋됨이면 skip)**
+- [x] **Step 2: Commit (이미 커밋됨이면 skip)**
 
 ---
 
