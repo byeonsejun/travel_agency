@@ -115,7 +115,36 @@ describe("searchProductsByVector — 벡터 경로", () => {
     // 메인 WHERE에는 ProductTag 배제가 없어야 한다(soft 전환의 핵심)
     expect(whereClause).not.toContain("ProductTag");
     // ProductTag 매칭은 SELECT 점수식(가산항)에 존재해야 한다
-    expect(text.slice(0, mainWhereIdx)).toContain("ProductTag");
+    const selectClause = text.slice(0, mainWhereIdx);
+    expect(selectClause).toContain("ProductTag");
+    // graduated: 이진 CASE가 아니라 count(*) 비율 산술이어야 한다
+    expect(selectClause).toContain("count(*)");
+    expect(selectClause).not.toContain("THEN 0.1");
+  });
+
+  it("graduated: 요청 태그 개수(분모)가 바인딩 파라미터로 전달된다", async () => {
+    mockDb.$queryRaw
+      .mockResolvedValueOnce([{ one: 1 }])
+      .mockResolvedValueOnce([{ id: "p1", score: 0.6 }]);
+    mockDb.product.findMany.mockResolvedValueOnce([fakeProduct("p1")]);
+
+    await searchProductsByVector(
+      qVec,
+      { themeTags: ["휴양", "미식", "가성비"] },
+      MODEL,
+      "휴양 미식 가성비"
+    );
+
+    const searchSql = mockDb.$queryRaw.mock.calls[1][0];
+    // 분모 = 정규화된 요청 태그 개수(3)가 바인딩 값으로 존재
+    expect(searchSql.values).toContain(3);
+    // 태그 배열도 '#' 정규화되어 바인딩
+    expect(
+      searchSql.values.some(
+        (v: unknown) =>
+          Array.isArray(v) && v.includes("#휴양") && v.includes("#미식")
+      )
+    ).toBe(true);
   });
 });
 

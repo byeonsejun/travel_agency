@@ -118,13 +118,22 @@ function normalizeThemeTags(themeTags: string[] | undefined): string[] {
   return themeTags.map((t) => (t.startsWith("#") ? t : `#${t}`));
 }
 
-/** 테마 태그 적중 → 점수 가산 조각(soft boost, 없으면 0). */
+/**
+ * 테마 태그 적중 → graduated 점수 가산 조각(soft boost, 없으면 0).
+ *
+ * themeBoost 공식의 SQL 미러: THEME_WEIGHT × matchCount / requested.
+ *  - matchCount = 요청 태그 적중 개수 (count(*), ProductTag @@unique로 ≤ requested)
+ *  - requested  = tags.length (호출부에서 1개 이상 보장 — 빈 배열은 위에서 0 반환)
+ * 분모는 바인딩 파라미터로 전달(인젝션 안전 R6). ::float로 정수나눗셈 회피.
+ *
+ * ⚠️ themeBoost(searchByVector.ts) 공식과 동기화 유지 — 한쪽 변경 시 양쪽 갱신.
+ */
 function buildThemeScore(tags: string[]): Prisma.Sql {
   if (tags.length === 0) return Prisma.sql`0`;
-  return Prisma.sql`(CASE WHEN EXISTS (
-                            SELECT 1 FROM "ProductTag" pt
-                            WHERE pt."productId" = p.id AND pt.tag = ANY(${tags})
-                          ) THEN ${THEME_WEIGHT} ELSE 0 END)`;
+  return Prisma.sql`(${THEME_WEIGHT} * (
+    SELECT count(*) FROM "ProductTag" pt
+    WHERE pt."productId" = p.id AND pt.tag = ANY(${tags})
+  )::float / ${tags.length})`;
 }
 
 type ScoredRow = { id: string; score: number };
