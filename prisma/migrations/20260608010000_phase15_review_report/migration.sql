@@ -22,7 +22,7 @@ CREATE TABLE "ReviewReport" (
 CREATE UNIQUE INDEX "ReviewReport_reviewId_reporterId_key" ON "ReviewReport"("reviewId", "reporterId");
 
 -- CreateIndex
-CREATE INDEX "ReviewReport_status_createdAt_idx" ON "ReviewReport"("status", "createdAt");
+CREATE INDEX "ReviewReport_status_createdAt_idx" ON "ReviewReport"("status", "createdAt" DESC);
 
 -- CreateIndex
 CREATE INDEX "ReviewReport_reviewId_idx" ON "ReviewReport"("reviewId");

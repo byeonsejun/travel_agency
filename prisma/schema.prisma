@@ -650,7 +650,7 @@ model ReviewReport {
   reporter User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@unique([reviewId, reporterId]) // 1인 1신고 (멱등 dedup)
-  @@index([status, createdAt]) // admin OPEN 큐 정렬
+  @@index([status, createdAt(sort: Desc)]) // admin OPEN 큐 정렬 (createdAt desc 쿼리 일치)
   @@index([reviewId])
 }
 
