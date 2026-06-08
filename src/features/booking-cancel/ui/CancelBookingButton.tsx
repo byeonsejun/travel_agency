@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { CANCEL_REASON_PRESETS } from "@/entities/booking/client";
-import type { PenaltyResult } from "@/entities/payment";
+import type { PenaltyResult } from "@/entities/penalty-policy";
 import { cancelBookingAction } from "../server/actions";
 
 type Props = {

@@ -39,6 +39,16 @@ vi.mock("@/entities/booking", async (importOriginal) => {
 vi.mock("@/shared/lib/email-job/enqueue", () => ({
   enqueueEmailJob: mocks.enqueueEmailJob,
 }));
+// refundRetry → ../refund 가 @/entities/penalty-policy(server-only DB 로더) 를 transitive import.
+// 순수부는 실제 유지, getTiersBySnapshot 만 stub 해 실제 DB 체인 진입 차단.
+// 주의: 팩토리는 hoist 되므로 top-level import 바인딩을 참조하면 TDZ. orig 에서 직접 꺼낸다.
+vi.mock("@/entities/penalty-policy", async (orig) => {
+  const actual = await orig<typeof import("@/entities/penalty-policy")>();
+  return {
+    ...actual,
+    getTiersBySnapshot: vi.fn().mockResolvedValue(actual.OVERSEAS_PENALTY_TIERS),
+  };
+});
 
 import { listDueRefundJobs, retryRefundJob } from "../refundRetry";
 

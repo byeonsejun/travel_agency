@@ -6,8 +6,9 @@ import {
   isCancelableByUser,
 } from "@/entities/booking";
 import type { BookingDetail } from "@/entities/booking";
-import { PaymentStatusBadge, computePenalty } from "@/entities/payment";
+import { PaymentStatusBadge } from "@/entities/payment";
 import type { ActiveRefundJob } from "@/entities/payment";
+import { computePenalty, getTiersBySnapshot } from "@/entities/penalty-policy";
 import { CancelBookingButton } from "@/features/booking-cancel";
 
 type Props = {
@@ -30,7 +31,7 @@ function formatDateTime(d: Date): string {
   });
 }
 
-export function BookingDetailView({ booking, activeRefundJob }: Props) {
+export async function BookingDetailView({ booking, activeRefundJob }: Props) {
   // 영수증은 가장 최근 PAID(혹은 환불 전이라도 receiptUrl이 있는) 결제에서만.
   const receipt = booking.payments.find(
     (p) => p.status === "PAID" && p.receiptUrl
@@ -49,11 +50,17 @@ export function BookingDetailView({ booking, activeRefundJob }: Props) {
   // 자가취소 미리보기: PAID 결제 + 출발일로 위약금/환불액을 RSC에서 미리 계산.
   // 실제 동결은 Server Action 실행 시점에 권위 재계산 (spec §6.1).
   const paidForPreview = booking.payments.find((p) => p.status === "PAID");
+  // 예약 스냅샷(key, version)으로 위약금 tiers 복원 (server-only DB read — RSC).
+  const tiers = await getTiersBySnapshot(
+    booking.penaltyPolicyKey,
+    booking.penaltyPolicyVersion,
+  );
   const refundPreview = paidForPreview
     ? computePenalty({
         baseAmount: paidForPreview.amount,
         departureDate: booking.departure.departureDate,
         now: new Date(),
+        tiers,
       })
     : null;
 

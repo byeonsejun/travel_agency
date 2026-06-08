@@ -676,7 +676,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `src/widgets/booking-detail/ui/BookingDetailView.tsx`
 - Test: `src/entities/payment/api/__tests__/refund.test.ts`
 
-- [ ] **Step 1: penaltyPolicy.ts 삭제 + payment barrel 갱신**
+- [x] **Step 1: penaltyPolicy.ts 삭제 + payment barrel 갱신**
 
 `rm src/entities/payment/model/penaltyPolicy.ts`. `src/entities/payment/index.ts`의 두 줄:
 ```ts
@@ -685,7 +685,7 @@ export type { PenaltyResult, PenaltyInput } from "./model/penaltyPolicy";
 ```
 → 제거(소비자는 `@/entities/penalty-policy`에서 직접 import). 기존 payment 테스트가 `../model/penaltyPolicy`를 import하면 함께 갱신.
 
-- [ ] **Step 2: refund.ts — 스냅샷 tiers 해소 후 computePenalty 호출**
+- [x] **Step 2: refund.ts — 스냅샷 tiers 해소 후 computePenalty 호출**
 
 import 교체:
 ```ts
@@ -711,7 +711,7 @@ penalty 계산부를 스냅샷 tiers 기반으로:
     : { penaltyAmount: 0, refundAmount: canceledBase };
 ```
 
-- [ ] **Step 3: BookingDetailView.tsx — 미리보기 tiers 전달**
+- [x] **Step 3: BookingDetailView.tsx — 미리보기 tiers 전달**
 
 `import { ..., computePenalty } from "@/entities/payment";` → `computePenalty`를 `@/entities/penalty-policy`에서 import. 미리보기 호출에 tiers 주입. RSC이므로 상위(`BookingDetailView` 또는 그 page loader)에서 `getTiersBySnapshot(booking.penaltyPolicyKey, booking.penaltyPolicyVersion)`로 tiers를 구해 prop으로 전달하거나 컴포넌트가 직접 await. 기존 `computePenalty({ baseAmount, departureDate, now })` 호출(약 53행)에 `tiers` 추가:
 ```ts
@@ -719,7 +719,7 @@ computePenalty({ baseAmount, departureDate, now, tiers })
 ```
 (tiers는 위 로더로 확보; 스냅샷 없으면 로더가 상수 폴백.)
 
-- [ ] **Step 4: 기존 refund 테스트 갱신 + 통과**
+- [x] **Step 4: 기존 refund 테스트 갱신 + 통과**
 
 `refund.test.ts`/`refundRetry.test.ts`에서 booking mock에 `penaltyPolicyKey/Version` 필드 추가(없으면 null), `getTiersBySnapshot` 모킹:
 ```ts
@@ -731,7 +731,7 @@ vi.mock("@/entities/penalty-policy", async (orig) => ({
 Run: `npx vitest run src/entities/payment src/widgets && npx tsc --noEmit`
 Expected: PASS, tsc clean
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A

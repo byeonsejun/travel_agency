@@ -20,7 +20,7 @@ import {
 } from "@/entities/booking";
 import { metrics, captureException } from "@/shared/lib/observability";
 import { PaymentError } from "./errors";
-import { computePenalty } from "../model/penaltyPolicy";
+import { computePenalty, getTiersBySnapshot } from "@/entities/penalty-policy";
 import { reserveRefund } from "./ledger";
 import {
   discretionaryKey,
@@ -241,6 +241,8 @@ export async function refundTraveler(input: TravelerCancelInput): Promise<void> 
       id: true,
       status: true,
       departureId: true,
+      penaltyPolicyKey: true,
+      penaltyPolicyVersion: true,
       departure: { select: { departureDate: true } },
       travelers: { select: { id: true, paxType: true, unitPrice: true, canceledAt: true } },
     },
@@ -256,8 +258,10 @@ export async function refundTraveler(input: TravelerCancelInput): Promise<void> 
   if (targetTravelers.length === 0) throw new PaymentError("NO_ACTIVE_TRAVELERS");
 
   const { canceledBase, seatsReleased } = computeCanceledBase(targetTravelers);
+  // 예약 스냅샷(key, version)으로 위약금 tiers 복원 — $transaction 밖 read (사가 진입 전).
+  const tiers = await getTiersBySnapshot(booking.penaltyPolicyKey, booking.penaltyPolicyVersion);
   const { penaltyAmount, refundAmount } = input.applyPenalty
-    ? computePenalty({ baseAmount: canceledBase, departureDate: booking.departure.departureDate, now: new Date() })
+    ? computePenalty({ baseAmount: canceledBase, departureDate: booking.departure.departureDate, now: new Date(), tiers })
     : { penaltyAmount: 0, refundAmount: canceledBase };
 
   const payment = await db.payment.findFirst({

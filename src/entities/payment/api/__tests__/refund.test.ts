@@ -47,6 +47,16 @@ vi.mock("@/shared/lib/observability", () => ({
 vi.mock("@/shared/lib/email-job/enqueue", () => ({
   enqueueEmailJob: mocks.enqueueEmailJob,
 }));
+// penalty-policy: 순수 computePenalty/OVERSEAS_PENALTY_TIERS 는 실제 유지, DB read 인
+// getTiersBySnapshot 만 stub (시스템 기본 tiers 반환 → 기존 위약금 단가 검증 불변).
+// 주의: 팩토리는 hoist 되므로 top-level import 바인딩을 참조하면 TDZ. orig 에서 직접 꺼낸다.
+vi.mock("@/entities/penalty-policy", async (orig) => {
+  const actual = await orig<typeof import("@/entities/penalty-policy")>();
+  return {
+    ...actual,
+    getTiersBySnapshot: vi.fn().mockResolvedValue(actual.OVERSEAS_PENALTY_TIERS),
+  };
+});
 
 import { refundBooking, backoff, refundTraveler } from "../refund";
 
@@ -81,6 +91,8 @@ const mockPaidBookingFull = {
   id: BOOKING_ID,
   status: "PAID" as const,
   departureId: "dep1",
+  penaltyPolicyKey: null,
+  penaltyPolicyVersion: null,
   departure: { departureDate: DEPARTURE_DATE_FAR },
   travelers: [
     { id: TRAVELER_ID_1, paxType: "ADULT" as const, unitPrice: 100_000, canceledAt: null },
@@ -273,6 +285,8 @@ describe("refundBooking", () => {
         id: BOOKING_ID,
         status: "RECEIVED",
         departureId: "dep1",
+        penaltyPolicyKey: null,
+        penaltyPolicyVersion: null,
         departure: { departureDate: DEPARTURE_DATE_FAR },
         travelers: [
           { id: TRAVELER_ID_1, paxType: "ADULT", unitPrice: 100_000, canceledAt: null },
@@ -361,6 +375,8 @@ describe("refundBooking — 부분 환불(위약금)", () => {
         id: BOOKING_ID,
         status: "PAID" as const,
         departureId: "dep1",
+        penaltyPolicyKey: null,
+        penaltyPolicyVersion: null,
         departure: { departureDate },
         travelers: [
           { id: TRAVELER_ID_1, paxType: "ADULT", unitPrice: paymentAmount, canceledAt: null },
@@ -418,6 +434,8 @@ describe("refundBooking — 부분 환불(위약금)", () => {
         id: BOOKING_ID,
         status: "PAID" as const,
         departureId: "dep1",
+        penaltyPolicyKey: null,
+        penaltyPolicyVersion: null,
         departure: { departureDate },
         travelers: [
           { id: TRAVELER_ID_1, paxType: "ADULT", unitPrice: paymentAmount, canceledAt: null },
@@ -471,6 +489,8 @@ describe("refundBooking — 부분 환불(위약금)", () => {
         id: BOOKING_ID,
         status: "PAID" as const,
         departureId: "dep1",
+        penaltyPolicyKey: null,
+        penaltyPolicyVersion: null,
         departure: { departureDate },
         travelers: [
           { id: TRAVELER_ID_1, paxType: "ADULT", unitPrice: paymentAmount, canceledAt: null },
@@ -590,6 +610,8 @@ describe("runRefundSaga — PARTIAL_REFUND_COMPLETED enqueue", () => {
       id: DISC_BOOKING_ID,
       status: "PAID",
       departureId: "dep_trav_1",
+      penaltyPolicyKey: null,
+      penaltyPolicyVersion: null,
       departure: { departureDate: futureDateUtcMidnight(40) },
       travelers: [
         { id: "traveler_A", paxType: "ADULT", unitPrice: 100_000, canceledAt: null },
@@ -635,6 +657,8 @@ describe("runRefundSaga — PARTIAL_REFUND_COMPLETED enqueue", () => {
         id: DISC_BOOKING_ID,
         status: "PAID",
         departureId: "dep_fc_1",
+        penaltyPolicyKey: null,
+        penaltyPolicyVersion: null,
         departure: { departureDate: futureDateUtcMidnight(40) },
         travelers: [
           { id: "traveler_A", paxType: "ADULT", unitPrice: 100_000, canceledAt: null },
@@ -687,6 +711,7 @@ describe("refundTraveler — refundAmount===0 Toss-skip 가드", () => {
     // unitPrice=0인 여행자 → canceledBase=0 → refundAmount=0
     mocks.db.booking.findUnique.mockResolvedValue({
       id: "bk0", status: "PAID", departureId: "dp0",
+      penaltyPolicyKey: null, penaltyPolicyVersion: null,
       departure: { departureDate: new Date("2026-12-25") },
       travelers: [{ id: "t0", paxType: "ADULT", unitPrice: 0, canceledAt: null }],
     });
