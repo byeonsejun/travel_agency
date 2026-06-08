@@ -47,7 +47,7 @@
 - Modify: `prisma/schema.prisma`
 - Create: `prisma/migrations/20260608010000_phase15_review_report/migration.sql`
 
-- [ ] **Step 1: schema.prisma 에 enum + 모델 추가**
+- [x] **Step 1: schema.prisma 에 enum + 모델 추가**
 
 `prisma/schema.prisma` 의 `enum ReviewStatus { ... }` 블록 바로 아래에 추가:
 
@@ -87,7 +87,7 @@ model ReviewReport {
 }
 ```
 
-- [ ] **Step 2: 역관계 추가**
+- [x] **Step 2: 역관계 추가**
 
 `model Review { ... }` 의 `photos ReviewPhoto[]` 줄 아래에 추가:
 
@@ -101,12 +101,12 @@ model ReviewReport {
   reviewReports ReviewReport[]
 ```
 
-- [ ] **Step 3: schema 포맷 검증**
+- [x] **Step 3: schema 포맷 검증**
 
 Run: `npx prisma format`
 Expected: 에러 없이 포맷 완료. `ReviewReport` 모델·enum 정렬됨.
 
-- [ ] **Step 4: 수동 migration.sql 작성**
+- [x] **Step 4: 수동 migration.sql 작성**
 
 Create `prisma/migrations/20260608010000_phase15_review_report/migration.sql`:
 
@@ -147,22 +147,22 @@ ALTER TABLE "ReviewReport" ADD CONSTRAINT "ReviewReport_reviewId_fkey" FOREIGN K
 ALTER TABLE "ReviewReport" ADD CONSTRAINT "ReviewReport_reporterId_fkey" FOREIGN KEY ("reporterId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ```
 
-- [ ] **Step 5: dev DB 에 적용 (db push) + 클라이언트 생성**
+- [x] **Step 5: dev DB 에 적용 (db push) + 클라이언트 생성**
 
 Run: `npx prisma db push && npx prisma generate`
 Expected: `ReviewReport` 테이블 + enum 생성. `Your database is now in sync`. Prisma Client 재생성으로 `ReviewReport`/`ReportReason`/`ReportStatus` 타입 사용 가능.
 
-- [ ] **Step 6: 마이그레이션 히스토리 정합 (resolve)**
+- [x] **Step 6: 마이그레이션 히스토리 정합 (resolve)**
 
 Run: `npx prisma migrate resolve --applied 20260608010000_phase15_review_report`
 Expected: `Migration ... marked as applied`. (shadow DB 우회 — 실행 없이 히스토리만 기록)
 
-- [ ] **Step 7: 타입체크로 클라이언트 생성 확인**
+- [x] **Step 7: 타입체크로 클라이언트 생성 확인**
 
 Run: `npx tsc --noEmit`
 Expected: PASS (신규 모델 참조처가 아직 없으므로 기존 코드 기준 통과).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add prisma/schema.prisma prisma/migrations/20260608010000_phase15_review_report
