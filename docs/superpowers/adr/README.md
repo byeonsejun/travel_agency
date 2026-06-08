@@ -91,6 +91,7 @@
 | 0041  | [여권번호 PII AES-256-GCM 암호화 + `enc:v1:` envelope lazy 마이그레이션 (Phase 12)](./0041-passport-pii-encryption.md) | Accepted | 2026-06-06   |
 | 0042  | [부분 환불 완료 메일 — settle Tx 아웃박스 + refundJobId 멱등 식별 + FULL_CANCEL 중복 차단 (Phase 13)](./0042-partial-refund-email-outbox.md) | Accepted | 2026-06-07   |
 | 0043  | [FULL_CANCEL 결제 terminal 마감 + 위약금 정책 reference-snapshot (Phase 14, ADR-0031 #4 부분 supersede)](./0043-full-cancel-terminal-state-and-penalty-snapshot.md) | Accepted | 2026-06-08   |
+| 0044  | [리뷰 신고를 `ReviewStatus.REPORTED` flip 대신 `ReviewReport` 이벤트 적재로 구현 (Phase 15)](./0044-review-report-queue-vs-status-flip.md) | Accepted | 2026-06-09   |
 
 ## 향후 후보 (작성 대기)
 
