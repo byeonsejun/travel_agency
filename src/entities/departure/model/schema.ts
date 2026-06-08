@@ -9,6 +9,13 @@ export const departureSchema = z
     priceInfant: z.number().int().min(0).default(0),
     capacity: z.number().int().min(1, "정원을 입력하세요"),
     minPax: z.number().int().min(1, "최소 출발 인원을 입력하세요"),
+    // 위약금 정책 오버라이드(Phase 14). "" / 미지정은 null(상품 정책 상속)로 정규화.
+    penaltyPolicyKey: z
+      .preprocess(
+        (v) => (v === "" || v == null ? null : v),
+        z.string().min(1).nullable(),
+      )
+      .optional(),
   })
   .refine((data) => data.returnDate > data.departureDate, {
     message: "귀국일은 출발일 이후여야 합니다",

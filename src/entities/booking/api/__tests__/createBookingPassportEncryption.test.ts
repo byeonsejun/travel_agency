@@ -24,6 +24,8 @@ vi.mock("@/shared/lib/db", () => ({
         priceAdult: 1_000_000,
         priceChild: 700_000,
         priceInfant: 0,
+        penaltyPolicyKey: null,
+        product: { penaltyPolicyKey: null },
       }),
     },
     $transaction: vi.fn().mockImplementation((callback: (tx: typeof mocks.tx) => Promise<unknown>) =>
@@ -42,6 +44,12 @@ vi.mock("../seatLock", () => ({
 // email-job enqueue mock
 vi.mock("@/shared/lib/email-job/enqueue", () => ({
   enqueueEmailJob: vi.fn(),
+}));
+
+// penalty-policy mock (createBooking이 이제 policy 스냅샷을 조회함)
+vi.mock("@/entities/penalty-policy", () => ({
+  resolvePenaltyPolicyKey: (p: string | null, d: string | null) => d ?? p ?? "standard_overseas",
+  getActivePenaltyTiers: vi.fn().mockResolvedValue({ version: 0, tiers: [] }),
 }));
 
 import { createBooking } from "../mutations";

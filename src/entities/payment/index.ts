@@ -57,9 +57,9 @@ export type { ActiveRefundJob, RefundJobRow } from "./api/observability";
 export { enqueueRefundJob } from "./api/enqueueRefundJob";
 export type { EnqueueRefundJobArgs } from "./api/enqueueRefundJob";
 
-// ── 위약금 정책 (순수) ─────────────────────────────────────────
-export { computePenalty, OVERSEAS_PENALTY_TIERS } from "./model/penaltyPolicy";
-export type { PenaltyResult, PenaltyInput } from "./model/penaltyPolicy";
+// ── 위약금 정책: @/entities/penalty-policy 로 이전됨 (Phase 14) ──
+// computePenalty/OVERSEAS_PENALTY_TIERS 는 더 이상 payment 를 통해 노출하지 않는다.
+// 소비자는 @/entities/penalty-policy 에서 직접 import 한다 (슬라이스 디커플링).
 
 // ── 잔여 환불가능액 (순수) ─────────────────────────────────────
 export { refundableAmount } from "./model/refundable";

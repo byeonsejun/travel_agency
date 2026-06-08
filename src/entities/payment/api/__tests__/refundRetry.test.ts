@@ -39,6 +39,16 @@ vi.mock("@/entities/booking", async (importOriginal) => {
 vi.mock("@/shared/lib/email-job/enqueue", () => ({
   enqueueEmailJob: mocks.enqueueEmailJob,
 }));
+// refundRetry → ../refund 가 @/entities/penalty-policy(server-only DB 로더) 를 transitive import.
+// 순수부는 실제 유지, getTiersBySnapshot 만 stub 해 실제 DB 체인 진입 차단.
+// 주의: 팩토리는 hoist 되므로 top-level import 바인딩을 참조하면 TDZ. orig 에서 직접 꺼낸다.
+vi.mock("@/entities/penalty-policy", async (orig) => {
+  const actual = await orig<typeof import("@/entities/penalty-policy")>();
+  return {
+    ...actual,
+    getTiersBySnapshot: vi.fn().mockResolvedValue(actual.OVERSEAS_PENALTY_TIERS),
+  };
+});
 
 import { listDueRefundJobs, retryRefundJob } from "../refundRetry";
 
@@ -299,9 +309,9 @@ describe("retryRefundJob", () => {
 describe("retryRefundJob — 부분 환불 스냅샷", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ── Case A: 부분 환불 → cancelAmount=job.amount, Payment=PARTIAL_CANCELED ─
-  // refundedAmount(700_000) < paymentAmount(1_000_000) → PARTIAL_CANCELED
-  it("Case A: refundedAmount < paymentAmount이면 job.amount로 PG 취소 + Payment PARTIAL_CANCELED", async () => {
+  // ── Case A: FULL_CANCEL 부분환불(위약금) → cancelAmount=job.amount, Payment=CANCELED ─
+  // refundedAmount(700_000) < paymentAmount(1_000_000)이지만 kind FULL_CANCEL이므로 CANCELED [ADR-0031 갱신]
+  it("Case A: FULL_CANCEL이면 환불액<원금이어도 job.amount로 PG 취소 + Payment CANCELED", async () => {
     setupClaimSucceeds();
     // Payment 원금 1_000_000, 환불금 700_000, 위약금 300_000
     mockJobLoad({
@@ -324,10 +334,10 @@ describe("retryRefundJob — 부분 환불 스냅샷", () => {
       cancelReason: "test refund",
       cancelAmount: 700_000,
     });
-    // Payment 상태는 PARTIAL_CANCELED (refundedAmount < amount)
+    // Payment 상태는 CANCELED — FULL_CANCEL은 환불액<원금이어도 terminal 마감 [ADR-0031 갱신]
     expect(mocks.tx.payment.update).toHaveBeenCalledWith({
       where: { id: PAYMENT_ID },
-      data: expect.objectContaining({ status: "PARTIAL_CANCELED" }),
+      data: expect.objectContaining({ status: "CANCELED" }),
     });
     // PaymentEvent audit fields 포함 확인
     expect(mocks.tx.paymentEvent.create).toHaveBeenCalledWith({
@@ -448,5 +458,28 @@ describe("retryRefundJob — PARTIAL_REFUND_COMPLETED enqueue", () => {
 
     expect(result).toEqual({ type: "succeeded", jobId: JOB_ID });
     expect(mocks.enqueueEmailJob).not.toHaveBeenCalled();
+  });
+});
+
+// ── job.amount===0 Toss-skip 가드 테스트 ─────────────────────────────────
+describe("retryRefundJob — job.amount===0 Toss-skip 가드", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("job.amount===0이면 tossClient.cancel skip 후 SUCCEEDED settle", async () => {
+    setupClaimSucceeds();
+    // paymentStatus: "PAID" — Short-circuit 1(CANCELED/PARTIAL_CANCELED) 분기 회피
+    mockJobLoad({
+      amount: 0,
+      penaltyAmount: 100000,
+      paymentStatus: "PAID",
+      kind: "DISCRETIONARY",
+      paymentAmount: 100000,
+      refundedAmount: 100000,
+    });
+
+    const res = await retryRefundJob(JOB_ID);
+
+    expect(mocks.tossClient.cancel).not.toHaveBeenCalled();
+    expect(res).toMatchObject({ type: "succeeded" });
   });
 });

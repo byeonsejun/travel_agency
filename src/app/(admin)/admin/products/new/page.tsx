@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { ProductForm } from "@/features/admin-product";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminProductNewPage() {
+export default async function AdminProductNewPage() {
+  const policies = await getActivePenaltyPolicies();
+  const policyOptions = policies.map((p) => ({ key: p.key, name: p.name }));
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -16,7 +20,7 @@ export default function AdminProductNewPage() {
         <h1 className="text-2xl font-bold text-gray-900">상품 등록</h1>
       </div>
 
-      <ProductForm mode="create" />
+      <ProductForm mode="create" policies={policyOptions} />
     </div>
   );
 }

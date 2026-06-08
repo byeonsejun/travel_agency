@@ -61,6 +61,26 @@ describe("createDeparture", () => {
       DepartureDateConflictError,
     );
   });
+
+  it("penaltyPolicyKey 오버라이드 → create data 에 반영 (Phase 14)", async () => {
+    mocks.db.departure.create.mockResolvedValue({ id: "dep_1" });
+    await createDeparture("prod_1", { ...baseForm, penaltyPolicyKey: "peak_season" });
+    expect(mocks.db.departure.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ penaltyPolicyKey: "peak_season" }),
+      }),
+    );
+  });
+
+  it("penaltyPolicyKey 미지정 → null(상품 정책 상속)", async () => {
+    mocks.db.departure.create.mockResolvedValue({ id: "dep_1" });
+    await createDeparture("prod_1", baseForm);
+    expect(mocks.db.departure.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ penaltyPolicyKey: null }),
+      }),
+    );
+  });
 });
 
 describe("updateDeparture — capacity 축소 CAS (D3)", () => {
@@ -81,6 +101,16 @@ describe("updateDeparture — capacity 축소 CAS (D3)", () => {
     await expect(
       updateDeparture("dep_1", { ...baseForm, capacity: 2 }),
     ).rejects.toBeInstanceOf(CapacityBelowBookedError);
+  });
+
+  it("penaltyPolicyKey 오버라이드 → updateMany data 에 반영 (Phase 14)", async () => {
+    mocks.db.departure.updateMany.mockResolvedValue({ count: 1 });
+    await updateDeparture("dep_1", { ...baseForm, penaltyPolicyKey: "peak_season" });
+    expect(mocks.db.departure.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ penaltyPolicyKey: "peak_season" }),
+      }),
+    );
   });
 
   it("날짜 충돌(P2002) → DepartureDateConflictError", async () => {

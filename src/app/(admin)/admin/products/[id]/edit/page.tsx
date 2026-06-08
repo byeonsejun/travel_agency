@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAdminProductById } from "@/entities/product";
 import type { AdminEmbeddingInfo, AdminLatestJobInfo } from "@/entities/product";
+import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { ProductForm } from "@/features/admin-product";
 import type { EmbeddingJobStatus } from "@prisma/client";
 
@@ -146,11 +147,15 @@ type PageProps = {
 
 export default async function AdminProductEditPage({ params }: PageProps) {
   const { id } = await params;
-  const result = await getAdminProductById(id);
+  const [result, policies] = await Promise.all([
+    getAdminProductById(id),
+    getActivePenaltyPolicies(),
+  ]);
 
   if (!result) notFound();
 
   const { product, embedding, latestJob } = result;
+  const policyOptions = policies.map((p) => ({ key: p.key, name: p.name }));
 
   return (
     <div className="space-y-6">
@@ -178,7 +183,7 @@ export default async function AdminProductEditPage({ params }: PageProps) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
         {/* 좌: 편집 폼 */}
         <div>
-          <ProductForm mode="edit" initial={product} />
+          <ProductForm mode="edit" initial={product} policies={policyOptions} />
         </div>
 
         {/* 우: 임베딩 상태 사이드바 */}

@@ -14,6 +14,7 @@ import {
   ForceCancelButton,
   forceCancelDepartureAction,
 } from "@/features/admin-departure-cancel";
+import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +42,13 @@ const ACTION_LABEL: Record<string, string> = {
 export default async function EditDeparturePage({ params, searchParams }: PageProps) {
   const { id: productId, depId } = await params;
   const { error } = await searchParams;
-  const dep = await getAdminDepartureById(depId);
+  const [dep, policies] = await Promise.all([
+    getAdminDepartureById(depId),
+    getActivePenaltyPolicies(),
+  ]);
   if (!dep) notFound();
 
+  const policyOptions = policies.map((p) => ({ key: p.key, name: p.name }));
   const action = updateDepartureAction.bind(null, depId, productId);
   const nextStatuses = allowedNextStatuses(dep.status);
 
@@ -70,7 +75,12 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <DepartureForm action={action} initial={dep} bookedSeats={dep.bookedSeats} />
+          <DepartureForm
+            action={action}
+            initial={dep}
+            bookedSeats={dep.bookedSeats}
+            policies={policyOptions}
+          />
         </div>
 
         {/* 상태 전이 패널 — <form action> progressive enhancement */}

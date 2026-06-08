@@ -11,6 +11,7 @@ import { emailJobForTransition } from "../model/emailPolicy";
 import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
 import { assignPaxTypes } from "../model/paxAssignment";
 import { encrypt } from "@/shared/lib/crypto";
+import { resolvePenaltyPolicyKey, getActivePenaltyTiers } from "@/entities/penalty-policy";
 
 export async function createBooking(input: CreateBookingInput): Promise<Booking> {
   // R3-1: 입력 검증
@@ -23,6 +24,8 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
       priceAdult: true,
       priceChild: true,
       priceInfant: true,
+      penaltyPolicyKey: true,
+      product: { select: { penaltyPolicyKey: true } },
     },
   });
   const totalPrice = computeTotalPrice({
@@ -36,6 +39,13 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
   if (totalPrice !== data.expectedTotalPrice) {
     throw new PriceMismatchError(totalPrice, data.expectedTotalPrice);
   }
+
+  // 위약금 정책 스냅샷 해소 — Tx 밖에서 조회(외부 IO를 Tx 내부에 포함시키지 않음)
+  const policyKey = resolvePenaltyPolicyKey(
+    departure.product.penaltyPolicyKey ?? null,
+    departure.penaltyPolicyKey ?? null,
+  );
+  const { version: policyVersion } = await getActivePenaltyTiers(policyKey);
 
   // pax 배정 — index를 key로 assignPaxTypes 호출 후 역매핑
   const assignments = assignPaxTypes({
@@ -65,6 +75,8 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
         totalPrice,
         status: "RECEIVED",
         notes: data.notes,
+        penaltyPolicyKey: policyKey,
+        penaltyPolicyVersion: policyVersion,
         travelers: {
           create: data.travelers.map((t, i) => ({
             role: t.role ?? "TRAVELER",
@@ -81,10 +93,10 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
           })),
         },
         terms: {
-          create: data.termKeys.map((key) => ({
-            termKey: key,
-            termVersion: "1",
-          })),
+          create: [
+            ...data.termKeys.map((key) => ({ termKey: key, termVersion: "1" })),
+            { termKey: policyKey, termVersion: String(policyVersion) },
+          ],
         },
       },
     });

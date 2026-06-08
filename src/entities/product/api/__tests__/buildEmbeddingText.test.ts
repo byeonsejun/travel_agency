@@ -16,6 +16,7 @@ const BASE_PRODUCT: ProductDetail = {
   durationDays: 4,
   heroImageUrl: "https://example.com/hero.jpg",
   basePriceAdult: 890000,
+  penaltyPolicyKey: null,
   aiSummary: null,
   status: "PUBLISHED",
   createdAt: new Date("2024-01-01"),

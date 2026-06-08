@@ -5,6 +5,9 @@ import type { AdminDepartureRow } from "@/entities/departure";
 import type { DepartureActionState } from "../server/actions";
 import type { DepartureFormInput } from "../model/schemas";
 
+// 위약금 정책 드롭다운 옵션 (page에서 getActivePenaltyPolicies로 주입).
+export type PenaltyPolicyOption = { key: string; name: string };
+
 type Props = {
   action: (
     prev: DepartureActionState | null,
@@ -13,6 +16,8 @@ type Props = {
   // edit 모드에서 가격 경고 배너 노출용. create 모드는 0.
   bookedSeats?: number;
   initial?: AdminDepartureRow | null;
+  // 위약금 정책 오버라이드 옵션. 빈 배열이면 "상품 정책 상속"만 노출.
+  policies?: PenaltyPolicyOption[];
 };
 
 function toDateInput(d: Date | string | undefined): string {
@@ -21,7 +26,12 @@ function toDateInput(d: Date | string | undefined): string {
   return date.toISOString().slice(0, 10); // yyyy-mm-dd
 }
 
-export function DepartureForm({ action, bookedSeats = 0, initial = null }: Props) {
+export function DepartureForm({
+  action,
+  bookedSeats = 0,
+  initial = null,
+  policies = [],
+}: Props) {
   const [state, formAction, isPending] = useActionState(action, null);
   const [capacity, setCapacity] = useState(initial?.capacity ?? 1);
 
@@ -36,6 +46,7 @@ export function DepartureForm({ action, bookedSeats = 0, initial = null }: Props
       priceInfant: Number(fd.get("priceInfant")),
       capacity: Number(fd.get("capacity")),
       minPax: Number(fd.get("minPax")),
+      penaltyPolicyKey: (fd.get("penaltyPolicyKey") as string) || null,
     };
     startTransition(() => formAction(input));
   }
@@ -77,6 +88,26 @@ export function DepartureForm({ action, bookedSeats = 0, initial = null }: Props
         <Field label="최소 출발 인원" name="minPax" type="number" min={1}
           defaultValue={initial?.minPax ?? 1} error={fieldErr("minPax")} />
       </div>
+
+      {/* 위약금 정책 오버라이드 (Phase 14) */}
+      <label className="block text-sm">
+        <span className="mb-1 block font-medium text-gray-700">위약금 정책</span>
+        <select
+          name="penaltyPolicyKey"
+          defaultValue={initial?.penaltyPolicyKey ?? ""}
+          className="block w-full rounded-lg border border-gray-300 px-3 py-2"
+        >
+          <option value="">상품 정책 상속(기본)</option>
+          {policies.map((p) => (
+            <option key={p.key} value={p.key}>
+              {p.name} ({p.key})
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-xs text-gray-400">
+          비워두면 상품에 지정된 정책(없으면 시스템 표준약관)을 따릅니다.
+        </span>
+      </label>
 
       {initial && capacity < initial.bookedSeats && (
         <p className="text-sm text-red-600">

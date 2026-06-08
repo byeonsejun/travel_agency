@@ -288,6 +288,33 @@ describe("createProductAction", () => {
 
     expect(result).toMatchObject({ type: "success", productId: PRODUCT_ID });
   });
+
+  it("penaltyPolicyKey 지정 → product.create data 에 반영 (Phase 14)", async () => {
+    mocks.auth.mockResolvedValue(adminSession);
+
+    await createProductAction(null, {
+      ...validProductInput,
+      penaltyPolicyKey: "peak_season",
+    });
+
+    expect(mocks.db.product.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ penaltyPolicyKey: "peak_season" }),
+      }),
+    );
+  });
+
+  it("penaltyPolicyKey 미지정 → null 로 저장(시스템 기본 폴백)", async () => {
+    mocks.auth.mockResolvedValue(adminSession);
+
+    await createProductAction(null, validProductInput);
+
+    expect(mocks.db.product.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ penaltyPolicyKey: null }),
+      }),
+    );
+  });
 });
 
 // ══════════════════════════════════════════════════════════════════
@@ -383,6 +410,22 @@ describe("updateProductAction", () => {
     if (result.type === "error") {
       expect(result.message).toMatch(/찾을 수 없|not found/i);
     }
+  });
+
+  it("penaltyPolicyKey 지정 → product.update data 에 반영 (Phase 14)", async () => {
+    mocks.auth.mockResolvedValue(adminSession);
+
+    await updateProductAction(null, {
+      ...validUpdateInput,
+      penaltyPolicyKey: "peak_season",
+    });
+
+    expect(mocks.db.product.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: PRODUCT_ID },
+        data: expect.objectContaining({ penaltyPolicyKey: "peak_season" }),
+      }),
+    );
   });
 });
 

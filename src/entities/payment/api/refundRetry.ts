@@ -162,73 +162,81 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
   // ── Phase 2: 외부 PG 취소 (Tx 바깥, ADR-0003) ─────────────────────
   // cancelAmount = job.amount (enqueue 시점 동결 환불금) — payment.amount(원금)가 아님.
   // 부분 환불(위약금 존재)의 경우 원금보다 작은 금액만 취소해야 한다.
-  try {
-    await tossClient.cancel({
-      paymentKey: job.payment.tossPaymentKey,
-      cancelReason: job.reason ?? "환불 처리 재시도",
-      cancelAmount: job.amount,
-    });
-  } catch (cancelErr) {
-    const newAttempts = job.attempts + 1;
-    const lastError = String(cancelErr);
-
-    // 영구 실패: ledger 예약 해제 후 FAILED 종료
-    if (isPermanentFailure(newAttempts)) {
-      await db.$transaction(async (tx) => {
-        await tx.refundJob.update({
-          where: { id: jobId },
-          data: { status: "FAILED", attempts: { increment: 1 }, lastError },
-        });
-        await releaseRefund(tx, { paymentId: job.paymentId, amount: job.amount });
+  // job.amount===0(100% 위약금)이면 Toss cancel은 거부되므로 skip → 곧장 Phase 3 settle.
+  // 머니무브만 없고 settle·booking 전이는 정상 수행한다.
+  if (job.amount > 0) {
+    try {
+      await tossClient.cancel({
+        paymentKey: job.payment.tossPaymentKey,
+        cancelReason: job.reason ?? "환불 처리 재시도",
+        cancelAmount: job.amount,
       });
-      metrics.incr("payment.refund.retry.permanent_failed");
+    } catch (cancelErr) {
+      const newAttempts = job.attempts + 1;
+      const lastError = String(cancelErr);
+
+      // 영구 실패: ledger 예약 해제 후 FAILED 종료
+      if (isPermanentFailure(newAttempts)) {
+        await db.$transaction(async (tx) => {
+          await tx.refundJob.update({
+            where: { id: jobId },
+            data: { status: "FAILED", attempts: { increment: 1 }, lastError },
+          });
+          await releaseRefund(tx, { paymentId: job.paymentId, amount: job.amount });
+        });
+        metrics.incr("payment.refund.retry.permanent_failed");
+        captureException(cancelErr, {
+          bookingId: job.bookingId,
+          paymentId: job.paymentId,
+          extras: { jobId, permanent: true },
+        });
+        return { type: "failed", jobId, reason: "permanent_failure" };
+      }
+
+      // 일시 실패: 재시도 스케줄링
+      const nextRunAt = backoff(newAttempts);
+      await db.refundJob.update({
+        where: { id: jobId },
+        data: {
+          status: "PENDING",
+          attempts: { increment: 1 },
+          nextRunAt,
+          lastError,
+        },
+      });
+      logger.warn("payment.refund.retry.pg_failed", {
+        jobId,
+        attempts: newAttempts,
+        nextRunAt: nextRunAt.toISOString(),
+      });
+      metrics.incr("payment.refund.retry.deferred");
       captureException(cancelErr, {
         bookingId: job.bookingId,
         paymentId: job.paymentId,
-        extras: { jobId, permanent: true },
+        extras: { jobId, retry: true },
       });
-      return { type: "failed", jobId, reason: "permanent_failure" };
-    }
-
-    // 일시 실패: 재시도 스케줄링
-    const nextRunAt = backoff(newAttempts);
-    await db.refundJob.update({
-      where: { id: jobId },
-      data: {
-        status: "PENDING",
-        attempts: { increment: 1 },
+      return {
+        type: "deferred",
+        jobId,
+        attempts: newAttempts,
         nextRunAt,
         lastError,
-      },
-    });
-    logger.warn("payment.refund.retry.pg_failed", {
-      jobId,
-      attempts: newAttempts,
-      nextRunAt: nextRunAt.toISOString(),
-    });
-    metrics.incr("payment.refund.retry.deferred");
-    captureException(cancelErr, {
-      bookingId: job.bookingId,
-      paymentId: job.paymentId,
-      extras: { jobId, retry: true },
-    });
-    return {
-      type: "deferred",
-      jobId,
-      attempts: newAttempts,
-      nextRunAt,
-      lastError,
-    };
+      };
+    }
+  } else {
+    metrics.incr("payment.refund.retry.zero_amount_skip");
   }
 
   // ── Phase 3: Payment 상태 갱신 + RefundJob SUCCEEDED + PaymentEvent ─
-  // refundedAmount >= amount면 전액 환불 → CANCELED, 아니면 부분 환불 → PARTIAL_CANCELED.
+  // FULL_CANCEL은 booking이 terminal로 가므로 환불액과 무관하게 CANCELED로 마감(100% 위약금 포함). [ADR-0031 갱신]
+  // 그 외엔 refundedAmount >= amount면 전액 환불 → CANCELED, 아니면 부분 환불 → PARTIAL_CANCELED.
   // refundedAmount는 Phase 1 reserveRefund에서 이미 increment된 동결 스냅샷 — 재계산 금지.
   await db.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: job.paymentId },
       data: {
         status:
+          job.kind === "FULL_CANCEL" ||
           job.payment.refundedAmount >= job.payment.amount
             ? "CANCELED"
             : "PARTIAL_CANCELED",

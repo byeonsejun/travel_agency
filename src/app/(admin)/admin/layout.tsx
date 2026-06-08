@@ -55,6 +55,12 @@ export default async function AdminLayout({
                 상품 관리
               </Link>
               <Link
+                href="/admin/penalty-policies"
+                className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
+              >
+                위약금 정책
+              </Link>
+              <Link
                 href="/admin/embedding-jobs"
                 className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100"
               >

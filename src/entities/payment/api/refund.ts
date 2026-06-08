@@ -20,7 +20,7 @@ import {
 } from "@/entities/booking";
 import { metrics, captureException } from "@/shared/lib/observability";
 import { PaymentError } from "./errors";
-import { computePenalty } from "../model/penaltyPolicy";
+import { computePenalty, getTiersBySnapshot } from "@/entities/penalty-policy";
 import { reserveRefund } from "./ledger";
 import {
   discretionaryKey,
@@ -89,35 +89,47 @@ async function runRefundSaga(
   if (!created) return; // 멱등 종료
 
   // Phase 2: 외부 PG 취소 (Tx 밖 — ADR-0003)
-  try {
-    await tossClient.cancel({
-      paymentKey: core.tossPaymentKey,
-      cancelReason: core.reason ?? "환불 요청",
-      cancelAmount: core.refundAmount,
-      idempotencyKey: created.id,
-    });
-  } catch (err) {
-    await db.refundJob.update({
-      where: { id: created.id },
-      data: {
-        status: "PENDING",
-        attempts: { increment: 1 },
-        nextRunAt: backoff(created.attempts),
-        lastError: String(err),
-      },
-    });
-    metrics.incr("payment.refund.deferred");
-    captureException(err, { bookingId: core.bookingId });
-    throw new PaymentError("REFUND_DEFERRED", { cause: String(err) });
+  // 100% 위약금 등으로 실환불액이 0이면 Toss cancel(cancelAmount:0)은 거부되므로 skip.
+  // 머니무브만 없고 settle(Phase 3)·booking 전이(onSettled)는 정상 수행한다.
+  if (core.refundAmount > 0) {
+    try {
+      await tossClient.cancel({
+        paymentKey: core.tossPaymentKey,
+        cancelReason: core.reason ?? "환불 요청",
+        cancelAmount: core.refundAmount,
+        idempotencyKey: created.id,
+      });
+    } catch (err) {
+      await db.refundJob.update({
+        where: { id: created.id },
+        data: {
+          status: "PENDING",
+          attempts: { increment: 1 },
+          nextRunAt: backoff(created.attempts),
+          lastError: String(err),
+        },
+      });
+      metrics.incr("payment.refund.deferred");
+      captureException(err, { bookingId: core.bookingId });
+      throw new PaymentError("REFUND_DEFERRED", { cause: String(err) });
+    }
+  } else {
+    metrics.incr("payment.refund.zero_amount_skip");
   }
 
   // Phase 3: 정산 (DB Tx)
   const newRefundedAmount = core.prevRefundedAmount + core.refundAmount;
+  // FULL_CANCEL은 booking이 terminal(CANCELED_BY_*)로 가므로, 환불액과 무관하게 결제도
+  // CANCELED로 마감한다 — 100% 위약금(0원 환불)·부분위약금 전체취소 모두 포함. [ADR-0031 갱신]
+  // 진짜 부분환불(DISCRETIONARY/TRAVELER_CANCEL)만 refundedAmount<amount에서 PARTIAL_CANCELED 유지.
   await db.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: core.paymentId },
       data: {
-        status: newRefundedAmount >= core.amount ? "CANCELED" : "PARTIAL_CANCELED",
+        status:
+          core.kind === "FULL_CANCEL" || newRefundedAmount >= core.amount
+            ? "CANCELED"
+            : "PARTIAL_CANCELED",
         canceledAt: new Date(),
       },
     });
@@ -235,6 +247,8 @@ export async function refundTraveler(input: TravelerCancelInput): Promise<void> 
       id: true,
       status: true,
       departureId: true,
+      penaltyPolicyKey: true,
+      penaltyPolicyVersion: true,
       departure: { select: { departureDate: true } },
       travelers: { select: { id: true, paxType: true, unitPrice: true, canceledAt: true } },
     },
@@ -250,8 +264,10 @@ export async function refundTraveler(input: TravelerCancelInput): Promise<void> 
   if (targetTravelers.length === 0) throw new PaymentError("NO_ACTIVE_TRAVELERS");
 
   const { canceledBase, seatsReleased } = computeCanceledBase(targetTravelers);
+  // 예약 스냅샷(key, version)으로 위약금 tiers 복원 — $transaction 밖 read (사가 진입 전).
+  const tiers = await getTiersBySnapshot(booking.penaltyPolicyKey, booking.penaltyPolicyVersion);
   const { penaltyAmount, refundAmount } = input.applyPenalty
-    ? computePenalty({ baseAmount: canceledBase, departureDate: booking.departure.departureDate, now: new Date() })
+    ? computePenalty({ baseAmount: canceledBase, departureDate: booking.departure.departureDate, now: new Date(), tiers })
     : { penaltyAmount: 0, refundAmount: canceledBase };
 
   const payment = await db.payment.findFirst({
