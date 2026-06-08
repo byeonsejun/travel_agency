@@ -1,4 +1,4 @@
-import type { ReviewStatus } from "@prisma/client";
+import { Prisma, type ReviewStatus, type ReportReason } from "@prisma/client";
 
 import { db } from "@/shared/lib/db";
 
@@ -25,4 +25,40 @@ export async function setReviewStatus(
     data: { status: next },
   });
   return { productId: current.productId };
+}
+
+// 사용자 신고 생성. 멱등 — 같은 (review, reporter) 재신고는 P2002 를 duplicate 로
+// 흡수(에러 아님). 본인 리뷰는 self 로 차단. 돈·좌석 아니므로 TOCTOU 비크리티컬.
+export async function createReviewReport(input: {
+  reviewId: string;
+  reporterId: string;
+  reason: ReportReason;
+  note?: string;
+}): Promise<"created" | "duplicate" | "self" | "not_found"> {
+  const review = await db.review.findUnique({
+    where: { id: input.reviewId },
+    select: { userId: true },
+  });
+  if (!review) return "not_found";
+  if (review.userId === input.reporterId) return "self";
+
+  try {
+    await db.reviewReport.create({
+      data: {
+        reviewId: input.reviewId,
+        reporterId: input.reporterId,
+        reason: input.reason,
+        note: input.note ?? null,
+      },
+    });
+    return "created";
+  } catch (e) {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2002"
+    ) {
+      return "duplicate";
+    }
+    throw e;
+  }
 }
