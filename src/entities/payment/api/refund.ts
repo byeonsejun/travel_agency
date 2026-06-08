@@ -119,11 +119,17 @@ async function runRefundSaga(
 
   // Phase 3: 정산 (DB Tx)
   const newRefundedAmount = core.prevRefundedAmount + core.refundAmount;
+  // FULL_CANCEL은 booking이 terminal(CANCELED_BY_*)로 가므로, 환불액과 무관하게 결제도
+  // CANCELED로 마감한다 — 100% 위약금(0원 환불)·부분위약금 전체취소 모두 포함. [ADR-0031 갱신]
+  // 진짜 부분환불(DISCRETIONARY/TRAVELER_CANCEL)만 refundedAmount<amount에서 PARTIAL_CANCELED 유지.
   await db.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: core.paymentId },
       data: {
-        status: newRefundedAmount >= core.amount ? "CANCELED" : "PARTIAL_CANCELED",
+        status:
+          core.kind === "FULL_CANCEL" || newRefundedAmount >= core.amount
+            ? "CANCELED"
+            : "PARTIAL_CANCELED",
         canceledAt: new Date(),
       },
     });

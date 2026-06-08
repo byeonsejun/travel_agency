@@ -802,6 +802,17 @@ git commit -m "feat(booking): snapshot active penalty policy at booking creation
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
+### Task 3.5 (추가): FULL_CANCEL → Payment CANCELED 상태 전이 픽스 (Task 1 보류분)
+
+사용자 지시로 추가. 100% 위약금(`refundAmount===0`) 및 부분위약금 전체취소 시 결제가 `PARTIAL_CANCELED`로 잘못 남던 문제를, `kind === "FULL_CANCEL"`이면 환불액과 무관하게 `CANCELED`로 마감하도록 양 사가 Phase 3에 게이트 추가. 진짜 부분환불(DISCRETIONARY/TRAVELER_CANCEL)은 PARTIAL_CANCELED 유지. ADR-0031의 full-cancel 규칙을 갱신(supersede).
+
+- [x] 신규 테스트 RED→GREEN: 100% 위약금 전체취소 → Toss skip(Task-1) + Payment CANCELED(Task-3.5) 결합 검증
+- [x] `refund.ts` `runRefundSaga` Phase 3: `core.kind === "FULL_CANCEL" || newRefundedAmount >= core.amount` 게이트
+- [x] `refundRetry.ts` `retryRefundJob` Phase 3: `job.kind === "FULL_CANCEL" || refundedAmount >= amount` 게이트
+- [x] 기존 Case A 테스트 2건(FULL_CANCEL+위약금) PARTIAL_CANCELED → CANCELED 갱신(의도적 행위 변경)
+- [x] 이메일 경로(`getRefundCompletedEmailData`) 영향 없음 확인(status `in` 필터 + 금액은 RefundJob에서 read)
+- [x] 전체 회귀 1014 tests green, tsc clean
+
 ---
 
 ## Task 4: Admin CMS (정책 생성 + 상품/출발일 매핑)

@@ -228,13 +228,15 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
   }
 
   // ── Phase 3: Payment 상태 갱신 + RefundJob SUCCEEDED + PaymentEvent ─
-  // refundedAmount >= amount면 전액 환불 → CANCELED, 아니면 부분 환불 → PARTIAL_CANCELED.
+  // FULL_CANCEL은 booking이 terminal로 가므로 환불액과 무관하게 CANCELED로 마감(100% 위약금 포함). [ADR-0031 갱신]
+  // 그 외엔 refundedAmount >= amount면 전액 환불 → CANCELED, 아니면 부분 환불 → PARTIAL_CANCELED.
   // refundedAmount는 Phase 1 reserveRefund에서 이미 increment된 동결 스냅샷 — 재계산 금지.
   await db.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: job.paymentId },
       data: {
         status:
+          job.kind === "FULL_CANCEL" ||
           job.payment.refundedAmount >= job.payment.amount
             ? "CANCELED"
             : "PARTIAL_CANCELED",
