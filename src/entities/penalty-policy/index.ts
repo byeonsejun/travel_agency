@@ -7,3 +7,7 @@ export type { PenaltyTier, PenaltyInput, PenaltyResult } from "./model/tiers";
 
 // ── 서버 전용 조회 로더 (DB) ──
 export { getActivePenaltyTiers, getTiersBySnapshot, getActivePenaltyPolicies } from "./api/queries";
+
+// ── 서버 전용 mutation (DB) ──
+export { createPenaltyPolicyVersion } from "./api/mutations";
+export type { CreatePenaltyPolicyVersionInput } from "./api/mutations";
