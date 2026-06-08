@@ -9,11 +9,12 @@ type Props = {
   productId: string;
   initialItems: ReviewListItem[];
   initialCursor: string | null;
+  isAuthenticated: boolean;
 };
 
 // 첫 페이지(10건)는 PDP(RSC)가 prerender 로 전달 → SEO/초기 페인트 보존.
 // "더보기"만 client 에서 server action 으로 추가 로드·누적.
-export function ReviewFeed({ productId, initialItems, initialCursor }: Props) {
+export function ReviewFeed({ productId, initialItems, initialCursor, isAuthenticated }: Props) {
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [isPending, startTransition] = useTransition();
@@ -33,7 +34,7 @@ export function ReviewFeed({ productId, initialItems, initialCursor }: Props) {
     <div className="space-y-4">
       <ul className="space-y-4">
         {items.map((r) => (
-          <ReviewCard key={r.id} review={r} />
+          <ReviewCard key={r.id} review={r} isAuthenticated={isAuthenticated} />
         ))}
       </ul>
       {cursor && (
