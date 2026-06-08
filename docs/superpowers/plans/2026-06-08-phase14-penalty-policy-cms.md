@@ -947,7 +947,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Create: `src/app/(admin)/admin/penalty-policies/page.tsx`
 - Test: `src/features/admin-penalty-policy/server/__tests__/actions.test.ts`
 
-- [ ] **Step 1: schemas.ts**
+- [x] **Step 1: schemas.ts**
 
 ```ts
 import { z } from "zod";
@@ -961,7 +961,7 @@ export const SavePenaltyPolicySchema = z.object({
 export type SavePenaltyPolicyInput = z.infer<typeof SavePenaltyPolicySchema>;
 ```
 
-- [ ] **Step 2: server/actions.ts (Zod 검증 + auth admin 가드 + withRateLimitAction mutation + revalidate)**
+- [x] **Step 2: server/actions.ts (Zod 검증 + auth admin 가드 + withRateLimitAction mutation + revalidate)**
 
 ```ts
 "use server";
@@ -986,11 +986,11 @@ export const savePenaltyPolicyAction = withRateLimitAction(
 ```
 (주: `withRateLimitAction` 시그니처·`onBlock` 반환모드는 기존 `admin-booking-cancel/server/actions.ts`를 참고해 정확히 맞춘다 — [ADR-0040].)
 
-- [ ] **Step 3: ui/PenaltyPolicyForm.tsx (`'use client'` island)**
+- [x] **Step 3: ui/PenaltyPolicyForm.tsx (`'use client'` island)**
 
 tier 행 동적 추가/삭제(minDaysBefore, rate%), 저장 시 `savePenaltyPolicyAction` 호출. `useActionState`/`useTransition` 패턴은 기존 admin island를 따른다. (rate는 % 입력 → /100 변환해 0~1로 전송.)
 
-- [ ] **Step 4: app/(admin)/admin/penalty-policies/page.tsx (RSC)**
+- [x] **Step 4: app/(admin)/admin/penalty-policies/page.tsx (RSC)**
 
 ```tsx
 import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
@@ -1004,13 +1004,13 @@ export default async function PenaltyPoliciesPage() {
 }
 ```
 
-- [ ] **Step 5: actions 테스트 + 통과**
+- [x] **Step 5: actions 테스트 + 통과**
 
 `actions.test.ts`: 비admin → FORBIDDEN, 잘못된 tiers → INVALID_INPUT, 정상 → createPenaltyPolicyVersion 호출 + revalidatePath. (auth/withRateLimitAction/createPenaltyPolicyVersion 모킹.)
 Run: `npx vitest run src/features/admin-penalty-policy && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/features/admin-penalty-policy "src/app/(admin)/admin/penalty-policies"
