@@ -26,7 +26,7 @@ import type {
 // SELECT 한 번 호출(in 절)이라 사진 N개에 비례한 round-trip 0건 = N+1 없음.
 export async function listReviewsByProduct(
   productId: string,
-  opts: { limit?: number; cursor?: string } = {},
+  opts: { limit?: number; cursor?: string; viewerId?: string } = {},
 ): Promise<ReviewListPage> {
   const limit = Math.min(Math.max(opts.limit ?? 10, 1), 50);
 
@@ -40,6 +40,7 @@ export async function listReviewsByProduct(
       rating: true,
       content: true,
       createdAt: true,
+      userId: true,
       // email 은 마스킹 입력으로만 사용 — 본 함수 로컬 범위를 벗어나지 않는다.
       // 반환 타입(`ReviewListItem`)에는 displayName 만 포함되므로 raw email 이
       // 호출부(RSC/widget/client) 로 전달될 경로 자체가 봉쇄된다.
@@ -68,6 +69,7 @@ export async function listReviewsByProduct(
     rating: r.rating,
     content: r.content,
     createdAt: r.createdAt,
+    isOwn: opts.viewerId != null && r.userId === opts.viewerId,
     user: {
       displayName: maskAuthorDisplayName({
         email: r.user.email,

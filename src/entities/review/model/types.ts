@@ -16,6 +16,7 @@ export type ReviewListItem = {
   rating: number;
   content: string;
   createdAt: Date;
+  isOwn: boolean; // 뷰어 본인 작성 여부. viewerId 미전달 시 false.
   user: {
     displayName: string;
     image: string | null;
