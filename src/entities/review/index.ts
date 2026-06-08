@@ -19,6 +19,10 @@ export type {
   AdminReviewListItem,
   AdminReviewListPage,
   AdminReviewDetail,
+  AdminReportedReviewListItem,
+  AdminReportedReviewListPage,
+  ReviewReportEntry,
+  ReviewReportSummary,
 } from "./model/types";
 
 export {
@@ -29,6 +33,13 @@ export {
   getReviewRatingDistribution,
   listReviewsForAdmin,
   getReviewForAdmin,
+  listReviewsWithOpenReports,
+  getReportsForReview,
 } from "./api/queries";
 
-export { setReviewStatus } from "./api/mutations";
+export {
+  setReviewStatus,
+  createReviewReport,
+  resolveReportsByHiding,
+  dismissReports,
+} from "./api/mutations";
