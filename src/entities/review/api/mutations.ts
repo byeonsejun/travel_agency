@@ -62,3 +62,43 @@ export async function createReviewReport(input: {
     throw e;
   }
 }
+
+// 신고 인정: 리뷰를 숨기고(PUBLISHED→HIDDEN 전이 가드) OPEN 신고를 일괄 RESOLVED.
+// 숨김+신고종결을 단일 tx 로 묶어 부분 적용 방지. 이미 HIDDEN 이면 전이 가드 throw.
+export async function resolveReportsByHiding(
+  reviewId: string,
+): Promise<{ productId: string } | null> {
+  const review = await db.review.findUnique({
+    where: { id: reviewId },
+    select: { status: true, productId: true },
+  });
+  if (!review) return null;
+
+  assertReviewTransition(review.status, "HIDDEN"); // 위반 시 throw
+
+  await db.$transaction([
+    db.review.update({ where: { id: reviewId }, data: { status: "HIDDEN" } }),
+    db.reviewReport.updateMany({
+      where: { reviewId, status: "OPEN" },
+      data: { status: "RESOLVED", resolvedAt: new Date() },
+    }),
+  ]);
+  return { productId: review.productId };
+}
+
+// 신고 반려: OPEN 신고만 DISMISSED 로 종결. 리뷰 status 불변(노출 유지).
+export async function dismissReports(
+  reviewId: string,
+): Promise<{ productId: string } | null> {
+  const review = await db.review.findUnique({
+    where: { id: reviewId },
+    select: { productId: true },
+  });
+  if (!review) return null;
+
+  await db.reviewReport.updateMany({
+    where: { reviewId, status: "OPEN" },
+    data: { status: "DISMISSED", resolvedAt: new Date() },
+  });
+  return { productId: review.productId };
+}

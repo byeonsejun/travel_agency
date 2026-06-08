@@ -23,7 +23,12 @@ vi.mock("@/shared/lib/db", () => ({
   },
 }));
 
-import { setReviewStatus, createReviewReport } from "../mutations";
+import {
+  setReviewStatus,
+  createReviewReport,
+  resolveReportsByHiding,
+  dismissReports,
+} from "../mutations";
 import { InvalidReviewTransitionError } from "../../model/transitions";
 
 beforeEach(() => {
@@ -126,5 +131,50 @@ describe("createReviewReport", () => {
       reason: "SPAM",
     });
     expect(r).toBe("duplicate");
+  });
+});
+
+describe("resolveReportsByHiding", () => {
+  it("리뷰 부재 시 null", async () => {
+    mocks.findUnique.mockResolvedValue(null);
+    expect(await resolveReportsByHiding("nope")).toBeNull();
+  });
+
+  it("PUBLISHED 면 HIDDEN 전이 + OPEN 신고 RESOLVED 일괄 (단일 tx)", async () => {
+    mocks.findUnique.mockResolvedValue({
+      status: "PUBLISHED",
+      productId: "p1",
+    });
+    mocks.txn.mockResolvedValue([]);
+    const r = await resolveReportsByHiding("r1");
+    expect(r).toEqual({ productId: "p1" });
+    expect(mocks.txn).toHaveBeenCalledTimes(1);
+  });
+
+  it("이미 HIDDEN 이면 전이 가드 throw", async () => {
+    mocks.findUnique.mockResolvedValue({ status: "HIDDEN", productId: "p1" });
+    await expect(resolveReportsByHiding("r1")).rejects.toBeInstanceOf(
+      InvalidReviewTransitionError,
+    );
+    expect(mocks.txn).not.toHaveBeenCalled();
+  });
+});
+
+describe("dismissReports", () => {
+  it("리뷰 부재 시 null", async () => {
+    mocks.findUnique.mockResolvedValue(null);
+    expect(await dismissReports("nope")).toBeNull();
+  });
+
+  it("OPEN 신고를 DISMISSED 로 일괄 변경 + status 불변", async () => {
+    mocks.findUnique.mockResolvedValue({ productId: "p1" });
+    mocks.reportUpdateMany.mockResolvedValue({ count: 2 });
+    const r = await dismissReports("r1");
+    expect(r).toEqual({ productId: "p1" });
+    expect(mocks.reportUpdateMany).toHaveBeenCalledWith({
+      where: { reviewId: "r1", status: "OPEN" },
+      data: { status: "DISMISSED", resolvedAt: expect.any(Date) },
+    });
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 });
