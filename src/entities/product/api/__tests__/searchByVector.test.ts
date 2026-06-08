@@ -214,6 +214,26 @@ describe("searchProductsByVector — graceful degradation (D5)", () => {
     const res = await searchProductsByVector(qVec, {}, MODEL, "온천");
     expect(res).toEqual([]);
   });
+
+  it("폴백 경로는 graduated가 아닌 binary theme-first 정렬을 유지한다", async () => {
+    mockDb.$queryRaw
+      .mockResolvedValueOnce([]) // pgvector 미가용 → 폴백 진입
+      .mockResolvedValueOnce([{ id: "p1", score: 0 }]); // 폴백 ILIKE 쿼리
+    mockDb.product.findMany.mockResolvedValueOnce([fakeProduct("p1")]);
+
+    await searchProductsByVector(
+      qVec,
+      { themeTags: ["휴양"] },
+      MODEL,
+      "동남아 휴양"
+    );
+
+    const fallbackSql = mockDb.$queryRaw.mock.calls[1][0].sql as string;
+    // 폴백은 binary theme-first 정렬(CASE WHEN EXISTS) 유지 — graduated count(*) 비율 산술 부재.
+    // 회귀 가드: 미래에 폴백을 graduated로 바꾸면 이 테스트가 깨져 의도적 정책 변경임을 강제한다.
+    expect(fallbackSql).toContain("ORDER BY");
+    expect(fallbackSql).not.toContain("count(*)");
+  });
 });
 
 describe("themeBoost — graduated 커버리지 비율 (순수 함수 invariant)", () => {
