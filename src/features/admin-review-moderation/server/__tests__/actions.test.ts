@@ -3,17 +3,21 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   setReviewStatus: vi.fn(),
+  resolveReportsByHiding: vi.fn(),
+  dismissReports: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
 vi.mock("@/features/auth/server/auth", () => ({ auth: mocks.auth }));
 vi.mock("@/entities/review", () => ({
   setReviewStatus: mocks.setReviewStatus,
+  resolveReportsByHiding: mocks.resolveReportsByHiding,
+  dismissReports: mocks.dismissReports,
   InvalidReviewTransitionError: class extends Error {},
 }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { setReviewStatusAction } from "../actions";
+import { setReviewStatusAction, resolveReportsAction, dismissReportsAction } from "../actions";
 
 const VALID_ID = "clxreview0000000000000000";
 
@@ -55,5 +59,33 @@ describe("setReviewStatusAction", () => {
       next: "HIDDEN",
     });
     expect(res.type).toBe("error");
+  });
+});
+
+describe("resolveReportsAction", () => {
+  it("비-admin 거부", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: "u", role: "USER" } });
+    const r = await resolveReportsAction(VALID_ID);
+    expect(r.type).toBe("error");
+    expect(mocks.resolveReportsByHiding).not.toHaveBeenCalled();
+  });
+
+  it("성공 시 PDP + admin 무효화", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: "a", role: "ADMIN" } });
+    mocks.resolveReportsByHiding.mockResolvedValue({ productId: "p1" });
+    const r = await resolveReportsAction(VALID_ID);
+    expect(r).toEqual({ type: "success" });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/products/p1");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/reviews");
+  });
+});
+
+describe("dismissReportsAction", () => {
+  it("성공 시 admin 무효화", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: "a", role: "ADMIN" } });
+    mocks.dismissReports.mockResolvedValue({ productId: "p1" });
+    const r = await dismissReportsAction(VALID_ID);
+    expect(r).toEqual({ type: "success" });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/reviews");
   });
 });

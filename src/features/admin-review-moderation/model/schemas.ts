@@ -7,3 +7,9 @@ export const SetReviewStatusSchema = z.object({
 });
 
 export type SetReviewStatusInput = z.infer<typeof SetReviewStatusSchema>;
+
+export const ReportModerationSchema = z.object({
+  reviewId: z.string().cuid(),
+});
+
+export type ReportModerationInput = z.infer<typeof ReportModerationSchema>;
