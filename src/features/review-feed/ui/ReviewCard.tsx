@@ -3,6 +3,7 @@
 import type { ReviewListItem } from "@/entities/review";
 import { reviewPhotoPublicUrl } from "@/shared/lib/supabase/photoMime";
 import { PhotoGrid } from "@/shared/ui/PhotoGrid";
+import { ReportReviewButton } from "./ReportReviewButton";
 
 function Stars({ value }: { value: number }) {
   return (
@@ -30,7 +31,13 @@ function formatDate(d: Date): string {
 }
 
 // 작성자 displayName 은 entities query 레이어에서 사전 마스킹됨 — raw PII 미수신.
-export function ReviewCard({ review }: { review: ReviewListItem }) {
+export function ReviewCard({
+  review,
+  isAuthenticated,
+}: {
+  review: ReviewListItem;
+  isAuthenticated: boolean;
+}) {
   const images = review.photos.map((p) => ({
     id: p.id,
     url: reviewPhotoPublicUrl(p.storagePath),
@@ -51,6 +58,12 @@ export function ReviewCard({ review }: { review: ReviewListItem }) {
             </span>
           </div>
         </div>
+        {!review.isOwn && (
+          <ReportReviewButton
+            reviewId={review.id}
+            isAuthenticated={isAuthenticated}
+          />
+        )}
       </div>
       <p className="mt-3 whitespace-pre-wrap text-sm text-gray-700">
         {review.content}
