@@ -64,6 +64,7 @@ async function main() {
 
   // Cleanup in FK reverse order
   await prisma.$transaction([
+    prisma.penaltyPolicy.deleteMany(),
     prisma.emailJob.deleteMany(),
     prisma.refundJob.deleteMany(),
     prisma.departureCancellation.deleteMany(),
@@ -108,6 +109,27 @@ async function main() {
     ],
   });
   console.log("Seed users: customer@nextour.test, admin@nextour.test");
+
+  // ─── PenaltyPolicy: 국외여행 표준약관 v1 ──────────────────────
+  await prisma.penaltyPolicy.upsert({
+    where: { key_version: { key: "standard_overseas", version: 1 } },
+    update: {},
+    create: {
+      key: "standard_overseas",
+      version: 1,
+      name: "국외여행 표준약관",
+      isActive: true,
+      tiers: [
+        { minDaysBefore: 30, rate: 0.0 },
+        { minDaysBefore: 20, rate: 0.1 },
+        { minDaysBefore: 10, rate: 0.15 },
+        { minDaysBefore: 8, rate: 0.2 },
+        { minDaysBefore: 1, rate: 0.3 },
+        { minDaysBefore: -99999, rate: 0.5 },
+      ],
+    },
+  });
+  console.log("Seed penalty policy: standard_overseas v1");
 
   // ─── Product 1: 오사카·교토 3박4일 ───────────────────────────
   await prisma.product.create({

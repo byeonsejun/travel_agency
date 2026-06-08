@@ -124,9 +124,10 @@ model Product {
   durationDays    Int
   heroImageUrl    String?
   status          ProductStatus @default(DRAFT)
-  basePriceAdult  Int // 노출용 시작가 (실가격은 Departure)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  basePriceAdult   Int // 노출용 시작가 (실가격은 Departure)
+  penaltyPolicyKey String? // null → 시스템 기본("standard_overseas")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   tags          ProductTag[]
   inclusions    Inclusion[]
@@ -248,9 +249,10 @@ model Departure {
   bookedSeats   Int             @default(0) // 비관적 락으로 변경
   minPax        Int // 최소 출발 인원
   status        DepartureStatus @default(SCHEDULED)
-  version       Int             @default(0) // 낙관적 락 보조용
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  version          Int             @default(0) // 낙관적 락 보조용
+  penaltyPolicyKey String? // null → 상품 정책 상속(오버라이드 시에만 set)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   product       Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
   bookings      Booking[]
@@ -258,6 +260,22 @@ model Departure {
 
   @@unique([productId, departureDate])
   @@index([departureDate, status])
+}
+
+// 위약금 정책 템플릿. append-only 불변 버전: 수정 = version+1 새 행 INSERT(기존 행 불변).
+// Product/Departure가 penaltyPolicyKey(논리 key)로 참조 → 예약 시점 활성 버전으로 해소·스냅샷.
+model PenaltyPolicy {
+  id        String   @id @default(cuid())
+  key       String   // 버전 간 안정 식별자. ex) "standard_overseas", "peak_season"
+  version   Int      // key별 1부터 증가
+  name      String
+  tiers     Json     // [{ minDaysBefore: Int, rate: Float(0~1) }, ...] 내림차순, 마지막=catch-all
+  isActive  Boolean  @default(true) // key당 정확히 1개만 true
+  createdBy String?  // "admin:<id>"
+  createdAt DateTime @default(now())
+
+  @@unique([key, version])
+  @@index([key, isActive])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -289,7 +307,9 @@ model Booking {
   updatedAt    DateTime      @updatedAt
   canceledAt   DateTime?
   cancelReason String?
-  paymentDueAt DateTime? // DEPARTURE_CONFIRMED 진입 시 set (결제 만료 cron용)
+  paymentDueAt         DateTime? // DEPARTURE_CONFIRMED 진입 시 set (결제 만료 cron용)
+  penaltyPolicyKey     String? // 예약 시점 동결 (legacy=null → 시스템 기본 상수)
+  penaltyPolicyVersion Int?    // 동결 버전 → 취소 시 정확한 tiers 복원
 
   user          User           @relation(fields: [userId], references: [id])
   departure     Departure      @relation(fields: [departureId], references: [id])

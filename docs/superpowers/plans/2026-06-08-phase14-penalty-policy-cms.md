@@ -233,7 +233,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Create: `prisma/migrations/20260608000000_phase14_penalty_policy/migration.sql`
 - Modify: `prisma/seed.ts`
 
-- [ ] **Step 1: schema.prisma — PenaltyPolicy 모델 + 컬럼 추가**
+- [x] **Step 1: schema.prisma — PenaltyPolicy 모델 + 컬럼 추가**
 
 `PenaltyPolicy` 모델 추가(파일 내 적당한 위치, 예: Departure 인근):
 
@@ -269,7 +269,7 @@ model PenaltyPolicy {
   penaltyPolicyVersion Int?    // 동결 버전 → 취소 시 정확한 tiers 복원
 ```
 
-- [ ] **Step 2: 마이그레이션 적용 (검증된 워크어라운드 — `prisma migrate dev` 금지)**
+- [x] **Step 2: 마이그레이션 적용 (검증된 워크어라운드 — `prisma migrate dev` 금지)**
 
 이 repo는 shadow DB(pgvector)에서 `migrate dev`가 실패한다. 3-step:
 
@@ -307,7 +307,7 @@ ALTER TABLE "Booking" ADD COLUMN "penaltyPolicyVersion" INTEGER;
 npx prisma migrate resolve --applied 20260608000000_phase14_penalty_policy
 ```
 
-- [ ] **Step 3: 적용 검증**
+- [x] **Step 3: 적용 검증**
 
 Run:
 ```bash
@@ -319,7 +319,7 @@ SQL
 ```
 Expected: schema valid, 2 Booking 컬럼 + PenaltyPolicy 테이블 존재.
 
-- [ ] **Step 4: seed.ts — standard_overseas v1 시드**
+- [x] **Step 4: seed.ts — standard_overseas v1 시드**
 
 `prisma/seed.ts`에 추가(상품 시드보다 먼저 실행되도록 상단부). tiers는 현 `OVERSEAS_PENALTY_TIERS` 값을 JSON-safe(마지막 행 minDaysBefore = -99999)로:
 
@@ -344,14 +344,14 @@ await prisma.penaltyPolicy.upsert({
 });
 ```
 
-- [ ] **Step 5: seed 실행 검증**
+- [x] **Step 5: seed 실행 검증**
 
 Run: `npm run db:seed && npx prisma db execute --stdin <<'SQL'
 SELECT key, version, "isActive" FROM "PenaltyPolicy" WHERE key='standard_overseas';
 SQL`
 Expected: 1행 (standard_overseas, 1, true).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add prisma
