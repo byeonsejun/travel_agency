@@ -89,26 +89,32 @@ async function runRefundSaga(
   if (!created) return; // 멱등 종료
 
   // Phase 2: 외부 PG 취소 (Tx 밖 — ADR-0003)
-  try {
-    await tossClient.cancel({
-      paymentKey: core.tossPaymentKey,
-      cancelReason: core.reason ?? "환불 요청",
-      cancelAmount: core.refundAmount,
-      idempotencyKey: created.id,
-    });
-  } catch (err) {
-    await db.refundJob.update({
-      where: { id: created.id },
-      data: {
-        status: "PENDING",
-        attempts: { increment: 1 },
-        nextRunAt: backoff(created.attempts),
-        lastError: String(err),
-      },
-    });
-    metrics.incr("payment.refund.deferred");
-    captureException(err, { bookingId: core.bookingId });
-    throw new PaymentError("REFUND_DEFERRED", { cause: String(err) });
+  // 100% 위약금 등으로 실환불액이 0이면 Toss cancel(cancelAmount:0)은 거부되므로 skip.
+  // 머니무브만 없고 settle(Phase 3)·booking 전이(onSettled)는 정상 수행한다.
+  if (core.refundAmount > 0) {
+    try {
+      await tossClient.cancel({
+        paymentKey: core.tossPaymentKey,
+        cancelReason: core.reason ?? "환불 요청",
+        cancelAmount: core.refundAmount,
+        idempotencyKey: created.id,
+      });
+    } catch (err) {
+      await db.refundJob.update({
+        where: { id: created.id },
+        data: {
+          status: "PENDING",
+          attempts: { increment: 1 },
+          nextRunAt: backoff(created.attempts),
+          lastError: String(err),
+        },
+      });
+      metrics.incr("payment.refund.deferred");
+      captureException(err, { bookingId: core.bookingId });
+      throw new PaymentError("REFUND_DEFERRED", { cause: String(err) });
+    }
+  } else {
+    metrics.incr("payment.refund.zero_amount_skip");
   }
 
   // Phase 3: 정산 (DB Tx)

@@ -48,7 +48,7 @@
 - Modify: `src/entities/payment/api/refundRetry.ts` (retryRefundJob Phase 2)
 - Test: `src/entities/payment/api/__tests__/refund.test.ts`, `src/entities/payment/api/__tests__/refundRetry.test.ts`
 
-- [ ] **Step 1: refund.ts — 실패 테스트 작성**
+- [x] **Step 1: refund.ts — 실패 테스트 작성**
 
 `src/entities/payment/api/__tests__/refund.test.ts`에 추가(기존 `mocks`/하네스 재사용):
 
@@ -89,12 +89,12 @@ it("refundAmount===0(100% 위약금)이면 tossClient.cancel을 호출하지 않
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/entities/payment/api/__tests__/refund.test.ts -t "refundAmount===0"`
 Expected: FAIL — 현재는 `tossClient.cancel`이 cancelAmount:0으로 호출됨.
 
-- [ ] **Step 3: refund.ts 가드 구현**
+- [x] **Step 3: refund.ts 가드 구현**
 
 `runRefundSaga`의 Phase 2 블록을 수정. 기존:
 
@@ -138,12 +138,12 @@ Expected: FAIL — 현재는 `tossClient.cancel`이 cancelAmount:0으로 호출�
   }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/entities/payment/api/__tests__/refund.test.ts -t "refundAmount===0"`
 Expected: PASS
 
-- [ ] **Step 5: refundRetry.ts — 실패 테스트 작성**
+- [x] **Step 5: refundRetry.ts — 실패 테스트 작성**
 
 `src/entities/payment/api/__tests__/refundRetry.test.ts`에 추가(기존 하네스 재사용):
 
@@ -166,12 +166,12 @@ it("job.amount===0이면 tossClient.cancel skip 후 SUCCEEDED settle", async () 
 });
 ```
 
-- [ ] **Step 6: 실패 확인**
+- [x] **Step 6: 실패 확인**
 
 Run: `npx vitest run src/entities/payment/api/__tests__/refundRetry.test.ts -t "job.amount===0"`
 Expected: FAIL
 
-- [ ] **Step 7: refundRetry.ts 가드 구현**
+- [x] **Step 7: refundRetry.ts 가드 구현**
 
 `retryRefundJob`의 Phase 2 `try { await tossClient.cancel(...) }` 블록을 `if (job.amount > 0) { ... }` 로 감싼다. 0이면 skip하고 곧장 Phase 3 settle로 진행:
 
@@ -210,12 +210,12 @@ Expected: FAIL
   }
 ```
 
-- [ ] **Step 8: 통과 확인 + 전체 회귀**
+- [x] **Step 8: 통과 확인 + 전체 회귀**
 
 Run: `npx vitest run src/entities/payment && npx tsc --noEmit`
 Expected: PASS, tsc clean
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/entities/payment

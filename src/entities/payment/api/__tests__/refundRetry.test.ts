@@ -450,3 +450,26 @@ describe("retryRefundJob — PARTIAL_REFUND_COMPLETED enqueue", () => {
     expect(mocks.enqueueEmailJob).not.toHaveBeenCalled();
   });
 });
+
+// ── job.amount===0 Toss-skip 가드 테스트 ─────────────────────────────────
+describe("retryRefundJob — job.amount===0 Toss-skip 가드", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("job.amount===0이면 tossClient.cancel skip 후 SUCCEEDED settle", async () => {
+    setupClaimSucceeds();
+    // paymentStatus: "PAID" — Short-circuit 1(CANCELED/PARTIAL_CANCELED) 분기 회피
+    mockJobLoad({
+      amount: 0,
+      penaltyAmount: 100000,
+      paymentStatus: "PAID",
+      kind: "DISCRETIONARY",
+      paymentAmount: 100000,
+      refundedAmount: 100000,
+    });
+
+    const res = await retryRefundJob(JOB_ID);
+
+    expect(mocks.tossClient.cancel).not.toHaveBeenCalled();
+    expect(res).toMatchObject({ type: "succeeded" });
+  });
+});

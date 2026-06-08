@@ -48,7 +48,7 @@ vi.mock("@/shared/lib/email-job/enqueue", () => ({
   enqueueEmailJob: mocks.enqueueEmailJob,
 }));
 
-import { refundBooking, backoff } from "../refund";
+import { refundBooking, backoff, refundTraveler } from "../refund";
 
 // ── 공통 픽스처 ────────────────────────────────────────────────
 const BOOKING_ID = "booking_refund_testid001";
@@ -656,6 +656,51 @@ describe("runRefundSaga — PARTIAL_REFUND_COMPLETED enqueue", () => {
 
     // FULL_CANCEL이므로 partial 메일 enqueue 없음
     expect(mocks.enqueueEmailJob).not.toHaveBeenCalled();
+  });
+});
+
+// ── refundAmount===0 Toss-skip 가드 테스트 ───────────────────────────────
+describe("refundTraveler — refundAmount===0 Toss-skip 가드", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.db.$transaction.mockImplementation(
+      async (arg: ((tx: typeof mocks.tx) => unknown) | Array<Promise<unknown>>) => {
+        if (typeof arg === "function") return arg(mocks.tx);
+        if (Array.isArray(arg)) return Promise.all(arg);
+      }
+    );
+    mocks.tx.refundJob.findUnique.mockResolvedValue(null);
+    mocks.tx.payment.updateMany.mockResolvedValue({ count: 1 });
+    mocks.tx.refundJob.create.mockResolvedValue({ id: "rj0", attempts: 0 });
+    mocks.tx.refundJob.findFirstOrThrow.mockResolvedValue({ id: "rj0" });
+    mocks.tx.payment.update.mockResolvedValue({});
+    mocks.tx.refundJob.update.mockResolvedValue({});
+    mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_zero_1" });
+    mocks.tx.traveler.updateMany.mockResolvedValue({ count: 1 });
+    mocks.releaseSeats.mockResolvedValue(undefined);
+    mocks.transitionStatusTx.mockResolvedValue({ id: "bk0", status: "CANCELED_BY_AGENCY" });
+    mocks.db.refundJob.update.mockResolvedValue({});
+    mocks.enqueueEmailJob.mockResolvedValue(undefined);
+  });
+
+  it("refundAmount===0(100% 위약금)이면 tossClient.cancel을 호출하지 않고 settle한다", async () => {
+    // unitPrice=0인 여행자 → canceledBase=0 → refundAmount=0
+    mocks.db.booking.findUnique.mockResolvedValue({
+      id: "bk0", status: "PAID", departureId: "dp0",
+      departure: { departureDate: new Date("2026-12-25") },
+      travelers: [{ id: "t0", paxType: "ADULT", unitPrice: 0, canceledAt: null }],
+    });
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: "pay0", amount: 100000, refundedAmount: 0, tossPaymentKey: "tk0",
+    });
+
+    await refundTraveler({ bookingId: "bk0", travelerIds: ["t0"], actor: "admin:a", applyPenalty: false });
+
+    expect(mocks.tossClient.cancel).not.toHaveBeenCalled();
+    // settle은 수행 — refundJob SUCCEEDED 업데이트가 일어남
+    expect(mocks.tx.refundJob.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: "SUCCEEDED" }) }),
+    );
   });
 });
 
