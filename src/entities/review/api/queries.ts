@@ -298,6 +298,19 @@ export async function listReviewsWithOpenReports(
   };
 }
 
+// 특정 상품에서 viewer 본인이 작성한 리뷰 id 집합. PDP client island 가 신고 버튼
+// 노출 제어(본인 리뷰 숨김)에 사용. 타 유저 데이터는 반환하지 않음(PII 경계 보존).
+export async function getOwnReviewIdsForProduct(
+  productId: string,
+  userId: string,
+): Promise<string[]> {
+  const rows = await db.review.findMany({
+    where: { productId, userId },
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
+}
+
 // admin 상세 신고 패널. 전체 신고(OPEN+종결) 최신순 + OPEN 사유별 집계.
 export async function getReportsForReview(
   reviewId: string,

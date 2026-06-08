@@ -29,6 +29,7 @@ export {
   getProductReviewStats,
   getReviewByBooking,
   getReviewedBookingIds,
+  getOwnReviewIdsForProduct,
   listReviewsByProduct,
   getReviewRatingDistribution,
   listReviewsForAdmin,

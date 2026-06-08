@@ -41,6 +41,23 @@ export function ReportReviewButton({ reviewId, isAuthenticated }: Props) {
     };
   }, []);
 
+  // B2 Escape to close — open 상태에서만 등록.
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !isPending) close();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, isPending]);
+
+  // B6 닫기 헬퍼 — state 일괄 초기화.
+  function close() {
+    setOpen(false);
+    setNote("");
+    setReason("SPAM");
+  }
+
   function showToast(msg: string) {
     setToast(msg);
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -79,13 +96,19 @@ export function ReportReviewButton({ reviewId, isAuthenticated }: Props) {
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setOpen(false)}
+          onClick={() => !isPending && close()}
         >
+          {/* B1 role/aria on the panel */}
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-dialog-title"
+            tabIndex={-1}
             className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-base font-semibold text-gray-900">리뷰 신고</h3>
+            {/* B1 id on heading */}
+            <h3 id="report-dialog-title" className="text-base font-semibold text-gray-900">리뷰 신고</h3>
 
             {!isAuthenticated ? (
               <div className="mt-4 text-sm text-gray-600">
@@ -100,6 +123,8 @@ export function ReportReviewButton({ reviewId, isAuthenticated }: Props) {
             ) : (
               <>
                 <fieldset className="mt-4 space-y-2">
+                  {/* B4 sr-only legend */}
+                  <legend className="sr-only">신고 사유</legend>
                   {REPORT_REASONS.map((r) => (
                     <label key={r} className="flex items-center gap-2 text-sm">
                       <input
@@ -113,18 +138,21 @@ export function ReportReviewButton({ reviewId, isAuthenticated }: Props) {
                     </label>
                   ))}
                 </fieldset>
+                {/* B5 aria-label on textarea */}
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   maxLength={500}
                   placeholder="상세 사유(선택)"
+                  aria-label="상세 사유"
                   className="mt-3 w-full rounded-md border border-gray-300 p-2 text-sm"
                   rows={3}
                 />
                 <div className="mt-4 flex justify-end gap-2">
+                  {/* B6 cancel uses close() helper */}
                   <button
                     type="button"
-                    onClick={() => setOpen(false)}
+                    onClick={() => !isPending && close()}
                     className="rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
                   >
                     취소
@@ -144,8 +172,13 @@ export function ReportReviewButton({ reviewId, isAuthenticated }: Props) {
         </div>
       )}
 
+      {/* B3 toast aria-live */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-md bg-gray-900 px-4 py-2 text-sm text-white shadow-lg">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-md bg-gray-900 px-4 py-2 text-sm text-white shadow-lg"
+        >
           {toast}
         </div>
       )}

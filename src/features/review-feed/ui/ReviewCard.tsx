@@ -31,12 +31,16 @@ function formatDate(d: Date): string {
 }
 
 // 작성자 displayName 은 entities query 레이어에서 사전 마스킹됨 — raw PII 미수신.
+// isOwn 은 server review.isOwn 이 아닌 ReviewFeed island 의 ownIds set 에서 전달받는다
+// (PDP ISR 보존을 위해 server 는 viewerId 없이 렌더 — isOwn 은 항상 false).
 export function ReviewCard({
   review,
   isAuthenticated,
+  isOwn,
 }: {
   review: ReviewListItem;
   isAuthenticated: boolean;
+  isOwn: boolean;
 }) {
   const images = review.photos.map((p) => ({
     id: p.id,
@@ -58,7 +62,7 @@ export function ReviewCard({
             </span>
           </div>
         </div>
-        {!review.isOwn && (
+        {!isOwn && (
           <ReportReviewButton
             reviewId={review.id}
             isAuthenticated={isAuthenticated}
