@@ -1,4 +1,4 @@
-import type { ReviewStatus } from "@prisma/client";
+import type { ReviewStatus, ReportReason } from "@prisma/client";
 
 import { db } from "@/shared/lib/db";
 
@@ -10,7 +10,11 @@ import {
 import type {
   AdminReviewDetail,
   AdminReviewListPage,
+  AdminReportedReviewListItem,
+  AdminReportedReviewListPage,
   ReviewListPage,
+  ReviewReportEntry,
+  ReviewReportSummary,
   ReviewStats,
   ReviewWithPhotos,
 } from "../model/types";
@@ -22,7 +26,7 @@ import type {
 // SELECT 한 번 호출(in 절)이라 사진 N개에 비례한 round-trip 0건 = N+1 없음.
 export async function listReviewsByProduct(
   productId: string,
-  opts: { limit?: number; cursor?: string } = {},
+  opts: { limit?: number; cursor?: string; viewerId?: string } = {},
 ): Promise<ReviewListPage> {
   const limit = Math.min(Math.max(opts.limit ?? 10, 1), 50);
 
@@ -36,6 +40,7 @@ export async function listReviewsByProduct(
       rating: true,
       content: true,
       createdAt: true,
+      userId: true,
       // email 은 마스킹 입력으로만 사용 — 본 함수 로컬 범위를 벗어나지 않는다.
       // 반환 타입(`ReviewListItem`)에는 displayName 만 포함되므로 raw email 이
       // 호출부(RSC/widget/client) 로 전달될 경로 자체가 봉쇄된다.
@@ -64,6 +69,7 @@ export async function listReviewsByProduct(
     rating: r.rating,
     content: r.content,
     createdAt: r.createdAt,
+    isOwn: opts.viewerId != null && r.userId === opts.viewerId,
     user: {
       displayName: maskAuthorDisplayName({
         email: r.user.email,
@@ -223,4 +229,132 @@ export async function getReviewForAdmin(
     }),
     photos: r.photos,
   };
+}
+
+// admin 신고 큐. OPEN 신고가 1건+ 인 리뷰만. OPEN 신고를 relation 으로 동봉해
+// JS 에서 건수/대표사유 집계(필터 _count 대신 명시 — 버전 호환 안전).
+// 작성자 email 은 maskAuthorDisplayName 으로 즉시 마스킹(PII 미유출).
+export async function listReviewsWithOpenReports(
+  opts: { cursor?: string; limit?: number } = {},
+): Promise<AdminReportedReviewListPage> {
+  const limit = Math.min(Math.max(opts.limit ?? 20, 1), 50);
+  const rows = await db.review.findMany({
+    // PUBLISHED 리뷰만 큐에 노출 — 이미 숨겨진 리뷰의 잔여 OPEN 신고는 무의미(노출 안 됨)
+    // 하므로 제외. 이로써 resolveReportsAction(PUBLISHED→HIDDEN)이 큐 항목에서 항상 유효.
+    where: { status: "PUBLISHED", reports: { some: { status: "OPEN" } } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
+    ...(opts.cursor && { cursor: { id: opts.cursor }, skip: 1 }),
+    select: {
+      id: true,
+      rating: true,
+      status: true,
+      createdAt: true,
+      productId: true,
+      product: { select: { title: true } },
+      user: { select: { name: true, email: true } },
+      reports: {
+        where: { status: "OPEN" },
+        select: { reason: true },
+      },
+    },
+  });
+
+  const hasMore = rows.length > limit;
+  const sliced = hasMore ? rows.slice(0, limit) : rows;
+
+  const items: AdminReportedReviewListItem[] = sliced.map((r) => {
+    const counts = new Map<ReportReason, number>();
+    for (const rep of r.reports) {
+      counts.set(rep.reason, (counts.get(rep.reason) ?? 0) + 1);
+    }
+    let topReason: ReportReason | null = null;
+    let topN = 0;
+    for (const [reason, n] of counts) {
+      if (n > topN) {
+        topN = n;
+        topReason = reason;
+      }
+    }
+    return {
+      id: r.id,
+      rating: r.rating,
+      status: r.status,
+      createdAt: r.createdAt,
+      productId: r.productId,
+      productTitle: r.product.title,
+      authorDisplayName: maskAuthorDisplayName({
+        name: r.user.name,
+        email: r.user.email,
+      }),
+      openReportCount: r.reports.length,
+      topReason,
+    };
+  });
+
+  return {
+    items,
+    nextCursor: hasMore ? sliced[sliced.length - 1].id : null,
+  };
+}
+
+// 특정 상품에서 viewer 본인이 작성한 리뷰 id 집합. PDP client island 가 신고 버튼
+// 노출 제어(본인 리뷰 숨김)에 사용. 타 유저 데이터는 반환하지 않음(PII 경계 보존).
+export async function getOwnReviewIdsForProduct(
+  productId: string,
+  userId: string,
+): Promise<string[]> {
+  const rows = await db.review.findMany({
+    where: { productId, userId },
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
+}
+
+// admin 상세 신고 패널. 전체 신고(OPEN+종결) 최신순 + OPEN 사유별 집계.
+export async function getReportsForReview(
+  reviewId: string,
+): Promise<ReviewReportSummary> {
+  const rows = await db.reviewReport.findMany({
+    where: { reviewId },
+    orderBy: { createdAt: "desc" },
+    // 상한 100 — 단일 리뷰에 비정상적으로 많은 신고가 쌓여도 admin 패널 쿼리를 유계로 유지.
+    take: 100,
+    select: {
+      id: true,
+      reason: true,
+      note: true,
+      status: true,
+      createdAt: true,
+      reporter: { select: { name: true, email: true } },
+    },
+  });
+
+  const reasonCounts: Record<ReportReason, number> = {
+    SPAM: 0,
+    ABUSIVE: 0,
+    IRRELEVANT: 0,
+    PRIVACY: 0,
+    OTHER: 0,
+  };
+  let openCount = 0;
+  const entries: ReviewReportEntry[] = rows.map((r) => {
+    if (r.status === "OPEN") {
+      reasonCounts[r.reason] += 1;
+      openCount += 1;
+    }
+    return {
+      id: r.id,
+      reason: r.reason,
+      note: r.note,
+      status: r.status,
+      createdAt: r.createdAt,
+      reporterDisplayName: maskAuthorDisplayName({
+        name: r.reporter.name,
+        email: r.reporter.email,
+      }),
+    };
+  });
+
+  return { reviewId, openCount, reasonCounts, entries };
 }

@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   groupBy: vi.fn(),
   findMany: vi.fn(),
   findUnique: vi.fn(),
+  reportFindMany: vi.fn(),
 }));
 
 vi.mock("@/shared/lib/db", () => ({
@@ -13,6 +14,9 @@ vi.mock("@/shared/lib/db", () => ({
       findMany: mocks.findMany,
       findUnique: mocks.findUnique,
     },
+    reviewReport: {
+      findMany: mocks.reportFindMany,
+    },
   },
 }));
 
@@ -20,6 +24,8 @@ import {
   getReviewRatingDistribution,
   listReviewsForAdmin,
   getReviewForAdmin,
+  listReviewsWithOpenReports,
+  getReportsForReview,
 } from "../queries";
 
 beforeEach(() => {
@@ -155,5 +161,66 @@ describe("getReviewForAdmin", () => {
       authorDisplayName: "fro***",
       photos: [{ id: "ph1", storagePath: "review-photos/r1/0.webp", order: 0 }],
     });
+  });
+});
+
+describe("listReviewsWithOpenReports", () => {
+  it("OPEN 신고 있는 리뷰만 + 건수/대표사유 집계 + 작성자 마스킹", async () => {
+    mocks.findMany.mockResolvedValue([
+      {
+        id: "r1",
+        rating: 2,
+        status: "PUBLISHED",
+        createdAt: new Date("2026-06-01"),
+        productId: "p1",
+        product: { title: "방콕 4일" },
+        user: { name: "홍길동", email: "hong@test.com" },
+        reports: [{ reason: "SPAM" }, { reason: "SPAM" }, { reason: "ABUSIVE" }],
+      },
+    ]);
+
+    const page = await listReviewsWithOpenReports({ limit: 20 });
+
+    expect(mocks.findMany.mock.calls[0][0].where).toEqual({
+      status: "PUBLISHED",
+      reports: { some: { status: "OPEN" } },
+    });
+    expect(page.items[0].openReportCount).toBe(3);
+    expect(page.items[0].topReason).toBe("SPAM");
+    expect(page.items[0].productTitle).toBe("방콕 4일");
+    // raw email 미유출
+    expect(JSON.stringify(page.items[0])).not.toContain("hong@test.com");
+    expect(page.nextCursor).toBeNull();
+  });
+});
+
+describe("getReportsForReview", () => {
+  it("사유별 OPEN 집계 + entries 마스킹", async () => {
+    mocks.reportFindMany.mockResolvedValue([
+      {
+        id: "rep1",
+        reason: "SPAM",
+        note: null,
+        status: "OPEN",
+        createdAt: new Date(),
+        reporter: { name: "김철수", email: "kim@test.com" },
+      },
+      {
+        id: "rep2",
+        reason: "PRIVACY",
+        note: "전화번호",
+        status: "DISMISSED",
+        createdAt: new Date(),
+        reporter: { name: null, email: "lee@test.com" },
+      },
+    ]);
+
+    const summary = await getReportsForReview("r1");
+
+    expect(summary.openCount).toBe(1);
+    expect(summary.reasonCounts.SPAM).toBe(1);
+    expect(summary.reasonCounts.PRIVACY).toBe(0); // DISMISSED 는 OPEN 집계 제외
+    expect(summary.entries).toHaveLength(2);
+    expect(JSON.stringify(summary)).not.toContain("kim@test.com");
   });
 });

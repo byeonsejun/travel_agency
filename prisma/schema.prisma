@@ -40,6 +40,7 @@ model User {
   bookings        Booking[]
   wishlists       Wishlist[]
   reviews         Review[]
+  reviewReports   ReviewReport[]
 }
 
 model Account {
@@ -114,16 +115,16 @@ enum ProductStatus {
 }
 
 model Product {
-  id              String        @id @default(cuid())
-  title           String
-  summary         String        @db.Text
-  aiSummary       String?       @db.Text // PDP 상단 AI 3줄 요약, 저장 시 사전 생성
-  destination     String // "오사카, 일본"
-  destinationCode String? // 검색 필터용 ISO 등 (예: "JP-OSA")
-  durationNights  Int
-  durationDays    Int
-  heroImageUrl    String?
-  status          ProductStatus @default(DRAFT)
+  id               String        @id @default(cuid())
+  title            String
+  summary          String        @db.Text
+  aiSummary        String?       @db.Text // PDP 상단 AI 3줄 요약, 저장 시 사전 생성
+  destination      String // "오사카, 일본"
+  destinationCode  String? // 검색 필터용 ISO 등 (예: "JP-OSA")
+  durationNights   Int
+  durationDays     Int
+  heroImageUrl     String?
+  status           ProductStatus @default(DRAFT)
   basePriceAdult   Int // 노출용 시작가 (실가격은 Departure)
   penaltyPolicyKey String? // null → 시스템 기본("standard_overseas")
   createdAt        DateTime      @default(now())
@@ -238,17 +239,17 @@ enum DepartureStatus {
 }
 
 model Departure {
-  id            String          @id @default(cuid())
-  productId     String
-  departureDate DateTime        @db.Date
-  returnDate    DateTime        @db.Date
-  priceAdult    Int
-  priceChild    Int
-  priceInfant   Int             @default(0)
-  capacity      Int // 총 가능 좌석
-  bookedSeats   Int             @default(0) // 비관적 락으로 변경
-  minPax        Int // 최소 출발 인원
-  status        DepartureStatus @default(SCHEDULED)
+  id               String          @id @default(cuid())
+  productId        String
+  departureDate    DateTime        @db.Date
+  returnDate       DateTime        @db.Date
+  priceAdult       Int
+  priceChild       Int
+  priceInfant      Int             @default(0)
+  capacity         Int // 총 가능 좌석
+  bookedSeats      Int             @default(0) // 비관적 락으로 변경
+  minPax           Int // 최소 출발 인원
+  status           DepartureStatus @default(SCHEDULED)
   version          Int             @default(0) // 낙관적 락 보조용
   penaltyPolicyKey String? // null → 상품 정책 상속(오버라이드 시에만 set)
   createdAt        DateTime        @default(now())
@@ -266,12 +267,12 @@ model Departure {
 // Product/Departure가 penaltyPolicyKey(논리 key)로 참조 → 예약 시점 활성 버전으로 해소·스냅샷.
 model PenaltyPolicy {
   id        String   @id @default(cuid())
-  key       String   // 버전 간 안정 식별자. ex) "standard_overseas", "peak_season"
-  version   Int      // key별 1부터 증가
+  key       String // 버전 간 안정 식별자. ex) "standard_overseas", "peak_season"
+  version   Int // key별 1부터 증가
   name      String
-  tiers     Json     // [{ minDaysBefore: Int, rate: Float(0~1) }, ...] 내림차순, 마지막=catch-all
+  tiers     Json // [{ minDaysBefore: Int, rate: Float(0~1) }, ...] 내림차순, 마지막=catch-all
   isActive  Boolean  @default(true) // key당 정확히 1개만 true
-  createdBy String?  // "admin:<id>"
+  createdBy String? // "admin:<id>"
   createdAt DateTime @default(now())
 
   @@unique([key, version])
@@ -294,22 +295,22 @@ enum BookingStatus {
 }
 
 model Booking {
-  id           String        @id @default(cuid())
-  userId       String
-  departureId  String
-  adultCount   Int           @default(0)
-  childCount   Int           @default(0)
-  infantCount  Int           @default(0)
-  totalPrice   Int // 결제 시점에 서버에서 재계산해 검증
-  status       BookingStatus @default(RECEIVED)
-  notes        String?       @db.Text
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  canceledAt   DateTime?
-  cancelReason String?
+  id                   String        @id @default(cuid())
+  userId               String
+  departureId          String
+  adultCount           Int           @default(0)
+  childCount           Int           @default(0)
+  infantCount          Int           @default(0)
+  totalPrice           Int // 결제 시점에 서버에서 재계산해 검증
+  status               BookingStatus @default(RECEIVED)
+  notes                String?       @db.Text
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  canceledAt           DateTime?
+  cancelReason         String?
   paymentDueAt         DateTime? // DEPARTURE_CONFIRMED 진입 시 set (결제 만료 cron용)
   penaltyPolicyKey     String? // 예약 시점 동결 (legacy=null → 시스템 기본 상수)
-  penaltyPolicyVersion Int?    // 동결 버전 → 취소 시 정확한 tiers 복원
+  penaltyPolicyVersion Int? // 동결 버전 → 취소 시 정확한 tiers 복원
 
   user          User           @relation(fields: [userId], references: [id])
   departure     Departure      @relation(fields: [departureId], references: [id])
@@ -583,23 +584,23 @@ enum EmailJobStatus {
 // booking 상태전이 Tx 안에서 적재되어 유실 0. payload 컬럼 없음 —
 // bookingId만으로 워커가 발송 시점에 전체 데이터를 hydrate한다.
 model EmailJob {
-  id         String         @id @default(cuid())
-  type       EmailType
+  id          String         @id @default(cuid())
+  type        EmailType
   // 멱등 enqueue 키. ex) "booking-confirmation:<bookingId>" / "refund-completed:<bookingId>"
-  dedupeKey  String         @unique
-  bookingId  String
+  dedupeKey   String         @unique
+  bookingId   String
   // PARTIAL_REFUND_COMPLETED 타입일 때만 설정. 이 메일이 보고하는 RefundJob의 id.
   // (예약 한 건에 부분 환불이 여러 번 발생할 수 있으므로 bookingId만으로 식별 불가)
   // 워커가 hydration 시점에 RefundJob을 id로 직접 조회 — back-relation 없이 스칼라만 저장.
   refundJobId String?
-  status     EmailJobStatus @default(PENDING)
-  attempts   Int            @default(0)
-  lastError  String?        @db.Text
-  nextRunAt  DateTime       @default(now()) // 지수 백오프
-  sentTo     String? // 발송 시점 수신 주소 스냅샷 (감사)
-  providerId String? // Resend 메시지 id (감사 + 멱등 추적)
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  status      EmailJobStatus @default(PENDING)
+  attempts    Int            @default(0)
+  lastError   String?        @db.Text
+  nextRunAt   DateTime       @default(now()) // 지수 백오프
+  sentTo      String? // 발송 시점 수신 주소 스냅샷 (감사)
+  providerId  String? // Resend 메시지 id (감사 + 멱등 추적)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
@@ -619,6 +620,40 @@ enum ReviewStatus {
   REPORTED // 사용자 신고 (모더레이션 대기)
 }
 
+enum ReportReason {
+  SPAM // 스팸/광고
+  ABUSIVE // 욕설/비방
+  IRRELEVANT // 관련 없는 내용
+  PRIVACY // 개인정보 노출
+  OTHER // 기타
+}
+
+enum ReportStatus {
+  OPEN // 처리 대기 (admin 큐 진입)
+  RESOLVED // 숨김 인정으로 종료
+  DISMISSED // 반려로 종료 (리뷰 노출 유지)
+}
+
+// 사용자 리뷰 신고. Review.status 는 바꾸지 않고 본 테이블에만 적재(검열 어뷰징
+// 차단 — spec D1). admin 큐는 status=OPEN 행의 존재로 report-driven 구동.
+model ReviewReport {
+  id         String       @id @default(cuid())
+  reviewId   String
+  reporterId String
+  reason     ReportReason
+  note       String?      @db.Text
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+  resolvedAt DateTime?
+
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reporter User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, reporterId]) // 1인 1신고 (멱등 dedup)
+  @@index([status, createdAt(sort: Desc)]) // admin OPEN 큐 정렬 (createdAt desc 쿼리 일치)
+  @@index([reviewId])
+}
+
 model Review {
   id        String       @id @default(cuid())
   bookingId String       @unique // 1 booking = 1 review (자격 + 중복 방지)
@@ -630,10 +665,11 @@ model Review {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  booking Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  booking Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
   photos  ReviewPhoto[]
+  reports ReviewReport[]
 
   @@index([productId, status, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])

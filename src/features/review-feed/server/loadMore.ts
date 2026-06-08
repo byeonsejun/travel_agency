@@ -8,8 +8,7 @@ const InputSchema = z.object({
   cursor: z.string().min(1),
 });
 
-// PDP "더보기" — nextCursor 를 받아 다음 10건 반환. PUBLISHED 필터는 쿼리에 내장
-// (admin 이 숨긴 리뷰는 더보기로도 안 나옴 — 노출 일관성). 캐시 비대상 실시간 쿼리.
+// PDP "더보기" — nextCursor 로 다음 10건. PUBLISHED 필터는 쿼리 내장. 캐시 비대상.
 export async function loadMoreReviewsAction(
   productId: string,
   cursor: string,

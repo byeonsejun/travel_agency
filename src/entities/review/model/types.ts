@@ -1,4 +1,4 @@
-import type { Prisma, ReviewStatus } from "@prisma/client";
+import type { Prisma, ReviewStatus, ReportReason, ReportStatus } from "@prisma/client";
 
 // Prisma row + photos relation 의 결합형. server-side에서 사진까지 함께 fetch
 // 한 결과의 정확한 타입을 GetPayload 로 도출 — schema 변경 시 자동 추종.
@@ -16,6 +16,7 @@ export type ReviewListItem = {
   rating: number;
   content: string;
   createdAt: Date;
+  isOwn: boolean; // 뷰어 본인 작성 여부. viewerId 미전달 시 false.
   user: {
     displayName: string;
     image: string | null;
@@ -57,6 +58,41 @@ export type AdminReviewListItem = {
 export type AdminReviewListPage = {
   items: AdminReviewListItem[];
   nextCursor: string | null;
+};
+
+// admin 신고 큐 row. OPEN 신고가 있는 리뷰만. 작성자는 displayName 으로 마스킹.
+export type AdminReportedReviewListItem = {
+  id: string;
+  rating: number;
+  status: ReviewStatus;
+  createdAt: Date;
+  productId: string;
+  productTitle: string;
+  authorDisplayName: string;
+  openReportCount: number;
+  topReason: ReportReason | null; // 가장 많이 지목된 OPEN 사유
+};
+
+export type AdminReportedReviewListPage = {
+  items: AdminReportedReviewListItem[];
+  nextCursor: string | null;
+};
+
+// admin 상세 신고 패널. 신고자는 displayName 으로 마스킹.
+export type ReviewReportEntry = {
+  id: string;
+  reason: ReportReason;
+  note: string | null;
+  status: ReportStatus;
+  createdAt: Date;
+  reporterDisplayName: string;
+};
+
+export type ReviewReportSummary = {
+  reviewId: string;
+  openCount: number;
+  reasonCounts: Record<ReportReason, number>; // OPEN 신고만 집계
+  entries: ReviewReportEntry[]; // 전체(OPEN+종결) 최신순
 };
 
 // admin 상세 — 본문·사진 전체·상품 컨텍스트.
