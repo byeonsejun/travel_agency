@@ -746,7 +746,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `src/entities/booking/api/mutations.ts` (createBooking Tx)
 - Test: `src/entities/booking/api/__tests__/*` (createBooking 테스트)
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 createBooking 테스트(해당 파일)에 추가 — booking.create data에 스냅샷 컬럼이 들어가는지:
 ```ts
@@ -758,12 +758,12 @@ it("예약 생성 시 활성 위약금 정책을 스냅샷한다", async () => {
 ```
 (실제 하네스의 mock 구조에 맞춰 작성. 핵심 단언: `tx.booking.create` data에 `penaltyPolicyKey`, `penaltyPolicyVersion` 포함.)
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/entities/booking/api -t "스냅샷"`
 Expected: FAIL
 
-- [ ] **Step 3: mutations.ts 구현**
+- [x] **Step 3: mutations.ts 구현**
 
 createBooking에서 departure 조회 시 product/departure의 `penaltyPolicyKey`를 포함하고, 스냅샷 해소:
 ```ts
@@ -788,12 +788,12 @@ const { version: policyVersion } = await getActivePenaltyTiers(policyKey);
 ```
 (주의: `getActivePenaltyTiers`는 Tx 밖 조회 — createBooking 진입 직후, `db.$transaction` 시작 전에 호출해 Tx 내부엔 순수 데이터만 들어가게 한다.)
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/entities/booking/api && npx tsc --noEmit`
 Expected: PASS, tsc clean
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/booking
