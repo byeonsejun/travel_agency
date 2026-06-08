@@ -370,7 +370,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Create: `src/entities/penalty-policy/model/tiers.ts`
 - Create: `src/entities/penalty-policy/model/__tests__/tiers.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/entities/penalty-policy/model/__tests__/tiers.test.ts`:
 
@@ -434,12 +434,12 @@ describe("computePenalty (tiers 주입)", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/entities/penalty-policy/model/__tests__/tiers.test.ts`
 Expected: FAIL — 모듈 없음.
 
-- [ ] **Step 3: tiers.ts 구현**
+- [x] **Step 3: tiers.ts 구현**
 
 `src/entities/penalty-policy/model/tiers.ts`:
 
@@ -524,12 +524,12 @@ export function computePenalty(input: PenaltyInput): PenaltyResult {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/entities/penalty-policy/model/__tests__/tiers.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/penalty-policy/model
