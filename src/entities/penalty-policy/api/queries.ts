@@ -1,10 +1,18 @@
+import "server-only";
 import { db } from "@/shared/lib/db";
+import { logger } from "@/shared/lib/observability";
 import { OVERSEAS_PENALTY_TIERS, PenaltyTiersSchema, type PenaltyTier } from "../model/tiers";
 
 /** tiers JSON을 검증·파싱. 실패 시 시스템 기본 상수로 graceful 폴백. */
 function parseTiers(raw: unknown): PenaltyTier[] {
   const parsed = PenaltyTiersSchema.safeParse(raw);
-  return parsed.success ? parsed.data : OVERSEAS_PENALTY_TIERS;
+  if (!parsed.success) {
+    logger.warn("penalty-policy.tiers.parse_failed", {
+      error: parsed.error.message,
+    });
+    return OVERSEAS_PENALTY_TIERS;
+  }
+  return parsed.data;
 }
 
 /** key의 활성 버전 tiers + version. 없으면 시스템 기본 상수(version 0). */
