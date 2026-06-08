@@ -99,7 +99,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                     colSpan={6}
                     className="px-4 py-8 text-center text-gray-400"
                   >
-                    처리 대기 중인 신고가 없습니다
+                    처리 대기 중인 신고가 없습니다.
                   </td>
                 </tr>
               ) : (
@@ -108,7 +108,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                     <td className="max-w-xs truncate px-4 py-2">
                       <Link
                         href={`/admin/reviews/${r.id}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-red-600 hover:underline"
                       >
                         {r.productTitle}
                       </Link>

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { ReportStatus } from "@prisma/client";
 import { getReviewForAdmin, getReportsForReview } from "@/entities/review";
 import { reviewPhotoPublicUrl } from "@/shared/lib/supabase/photoMime";
 import { PhotoGrid } from "@/shared/ui/PhotoGrid";
@@ -8,6 +9,12 @@ import {
   ReportModerationActions,
 } from "@/features/admin-review-moderation";
 import { REPORT_REASON_LABELS } from "@/features/review-feed";
+
+const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
+  OPEN: "대기",
+  RESOLVED: "인정(숨김)",
+  DISMISSED: "반려",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +42,10 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
       >
         ← 리뷰 목록
       </Link>
+
+      <h1 className="mt-4 text-2xl font-bold text-gray-900">
+        {review.productTitle} — 리뷰 상세
+      </h1>
 
       {/* 기존 리뷰 본문 카드 */}
       <div className="mt-4 rounded-lg border border-gray-200 bg-white p-6">
@@ -105,7 +116,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                 </span>
                 <span className="text-xs text-gray-400">
                   {e.reporterDisplayName} ·{" "}
-                  {new Date(e.createdAt).toLocaleString("ko-KR")} · {e.status}
+                  {new Date(e.createdAt).toLocaleString("ko-KR")} · {REPORT_STATUS_LABELS[e.status]}
                 </span>
               </div>
               {e.note && <p className="mt-1 text-gray-600">{e.note}</p>}
