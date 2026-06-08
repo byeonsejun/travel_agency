@@ -1744,7 +1744,7 @@ git commit -m "chore(review-feed): barrel touch for report UI"
 - Create: `src/features/admin-review-moderation/ui/ReportModerationActions.tsx`
 - Modify: `src/features/admin-review-moderation/index.ts`
 
-- [ ] **Step 1: 컴포넌트 작성**
+- [x] **Step 1: 컴포넌트 작성**
 
 Create `src/features/admin-review-moderation/ui/ReportModerationActions.tsx`:
 
@@ -1801,7 +1801,7 @@ export function ReportModerationActions({ reviewId }: Props) {
 }
 ```
 
-- [ ] **Step 2: barrel export**
+- [x] **Step 2: barrel export**
 
 `src/features/admin-review-moderation/index.ts` 에 추가:
 
@@ -1811,12 +1811,12 @@ export { ReportModerationActions } from "./ui/ReportModerationActions";
 
 (기존 `ReviewStatusToggle`, 액션 export 는 유지. `resolveReportsAction`/`dismissReportsAction`/`ReportModerationState` 도 export 되는지 확인하고 없으면 추가.)
 
-- [ ] **Step 3: 타입체크**
+- [x] **Step 3: 타입체크**
 
 Run: `npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/features/admin-review-moderation/ui/ReportModerationActions.tsx src/features/admin-review-moderation/index.ts
@@ -1828,7 +1828,7 @@ git commit -m "feat(admin-review): ReportModerationActions client buttons"
 **Files:**
 - Modify: `src/app/(admin)/admin/reviews/page.tsx`
 
-- [ ] **Step 1: 페이지 수정**
+- [x] **Step 1: 페이지 수정**
 
 import 에 신규 쿼리/타입 추가:
 
@@ -1924,12 +1924,12 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
 
 > **구현 가이드:** 기존 status 테이블 렌더 블록을 위 `else` 가지로 옮기고, 데이터 소스를 `page!.items` 로 참조. 기존 `page` 변수명이 그대로면 non-null 단언만 추가. "신고됨" 탭은 이제 status 필터가 아니라 OPEN 신고 존재 기준이므로, 행 클릭 시 상세로 이동해 처리한다.
 
-- [ ] **Step 2: 타입체크**
+- [x] **Step 2: 타입체크**
 
 Run: `npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add "src/app/(admin)/admin/reviews/page.tsx"
@@ -1941,7 +1941,7 @@ git commit -m "feat(admin-review): report-driven queue for 신고됨 tab"
 **Files:**
 - Modify: `src/app/(admin)/admin/reviews/[id]/page.tsx`
 
-- [ ] **Step 1: 상세 페이지에 신고 패널 추가**
+- [x] **Step 1: 상세 페이지에 신고 패널 추가**
 
 import 보강:
 
@@ -2035,12 +2035,12 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
 
 > 기존 리뷰 본문 카드 블록(상품명·작성자·content·photos·ReviewStatusToggle)은 그대로 두고, 그 아래에 신고 패널을 추가.
 
-- [ ] **Step 2: 타입체크**
+- [x] **Step 2: 타입체크**
 
 Run: `npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add "src/app/(admin)/admin/reviews/[id]/page.tsx"
@@ -2049,17 +2049,17 @@ git commit -m "feat(admin-review): report panel + moderation actions on detail p
 
 ### Task 4.4: 종합 검증 (QA Engineer)
 
-- [ ] **Step 1: 전체 정적 검증**
+- [x] **Step 1: 전체 정적 검증**
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: 전부 PASS.
 
-- [ ] **Step 2: 빌드 검증 (서버/클라 경계·env 누수)**
+- [x] **Step 2: 빌드 검증 (서버/클라 경계·env 누수)**
 
 Run: `npm run build`
 Expected: PASS. PDP·admin 라우트 정상 빌드. (`feedback_run_build_for_boundaries` 메모리 — typecheck/test 만으론 경계 회귀 미검출)
 
-- [ ] **Step 3: admin 런타임 e2e 검증**
+- [x] **Step 3: admin 런타임 e2e 검증**
 
 `npm run dev` 후 admin 매직링크 로그인(콘솔 `📧 [DEV] Magic link`).
 검증:
@@ -2073,12 +2073,12 @@ npx tsx -e "import {db} from './src/shared/lib/db'; db.reviewReport.groupBy({by:
 ```
 Expected: OPEN/RESOLVED/DISMISSED 분포가 조작과 일치.
 
-- [ ] **Step 4: 체크박스 누락 점검**
+- [x] **Step 4: 체크박스 누락 점검**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-08-review-moderation.md`
 Expected: 완료된 Task 의 미체크 항목이 없어야 함(§4.1).
 
-- [ ] **Step 5: 최종 커밋 + CLAUDE.md/ADR 갱신 제안**
+- [x] **Step 5: 최종 커밋 + CLAUDE.md/ADR 갱신 제안**
 
 - CLAUDE.md §8 "기억해야 할 컨텍스트" 에 Phase 15 완료 1줄 + "다음 작업자 혼란 방지" 노트 추가.
 - ADR 발행 제안: `REPORTED status-flip 포기 / ReviewReport 큐 적재` 결정(spec §9). 사용자 승인 시 `docs/superpowers/adr/` 에 작성.
@@ -2092,15 +2092,15 @@ git commit -m "docs(claude): mark Phase 15 review moderation complete"
 
 ## 최종 체크리스트
 
-- [ ] `ReviewReport` 모델 + enum 마이그레이션 적용·resolve
-- [ ] `createReviewReport` 멱등(중복 P2002 흡수, self/not_found 가드) + 테스트
-- [ ] `resolveReportsByHiding`(단일 tx, 전이 가드) + `dismissReports` + 테스트
-- [ ] `listReviewsWithOpenReports` + `getReportsForReview` (마스킹·집계) + 테스트
-- [ ] `listReviewsByProduct` viewerId → isOwn + 테스트
-- [ ] `reportReviewAction`(rate-limit·auth·Zod) + 테스트
-- [ ] `resolveReportsAction`/`dismissReportsAction`(ADMIN 가드·revalidate) + 테스트
-- [ ] PDP `ReportReviewButton` 모달(로그인 유도·본인 제외·멱등 토스트·타이머 cleanup)
-- [ ] admin "신고됨" 탭 report-driven + 상세 신고 패널 + 처리 버튼
-- [ ] typecheck + test + lint + build 전부 PASS
-- [ ] admin/사용자 런타임 e2e 증거 수집
+- [x] `ReviewReport` 모델 + enum 마이그레이션 적용·resolve
+- [x] `createReviewReport` 멱등(중복 P2002 흡수, self/not_found 가드) + 테스트
+- [x] `resolveReportsByHiding`(단일 tx, 전이 가드) + `dismissReports` + 테스트
+- [x] `listReviewsWithOpenReports` + `getReportsForReview` (마스킹·집계) + 테스트
+- [x] `listReviewsByProduct` viewerId → isOwn + 테스트
+- [x] `reportReviewAction`(rate-limit·auth·Zod) + 테스트
+- [x] `resolveReportsAction`/`dismissReportsAction`(ADMIN 가드·revalidate) + 테스트
+- [x] PDP `ReportReviewButton` 모달(로그인 유도·본인 제외·멱등 토스트·타이머 cleanup)
+- [x] admin "신고됨" 탭 report-driven + 상세 신고 패널 + 처리 버튼
+- [x] typecheck + test + lint + build 전부 PASS
+- [x] admin/사용자 런타임 e2e 증거 수집
 - [ ] CLAUDE.md 갱신 + ADR 발행 제안
