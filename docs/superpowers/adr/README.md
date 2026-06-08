@@ -92,6 +92,7 @@
 | 0042  | [부분 환불 완료 메일 — settle Tx 아웃박스 + refundJobId 멱등 식별 + FULL_CANCEL 중복 차단 (Phase 13)](./0042-partial-refund-email-outbox.md) | Accepted | 2026-06-07   |
 | 0043  | [FULL_CANCEL 결제 terminal 마감 + 위약금 정책 reference-snapshot (Phase 14, ADR-0031 #4 부분 supersede)](./0043-full-cancel-terminal-state-and-penalty-snapshot.md) | Accepted | 2026-06-08   |
 | 0044  | [리뷰 신고를 `ReviewStatus.REPORTED` flip 대신 `ReviewReport` 이벤트 적재로 구현 (Phase 15)](./0044-review-report-queue-vs-status-flip.md) | Accepted | 2026-06-09   |
+| 0045  | [테마 부스트 이진→요청 커버리지 비율 graduated, 천장 0.1 유지 (Phase 16)](./0045-graduated-theme-boost.md) | Accepted | 2026-06-09   |
 
 ## 향후 후보 (작성 대기)
 

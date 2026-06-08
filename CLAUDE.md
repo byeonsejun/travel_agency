@@ -314,6 +314,10 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
   - "REPORT_REASON_LABELS를 admin 페이지에서 왜 `@/features/review-feed` 배럴로 가져오나?" → FSD 공개 API 컨벤션. `features/review-feed/model/reportSchema.ts`의 딥패스(`/model/reportSchema`) import는 금지. `app` 레이어는 feature 배럴을 통해서만 접근(§5 Architect 규칙). `features/review-feed/index.ts`가 `REPORT_REASON_LABELS`를 re-export함.
   - "`resolveReportsByHiding`이 왜 단일 Tx인가?" → 리뷰 HIDDEN 전환과 OPEN 신고 RESOLVED 처리를 분리하면 부분 적용 위험. HIDDEN만 되고 신고가 OPEN으로 남으면 큐에서 사라지지 않고 admin이 중복 처리. 단일 `$transaction`으로 원자성 보장.
   - "신고 처리 후 큐에서 즉시 사라지나?" → `resolveReportsAction`/`dismissReportsAction` 모두 `revalidatePath("/admin/reviews")`와 `revalidatePath("/admin/reviews/${reviewId}")`를 호출. `force-dynamic` 페이지라 캐시 무효화 즉시 반영. 새로고침 시 큐 갱신.
+- **다음 작업자의 혼란 방지 노트 (Phase 16)**:
+  - "테마 부스트가 왜 이진이 아니라 비율이지?" → [ADR-0045]. `buildThemeScore`가 `EXISTS → +0.1`(이진)에서 `0.1 × matchCount/requested`(요청 커버리지 비율)로 전환. 다태그 매칭 상품이 단일 매칭보다 상위. 천장 0.1 불변 → 가중치 밸런스(벡터 0.5/키워드 0.2/geo 0.2/테마 0.1) 무손상. `ProductTag @@unique([productId,tag])`가 matchCount ≤ requested 보장 → cap 불필요.
+  - "공식이 왜 두 곳(순수함수 + SQL)에 있지?" → SSOT는 순수 함수 `themeBoost`, DB-단 `buildThemeScore` SQL이 동일 산술을 미러. SQL은 DB가 실행해 코드로 동기화 강제 불가 → 양쪽 JSDoc `⚠️` 경고 + 이원 테스트(불변식 6케이스 vs SQL 배선)로 방어. 한쪽 수정 시 반드시 양쪽 갱신.
+  - "폴백은 왜 graduated가 아니지?" → (Phase 16) 의도적 YAGNI. 키워드 폴백(pgvector 부재)은 희귀 강등 경로라 binary theme-first 정렬 유지. `keywordFallback` 건드리지 말 것 — "폴백 경로는 graduated가 아닌..." 회귀 가드 테스트가 깨지면 의도적 정책 변경임을 강제.
 - 시드 데이터는 `prisma/seed.ts`. 검증용 10개 상품(JP/VN/TH/EU/ID/PH) + 1개 보라카이 Draft + 1개 QA 테스트 상품 = 총 12건(시드 외 2건은 관리자 직접 생성).
 - 자세한 진행 상황은 `docs/superpowers/plans/done/` 의 완료된 plan, 의사결정은 `docs/superpowers/adr/` 참조.
 

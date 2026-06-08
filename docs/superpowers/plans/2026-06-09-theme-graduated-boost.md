@@ -27,7 +27,7 @@
 - Test: `src/entities/product/api/__tests__/searchByVector.test.ts` (describe 블록 신규 추가)
 - Modify: `src/entities/product/api/searchByVector.ts` (`themeBoost` export 추가)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `searchByVector.test.ts` 상단 import에 `themeBoost`를 추가한다:
 
@@ -79,12 +79,12 @@ describe("themeBoost — graduated 커버리지 비율 (순수 함수 invariant)
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm run test -- searchByVector`
 Expected: FAIL — `themeBoost` is not exported / not a function (import 에러 또는 `themeBoost is not defined`).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 `searchByVector.ts`의 `THEME_WEIGHT` 상수 정의 직후(현재 43행 부근)에 헬퍼를 추가한다:
 
@@ -107,12 +107,12 @@ export function themeBoost(matchCount: number, requested: number): number {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm run test -- searchByVector`
 Expected: PASS — 새 `themeBoost` describe 블록 6개 케이스 모두 통과, 기존 케이스도 통과.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/product/api/searchByVector.ts src/entities/product/api/__tests__/searchByVector.test.ts
@@ -127,7 +127,7 @@ git commit -m "feat(search): themeBoost pure helper + graduated invariant tests"
 - Modify: `src/entities/product/api/searchByVector.ts` (`buildThemeScore` 함수)
 - Modify: `src/entities/product/api/__tests__/searchByVector.test.ts` (기존 "soft boost" 통합 테스트 갱신)
 
-- [ ] **Step 1: Update the existing soft-boost integration test (failing)**
+- [x] **Step 1: Update the existing soft-boost integration test (failing)**
 
 `searchByVector.test.ts:95`의 기존 테스트를 graduated SQL을 검증하도록 갱신한다. 해당 `it("themeTags는 WHERE 하드배제가 아닌 SELECT 점수 가산항(soft boost)", ...)` 블록 본문의 단언부를 다음으로 교체한다(테스트 셋업/mock 부분은 그대로 유지):
 
@@ -175,12 +175,12 @@ git commit -m "feat(search): themeBoost pure helper + graduated invariant tests"
   });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm run test -- searchByVector`
 Expected: FAIL — 현재 `buildThemeScore`는 `THEN ${THEME_WEIGHT}`(=0.1) 이진식이라 `selectClause`에 `count(*)`가 없고 `THEN 0.1`이 존재 → 갱신된 단언 실패. 분모 `3`도 바인딩에 없어 실패.
 
-- [ ] **Step 3: Rewrite `buildThemeScore` to graduated arithmetic**
+- [x] **Step 3: Rewrite `buildThemeScore` to graduated arithmetic**
 
 `searchByVector.ts`의 `buildThemeScore` 함수(현재 104-110행)를 다음으로 교체한다:
 
@@ -204,17 +204,17 @@ function buildThemeScore(tags: string[]): Prisma.Sql {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm run test -- searchByVector`
 Expected: PASS — 갱신된 soft-boost 테스트 + 신규 분모 바인딩 테스트 + Task 1 invariant + 기존 벡터/geo/폴백 테스트 모두 통과.
 
-- [ ] **Step 5: Full verification (typecheck + test + lint)**
+- [x] **Step 5: Full verification (typecheck + test + lint)**
 
 Run: `npm run typecheck && npm run test -- searchByVector && npm run lint`
 Expected: typecheck PASS(`any`/`as any` 없음), 테스트 PASS, lint PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/entities/product/api/searchByVector.ts src/entities/product/api/__tests__/searchByVector.test.ts
@@ -230,7 +230,7 @@ git commit -m "feat(search): graduated theme boost SQL (matchCount/requested rat
 
 > 목적: 키워드 폴백(pgvector 부재)이 **의도적으로 graduated를 적용하지 않고 binary theme-first 정렬을 유지**함을 박제한다. 다음 작업자가 "폴백도 graduated 해야 하는 것 아닌가?" 오해로 건드리지 않도록 invariant를 고정한다.
 
-- [ ] **Step 1: Write the regression-guard test**
+- [x] **Step 1: Write the regression-guard test**
 
 폴백 describe 블록(또는 벡터 describe 블록 뒤)에 추가한다. 기존 폴백 테스트의 mock 패턴(가용성 체크가 빈 배열 → 폴백 진입)을 따른다:
 
@@ -255,12 +255,12 @@ git commit -m "feat(search): graduated theme boost SQL (matchCount/requested rat
   });
 ```
 
-- [ ] **Step 2: Run test to verify it passes immediately**
+- [x] **Step 2: Run test to verify it passes immediately**
 
 Run: `npm run test -- searchByVector`
 Expected: PASS — 폴백(`keywordFallback`)은 변경하지 않았으므로 binary 정렬 유지, 단언 즉시 통과. (이 테스트는 회귀 가드이므로 RED 단계 없이 GREEN 확인 → 폴백이 미래에 graduated로 바뀌면 이 테스트가 깨져 경보)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/entities/product/api/__tests__/searchByVector.test.ts
@@ -274,12 +274,12 @@ git commit -m "test(search): guard fallback stays binary theme-first (not gradua
 **Files:**
 - Modify: `CLAUDE.md` (§8 진행 상황 + 다음 작업자 혼란 방지 노트 1건)
 
-- [ ] **Step 1: 전체 스위트 종합 검증**
+- [x] **Step 1: 전체 스위트 종합 검증**
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: 전부 PASS. 출력의 테스트 통과 수를 완료 보고에 인용한다.
 
-- [ ] **Step 2: Update CLAUDE.md §8 진행 상황**
+- [x] **Step 2: Update CLAUDE.md §8 진행 상황**
 
 §8의 "현재는 Phase 15 ... 완료 / 다음 마일스톤 미정" 문단과 진행 상황 요약에 Phase 16 완료를 반영한다. "다음 작업자의 혼란 방지 노트"에 다음 항목을 추가한다:
 
@@ -289,18 +289,18 @@ Expected: 전부 PASS. 출력의 테스트 통과 수를 완료 보고에 인용
 
 (ADR 번호는 Step 4에서 발행 시 확정)
 
-- [ ] **Step 3: Update plan checkboxes**
+- [x] **Step 3: Update plan checkboxes**
 
 이 plan 파일의 완료된 모든 `- [ ]`를 `- [x]`로 갱신한다(§4.1 규칙). 커밋 전 확인:
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-09-theme-graduated-boost.md`
 Expected: 완료 태스크에 미체크 항목 없음.
 
-- [ ] **Step 4: ADR 발행 제안 (사용자 승인 후)**
+- [x] **Step 4: ADR 발행 제안 (사용자 승인 후)**
 
 완료 보고 말미에 ADR 후보를 제안한다: "이진→graduated 비율, 천장 0.1 유지로 가중치 밸런스 보존" 결정을 `docs/superpowers/adr/NNNN-graduated-theme-boost.md`로 박제할지 사용자에게 질의. 승인 시 다음 번호로 발행 + `adr/README.md` 인덱스 1줄 추가 + CLAUDE.md의 `[ADR-00XX]` 플레이스홀더를 실제 번호로 치환. **사용자가 명시 승인하기 전 임의 발행 금지(§6.1).**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add CLAUDE.md docs/superpowers/plans/2026-06-09-theme-graduated-boost.md
@@ -311,9 +311,9 @@ git commit -m "docs(claude): mark Phase 16 graduated theme boost complete"
 
 ## 완료 기준 (Definition of Done)
 
-- [ ] `themeBoost` 순수 함수 + 6개 invariant 테스트 통과 (경계·0가드·단조·비율·범위)
-- [ ] `buildThemeScore` SQL이 graduated 비율 산술로 교체 + 분모 바인딩 검증 통과
-- [ ] 폴백 binary 유지 회귀 가드 통과
-- [ ] `npm run typecheck && npm run test && npm run lint` 전부 PASS
-- [ ] CLAUDE.md §8 노트 갱신
-- [ ] ADR 발행 여부 사용자에 질의(임의 발행 금지)
+- [x] `themeBoost` 순수 함수 + 6개 invariant 테스트 통과 (경계·0가드·단조·비율·범위)
+- [x] `buildThemeScore` SQL이 graduated 비율 산술로 교체 + 분모 바인딩 검증 통과
+- [x] 폴백 binary 유지 회귀 가드 통과
+- [x] `npm run typecheck && npm run test && npm run lint` 전부 PASS
+- [x] CLAUDE.md §8 노트 갱신
+- [x] ADR 발행 여부 사용자에 질의(임의 발행 금지)
