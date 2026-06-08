@@ -1,4 +1,4 @@
-import type { ReviewStatus } from "@prisma/client";
+import type { ReviewStatus, ReportReason } from "@prisma/client";
 
 import { db } from "@/shared/lib/db";
 
@@ -10,7 +10,11 @@ import {
 import type {
   AdminReviewDetail,
   AdminReviewListPage,
+  AdminReportedReviewListItem,
+  AdminReportedReviewListPage,
   ReviewListPage,
+  ReviewReportEntry,
+  ReviewReportSummary,
   ReviewStats,
   ReviewWithPhotos,
 } from "../model/types";
@@ -223,4 +227,115 @@ export async function getReviewForAdmin(
     }),
     photos: r.photos,
   };
+}
+
+// admin 신고 큐. OPEN 신고가 1건+ 인 리뷰만. OPEN 신고를 relation 으로 동봉해
+// JS 에서 건수/대표사유 집계(필터 _count 대신 명시 — 버전 호환 안전).
+// 작성자 email 은 maskAuthorDisplayName 으로 즉시 마스킹(PII 미유출).
+export async function listReviewsWithOpenReports(
+  opts: { cursor?: string; limit?: number } = {},
+): Promise<AdminReportedReviewListPage> {
+  const limit = Math.min(Math.max(opts.limit ?? 20, 1), 50);
+  const rows = await db.review.findMany({
+    where: { reports: { some: { status: "OPEN" } } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
+    ...(opts.cursor && { cursor: { id: opts.cursor }, skip: 1 }),
+    select: {
+      id: true,
+      rating: true,
+      status: true,
+      createdAt: true,
+      productId: true,
+      product: { select: { title: true } },
+      user: { select: { name: true, email: true } },
+      reports: {
+        where: { status: "OPEN" },
+        select: { reason: true },
+      },
+    },
+  });
+
+  const hasMore = rows.length > limit;
+  const sliced = hasMore ? rows.slice(0, limit) : rows;
+
+  const items: AdminReportedReviewListItem[] = sliced.map((r) => {
+    const counts = new Map<ReportReason, number>();
+    for (const rep of r.reports) {
+      counts.set(rep.reason, (counts.get(rep.reason) ?? 0) + 1);
+    }
+    let topReason: ReportReason | null = null;
+    let topN = 0;
+    for (const [reason, n] of counts) {
+      if (n > topN) {
+        topN = n;
+        topReason = reason;
+      }
+    }
+    return {
+      id: r.id,
+      rating: r.rating,
+      status: r.status,
+      createdAt: r.createdAt,
+      productId: r.productId,
+      productTitle: r.product.title,
+      authorDisplayName: maskAuthorDisplayName({
+        name: r.user.name,
+        email: r.user.email,
+      }),
+      openReportCount: r.reports.length,
+      topReason,
+    };
+  });
+
+  return {
+    items,
+    nextCursor: hasMore ? sliced[sliced.length - 1].id : null,
+  };
+}
+
+// admin 상세 신고 패널. 전체 신고(OPEN+종결) 최신순 + OPEN 사유별 집계.
+export async function getReportsForReview(
+  reviewId: string,
+): Promise<ReviewReportSummary> {
+  const rows = await db.reviewReport.findMany({
+    where: { reviewId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      reason: true,
+      note: true,
+      status: true,
+      createdAt: true,
+      reporter: { select: { name: true, email: true } },
+    },
+  });
+
+  const reasonCounts: Record<ReportReason, number> = {
+    SPAM: 0,
+    ABUSIVE: 0,
+    IRRELEVANT: 0,
+    PRIVACY: 0,
+    OTHER: 0,
+  };
+  let openCount = 0;
+  const entries: ReviewReportEntry[] = rows.map((r) => {
+    if (r.status === "OPEN") {
+      reasonCounts[r.reason] += 1;
+      openCount += 1;
+    }
+    return {
+      id: r.id,
+      reason: r.reason,
+      note: r.note,
+      status: r.status,
+      createdAt: r.createdAt,
+      reporterDisplayName: maskAuthorDisplayName({
+        name: r.reporter.name,
+        email: r.reporter.email,
+      }),
+    };
+  });
+
+  return { reviewId, openCount, reasonCounts, entries };
 }
