@@ -1837,10 +1837,10 @@ import {
   listReviewsForAdmin,
   listReviewsWithOpenReports,
 } from "@/entities/review";
-import { REPORT_REASON_LABELS } from "@/features/review-feed/model/reportSchema";
+import { REPORT_REASON_LABELS } from "@/features/review-feed";
 ```
 
-> `REPORT_REASON_LABELS` 는 `features/review-feed/model` 의 pure 모듈(서버/클라 무관, env import 없음)이라 admin 페이지(서버)에서 import 안전. cross-slice 우려: app 레이어는 어떤 feature 든 import 가능(상위 레이어)이므로 FSD 위반 아님.
+> `REPORT_REASON_LABELS` 는 `features/review-feed` 배럴(공개 API)로 export 됨(Task 2 M5 fix). app 레이어는 어떤 feature 배럴이든 import 가능(상위 레이어)이라 FSD 위반 아님. **deep-path import(`/model/reportSchema`) 금지 — 반드시 배럴 경유.**
 
 `AdminReviewsPage` 본문에서 filter==="REPORTED" 분기:
 
@@ -1951,7 +1951,7 @@ import {
   ReviewStatusToggle,
   ReportModerationActions,
 } from "@/features/admin-review-moderation";
-import { REPORT_REASON_LABELS } from "@/features/review-feed/model/reportSchema";
+import { REPORT_REASON_LABELS } from "@/features/review-feed";
 ```
 
 병렬 fetch + 패널 렌더:
