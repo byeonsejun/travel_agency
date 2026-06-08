@@ -1323,7 +1323,7 @@ Expected: PASS (신규 + 기존 테스트 전부).
 **Files:**
 - Create: `src/features/review-feed/ui/ReportReviewButton.tsx`
 
-- [ ] **Step 1: 컴포넌트 작성**
+- [x] **Step 1: 컴포넌트 작성**
 
 Create `src/features/review-feed/ui/ReportReviewButton.tsx`:
 
@@ -1484,12 +1484,12 @@ export function ReportReviewButton({ reviewId, isAuthenticated }: Props) {
 }
 ```
 
-- [ ] **Step 2: 타입체크**
+- [x] **Step 2: 타입체크**
 
 Run: `npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/features/review-feed/ui/ReportReviewButton.tsx
@@ -1501,7 +1501,7 @@ git commit -m "feat(review-feed): ReportReviewButton client modal"
 **Files:**
 - Modify: `src/features/review-feed/ui/ReviewCard.tsx`
 
-- [ ] **Step 1: ReviewCard 수정**
+- [x] **Step 1: ReviewCard 수정**
 
 `ReportReviewButton` import 추가:
 
@@ -1559,12 +1559,12 @@ export function ReviewCard({
 }
 ```
 
-- [ ] **Step 2: 타입체크**
+- [x] **Step 2: 타입체크**
 
 Run: `npx tsc --noEmit`
 Expected: FAIL — `ReviewFeed` 가 아직 `isAuthenticated` 를 안 넘김(다음 Task 에서 해결). 또는 ReviewCard 호출부 미스매치. 확인 후 다음 단계 진행.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/features/review-feed/ui/ReviewCard.tsx
@@ -1578,7 +1578,7 @@ git commit -m "feat(review-feed): wire report button into ReviewCard (skip own)"
 - Modify: `src/features/review-feed/server/loadMore.ts`
 - Modify: `src/widgets/product-detail/ui/ProductReviewsSection.tsx`
 
-- [ ] **Step 1: ReviewFeed 에 isAuthenticated prop 추가**
+- [x] **Step 1: ReviewFeed 에 isAuthenticated prop 추가**
 
 `Props` 와 컴포넌트 수정:
 
@@ -1612,7 +1612,7 @@ export function ReviewFeed({
 
 > 기존 `items.map` 블록을 찾아 `isAuthenticated` 를 추가. `ReviewCard` 호출 형태만 변경.
 
-- [ ] **Step 2: loadMore 가 viewerId 로 isOwn 계산하도록 수정**
+- [x] **Step 2: loadMore 가 viewerId 로 isOwn 계산하도록 수정**
 
 `loadMore.ts` 수정 — `auth()` 로 viewerId 획득 후 쿼리에 전달:
 
@@ -1645,7 +1645,7 @@ export async function loadMoreReviewsAction(
 }
 ```
 
-- [ ] **Step 3: ProductReviewsSection 에서 viewer 주입**
+- [x] **Step 3: ProductReviewsSection 에서 viewer 주입**
 
 `ProductReviewsSection.tsx` 수정 — `auth()` 추가, 쿼리에 viewerId, ReviewFeed 에 isAuthenticated:
 
@@ -1692,12 +1692,12 @@ export async function ProductReviewsSection({
 
 > **캐시 주의:** PDP 가 ISR(`revalidate=3600`)이면 `auth()` 호출은 dynamic API 라 해당 세그먼트가 동적으로 전환될 수 있다. `ProductReviewsSection` 은 이미 `<Suspense>` 로 스트리밍되는 분리 세그먼트이므로(파일 주석 참조) 본문 ISR 에는 영향 없음. 빌드 후 `npm run build` 출력에서 PDP 가 여전히 적절히 처리되는지 확인(Task 4 종합검증).
 
-- [ ] **Step 4: 타입체크 + 테스트**
+- [x] **Step 4: 타입체크 + 테스트**
 
 Run: `npm run typecheck && npm run test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/review-feed/ui/ReviewFeed.tsx src/features/review-feed/server/loadMore.ts src/widgets/product-detail/ui/ProductReviewsSection.tsx
@@ -1709,11 +1709,11 @@ git commit -m "feat(review-feed): thread viewer context (isOwn/isAuthenticated) 
 **Files:**
 - Modify: `src/features/review-feed/index.ts`
 
-- [ ] **Step 1: barrel 확인/보강**
+- [x] **Step 1: barrel 확인/보강**
 
 `src/features/review-feed/index.ts` 에 `ReviewFeed` 가 export 되어 있는지 확인. `ReportReviewButton`/`reportReviewAction` 은 내부 사용이므로 export 불필요(외부에서 직접 안 씀). 변경 없으면 skip.
 
-- [ ] **Step 2: dev 서버 런타임 검증**
+- [x] **Step 2: dev 서버 런타임 검증**
 
 Run: `npm run dev` (백그라운드) 후, 리뷰가 있는 상품 PDP 접속.
 검증:
@@ -1727,7 +1727,7 @@ npx tsx -e "import {db} from './src/shared/lib/db'; db.reviewReport.findMany().t
 ```
 Expected: ReviewReport 행 생성 확인, 중복 신고 시 행 증가 없음.
 
-- [ ] **Step 3: Commit (변경 있을 때만)**
+- [x] **Step 3: Commit (변경 있을 때만)**
 
 ```bash
 git add src/features/review-feed/index.ts
