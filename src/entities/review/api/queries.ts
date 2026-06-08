@@ -239,7 +239,9 @@ export async function listReviewsWithOpenReports(
 ): Promise<AdminReportedReviewListPage> {
   const limit = Math.min(Math.max(opts.limit ?? 20, 1), 50);
   const rows = await db.review.findMany({
-    where: { reports: { some: { status: "OPEN" } } },
+    // PUBLISHED 리뷰만 큐에 노출 — 이미 숨겨진 리뷰의 잔여 OPEN 신고는 무의미(노출 안 됨)
+    // 하므로 제외. 이로써 resolveReportsAction(PUBLISHED→HIDDEN)이 큐 항목에서 항상 유효.
+    where: { status: "PUBLISHED", reports: { some: { status: "OPEN" } } },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: limit + 1,
     ...(opts.cursor && { cursor: { id: opts.cursor }, skip: 1 }),
@@ -303,6 +305,8 @@ export async function getReportsForReview(
   const rows = await db.reviewReport.findMany({
     where: { reviewId },
     orderBy: { createdAt: "desc" },
+    // 상한 100 — 단일 리뷰에 비정상적으로 많은 신고가 쌓여도 admin 패널 쿼리를 유계로 유지.
+    take: 100,
     select: {
       id: true,
       reason: true,

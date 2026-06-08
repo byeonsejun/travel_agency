@@ -11,7 +11,10 @@ vi.mock("@/entities/review", () => ({
 }));
 // rate-limit 래퍼는 통과(impl 직접 호출)로 stub
 vi.mock("@/shared/lib/rate-limit", () => ({
-  withRateLimitAction: (_opts: unknown, impl: unknown) => impl,
+  withRateLimitAction: (
+    _opts: unknown,
+    impl: (...args: unknown[]) => unknown,
+  ) => impl,
 }));
 
 import { reportReviewAction } from "../reportReview";

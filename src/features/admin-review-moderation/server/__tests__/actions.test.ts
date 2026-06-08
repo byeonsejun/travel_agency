@@ -77,15 +77,24 @@ describe("resolveReportsAction", () => {
     expect(r).toEqual({ type: "success" });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/products/p1");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/reviews");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/admin/reviews/${VALID_ID}`);
   });
 });
 
 describe("dismissReportsAction", () => {
+  it("비-admin 거부", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: "u", role: "USER" } });
+    const r = await dismissReportsAction(VALID_ID);
+    expect(r.type).toBe("error");
+    expect(mocks.dismissReports).not.toHaveBeenCalled();
+  });
+
   it("성공 시 admin 무효화", async () => {
     mocks.auth.mockResolvedValue({ user: { id: "a", role: "ADMIN" } });
     mocks.dismissReports.mockResolvedValue({ productId: "p1" });
     const r = await dismissReportsAction(VALID_ID);
     expect(r).toEqual({ type: "success" });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/reviews");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/admin/reviews/${VALID_ID}`);
   });
 });

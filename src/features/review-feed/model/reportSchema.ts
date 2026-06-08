@@ -23,7 +23,11 @@ export const REPORT_REASON_LABELS: Record<
 export const ReportInputSchema = z.object({
   reviewId: z.string().cuid(),
   reason: z.enum(REPORT_REASONS),
-  note: z.string().max(500).optional(),
+  note: z
+    .string()
+    .max(500)
+    .optional()
+    .transform((v) => (v && v.trim() !== "" ? v : undefined)),
 });
 
 export type ReportInput = z.infer<typeof ReportInputSchema>;

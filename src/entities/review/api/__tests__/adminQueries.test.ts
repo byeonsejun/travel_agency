@@ -182,6 +182,7 @@ describe("listReviewsWithOpenReports", () => {
     const page = await listReviewsWithOpenReports({ limit: 20 });
 
     expect(mocks.findMany.mock.calls[0][0].where).toEqual({
+      status: "PUBLISHED",
       reports: { some: { status: "OPEN" } },
     });
     expect(page.items[0].openReportCount).toBe(3);
