@@ -1176,6 +1176,30 @@ async function main() {
     });
     console.log(`✅ Booking seed: id=${booking.id} status=${booking.status} totalPrice=${booking.totalPrice}`);
   }
+
+  // ── 임베딩 잡 큐잉 ──────────────────────────────────────────────────────
+  // 검색은 ProductEmbedding 과의 pgvector 유사도라, 임베딩이 없으면 결과가 0건이다.
+  // 임베딩 생성은 비동기 파이프라인(EmbeddingJob → cron worker)이므로 seed 는
+  // PENDING 잡만 큐잉한다. 실제 벡터 생성은 dev 서버를 띄운 뒤 cron 워커를 호출:
+  //   curl -H "authorization: Bearer $CRON_SECRET" localhost:3000/api/cron/embedding-job
+  // (limit=5 라 상품 수 / 5 회 반복. USE_REAL_EMBEDDING 미설정 시 결정론 dev provider.)
+  const publishedForEmbedding = await prisma.product.findMany({
+    where: { status: ProductStatus.PUBLISHED },
+    select: { id: true },
+  });
+  if (publishedForEmbedding.length > 0) {
+    await prisma.embeddingJob.createMany({
+      data: publishedForEmbedding.map((p) => ({
+        productId: p.id,
+        status: "PENDING" as const,
+        actor: "system:seed",
+      })),
+    });
+    console.log(
+      `✅ EmbeddingJob seed: ${publishedForEmbedding.length}건 PENDING 큐잉. ` +
+        `검색 활성화하려면 cron 워커 호출 필요(위 주석 참조).`,
+    );
+  }
 }
 
 main()
