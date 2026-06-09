@@ -346,12 +346,12 @@ git commit -m "feat(ui): shadcn primitives (button/card/input/tabs/badge/select/
 **Files:**
 - Modify: `src/entities/product/ui/ProductCard.tsx`
 
-- [ ] **Step 1: 현재 ProductCard 구조 확인**
+- [x] **Step 1: 현재 ProductCard 구조 확인**
 
 Run: `cat src/entities/product/ui/ProductCard.tsx`
 Expected: props 시그니처(`ProductCardType`)·이미지·가격 표시 방식 파악. **서버 컴포넌트(`'use client'` 없음) 확인.**
 
-- [ ] **Step 2: A1 카드 룩으로 재작성 (서버 컴포넌트 유지)**
+- [x] **Step 2: A1 카드 룩으로 재작성 (서버 컴포넌트 유지)**
 
 `src/entities/product/ui/ProductCard.tsx` 를 shadcn `Card` + A1 스타일로. 핵심 구조 (props 시그니처·`ProductImage` 사용은 기존 유지, className만 교체):
 ```tsx
@@ -384,17 +384,17 @@ export function ProductCard({ product }: { product: ProductCardType }) {
 ```
 > 주의: 기존 props 모양(`product` 객체 vs 개별 props)·필드명을 Step 1 에서 확인한 실제 시그니처에 맞춰 조정. `ProductImage` 의 실제 props(src/alt) 확인.
 
-- [ ] **Step 3: typecheck + 기존 카드 테스트**
+- [x] **Step 3: typecheck + 기존 카드 테스트**
 
 Run: `npm run typecheck && npm run test -- ProductCard`
 Expected: PASS (관련 테스트 있으면). 시그니처 변경 시 호출부(`ProductCardList`) 동반 수정.
 
-- [ ] **Step 4: build + 경계 점검**
+- [x] **Step 4: build + 경계 점검**
 
 Run: `npm run build && grep -rc "use client" src/entities/product/ui/ProductCard.tsx`
 Expected: build 성공. ProductCard `use client` = `0`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/product/ui/ProductCard.tsx src/widgets/product-card-list

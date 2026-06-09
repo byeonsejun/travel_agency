@@ -31,32 +31,32 @@ export function ProductCard({ product, heart, compareButton, linkQueryString }: 
   return (
     // <a> 내부에 <button>/<form> 중첩은 HTML 위반이므로 카드 컨테이너는 article,
     // 네비게이션은 콘텐츠 영역의 Link로 한정. Heart 는 형제 absolute.
-    <article className="group relative overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
+    <article className="group relative overflow-hidden rounded-lg border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-card">
       <Link
         href={linkQueryString ? `/products/${id}?${linkQueryString}` : `/products/${id}`}
         className="block"
       >
         {/* 이미지 영역 */}
-        <div className="relative h-48 w-full bg-gray-100">
+        <div className="relative h-48 w-full overflow-hidden bg-secondary">
           <ProductImage
             src={heroImageUrl}
             alt={title}
-            className="h-full w-full"
+            className="h-full w-full transition-transform duration-300 group-hover:scale-105"
           />
         </div>
 
         {/* 콘텐츠 영역 */}
         <div className="p-4">
           {/* 목적지 */}
-          <p className="text-xs text-gray-500">{destination}</p>
+          <p className="text-xs font-bold text-primary">{destination}</p>
 
           {/* 제목 */}
-          <h3 className="mb-2 line-clamp-2 font-semibold text-gray-900">
+          <h3 className="mb-2 mt-1 line-clamp-2 font-bold leading-snug text-foreground">
             {title}
           </h3>
 
           {/* 기간 */}
-          <p className="mb-3 text-sm text-gray-600">
+          <p className="mb-3 text-sm text-muted-foreground">
             {durationNights}박 {durationDays}일
           </p>
 
@@ -65,7 +65,7 @@ export function ProductCard({ product, heart, compareButton, linkQueryString }: 
             {displayTags.map((tag, index) => (
               <span
                 key={index}
-                className="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700"
+                className="inline-block rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground"
               >
                 #{tag.tag}
               </span>
@@ -73,12 +73,15 @@ export function ProductCard({ product, heart, compareButton, linkQueryString }: 
           </div>
 
           {/* 가격 영역 */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-            <p className="text-sm font-semibold text-gray-900">
-              최저 {displayPrice.toLocaleString()}원~
+          <div className="flex items-end justify-between border-t border-border pt-3">
+            <p className="flex items-baseline gap-1">
+              <span className="text-xl font-extrabold text-foreground">
+                {displayPrice.toLocaleString("ko-KR")}
+              </span>
+              <span className="text-xs text-muted-foreground">원~</span>
             </p>
             {showNoDeparturesBadge && (
-              <span className="inline-block rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+              <span className="inline-block rounded-full bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground">
                 출발일 미정
               </span>
             )}
