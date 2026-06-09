@@ -822,12 +822,12 @@ git commit -m "feat(ui): home-region-deals widget (region tabs + deals grid)"
 **Files:**
 - Create: `src/widgets/home-hero/ui/HomeHero.tsx`, `index.ts`
 
-- [ ] **Step 1: 기존 검색 feature 확인**
+- [x] **Step 1: 기존 검색 feature 확인**
 
 Run: `cat src/features/search/index.ts`
 Expected: `SearchBox`, `SearchChips` export 확인(현 홈에서 사용 중).
 
-- [ ] **Step 2: HomeHero 작성 (서버 컴포넌트, 검색 island 래핑)**
+- [x] **Step 2: HomeHero 작성 (서버 컴포넌트, 검색 island 래핑)**
 
 Create `src/widgets/home-hero/ui/HomeHero.tsx`:
 ```tsx
@@ -858,7 +858,7 @@ export function HomeHero() {
 ```
 > 날짜/인원은 A1 의 시각 요소 — 검색은 기존 자연어 `SearchBox` 단일 유지(spec §3.1). 추후 필요 시 확장.
 
-- [ ] **Step 3: barrel + typecheck + Commit**
+- [x] **Step 3: barrel + typecheck + Commit**
 
 Create `src/widgets/home-hero/index.ts`:
 ```ts
