@@ -1,5 +1,9 @@
 # Security Headers + Nonce CSP Wiring Implementation Plan
 
+> **🗄️ ARCHIVED (2026-06-09) — CODE COMPLETE, OPS OUT-OF-SCOPE.**
+> 정적 헤더 7종 + nonce CSP 코드, `/api/csp-report` 엔드포인트, 테스트, ADR-0039(헤더+CSP 롤아웃 게이트)는 모두 머지·발행 완료. CLAUDE.md §8 Phase 11 완료로 박제됨.
+> 잔여 미체크 항목(Task 6~8: preview/prod 배포, `[WAIT-MARKER]` 7일 CSP 모니터링, `CSP_MODE=enforce` 승격, securityheaders.com A+ 외부 검증)은 **실거래 없는 dev 프로젝트의 범위 밖**(사용자 결정 2026-06-09)이라 의도적으로 미실행. prod CSP enforce 롤아웃은 이 repo에서 추적하지 않는다. (plan 본문이 참조하는 "ADR-0022"는 실제 발행 시 0039로 통합됨.)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Nextour 의 모든 HTML 응답에 프로덕션 수준 보안 헤더 7종(정적, `next.config.mjs`)과 nonce 기반 `strict-dynamic` CSP(동적, `src/middleware.ts`) 를 박제하고, `/api/csp-report` 엔드포인트로 위반을 Sentry 로 수렴시킨다. HSTS 는 Rolling Expiration (6개월) + Preload 배제.
