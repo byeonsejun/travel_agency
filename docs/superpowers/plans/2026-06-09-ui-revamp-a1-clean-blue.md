@@ -408,7 +408,7 @@ git commit -m "feat(ui): redesign ProductCard (A1 clean-blue, server component)"
 **Files:**
 - Create: `src/widgets/site-footer/ui/SiteFooter.tsx`, `src/widgets/site-footer/index.ts`
 
-- [ ] **Step 1: SiteFooter 작성 (서버 컴포넌트)**
+- [x] **Step 1: SiteFooter 작성 (서버 컴포넌트)**
 
 Create `src/widgets/site-footer/ui/SiteFooter.tsx`:
 ```tsx
@@ -430,14 +430,14 @@ export function SiteFooter() {
 }
 ```
 
-- [ ] **Step 2: barrel**
+- [x] **Step 2: barrel**
 
 Create `src/widgets/site-footer/index.ts`:
 ```ts
 export { SiteFooter } from "./ui/SiteFooter";
 ```
 
-- [ ] **Step 3: typecheck + Commit**
+- [x] **Step 3: typecheck + Commit**
 
 Run: `npm run typecheck`
 Expected: PASS.
