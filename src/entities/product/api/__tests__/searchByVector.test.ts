@@ -21,6 +21,7 @@ vi.mock("@/shared/lib/db", () => ({ db: mockDb }));
 
 import {
   searchProductsByVector,
+  themeBoost,
   __resetPgvectorCacheForTest,
 } from "../searchByVector";
 
@@ -114,7 +115,36 @@ describe("searchProductsByVector — 벡터 경로", () => {
     // 메인 WHERE에는 ProductTag 배제가 없어야 한다(soft 전환의 핵심)
     expect(whereClause).not.toContain("ProductTag");
     // ProductTag 매칭은 SELECT 점수식(가산항)에 존재해야 한다
-    expect(text.slice(0, mainWhereIdx)).toContain("ProductTag");
+    const selectClause = text.slice(0, mainWhereIdx);
+    expect(selectClause).toContain("ProductTag");
+    // graduated: 이진 CASE가 아니라 count(*) 비율 산술이어야 한다
+    expect(selectClause).toContain("count(*)");
+    expect(selectClause).not.toContain("THEN 0.1");
+  });
+
+  it("graduated: 요청 태그 개수(분모)가 바인딩 파라미터로 전달된다", async () => {
+    mockDb.$queryRaw
+      .mockResolvedValueOnce([{ one: 1 }])
+      .mockResolvedValueOnce([{ id: "p1", score: 0.6 }]);
+    mockDb.product.findMany.mockResolvedValueOnce([fakeProduct("p1")]);
+
+    await searchProductsByVector(
+      qVec,
+      { themeTags: ["휴양", "미식", "가성비"] },
+      MODEL,
+      "휴양 미식 가성비"
+    );
+
+    const searchSql = mockDb.$queryRaw.mock.calls[1][0];
+    // 분모 = 정규화된 요청 태그 개수(3)가 바인딩 값으로 존재
+    expect(searchSql.values).toContain(3);
+    // 태그 배열도 '#' 정규화되어 바인딩
+    expect(
+      searchSql.values.some(
+        (v: unknown) =>
+          Array.isArray(v) && v.includes("#휴양") && v.includes("#미식")
+      )
+    ).toBe(true);
   });
 });
 
@@ -183,5 +213,61 @@ describe("searchProductsByVector — graceful degradation (D5)", () => {
 
     const res = await searchProductsByVector(qVec, {}, MODEL, "온천");
     expect(res).toEqual([]);
+  });
+
+  it("폴백 경로는 graduated가 아닌 binary theme-first 정렬을 유지한다", async () => {
+    mockDb.$queryRaw
+      .mockResolvedValueOnce([]) // pgvector 미가용 → 폴백 진입
+      .mockResolvedValueOnce([{ id: "p1", score: 0 }]); // 폴백 ILIKE 쿼리
+    mockDb.product.findMany.mockResolvedValueOnce([fakeProduct("p1")]);
+
+    await searchProductsByVector(
+      qVec,
+      { themeTags: ["휴양"] },
+      MODEL,
+      "동남아 휴양"
+    );
+
+    const fallbackSql = mockDb.$queryRaw.mock.calls[1][0].sql as string;
+    // 폴백은 binary theme-first 정렬(CASE WHEN EXISTS) 유지 — graduated count(*) 비율 산술 부재.
+    // 회귀 가드: 미래에 폴백을 graduated로 바꾸면 이 테스트가 깨져 의도적 정책 변경임을 강제한다.
+    expect(fallbackSql).toContain("ORDER BY");
+    expect(fallbackSql).not.toContain("count(*)");
+  });
+});
+
+describe("themeBoost — graduated 커버리지 비율 (순수 함수 invariant)", () => {
+  it("요청 태그를 모두 매칭하면 천장 0.1을 반환한다", () => {
+    expect(themeBoost(3, 3)).toBeCloseTo(0.1, 10);
+    expect(themeBoost(1, 1)).toBeCloseTo(0.1, 10);
+  });
+
+  it("매칭이 0이면 0을 반환한다", () => {
+    expect(themeBoost(0, 3)).toBe(0);
+  });
+
+  it("요청 태그가 0이면 0을 반환한다(division-by-zero 가드)", () => {
+    expect(themeBoost(0, 0)).toBe(0);
+    expect(themeBoost(2, 0)).toBe(0);
+  });
+
+  it("matchCount가 늘면 score는 비감소(단조 증가)", () => {
+    expect(themeBoost(2, 3)).toBeGreaterThan(themeBoost(1, 3));
+    expect(themeBoost(3, 3)).toBeGreaterThan(themeBoost(2, 3));
+  });
+
+  it("부분 매칭은 요청 대비 비율값이다", () => {
+    expect(themeBoost(1, 3)).toBeCloseTo(0.1 / 3, 10); // ≈ 0.0333
+    expect(themeBoost(2, 4)).toBeCloseTo(0.05, 10);
+  });
+
+  it("score는 항상 [0, 0.1] 범위 안이다", () => {
+    for (let req = 1; req <= 5; req++) {
+      for (let m = 0; m <= req; m++) {
+        const s = themeBoost(m, req);
+        expect(s).toBeGreaterThanOrEqual(0);
+        expect(s).toBeLessThanOrEqual(0.1);
+      }
+    }
   });
 });
