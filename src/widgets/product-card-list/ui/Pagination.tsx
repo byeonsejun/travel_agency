@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cn } from "@/shared/lib/utils";
+import { buttonVariants } from "@/shared/ui/button";
 
 type PaginationProps = {
   total: number;
@@ -32,24 +34,24 @@ export function Pagination({
     pageNumbers.push(i);
   }
 
+  const navBtn = buttonVariants({ variant: "outline", size: "default" });
+  const pageBtn = (active: boolean) =>
+    active
+      ? buttonVariants({ variant: "default", size: "icon" })
+      : buttonVariants({ variant: "outline", size: "icon" });
+
   return (
     <nav
-      className="flex items-center justify-center gap-2 border-t border-gray-200 pt-6"
+      className="flex items-center justify-center gap-2 border-t border-border pt-6"
       aria-label="Pagination"
     >
       {/* Previous button */}
       {currentPage > 1 ? (
-        <Link
-          href={buildHref(currentPage - 1)}
-          className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-        >
+        <Link href={buildHref(currentPage - 1)} className={navBtn}>
           이전
         </Link>
       ) : (
-        <button
-          disabled
-          className="cursor-not-allowed rounded border border-gray-200 px-4 py-2 text-sm font-medium text-gray-400"
-        >
+        <button disabled className={cn(navBtn, "cursor-not-allowed opacity-50")}>
           이전
         </button>
       )}
@@ -58,14 +60,11 @@ export function Pagination({
       <div className="flex gap-1">
         {rangeStart > 1 && (
           <>
-            <Link
-              href={buildHref(1)}
-              className="rounded border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-            >
+            <Link href={buildHref(1)} className={pageBtn(false)}>
               1
             </Link>
             {rangeStart > 2 && (
-              <span className="px-2 py-2 text-sm text-gray-600">...</span>
+              <span className="px-2 py-2 text-sm text-muted-foreground">...</span>
             )}
           </>
         )}
@@ -74,11 +73,8 @@ export function Pagination({
           <Link
             key={page}
             href={buildHref(page)}
-            className={`rounded px-3 py-2 text-sm font-medium transition-colors ${
-              page === currentPage
-                ? "bg-blue-500 text-white"
-                : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-            }`}
+            aria-current={page === currentPage ? "page" : undefined}
+            className={pageBtn(page === currentPage)}
           >
             {page}
           </Link>
@@ -87,12 +83,9 @@ export function Pagination({
         {rangeEnd < totalPages && (
           <>
             {rangeEnd < totalPages - 1 && (
-              <span className="px-2 py-2 text-sm text-gray-600">...</span>
+              <span className="px-2 py-2 text-sm text-muted-foreground">...</span>
             )}
-            <Link
-              href={buildHref(totalPages)}
-              className="rounded border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-            >
+            <Link href={buildHref(totalPages)} className={pageBtn(false)}>
               {totalPages}
             </Link>
           </>
@@ -101,17 +94,11 @@ export function Pagination({
 
       {/* Next button */}
       {currentPage < totalPages ? (
-        <Link
-          href={buildHref(currentPage + 1)}
-          className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-        >
+        <Link href={buildHref(currentPage + 1)} className={navBtn}>
           다음
         </Link>
       ) : (
-        <button
-          disabled
-          className="cursor-not-allowed rounded border border-gray-200 px-4 py-2 text-sm font-medium text-gray-400"
-        >
+        <button disabled className={cn(navBtn, "cursor-not-allowed opacity-50")}>
           다음
         </button>
       )}

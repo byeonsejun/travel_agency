@@ -13,7 +13,7 @@ export function InclusionList({ inclusions }: InclusionListProps) {
       {/* INCLUDED 섹션 */}
       {included.length > 0 && (
         <div>
-          <h3 className="mb-3 font-semibold text-gray-900">포함되는 항목</h3>
+          <h3 className="mb-3 font-semibold text-foreground">포함되는 항목</h3>
           <div className="space-y-2">
             {included.map((item) => (
               <div
@@ -34,9 +34,9 @@ export function InclusionList({ inclusions }: InclusionListProps) {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{item.label}</p>
+                  <p className="font-medium text-foreground">{item.label}</p>
                   {item.note && (
-                    <p className="text-sm text-gray-600">{item.note}</p>
+                    <p className="text-sm text-muted-foreground">{item.note}</p>
                   )}
                 </div>
               </div>
@@ -48,7 +48,7 @@ export function InclusionList({ inclusions }: InclusionListProps) {
       {/* EXCLUDED 섹션 */}
       {excluded.length > 0 && (
         <div>
-          <h3 className="mb-3 font-semibold text-gray-900">제외되는 항목</h3>
+          <h3 className="mb-3 font-semibold text-foreground">제외되는 항목</h3>
           <div className="space-y-2">
             {excluded.map((item) => (
               <div
@@ -69,9 +69,9 @@ export function InclusionList({ inclusions }: InclusionListProps) {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{item.label}</p>
+                  <p className="font-medium text-foreground">{item.label}</p>
                   {item.note && (
-                    <p className="text-sm text-gray-600">{item.note}</p>
+                    <p className="text-sm text-muted-foreground">{item.note}</p>
                   )}
                 </div>
               </div>

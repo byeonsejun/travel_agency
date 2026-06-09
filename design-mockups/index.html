@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nextour 디자인 시안 갤러리</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Pretendard,system-ui,sans-serif;background:#0f1115;color:#e7e9ee;line-height:1.6;padding:48px 24px;max-width:1080px;margin:0 auto}
+  h1{font-size:32px;letter-spacing:-.02em;margin-bottom:8px}
+  .sub{color:#9aa0ac;margin-bottom:40px}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#7d8493;margin:40px 0 16px;border-bottom:1px solid #242833;padding-bottom:10px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:780px){.grid{grid-template-columns:1fr}}
+  a.card{display:block;text-decoration:none;color:inherit;background:#171a21;border:1px solid #242833;border-radius:14px;overflow:hidden;transition:transform .15s,border-color .15s}
+  a.card:hover{transform:translateY(-4px);border-color:#3a4252}
+  .thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;letter-spacing:.04em}
+  .card-body{padding:16px}
+  .tag{font-size:11px;font-weight:700;color:#8b93a3;text-transform:uppercase;letter-spacing:.06em}
+  .name{font-size:17px;font-weight:700;margin:4px 0 6px}
+  .desc{font-size:13px;color:#9aa0ac}
+  .legal{margin-top:48px;font-size:12px;color:#6b7280;border-top:1px solid #242833;padding-top:20px}
+</style>
+</head>
+<body>
+  <h1>Nextour 디자인 시안</h1>
+  <p class="sub">홈페이지 기준 6장. 카드를 클릭해 전체 화면으로 확인하세요.</p>
+
+  <h2>A · 한국형 여행사 장르 (하나투어 레퍼런스)</h2>
+  <div class="grid">
+    <a class="card" href="a1-clean.html">
+      <div class="thumb" style="background:linear-gradient(135deg,#e8f0ff,#cfe0ff);color:#0b4fd6">CLEAN BLUE</div>
+      <div class="card-body"><div class="tag">A1</div><div class="name">클린 블루</div><div class="desc">화이트+신뢰감 블루. 통합검색바·지역탭 중심. 하나투어 본연의 깔끔함에 가장 근접.</div></div>
+    </a>
+    <a class="card" href="a2-vivid.html">
+      <div class="thumb" style="background:linear-gradient(135deg,#0fb9b1,#ff7e5f);color:#fff">MODERN VIVID</div>
+      <div class="card-body"><div class="tag">A2</div><div class="name">모던 비비드</div><div class="desc">풀블리드 그라데이션 히어로, 큰 타이포·특가 배지. 젊고 활기찬 톤.</div></div>
+    </a>
+    <a class="card" href="a3-premium.html">
+      <div class="thumb" style="background:linear-gradient(135deg,#13233f,#1f3b66);color:#e9c46a">PREMIUM DEEP</div>
+      <div class="card-body"><div class="tag">A3</div><div class="name">프리미엄 딥</div><div class="desc">딥네이비+골드, 세리프 헤드라인. 큐레이션·고가 패키지 톤.</div></div>
+    </a>
+  </div>
+
+  <h2>B · Claude(Anthropic) 미감</h2>
+  <div class="grid">
+    <a class="card" href="b1-claude-ivory.html">
+      <div class="thumb" style="background:#f0eee6;color:#bd5d3a">WARM IVORY</div>
+      <div class="card-body"><div class="tag">B1</div><div class="name">Claude 아이보리</div><div class="desc">따뜻한 크림 배경+클레이 코랄, 세리프 디스플레이. 차분한 에디토리얼.</div></div>
+    </a>
+    <a class="card" href="b2-claude-dark.html">
+      <div class="thumb" style="background:#262624;color:#cc785c">SLATE DARK</div>
+      <div class="card-body"><div class="tag">B2</div><div class="name">Claude 다크</div><div class="desc">웜다크 배경+코랄 포인트. 아늑한 프리미엄 다크 모드.</div></div>
+    </a>
+    <a class="card" href="b3-claude-paper.html">
+      <div class="thumb" style="background:#faf9f5;color:#1a1a18;border-bottom:1px solid #e6e3d8">PAPER MINIMAL</div>
+      <div class="card-body"><div class="tag">B3</div><div class="name">Claude 페이퍼</div><div class="desc">극단적 여백·대형 세리프, 단일 포인트 컬러. 잡지처럼 조판된 미니멀.</div></div>
+    </a>
+  </div>
+
+  <p class="legal">※ 본 시안은 한국형 여행 예약 사이트의 일반적 UX 관습을 차용한 <b>오리지널 디자인</b>입니다. 특정 사이트의 로고·사진·문구·코드를 복제하지 않았습니다. 사진은 자유 이용 placeholder(picsum.photos), 폰트는 오픈소스를 사용합니다.</p>
+</body>
+</html>

@@ -17,8 +17,8 @@ export function BookingPaginator({ page, total, pageSize, basePath }: Props) {
   const linkClass = (active: boolean) =>
     `inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors ${
       active
-        ? "bg-indigo-600 text-white"
-        : "text-gray-600 hover:bg-gray-100"
+        ? "bg-primary text-primary-foreground"
+        : "text-muted-foreground hover:bg-accent"
     }`;
 
   // 표시할 페이지 번호 범위: 현재 페이지 중심 ±2
@@ -42,8 +42,8 @@ export function BookingPaginator({ page, total, pageSize, basePath }: Props) {
         tabIndex={hasPrev ? undefined : -1}
         className={`inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium transition-colors ${
           hasPrev
-            ? "text-gray-600 hover:bg-gray-100"
-            : "pointer-events-none text-gray-300"
+            ? "text-muted-foreground hover:bg-accent"
+            : "pointer-events-none text-muted-foreground/50"
         }`}
       >
         이전
@@ -55,7 +55,7 @@ export function BookingPaginator({ page, total, pageSize, basePath }: Props) {
             1
           </Link>
           {range[0] > 2 && (
-            <span className="px-1 text-gray-400">…</span>
+            <span className="px-1 text-muted-foreground">…</span>
           )}
         </>
       )}
@@ -74,7 +74,7 @@ export function BookingPaginator({ page, total, pageSize, basePath }: Props) {
       {range[range.length - 1] < totalPages && (
         <>
           {range[range.length - 1] < totalPages - 1 && (
-            <span className="px-1 text-gray-400">…</span>
+            <span className="px-1 text-muted-foreground">…</span>
           )}
           <Link
             href={`${basePath}?page=${totalPages}`}
@@ -91,8 +91,8 @@ export function BookingPaginator({ page, total, pageSize, basePath }: Props) {
         tabIndex={hasNext ? undefined : -1}
         className={`inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium transition-colors ${
           hasNext
-            ? "text-gray-600 hover:bg-gray-100"
-            : "pointer-events-none text-gray-300"
+            ? "text-muted-foreground hover:bg-accent"
+            : "pointer-events-none text-muted-foreground/50"
         }`}
       >
         다음

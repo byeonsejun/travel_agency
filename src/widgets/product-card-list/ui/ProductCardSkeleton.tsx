@@ -2,7 +2,7 @@ import { Skeleton } from "@/shared/ui/Skeleton";
 
 export function ProductCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div className="overflow-hidden rounded-lg border border-border bg-card">
       <Skeleton className="h-48 w-full rounded-none" />
       <div className="space-y-3 p-4">
         <Skeleton className="h-3 w-1/3" />

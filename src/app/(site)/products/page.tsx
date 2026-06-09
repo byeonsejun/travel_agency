@@ -58,8 +58,8 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
   })();
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
-      <h1 className="mb-8 text-3xl font-bold">여행 상품</h1>
+    <div className="mx-auto max-w-7xl px-6 py-10">
+      <h1 className="mb-8 text-3xl font-extrabold tracking-tight">여행 상품</h1>
 
       <ProductFilterBar
         destinations={destinations}
@@ -82,7 +82,7 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
             }
             action={
               params.destination ? (
-                <Link href="/products" className="text-blue-600 hover:underline">
+                <Link href="/products" className="font-semibold text-primary hover:underline">
                   필터 초기화
                 </Link>
               ) : undefined

@@ -14,10 +14,10 @@ export function ItineraryTimeline({ days }: ItineraryTimelineProps) {
           <div key={day.id} className="relative">
             {/* 일차 배지와 제목 */}
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
                 {day.dayNumber}
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-foreground">
                 {day.title}
               </h3>
             </div>
@@ -25,26 +25,26 @@ export function ItineraryTimeline({ days }: ItineraryTimelineProps) {
             {/* 방문지 목록 */}
             {day.stops.length > 0 && (
               <div className="mb-4 space-y-3 pl-5">
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-foreground">
                   방문지
                 </p>
                 {day.stops.map((stop) => (
                   <div
                     key={stop.id}
-                    className="border-l-2 border-gray-300 pl-4"
+                    className="border-l-2 border-border pl-4"
                   >
                     <div className="flex gap-2">
                       {stop.time && (
-                        <span className="text-sm font-medium text-gray-600">
+                        <span className="text-sm font-medium text-muted-foreground">
                           {stop.time}
                         </span>
                       )}
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-foreground">
                         {stop.place}
                       </span>
                     </div>
                     {stop.description && (
-                      <p className="mt-1 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         {stop.description}
                       </p>
                     )}
@@ -69,10 +69,10 @@ export function ItineraryTimeline({ days }: ItineraryTimelineProps) {
 
                   return (
                     <div key={key} className="flex gap-3">
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-foreground">
                         {label}:
                       </span>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-muted-foreground">
                         {mealValue}
                       </span>
                     </div>
@@ -85,10 +85,10 @@ export function ItineraryTimeline({ days }: ItineraryTimelineProps) {
             {day.accommodation && (
               <div className="pl-5">
                 <div className="flex gap-3">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-foreground">
                     숙소:
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-muted-foreground">
                     {day.accommodation}
                   </span>
                 </div>

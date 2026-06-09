@@ -2,6 +2,8 @@ import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, OAuthLoginButtons } from "@/features/auth";
 import { safeCallbackPath } from "@/shared/lib/security";
+import { Input } from "@/shared/ui/input";
+import { Button } from "@/shared/ui/button";
 
 interface Props {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
@@ -20,17 +22,17 @@ export default async function LoginPage({ searchParams }: Props) {
   const safeCallback = safeCallbackPath(callbackUrl);
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm space-y-6 rounded-xl bg-white px-8 py-10 shadow">
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-secondary px-6 py-16">
+      <div className="w-full max-w-sm space-y-6 rounded-2xl border border-border bg-card px-8 py-10 shadow-card">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">로그인</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">로그인</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             이메일로 로그인 링크를 받으세요
           </p>
         </div>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+          <p className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
             {ERROR_MESSAGES[error] ?? ERROR_MESSAGES.Default}
           </p>
         )}
@@ -63,26 +65,23 @@ export default async function LoginPage({ searchParams }: Props) {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-foreground"
             >
               이메일
             </label>
-            <input
+            <Input
               id="email"
               name="email"
               type="email"
               autoComplete="email"
               required
               placeholder="hello@example.com"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1.5"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
+          <Button type="submit" className="w-full">
             이메일로 링크 받기
-          </button>
+          </Button>
         </form>
 
         <OAuthLoginButtons callbackUrl={safeCallback} />

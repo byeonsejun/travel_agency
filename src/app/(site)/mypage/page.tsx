@@ -50,7 +50,7 @@ export default async function MyPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold text-gray-900">마이페이지</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">마이페이지</h1>
         {wishlistCount > 0 && (
           <span
             aria-label={`찜한 상품 ${wishlistCount}개`}
@@ -64,7 +64,7 @@ export default async function MyPage({ searchParams }: PageProps) {
       {/* 프로필 섹션 */}
       <section
         aria-labelledby="profile-heading"
-        className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+        className="mt-6 rounded-xl border border-border bg-card p-6 shadow-card"
       >
         <h2 id="profile-heading" className="sr-only">
           프로필
@@ -72,16 +72,16 @@ export default async function MyPage({ searchParams }: PageProps) {
         <div className="flex items-center gap-4">
           <div
             aria-hidden="true"
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-xl font-semibold text-indigo-700"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-xl font-semibold text-primary"
           >
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-semibold text-gray-900">
+            <p className="truncate text-lg font-bold text-foreground">
               {displayName}
             </p>
             {user.email && (
-              <p className="truncate text-sm text-gray-500">{user.email}</p>
+              <p className="truncate text-sm text-muted-foreground">{user.email}</p>
             )}
           </div>
         </div>
@@ -90,12 +90,12 @@ export default async function MyPage({ searchParams }: PageProps) {
       {/* 여권 정보 섹션 */}
       <section
         aria-labelledby="passport-heading"
-        className="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+        className="mt-8 rounded-xl border border-border bg-card p-6 shadow-card"
       >
         <div className="mb-5 flex items-baseline justify-between">
           <h2
             id="passport-heading"
-            className="text-lg font-semibold text-gray-900"
+            className="text-lg font-bold text-foreground"
           >
             여권 정보
           </h2>
@@ -118,11 +118,11 @@ export default async function MyPage({ searchParams }: PageProps) {
         <div className="mb-4 flex items-baseline justify-between">
           <h2
             id="wishlist-heading"
-            className="text-lg font-semibold text-gray-900"
+            className="text-lg font-bold text-foreground"
           >
             찜한 상품
           </h2>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground">
             총 {wishlistItems.length}건 · 최신순
           </span>
         </div>
@@ -134,11 +134,11 @@ export default async function MyPage({ searchParams }: PageProps) {
         <div className="mb-4 flex items-baseline justify-between">
           <h2
             id="bookings-heading"
-            className="text-lg font-semibold text-gray-900"
+            className="text-lg font-bold text-foreground"
           >
             예약 내역
           </h2>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground">
             총 {total}건 · 최신순
           </span>
         </div>

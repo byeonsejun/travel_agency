@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nextour · A1 클린 블루</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --blue:#1062ff; --blue-d:#0a4fd6; --ink:#16181d; --muted:#6b7280;
+    --line:#e9ecf2; --bg:#ffffff; --soft:#f5f7fb; --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Pretendard,system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}
+  a{text-decoration:none;color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  /* utility bar */
+  .util{background:var(--soft);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  .util .wrap{display:flex;justify-content:flex-end;gap:18px;height:36px;align-items:center}
+  /* main nav */
+  header{border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:20}
+  .nav{display:flex;align-items:center;height:68px;gap:36px}
+  .logo{font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--blue)}
+  .logo span{color:var(--ink)}
+  nav.menu{display:flex;gap:28px;font-size:16px;font-weight:600}
+  nav.menu a{padding:8px 0;border-bottom:2px solid transparent}
+  nav.menu a:hover{color:var(--blue);border-color:var(--blue)}
+  .nav-right{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:14px;font-weight:600}
+  .btn{background:var(--blue);color:#fff;padding:9px 18px;border-radius:10px;font-weight:700}
+  .btn:hover{background:var(--blue-d)}
+  .ghost{color:var(--muted)}
+  /* hero */
+  .hero{position:relative;height:440px;border-radius:0;overflow:hidden;background:#cfe0ff}
+  .hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.78)}
+  .hero-copy{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;color:#fff}
+  .hero-copy h1{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1.2;text-shadow:0 2px 24px rgba(0,0,0,.3)}
+  .hero-copy p{font-size:18px;margin-top:12px;opacity:.95;text-shadow:0 1px 12px rgba(0,0,0,.3)}
+  /* search bar */
+  .search{max-width:1180px;margin:-44px auto 0;position:relative;z-index:10;padding:0 24px}
+  .search-box{background:#fff;border-radius:18px;box-shadow:0 18px 50px rgba(16,40,90,.16);padding:14px;display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:8px;border:1px solid var(--line)}
+  .field{padding:12px 16px;border-radius:12px}
+  .field:hover{background:var(--soft)}
+  .field .lab{font-size:12px;color:var(--muted);font-weight:600}
+  .field .val{font-size:16px;font-weight:700;margin-top:3px;color:var(--ink)}
+  .search-btn{background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:800;padding:0 30px;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .search-btn:hover{background:var(--blue-d)}
+  /* region tabs */
+  section{margin-top:64px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px}
+  .sec-head h2{font-size:24px;font-weight:800;letter-spacing:-.02em}
+  .sec-head .more{margin-left:auto;font-size:14px;color:var(--muted);font-weight:600}
+  .tabs{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+  .tab{padding:9px 18px;border-radius:999px;border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+  .tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  /* cards */
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+  .card{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:box-shadow .15s,transform .15s;background:#fff}
+  .card:hover{box-shadow:0 14px 36px rgba(16,40,90,.12);transform:translateY(-3px)}
+  .card .ph{position:relative;height:160px;background:linear-gradient(135deg,#dbe7ff,#c3d6ff)}
+  .card .ph img{width:100%;height:100%;object-fit:cover}
+  .badge{position:absolute;top:10px;left:10px;background:#ff4d4f;color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:7px}
+  .card .info{padding:14px}
+  .card .dest{font-size:12px;color:var(--blue);font-weight:700}
+  .card .ttl{font-size:15px;font-weight:700;margin:5px 0 8px;line-height:1.35;height:40px;overflow:hidden}
+  .card .rate{font-size:12px;color:var(--muted)}
+  .card .price{margin-top:8px;display:flex;align-items:baseline;gap:6px}
+  .card .price .num{font-size:20px;font-weight:800}
+  .card .price .won{font-size:13px;color:var(--muted)}
+  /* theme bento */
+  .bento{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .bento a{border-radius:var(--radius);padding:24px;color:#fff;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;font-weight:800;font-size:18px}
+  .bento .s{font-size:13px;font-weight:600;opacity:.9;margin-bottom:4px}
+  footer{margin-top:80px;border-top:1px solid var(--line);background:var(--soft);padding:40px 0;color:var(--muted);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px}
+</style>
+</head>
+<body>
+  <div class="util"><div class="wrap"><a>고객센터</a><a>마이페이지</a><a>예약조회</a></div></div>
+  <header><div class="wrap nav">
+    <a class="logo">Next<span>tour</span></a>
+    <nav class="menu">
+      <a>해외여행</a><a>국내여행</a><a>호텔</a><a>항공</a><a>테마</a>
+    </nav>
+    <div class="nav-right"><a class="ghost">로그인</a><a class="btn">회원가입</a></div>
+  </div></header>
+
+  <div class="hero">
+    <img src="https://picsum.photos/seed/nextour-hero1/1600/600" alt="">
+    <div class="wrap hero-copy">
+      <h1>조건에 딱 맞는 여행을<br>AI가 찾아드립니다</h1>
+      <p>목적지·날짜·인원만 입력하면, 나머지는 Nextour가.</p>
+    </div>
+  </div>
+
+  <div class="search">
+    <div class="search-box">
+      <div class="field"><div class="lab">목적지</div><div class="val">도시·나라·테마 검색</div></div>
+      <div class="field"><div class="lab">출발일</div><div class="val">날짜 선택</div></div>
+      <div class="field"><div class="lab">인원</div><div class="val">성인 2명</div></div>
+      <button class="search-btn">🔍 검색</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section>
+      <div class="sec-head"><h2>지금 떠나기 좋은 특가</h2><a class="more">전체보기 ›</a></div>
+      <div class="tabs">
+        <div class="tab on">전체</div><div class="tab">일본</div><div class="tab">동남아</div>
+        <div class="tab">유럽</div><div class="tab">미주</div><div class="tab">대양주</div>
+      </div>
+      <div class="cards">
+        <a class="card"><div class="ph"><span class="badge">특가</span><img src="https://picsum.photos/seed/tokyo/400/300"></div><div class="info"><div class="dest">일본 · 도쿄</div><div class="ttl">도쿄 자유여행 3일 · 시내 호텔 포함</div><div class="rate">⭐ 4.8 (1,204)</div><div class="price"><span class="num">890,000</span><span class="won">원~</span></div></div></a>
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/danang/400/300"></div><div class="info"><div class="dest">베트남 · 다낭</div><div class="ttl">다낭·호이안 4일 · 5성 리조트</div><div class="rate">⭐ 4.7 (876)</div><div class="price"><span class="num">599,000</span><span class="won">원~</span></div></div></a>
+        <a class="card"><div class="ph"><span class="badge">HOT</span><img src="https://picsum.photos/seed/paris/400/300"></div><div class="info"><div class="dest">프랑스 · 파리</div><div class="ttl">파리 일주 5일 · 핵심 명소 가이드</div><div class="rate">⭐ 4.9 (532)</div><div class="price"><span class="num">1,490,000</span><span class="won">원~</span></div></div></a>
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/cebu/400/300"></div><div class="info"><div class="dest">필리핀 · 세부</div><div class="ttl">세부 4일 · 아일랜드 호핑 포함</div><div class="rate">⭐ 4.6 (1,031)</div><div class="price"><span class="num">650,000</span><span class="won">원~</span></div></div></a>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>테마별 기획전</h2></div>
+      <div class="bento">
+        <a style="background:linear-gradient(135deg,#1062ff,#0a4fd6)"><span class="s">가족과 함께</span>키즈 동반 추천</a>
+        <a style="background:linear-gradient(135deg,#ff7e5f,#ff5470)"><span class="s">단둘이</span>허니문 특집</a>
+        <a style="background:linear-gradient(135deg,#0fb9b1,#0a8f88)"><span class="s">혼자라서 좋아</span>나홀로 여행</a>
+        <a style="background:linear-gradient(135deg,#8a5cf6,#6d28d9)"><span class="s">짧고 굵게</span>주말 근거리</a>
+      </div>
+    </section>
+  </div>
+
+  <footer><div class="wrap">
+    <div><b style="color:var(--ink);font-size:16px">Nextour</b><br>AI 기반 맞춤형 패키지 여행 플랫폼</div>
+    <div>회사소개 · 이용약관 · 개인정보처리방침<br>고객센터 1234-5678</div>
+  </div></footer>
+</body>
+</html>

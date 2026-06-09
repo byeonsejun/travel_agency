@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nextour · A3 프리미엄 딥</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0e1b32;--navy2:#13233f;--gold:#d8a54a;--gold-l:#e9c46a;--ink:#101521;--muted:#8a93a6;--line:#e8eaf0;--cream:#faf7f0}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Pretendard,system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.55}
+  a{text-decoration:none;color:inherit}
+  .serif{font-family:"Noto Serif KR",serif}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+  header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:30}
+  .nav{display:flex;align-items:center;height:76px;gap:38px}
+  .logo{font-size:24px;font-weight:900;letter-spacing:.02em}
+  .logo b{color:var(--gold-l)}
+  nav.menu{display:flex;gap:30px;font-size:15px;font-weight:600;color:#cfd6e4}
+  nav.menu a:hover{color:var(--gold-l)}
+  .nav-right{margin-left:auto;display:flex;gap:18px;align-items:center;font-size:14px;color:#cfd6e4}
+  .gold-btn{border:1px solid var(--gold);color:var(--gold-l);padding:9px 20px;border-radius:4px;font-weight:700}
+  .gold-btn:hover{background:var(--gold);color:var(--navy)}
+  /* hero */
+  .hero{position:relative;height:520px;background:var(--navy2);overflow:hidden}
+  .hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--navy) 8%,rgba(14,27,50,.2) 70%)}
+  .hero-in{position:relative;z-index:2;color:#fff;height:100%;display:flex;flex-direction:column;justify-content:center}
+  .ey{color:var(--gold-l);letter-spacing:.28em;font-size:13px;font-weight:700;text-transform:uppercase;margin-bottom:18px}
+  .hero h1{font-size:50px;font-weight:900;line-height:1.25;letter-spacing:-.01em}
+  .hero p{font-size:18px;color:#d6dceb;margin-top:18px;max-width:520px}
+  /* search */
+  .search{max-width:1160px;margin:-40px auto 0;padding:0 28px;position:relative;z-index:10}
+  .search-box{background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);box-shadow:0 20px 50px rgba(14,27,50,.18);display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:0}
+  .field{padding:20px 24px;border-right:1px solid var(--line)}
+  .field .lab{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .field .val{font-size:16px;font-weight:700;margin-top:6px}
+  .sbtn{background:var(--navy);color:var(--gold-l);border:none;padding:0 38px;font-size:16px;font-weight:800;letter-spacing:.04em;cursor:pointer}
+  .sbtn:hover{background:var(--gold);color:var(--navy)}
+  section{margin-top:80px}
+  .sec-head{text-align:center;margin-bottom:36px}
+  .sec-head .eyc{color:var(--gold);letter-spacing:.24em;font-size:12px;font-weight:700;text-transform:uppercase}
+  .sec-head h2{font-size:32px;font-weight:900;margin-top:10px;letter-spacing:-.01em}
+  .sec-head .ln{width:50px;height:2px;background:var(--gold);margin:18px auto 0}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+  @media(max-width:880px){.cards{grid-template-columns:1fr}.hero h1{font-size:34px}}
+  .card{background:#fff;border:1px solid var(--line);overflow:hidden;transition:box-shadow .2s}
+  .card:hover{box-shadow:0 18px 44px rgba(14,27,50,.14)}
+  .card .ph{position:relative;height:230px}
+  .card .ph img{width:100%;height:100%;object-fit:cover}
+  .tagline{position:absolute;bottom:0;left:0;right:0;padding:30px 18px 12px;background:linear-gradient(transparent,rgba(14,27,50,.85));color:var(--gold-l);font-size:12px;letter-spacing:.16em;font-weight:700;text-transform:uppercase}
+  .card .info{padding:22px}
+  .card .ttl{font-size:20px;font-weight:700;line-height:1.4}
+  .card .desc{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .card .foot{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between}
+  .card .foot .small{font-size:12px;color:var(--muted)}
+  .card .foot .price{font-size:22px;font-weight:900}
+  .card .foot .price small{font-size:13px;color:var(--muted);font-weight:600}
+  .band{margin-top:80px;background:var(--cream);padding:64px 0;text-align:center}
+  .band h3{font-size:26px;font-weight:900}
+  .band p{color:var(--muted);margin-top:12px}
+  footer{background:var(--navy);color:#9aa6bd;padding:54px 0;font-size:13px;margin-top:0}
+  footer .logo{font-size:22px;margin-bottom:14px;color:#fff}
+</style>
+</head>
+<body>
+  <header><div class="wrap nav">
+    <a class="logo serif">NEX<b>TOUR</b></a>
+    <nav class="menu"><a>해외여행</a><a>럭셔리</a><a>크루즈</a><a>허니문</a><a>테마</a></nav>
+    <div class="nav-right"><a>로그인</a><a class="gold-btn">멤버십</a></div>
+  </div></header>
+
+  <div class="hero">
+    <img src="https://picsum.photos/seed/p-hero/1600/700" alt="">
+    <div class="wrap hero-in">
+      <div class="ey">Curated Journeys</div>
+      <h1 class="serif">머무는 순간까지<br>설계된 여행</h1>
+      <p>전문 큐레이터와 AI가 함께 고른, 당신만을 위한 프리미엄 패키지.</p>
+    </div>
+  </div>
+
+  <div class="search">
+    <div class="search-box">
+      <div class="field"><div class="lab">Destination</div><div class="val">목적지 · 테마</div></div>
+      <div class="field"><div class="lab">Departure</div><div class="val">출발일 선택</div></div>
+      <div class="field"><div class="lab">Travelers</div><div class="val">성인 2명</div></div>
+      <button class="sbtn">SEARCH</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section>
+      <div class="sec-head"><div class="eyc">Signature Collection</div><h2 class="serif">이달의 큐레이션</h2><div class="ln"></div></div>
+      <div class="cards">
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/p-kyoto/500/360"><div class="tagline">Japan · Kyoto</div></div><div class="info"><div class="ttl serif">교토 료칸 미식 4일</div><div class="desc">가이세키 정찬과 전통 온천, 비공개 정원 산책까지.</div><div class="foot"><span class="small">4박 5일 · 2인 기준</span><span class="price"><small>₩</small> 2,400,000</span></div></div></a>
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/p-maldives/500/360"><div class="tagline">Maldives</div></div><div class="info"><div class="ttl serif">몰디브 수상빌라 6일</div><div class="desc">프라이빗 수상빌라와 전용 버틀러, 선셋 디너 크루즈.</div><div class="foot"><span class="small">5박 6일 · 허니문</span><span class="price"><small>₩</small> 5,900,000</span></div></div></a>
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/p-swiss/500/360"><div class="tagline">Switzerland</div></div><div class="info"><div class="ttl serif">스위스 알프스 일주 8일</div><div class="desc">파노라마 특급열차와 융프라우, 5성 샬레 숙박.</div><div class="foot"><span class="small">7박 8일</span><span class="price"><small>₩</small> 4,300,000</span></div></div></a>
+      </div>
+    </section>
+  </div>
+
+  <div class="band"><div class="wrap"><h3 class="serif">전담 컨시어지가 동행합니다</h3><p>예약부터 귀국까지, 전문 큐레이터가 당신의 여정을 챙깁니다.</p></div></div>
+
+  <footer><div class="wrap"><div class="logo serif">NEXTOUR</div>AI 기반 프리미엄 패키지 여행 · 고객센터 1234-5678</div></footer>
+</body>
+</html>

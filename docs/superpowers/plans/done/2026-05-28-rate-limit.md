@@ -1,5 +1,9 @@
 # Rate Limit Implementation Plan — Phase 3 B2-C
 
+> **🗄️ ARCHIVED (2026-06-09) — CODE COMPLETE, OPS OUT-OF-SCOPE.**
+> 코드·테스트·ADR(0022 hybrid 통합 / 0023 fail-open)은 모두 머지·발행 완료. CLAUDE.md §8 Phase 11 완료로 박제됨.
+> 잔여 미체크 항목(Task 14: shadow→`enforce` 승격, `vercel deploy --prod`, 24~48h 운영 모니터링)은 **실거래 없는 dev 프로젝트의 범위 밖**(사용자 결정 2026-06-09)이라 의도적으로 미실행. prod 롤아웃은 이 repo에서 추적하지 않는다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** `@upstash/ratelimit` 기반 4-tier sliding window 속도 제한을 Hybrid 통합(Edge middleware global baseline + route/action wrapper tier-specific)으로 도입한다.
