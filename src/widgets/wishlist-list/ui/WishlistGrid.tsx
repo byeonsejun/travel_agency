@@ -15,7 +15,7 @@ export function WishlistGrid({ items }: Props) {
         title="아직 찜한 상품이 없습니다."
         description="상품 페이지에서 하트를 눌러 관심 상품을 저장해보세요."
         action={
-          <Link href="/products" className="text-blue-600 hover:underline">
+          <Link href="/products" className="text-primary hover:underline">
             상품 둘러보기 →
           </Link>
         }

@@ -1084,15 +1084,15 @@ git commit -m "feat(ui): restyle /login (A1)"
 **Files:**
 - Modify: `src/app/(site)/mypage/page.tsx`, `src/widgets/booking-list/**`, `src/widgets/wishlist-list/**`
 
-- [ ] **Step 1: 구조 확인**
+- [x] **Step 1: 구조 확인**
 
 Run: `cat "src/app/(site)/mypage/page.tsx" && ls src/widgets/booking-list/ui src/widgets/wishlist-list/ui`
 
-- [ ] **Step 2: 예약/위시리스트 카드 A1 화**
+- [x] **Step 2: 예약/위시리스트 카드 A1 화**
 
 booking/wishlist 항목을 `Card` + 토큰 클래스로. 상태 배지는 shadcn `Badge`. 위시리스트 `CustomEvent` bus([ADR-0019])·island 로직 **불변**.
 
-- [ ] **Step 3: typecheck + test + build + Playwright + Commit**
+- [x] **Step 3: typecheck + test + build + Playwright + Commit**
 
 Run: `npm run typecheck && npm run test && npm run build`
 Expected: PASS. Playwright: 마이페이지 예약 목록·위시리스트 토글.

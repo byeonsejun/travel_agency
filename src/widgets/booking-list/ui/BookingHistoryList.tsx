@@ -34,7 +34,7 @@ export function BookingHistoryList({ bookings, bookingIdsWithReview }: Props) {
         action={
           <Link
             href="/search"
-            className="inline-block rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="inline-block rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
             여행 검색하러 가기
           </Link>
@@ -55,7 +55,7 @@ export function BookingHistoryList({ bookings, bookingIdsWithReview }: Props) {
         return (
           <li
             key={booking.id}
-            className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+            className="overflow-hidden rounded-xl border border-border bg-card transition-all hover:shadow-card"
           >
             <Link
               href={`/bookings/${booking.id}`}
@@ -64,11 +64,11 @@ export function BookingHistoryList({ bookings, bookingIdsWithReview }: Props) {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-base font-semibold text-gray-900">
+                  <h3 className="truncate text-base font-semibold text-foreground">
                     {departure.product.title}
                   </h3>
-                  <p className="mt-1 text-sm text-gray-500">{period}</p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-sm text-muted-foreground">{period}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     예약 인원 {totalPax(booking)}명 · 예약 ID {booking.id.slice(-8)}
                   </p>
                 </div>
@@ -78,11 +78,11 @@ export function BookingHistoryList({ bookings, bookingIdsWithReview }: Props) {
               {/* 예약 진행 상태 바 (PRD §4.1D) */}
               <BookingProgressBar status={booking.status} className="mt-5" />
 
-              <div className="mt-5 flex items-end justify-between border-t border-gray-100 pt-4">
-                <span className="text-xs text-gray-400">
+              <div className="mt-5 flex items-end justify-between border-t border-border pt-4">
+                <span className="text-xs text-muted-foreground">
                   {booking.createdAt.toLocaleDateString("ko-KR")} 예약
                 </span>
-                <span className="text-lg font-bold text-gray-900">
+                <span className="text-lg font-bold text-foreground">
                   {booking.totalPrice.toLocaleString("ko-KR")}원
                 </span>
               </div>
@@ -90,18 +90,18 @@ export function BookingHistoryList({ bookings, bookingIdsWithReview }: Props) {
 
             {/* 후기 CTA — Link 중첩 회피를 위해 메인 Link 밖 별도 영역에 배치. */}
             {showReviewCTA && (
-              <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
+              <div className="border-t border-border bg-secondary px-5 py-3">
                 {hasReview ? (
                   <Link
                     href={`/products/${departure.product.id}`}
-                    className="inline-flex items-center text-sm font-medium text-indigo-700 hover:text-indigo-900"
+                    className="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80"
                   >
                     내 후기 보기 →
                   </Link>
                 ) : (
                   <Link
                     href={`/reviews/new?bookingId=${booking.id}`}
-                    className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                    className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
                   >
                     후기 작성하기
                   </Link>
