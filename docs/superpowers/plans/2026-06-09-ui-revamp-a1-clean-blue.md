@@ -555,7 +555,7 @@ git commit -m "feat(ui): site-header widget (responsive + mobile sheet)"
 **Files:**
 - Modify: `src/app/(site)/layout.tsx`
 
-- [ ] **Step 1: layout 교체**
+- [x] **Step 1: layout 교체**
 
 Replace `src/app/(site)/layout.tsx`:
 ```tsx
@@ -579,12 +579,12 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
 ```
 > `GlobalRouteProgress` 의 Suspense 경계·`<main>` 단일 랜드마크([ADR-0035]) 유지. cookies 의존 0 유지(auth 는 island 내부).
 
-- [ ] **Step 2: build + 런타임 확인 (Playwright)**
+- [x] **Step 2: build + 런타임 확인 (Playwright)**
 
 Run: `npm run build`
 Expected: 성공. dev 서버(`npm run dev`) 후 Playwright 로 `/` 접속 → 헤더 로고·해외/국내 메뉴·풋터 렌더, 모바일 뷰포트(375px)에서 햄버거 → sheet 열림 확인.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add "src/app/(site)/layout.tsx"
