@@ -23,7 +23,7 @@ async function SearchResults({ q }: { q: string }) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
       {results.map((item) => (
         <ProductCard key={item.id} product={item} />
       ))}
@@ -37,16 +37,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // 외곽 div — <main> landmark는 layout.tsx 단일 제공(중첩 방지).
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-6 py-10">
       <section className="mb-8">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900">여행 검색</h1>
-        <SearchBox defaultValue={query} />
+        <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-foreground">여행 검색</h1>
+        <div className="rounded-2xl bg-card p-3 shadow-float">
+          <SearchBox defaultValue={query} />
+        </div>
       </section>
 
       {query ? (
         <section>
-          <p className="mb-6 text-sm text-gray-500">
-            <span className="font-semibold text-gray-800">&ldquo;{query}&rdquo;</span> 검색
+          <p className="mb-6 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">&ldquo;{query}&rdquo;</span> 검색
             결과
           </p>
           <Suspense fallback={<SearchSkeleton />}>
@@ -55,7 +57,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </section>
       ) : (
         <section>
-          <h2 className="mb-4 text-lg font-semibold text-gray-700">
+          <h2 className="mb-4 text-lg font-bold text-foreground">
             이런 여행은 어떠세요?
           </h2>
           <SearchChips />
@@ -67,17 +69,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
 function SearchSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="animate-pulse overflow-hidden rounded-lg border border-gray-200">
-          <div className="h-48 bg-gray-200" />
-          <div className="p-4 space-y-3">
-            <div className="h-3 w-1/3 rounded bg-gray-200" />
-            <div className="h-4 w-3/4 rounded bg-gray-200" />
-            <div className="h-3 w-1/2 rounded bg-gray-200" />
+    <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="animate-pulse overflow-hidden rounded-lg border border-border bg-card">
+          <div className="h-48 bg-secondary" />
+          <div className="space-y-3 p-4">
+            <div className="h-3 w-1/3 rounded bg-secondary" />
+            <div className="h-4 w-3/4 rounded bg-secondary" />
+            <div className="h-3 w-1/2 rounded bg-secondary" />
             <div className="flex gap-2">
-              <div className="h-5 w-16 rounded-full bg-gray-200" />
-              <div className="h-5 w-12 rounded-full bg-gray-200" />
+              <div className="h-5 w-16 rounded-full bg-secondary" />
+              <div className="h-5 w-12 rounded-full bg-secondary" />
             </div>
           </div>
         </div>

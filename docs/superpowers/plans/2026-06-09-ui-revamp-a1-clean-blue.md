@@ -1010,16 +1010,16 @@ git commit -m "feat(ui): restyle PDP (A1, ISR/Suspense/island preserved)"
 **Files:**
 - Modify: `src/app/(site)/search/page.tsx` 및 검색 결과 위젯/feature
 
-- [ ] **Step 1: 구조 확인**
+- [x] **Step 1: 구조 확인**
 
 Run: `cat "src/app/(site)/search/page.tsx" && cat src/features/search/index.ts`
 Expected: 결과 렌더·`useTransition` 스피너 위치 파악.
 
-- [ ] **Step 2: 검색박스·칩·결과카드 A1 화**
+- [x] **Step 2: 검색박스·칩·결과카드 A1 화**
 
 검색박스를 히어로와 동일 톤(`shadow-float` 카드)으로, 결과 카드는 `ProductCard`(B1) 재사용, 칩은 `rounded-full`. `useTransition` 스피너 로직 유지.
 
-- [ ] **Step 3: typecheck + build + Playwright + Commit**
+- [x] **Step 3: typecheck + build + Playwright + Commit**
 
 Run: `npm run typecheck && npm run build`
 Expected: PASS. Playwright: 검색어 입력 → 결과·스피너. 
