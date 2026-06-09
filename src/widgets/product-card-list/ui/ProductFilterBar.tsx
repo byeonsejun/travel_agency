@@ -26,29 +26,25 @@ export function ProductFilterBar({
 
   const isAllActive = !activeCode;
 
+  const chipClass = (active: boolean) =>
+    `whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+      active
+        ? "border-primary bg-primary text-primary-foreground"
+        : "border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
+    }`;
+
   return (
-    <div className="space-y-4 border-b border-gray-200 pb-6">
-      {/* Destination tabs */}
-      <div className="flex gap-2 overflow-x-auto">
-        <Link
-          href={buildHref()}
-          className={`whitespace-nowrap pb-2 text-sm font-medium transition-colors ${
-            isAllActive
-              ? "border-b-2 border-blue-500 text-blue-600"
-              : "border-b-2 border-transparent text-gray-600 hover:text-gray-900"
-          }`}
-        >
+    <div className="space-y-4 border-b border-border pb-6">
+      {/* Destination chips */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <Link href={buildHref()} className={chipClass(isAllActive)}>
           전체
         </Link>
         {destinations.map((dest) => (
           <Link
             key={dest.code}
             href={buildHref(dest.code)}
-            className={`whitespace-nowrap pb-2 text-sm font-medium transition-colors ${
-              activeCode === dest.code
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "border-b-2 border-transparent text-gray-600 hover:text-gray-900"
-            }`}
+            className={chipClass(activeCode === dest.code)}
           >
             {dest.label} ({dest.count})
           </Link>
@@ -57,7 +53,7 @@ export function ProductFilterBar({
 
       {/* Sort select with Suspense */}
       <div className="flex justify-end">
-        <Suspense fallback={<div className="h-10 w-48 rounded border border-gray-300 bg-gray-100" />}>
+        <Suspense fallback={<div className="h-9 w-40 rounded-md border border-input bg-secondary" />}>
           <SortSelect current={activeSort} />
         </Suspense>
       </div>

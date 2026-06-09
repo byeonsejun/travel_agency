@@ -932,7 +932,7 @@ git commit -m "feat(ui): rebuild home with A1 IA (hero/region-deals/theme-bento)
 **Files:**
 - Modify: `src/app/(site)/products/page.tsx` 및 관련 위젯(`ProductCardList`, `SortSelect`, `ProductFilterBar`, `Pagination`)
 
-- [ ] **Step 1: 현재 products 페이지·위젯 구조 확인**
+- [x] **Step 1: 현재 products 페이지·위젯 구조 확인**
 
 Run:
 ```bash
@@ -941,20 +941,20 @@ ls src/widgets/product-card-list/ui src/features/*/ui 2>/dev/null | head -40
 ```
 Expected: 어떤 위젯/feature 가 리스트·정렬·필터·페이지네이션을 렌더하는지 파악.
 
-- [ ] **Step 2: SortSelect 를 shadcn select 로 교체**
+- [x] **Step 2: SortSelect 를 shadcn select 로 교체**
 
 해당 컴포넌트(`'use client'` 정렬 select)를 `@/shared/ui/select` 기반으로 교체. `router.push`+`useTransition` 의 `isPending` 스피너 로직([ADR-0035] 역할분담) **유지**, 마크업만 shadcn 화.
 
-- [ ] **Step 3: 카드 그리드·필터칩·페이지네이션 className A1 화**
+- [x] **Step 3: 카드 그리드·필터칩·페이지네이션 className A1 화**
 
 `ProductCardList` 그리드를 `grid grid-cols-2 gap-5 md:grid-cols-4` 로, 필터칩을 `rounded-full border` 스타일로, 페이지네이션 버튼을 shadcn `Button variant="outline"` 로. 빈 상태는 기존 `EmptyState` 사용 — `?destination=domestic` 처럼 결과 0건이면 "국내여행 상품 준비 중" 류 메시지(spec §2.5).
 
-- [ ] **Step 4: typecheck + test + build + Playwright**
+- [x] **Step 4: typecheck + test + build + Playwright**
 
 Run: `npm run typecheck && npm run test && npm run build`
 Expected: PASS. Playwright: `/products` 카드 그리드·정렬 변경 스피너·페이지 이동·`?destination=domestic` 빈상태.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add "src/app/(site)/products" src/widgets/product-card-list src/features
