@@ -24,10 +24,10 @@ export function ProductDetail({
   const isClosed = product.status === "CLOSED";
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
       {/* 1. Hero 이미지 영역 */}
-      <div className="relative">
-        <div className="h-96 w-full">
+      <div className="relative overflow-hidden rounded-2xl">
+        <div className="h-96 w-full bg-secondary">
           <ProductImage
             src={product.heroImageUrl}
             alt={product.title}
@@ -47,19 +47,19 @@ export function ProductDetail({
         {isClosed && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <div className="text-center">
-              <p className="text-3xl font-bold text-red-500">판매종료</p>
+              <p className="text-3xl font-extrabold text-destructive">판매종료</p>
             </div>
           </div>
         )}
       </div>
 
       {/* 2. 헤더 정보 */}
-      <div className="space-y-2 px-4 md:px-0">
+      <div className="space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-gray-600">{product.destination}</p>
-            <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
-            <p className="text-gray-700">
+            <p className="text-sm font-bold text-primary">{product.destination}</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{product.title}</h1>
+            <p className="text-muted-foreground">
               {product.durationNights}박 {product.durationDays}일
             </p>
           </div>
@@ -72,9 +72,9 @@ export function ProductDetail({
             {product.tags.map((tagObj) => (
               <span
                 key={`${product.id}-${tagObj.tag}`}
-                className="inline-block rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                className="inline-block rounded-full bg-secondary px-3 py-1 text-sm font-medium text-muted-foreground"
               >
-                {tagObj.tag}
+                #{tagObj.tag}
               </span>
             ))}
           </div>
@@ -83,31 +83,34 @@ export function ProductDetail({
 
       {/* 3. AI 요약 박스 */}
       {product.aiSummary && (
-        <div className="rounded-lg bg-indigo-50 p-4 md:p-6">
+        <div className="rounded-lg border border-primary/15 bg-primary/5 p-4 md:p-6">
           <div className="flex gap-3">
-            <span className="text-xl">✦</span>
+            <span className="text-xl text-primary">✦</span>
             <div>
-              <h3 className="mb-2 font-semibold text-gray-900">AI 추천 포인트</h3>
-              <p className="text-gray-700">{product.aiSummary}</p>
+              <h3 className="mb-2 font-bold text-foreground">AI 추천 포인트</h3>
+              <p className="text-muted-foreground">{product.aiSummary}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* 4. 기준가 카드 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 md:p-6">
-        <p className="text-sm text-gray-600">기준 가격 (성인 기준)</p>
-        <p className="text-2xl font-bold text-gray-900">
-          {product.basePriceAdult.toLocaleString()}원~
+      <div className="rounded-lg border border-border bg-card p-4 shadow-card md:p-6">
+        <p className="text-sm text-muted-foreground">기준 가격 (성인 기준)</p>
+        <p className="flex items-baseline gap-1">
+          <span className="text-2xl font-extrabold text-foreground">
+            {product.basePriceAdult.toLocaleString("ko-KR")}
+          </span>
+          <span className="text-sm text-muted-foreground">원~</span>
         </p>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-muted-foreground">
           출발일별로 가격이 상이할 수 있습니다.
         </p>
       </div>
 
       {/* 5. 출발일 섹션 — 클라이언트 폴링(20s)으로 잔여 좌석 신선도 보장 + low-stock 강조 */}
-      <div className="space-y-4 px-4 md:px-0">
-        <h2 className="text-2xl font-bold text-gray-900">출발일 일정</h2>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-extrabold tracking-tight text-foreground">출발일 일정</h2>
         <LiveDepartureList
           productId={product.id}
           initialDepartures={isClosed ? [] : departures}
@@ -115,21 +118,21 @@ export function ProductDetail({
       </div>
 
       {/* 6. 포함/불포함 섹션 */}
-      <div className="space-y-4 px-4 md:px-0">
-        <h2 className="text-2xl font-bold text-gray-900">포함/불포함 사항</h2>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-extrabold tracking-tight text-foreground">포함/불포함 사항</h2>
         <InclusionList inclusions={product.inclusions} />
       </div>
 
       {/* 7. 일정 섹션 */}
-      <div className="space-y-4 px-4 md:px-0">
-        <h2 className="text-2xl font-bold text-gray-900">여행 일정</h2>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-extrabold tracking-tight text-foreground">여행 일정</h2>
         <ItineraryTimeline days={product.itineraryDays} />
       </div>
 
       {/* 8. 후기 섹션 (페이지에서 주입) */}
       {reviewsSection && (
-        <div className="space-y-4 px-4 md:px-0">
-          <h2 className="text-2xl font-bold text-gray-900">여행자 후기</h2>
+        <div className="space-y-4">
+          <h2 className="text-2xl font-extrabold tracking-tight text-foreground">여행자 후기</h2>
           {reviewsSection}
         </div>
       )}

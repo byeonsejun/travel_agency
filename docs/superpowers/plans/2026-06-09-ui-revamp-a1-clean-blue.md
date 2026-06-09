@@ -968,7 +968,7 @@ git commit -m "feat(ui): restyle /products list (A1 grid/sort/filter/pagination)
 **Files:**
 - Modify: `src/widgets/product-detail/**` 및 `src/app/(site)/products/[id]/**`
 
-- [ ] **Step 1: PDP 구조·Suspense 경계 확인**
+- [x] **Step 1: PDP 구조·Suspense 경계 확인**
 
 Run:
 ```bash
@@ -977,7 +977,7 @@ sed -n '1,60p' "src/app/(site)/products/[id]/page.tsx"
 ```
 Expected: 히어로/가격/일정/포함/리뷰 섹션 구성, Suspense 스트리밍·리뷰 island([ADR-0017]/[ADR-0035]) 위치 파악.
 
-- [ ] **Step 2: 섹션별 className A1 적용 (구조·Suspense 불변)**
+- [x] **Step 2: 섹션별 className A1 적용 (구조·Suspense 불변)**
 
 `product-detail` 위젯의 각 섹션을 토큰 기반 클래스로 교체:
 - 히어로 이미지 컨테이너, 가격 박스 → `rounded-lg border shadow-card`
@@ -985,16 +985,16 @@ Expected: 히어로/가격/일정/포함/리뷰 섹션 구성, Suspense 스트�
 - 포함/불포함·일정 타이포 → `text-foreground`/`text-muted-foreground`
 - **Suspense 경계·`'use client'` island 위치·스트리밍 구조는 절대 변경 금지** (className 만 교체)
 
-- [ ] **Step 3: typecheck + test + build**
+- [x] **Step 3: typecheck + test + build**
 
 Run: `npm run typecheck && npm run test && npm run build`
 Expected: PASS. PDP 가 `●`(ISR) 유지(`ƒ` 로 강등되면 Suspense/dynamic 회귀 — 점검).
 
-- [ ] **Step 4: Playwright 런타임**
+- [x] **Step 4: Playwright 런타임**
 
 dev 서버 후 PDP 접속 → 히어로·가격·일정·리뷰 렌더, 리뷰 "더보기" island 동작, 위시리스트 하트 island 동작([ADR-0018]) 확인.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add "src/app/(site)/products" src/widgets/product-detail
