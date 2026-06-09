@@ -19,8 +19,8 @@ export default async function ComparePage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <div className="mb-6 flex items-baseline justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">상품 비교</h1>
-        <span className="text-xs text-gray-400">{products.length} / 3</span>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">상품 비교</h1>
+        <span className="text-xs text-muted-foreground">{products.length} / 3</span>
       </div>
 
       {products.length === 0 ? (
@@ -28,7 +28,7 @@ export default async function ComparePage({ searchParams }: PageProps) {
           title="비교할 상품이 없습니다."
           description="상품 목록에서 ‘+ 비교’ 버튼으로 최대 3개까지 담아보세요."
           action={
-            <Link href="/products" className="text-blue-600 hover:underline">
+            <Link href="/products" className="text-primary hover:underline">
               상품 둘러보기 →
             </Link>
           }

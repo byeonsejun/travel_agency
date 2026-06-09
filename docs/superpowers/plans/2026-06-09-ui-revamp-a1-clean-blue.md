@@ -1035,15 +1035,15 @@ git commit -m "feat(ui): restyle /search (A1)"
 **Files:**
 - Modify: `src/app/(site)/compare/page.tsx`, `src/widgets/product-compare-table/**`
 
-- [ ] **Step 1: 구조 확인**
+- [x] **Step 1: 구조 확인**
 
 Run: `ls src/widgets/product-compare-table/ui && cat "src/app/(site)/compare/page.tsx"`
 
-- [ ] **Step 2: 비교 표 A1 화**
+- [x] **Step 2: 비교 표 A1 화**
 
 표 헤더/행을 `border-border`·`bg-secondary` 헤더·가격 강조(`font-extrabold`)로. 모바일 가로 스크롤 컨테이너 유지/추가.
 
-- [ ] **Step 3: typecheck + build + Commit**
+- [x] **Step 3: typecheck + build + Commit**
 
 Run: `npm run typecheck && npm run build`
 Expected: PASS.
