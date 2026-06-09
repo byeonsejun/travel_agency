@@ -1,5 +1,6 @@
 import { PrismaClient, ProductStatus, DepartureStatus, InclusionKind, UserRole } from "@prisma/client";
 import { createBooking } from "../src/entities/booking/api/mutations";
+import { buildThemeProducts } from "./themeProducts";
 
 const prisma = new PrismaClient();
 
@@ -1176,6 +1177,13 @@ async function main() {
     });
     console.log(`✅ Booking seed: id=${booking.id} status=${booking.status} totalPrice=${booking.totalPrice}`);
   }
+
+  // ── 테마 기획전 상품 12개 (가족여행/허니문/나홀로/주말 근거리) ──────────
+  const themeProducts = buildThemeProducts(today);
+  for (const data of themeProducts) {
+    await prisma.product.create({ data });
+  }
+  console.log(`✅ Theme products seed: ${themeProducts.length}건 (테마별 기획전)`);
 
   // ── 임베딩 잡 큐잉 ──────────────────────────────────────────────────────
   // 검색은 ProductEmbedding 과의 pgvector 유사도라, 임베딩이 없으면 결과가 0건이다.
