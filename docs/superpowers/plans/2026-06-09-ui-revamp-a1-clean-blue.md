@@ -453,7 +453,7 @@ git commit -m "feat(ui): site-footer widget"
 **Files:**
 - Create: `src/widgets/site-header/ui/SiteHeader.tsx`, `src/widgets/site-header/ui/MobileNav.tsx`, `src/widgets/site-header/index.ts`
 
-- [ ] **Step 1: MobileNav (client island — sheet)**
+- [x] **Step 1: MobileNav (client island — sheet)**
 
 Create `src/widgets/site-header/ui/MobileNav.tsx`:
 ```tsx
@@ -491,7 +491,7 @@ export function MobileNav() {
 }
 ```
 
-- [ ] **Step 2: SiteHeader (서버 컴포넌트, 데스크탑 메뉴 + UserNavIsland + MobileNav)**
+- [x] **Step 2: SiteHeader (서버 컴포넌트, 데스크탑 메뉴 + UserNavIsland + MobileNav)**
 
 Create `src/widgets/site-header/ui/SiteHeader.tsx`:
 ```tsx
@@ -532,14 +532,14 @@ export function SiteHeader() {
 ```
 > `UserNavIsland` 의 실제 export 시그니처를 `cat src/features/auth/index.ts` 로 확인 후 Suspense 필요 여부 판단(현 layout 은 Suspense 없이 사용 중 — 동일하게 맞춰도 됨).
 
-- [ ] **Step 3: barrel**
+- [x] **Step 3: barrel**
 
 Create `src/widgets/site-header/index.ts`:
 ```ts
 export { SiteHeader } from "./ui/SiteHeader";
 ```
 
-- [ ] **Step 4: typecheck + Commit**
+- [x] **Step 4: typecheck + Commit**
 
 Run: `npm run typecheck`
 Expected: PASS.
