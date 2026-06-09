@@ -692,7 +692,7 @@ git commit -m "feat(ui): home-theme-bento widget (theme promo links)"
 **Files:**
 - Create: `src/widgets/home-region-deals/model/filterByRegion.ts`, `model/__tests__/filterByRegion.test.ts`, `ui/HomeRegionDeals.tsx`, `index.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 Create `src/widgets/home-region-deals/model/__tests__/filterByRegion.test.ts`:
 ```ts
@@ -725,12 +725,12 @@ describe("buildRegionTabs", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm run test -- filterByRegion`
 Expected: FAIL (모듈 없음).
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 Create `src/widgets/home-region-deals/model/filterByRegion.ts`:
 ```ts
@@ -748,12 +748,12 @@ export function buildRegionTabs(dests: { label: string }[]): string[] {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm run test -- filterByRegion`
 Expected: PASS.
 
-- [ ] **Step 5: 지역탭 UI (client island — shadcn Tabs + 클라 필터)**
+- [x] **Step 5: 지역탭 UI (client island — shadcn Tabs + 클라 필터)**
 
 Create `src/widgets/home-region-deals/ui/HomeRegionDeals.tsx`:
 ```tsx
@@ -802,7 +802,7 @@ export function HomeRegionDeals({
 ```
 > `ProductCard` props 모양은 Task B1 에서 확정된 시그니처에 맞춤. `ProductCardType` export 가 barrel 에 있는지 확인(`@/entities/product` index 에 존재함).
 
-- [ ] **Step 6: barrel + typecheck + Commit**
+- [x] **Step 6: barrel + typecheck + Commit**
 
 Create `src/widgets/home-region-deals/index.ts`:
 ```ts
