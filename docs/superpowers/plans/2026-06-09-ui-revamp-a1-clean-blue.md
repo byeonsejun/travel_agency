@@ -600,7 +600,7 @@ git commit -m "feat(ui): wire site-header/footer into (site) layout"
 **Files:**
 - Create: `src/widgets/home-theme-bento/model/themeLinks.ts`, `model/__tests__/themeLinks.test.ts`, `ui/HomeThemeBento.tsx`, `index.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 Create `src/widgets/home-theme-bento/model/__tests__/themeLinks.test.ts`:
 ```ts
@@ -618,12 +618,12 @@ describe("themeLinks", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npm run test -- themeLinks`
 Expected: FAIL ("Cannot find module '../themeLinks'").
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 Create `src/widgets/home-theme-bento/model/themeLinks.ts`:
 ```ts
@@ -641,12 +641,12 @@ export const THEME_TILES: ThemeTile[] = [
 ];
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npm run test -- themeLinks`
 Expected: PASS.
 
-- [ ] **Step 5: 벤토 UI (서버 컴포넌트)**
+- [x] **Step 5: 벤토 UI (서버 컴포넌트)**
 
 Create `src/widgets/home-theme-bento/ui/HomeThemeBento.tsx`:
 ```tsx
@@ -674,7 +674,7 @@ export function HomeThemeBento() {
 }
 ```
 
-- [ ] **Step 6: barrel + Commit**
+- [x] **Step 6: barrel + Commit**
 
 Create `src/widgets/home-theme-bento/index.ts`:
 ```ts
