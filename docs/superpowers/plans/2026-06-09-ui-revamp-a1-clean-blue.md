@@ -1059,16 +1059,16 @@ git commit -m "feat(ui): restyle /compare table (A1)"
 **Files:**
 - Modify: `src/app/(site)/login/page.tsx` 및 로그인 폼 컴포넌트
 
-- [ ] **Step 1: 구조 확인**
+- [x] **Step 1: 구조 확인**
 
 Run: `cat "src/app/(site)/login/page.tsx"`
 Expected: 매직링크/credentials 폼 위치 파악.
 
-- [ ] **Step 2: shadcn Input/Button 폼**
+- [x] **Step 2: shadcn Input/Button 폼**
 
 폼을 중앙 `Card` 안에 배치, `@/shared/ui/input`·`button` 사용. 라벨·에러 메시지 토큰 색(`text-destructive`). 폼 제출 로직(Server Action/island) **불변**.
 
-- [ ] **Step 3: typecheck + build + Playwright(로그인 진입) + Commit**
+- [x] **Step 3: typecheck + build + Playwright(로그인 진입) + Commit**
 
 Run: `npm run typecheck && npm run build`
 Expected: PASS.
