@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCurrentUser } from "@/entities/user";
 import { logger } from "@/shared/lib/observability";
+import { pretendard } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,8 +19,8 @@ export default async function RootLayout({
     logger.debug("layout.root.user_resolved", { userId: user?.id ?? null });
   }
   return (
-    <html lang="ko">
-      <body>{children}</body>
+    <html lang="ko" className={pretendard.variable}>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   );
 }
