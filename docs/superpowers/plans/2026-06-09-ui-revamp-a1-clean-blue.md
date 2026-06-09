@@ -878,7 +878,7 @@ git commit -m "feat(ui): home-hero widget (hero + search entry)"
 **Files:**
 - Modify: `src/app/(site)/page.tsx`
 
-- [ ] **Step 1: page.tsx 재구성**
+- [x] **Step 1: page.tsx 재구성**
 
 Replace `src/app/(site)/page.tsx`:
 ```tsx
@@ -907,7 +907,7 @@ export default async function HomePage() {
 ```
 > `getDistinctDestinations()` 는 `{code,label,count}[]` 반환 — `HomeRegionDeals` 의 `destinations` prop(`{label}` 만 사용)과 구조적 호환. 독립 쿼리 2개는 `Promise.all` 병렬(CLAUDE.md §6).
 
-- [ ] **Step 2: build + 런타임(Playwright)**
+- [x] **Step 2: build + 런타임(Playwright)**
 
 Run: `npm run build`
 Expected: 홈 `●`(ISR) 또는 `ƒ` 유지, 성공. dev 서버 후 Playwright:
@@ -916,7 +916,7 @@ Expected: 홈 `●`(ISR) 또는 `ƒ` 유지, 성공. dev 서버 후 Playwright:
 - 테마 "허니문" 타일 클릭 → `/search?q=...` 이동
 - 모바일 375px → 카드 2열, 벤토 2열
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add "src/app/(site)/page.tsx"
