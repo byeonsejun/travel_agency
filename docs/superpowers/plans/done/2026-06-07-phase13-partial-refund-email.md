@@ -67,4 +67,4 @@
 - [x] `npm run lint` 통과 (잔존 경고 2건은 features/checkout 기존분, 본 작업 무관)
 - [x] `npm run build` 통과 (server-only/배럴/클라경계 회귀 없음 — 메모리 규칙)
 - [x] 런타임 증거: worker 단위 테스트가 PARTIAL_REFUND_COMPLETED hydrate→send 페이로드(idempotencyKey=`partial-refund-completed:<refundJobId>`) 검증; render 테스트가 세 금액 + 위약금 0 라인 숨김 검증
-- [ ] ADR 후보 기록: PARTIAL_REFUND_COMPLETED 아웃박스 + refundJobId 식별 + FULL_CANCEL 중복 방지 결정 (사용자 승인 시 발행)
+- [x] ADR 후보 기록: PARTIAL_REFUND_COMPLETED 아웃박스 + refundJobId 식별 + FULL_CANCEL 중복 방지 결정 → **[ADR-0042] 발행 완료** (`docs/superpowers/adr/0042-partial-refund-email-outbox.md`)
