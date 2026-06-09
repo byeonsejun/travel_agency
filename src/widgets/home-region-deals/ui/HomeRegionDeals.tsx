@@ -4,18 +4,12 @@ import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ProductCard } from "@/entities/product";
 import type { ProductCardType } from "@/entities/product";
-import { filterByDestination, buildRegionTabs, ALL_TAB } from "../model/filterByRegion";
+import { filterByRegion, buildRegionTabs, ALL_TAB } from "../model/filterByRegion";
 
-export function HomeRegionDeals({
-  items,
-  destinations,
-}: {
-  items: ProductCardType[];
-  destinations: { label: string }[];
-}) {
-  const tabs = buildRegionTabs(destinations);
+export function HomeRegionDeals({ items }: { items: ProductCardType[] }) {
+  const tabs = buildRegionTabs(items);
   const [active, setActive] = useState(ALL_TAB);
-  const shown = filterByDestination(items, active).slice(0, 8);
+  const shown = filterByRegion(items, active).slice(0, 8);
 
   return (
     <section className="mt-16">
