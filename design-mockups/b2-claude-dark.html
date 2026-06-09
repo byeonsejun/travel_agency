@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nextour · B2 Claude 다크</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#262624; --panel:#1f1e1d; --card:#2d2c2a; --cream:#f0eee6;
+    --muted:#a8a59b; --clay:#cc785c; --clay-l:#e09478; --line:#3a3936; --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Pretendard,system-ui,sans-serif;color:var(--cream);background:var(--bg);line-height:1.6}
+  a{text-decoration:none;color:inherit}
+  .display{font-family:"Fraunces",Georgia,serif;font-weight:500;letter-spacing:-.01em}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  header{position:sticky;top:0;z-index:20;background:rgba(38,38,36,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;height:74px;gap:36px}
+  .logo{font-size:24px}
+  .logo b{color:var(--clay-l)}
+  nav.menu{display:flex;gap:28px;font-size:15px;color:#c9c5ba}
+  nav.menu a:hover{color:var(--clay-l)}
+  .nav-right{margin-left:auto;display:flex;gap:16px;align-items:center;font-size:14.5px}
+  .btn{background:var(--clay);color:#1b1b19;padding:10px 22px;border-radius:999px;font-weight:700}
+  .btn:hover{background:var(--clay-l)}
+  .hero{padding:90px 0 60px;position:relative;overflow:hidden}
+  .glow{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(204,120,92,.22),transparent 65%);top:-120px;right:-80px;filter:blur(20px)}
+  .hero-in{position:relative;z-index:2;text-align:center;max-width:760px;margin:0 auto}
+  .kicker{display:inline-block;color:var(--clay-l);font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--panel);padding:7px 18px;border-radius:999px;margin-bottom:26px}
+  .hero h1{font-size:60px;line-height:1.08;letter-spacing:-.02em}
+  .hero h1 em{font-style:italic;color:var(--clay-l)}
+  .hero p{font-size:19px;color:var(--muted);margin-top:24px}
+  .search{margin:36px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:8px;display:flex;align-items:center;gap:8px;max-width:560px}
+  .search input{flex:1;border:none;background:transparent;font-size:16px;padding:14px 16px;font-family:inherit;color:var(--cream)}
+  .search input::placeholder{color:#7d7a70}
+  .search input:focus{outline:none}
+  .sbtn{background:var(--clay);color:#1b1b19;border:none;border-radius:12px;padding:13px 28px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .sbtn:hover{background:var(--clay-l)}
+  section{margin-top:88px}
+  .sec-head{display:flex;align-items:flex-end;gap:16px;margin-bottom:32px}
+  .sec-head h2{font-size:34px}
+  .sec-head .more{margin-left:auto;font-size:15px;color:var(--clay-l);font-weight:600}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+  @media(max-width:860px){.cards{grid-template-columns:1fr}.hero h1{font-size:40px}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .2s,border-color .2s}
+  .card:hover{transform:translateY(-4px);border-color:#54514b}
+  .card .ph{height:206px;background:#3a3936}
+  .card .ph img{width:100%;height:100%;object-fit:cover}
+  .card .info{padding:22px}
+  .card .dest{font-size:13px;color:var(--clay-l);font-weight:600}
+  .card .ttl{font-size:21px;margin:8px 0 12px;line-height:1.3}
+  .card .desc{font-size:14px;color:var(--muted);line-height:1.6}
+  .card .foot{margin-top:18px;display:flex;align-items:baseline;justify-content:space-between}
+  .card .foot .price{font-size:20px;font-weight:600}
+  .card .foot .small{font-size:13px;color:var(--muted)}
+  .vals{margin-top:88px;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:48px;display:grid;grid-template-columns:repeat(3,1fr);gap:36px}
+  @media(max-width:860px){.vals{grid-template-columns:1fr;gap:26px;padding:32px}}
+  .val h3{font-size:20px;margin-bottom:8px}
+  .val p{font-size:14.5px;color:var(--muted)}
+  footer{margin-top:80px;padding:54px 0 70px;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
+  footer .logo{font-size:22px;color:var(--cream);margin-bottom:12px}
+</style>
+</head>
+<body>
+  <header><div class="wrap nav">
+    <a class="logo display">Next<b>tour</b></a>
+    <nav class="menu"><a>여행 둘러보기</a><a>테마</a><a>지역</a><a>이야기</a></nav>
+    <div class="nav-right"><a>로그인</a><a class="btn">시작하기</a></div>
+  </div></header>
+
+  <div class="hero"><div class="glow"></div>
+    <div class="wrap"><div class="hero-in">
+      <span class="kicker">✦ AI가 함께 고르는 여행</span>
+      <h1 class="display">밤에 떠올린 여행지,<br><em>아침엔 일정이</em> 되도록</h1>
+      <p>가고 싶은 느낌을 들려주면, 당신의 결에 맞는 여정을 차분히 정리해 드릴게요.</p>
+      <div class="search">
+        <input placeholder="예: 따뜻한 곳에서 조용히 쉬고 싶어요" />
+        <button class="sbtn">찾아보기</button>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="wrap">
+    <section>
+      <div class="sec-head"><h2 class="display">오늘의 추천</h2><a class="more">전체 보기 →</a></div>
+      <div class="cards">
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/d-kyoto/500/360"></div><div class="info"><div class="dest">일본 · 교토</div><div class="ttl display">고요한 사찰과 단풍길</div><div class="desc">번잡함을 피해 천천히 걷는 3일.</div><div class="foot"><span class="small">3박 · 2인</span><span class="price">890,000원~</span></div></div></a>
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/d-bali/500/360"></div><div class="info"><div class="dest">인도네시아 · 발리</div><div class="ttl display">풀빌라에서의 5일</div><div class="desc">아무것도 안 해도 좋은, 온전한 휴식.</div><div class="foot"><span class="small">5박 · 2인</span><span class="price">1,090,000원~</span></div></div></a>
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/d-iceland/500/360"></div><div class="info"><div class="dest">아이슬란드</div><div class="ttl display">오로라를 기다리며</div><div class="desc">긴 밤과 빙하, 잊지 못할 7일.</div><div class="foot"><span class="small">7박 · 2인</span><span class="price">2,890,000원~</span></div></div></a>
+      </div>
+    </section>
+
+    <div class="vals">
+      <div class="val"><h3 class="display">문장으로 검색</h3><p>복잡한 필터 대신, 원하는 느낌을 말하듯 적으면 AI가 맞춰 골라요.</p></div>
+      <div class="val"><h3 class="display">투명한 가격</h3><p>위약금·환불 규정까지 예약 전에 또렷하게 보여드려요.</p></div>
+      <div class="val"><h3 class="display">사람의 손길</h3><p>자동 추천 뒤엔, 여정을 살피는 담당자가 함께합니다.</p></div>
+    </div>
+  </div>
+
+  <footer><div class="wrap"><div class="logo display">Nextour</div>AI 기반 맞춤형 패키지 여행 · 고객센터 1234-5678</div></footer>
+</body>
+</html>

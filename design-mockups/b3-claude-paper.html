@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nextour · B3 Claude 페이퍼</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#faf9f5;--ink:#1a1a18;--muted:#73716a;--clay:#cc785c;--line:#eae7dd}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Pretendard,system-ui,sans-serif;color:var(--ink);background:var(--paper);line-height:1.7}
+  a{text-decoration:none;color:inherit}
+  .display{font-family:"Fraunces",Georgia,serif;font-weight:400;letter-spacing:-.015em}
+  .wrap{max-width:920px;margin:0 auto;padding:0 28px}
+  header{border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;height:80px;gap:32px}
+  .logo{font-size:22px}
+  nav.menu{display:flex;gap:26px;font-size:14.5px;color:var(--muted)}
+  nav.menu a:hover{color:var(--ink)}
+  .nav-right{margin-left:auto;display:flex;gap:20px;align-items:center;font-size:14px}
+  .link-clay{color:var(--clay);font-weight:600}
+  /* hero — editorial, lots of air */
+  .hero{padding:120px 0 90px;max-width:720px}
+  .hero .num{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);font-weight:600;margin-bottom:30px}
+  .hero h1{font-size:68px;line-height:1.05;letter-spacing:-.025em}
+  .hero h1 em{font-style:italic}
+  .hero p{font-size:20px;color:var(--muted);margin-top:30px;max-width:520px}
+  .search{margin-top:40px;display:flex;align-items:center;gap:0;border-bottom:2px solid var(--ink);max-width:480px;padding-bottom:6px}
+  .search input{flex:1;border:none;background:transparent;font-size:18px;font-family:"Fraunces",Georgia,serif;padding:8px 0;color:var(--ink)}
+  .search input::placeholder{color:#a9a69c;font-style:italic}
+  .search input:focus{outline:none}
+  .sbtn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--clay);padding:0 4px}
+  /* divider label */
+  .label{display:flex;align-items:center;gap:18px;margin:84px 0 40px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .label::after{content:"";flex:1;height:1px;background:var(--line)}
+  /* list-style entries */
+  .entry{display:grid;grid-template-columns:120px 1fr auto;gap:28px;align-items:center;padding:26px 0;border-bottom:1px solid var(--line);transition:padding-left .2s}
+  .entry:hover{padding-left:8px}
+  .entry .thumb{width:120px;height:84px;border-radius:10px;overflow:hidden;background:#ece9df}
+  .entry .thumb img{width:100%;height:100%;object-fit:cover}
+  .entry .dest{font-size:13px;color:var(--clay);font-weight:600}
+  .entry h3{font-size:24px;margin:4px 0 4px;font-weight:400}
+  .entry .meta{font-size:14px;color:var(--muted)}
+  .entry .price{text-align:right;white-space:nowrap}
+  .entry .price b{font-size:22px;font-weight:500}
+  .entry .price small{display:block;font-size:13px;color:var(--muted)}
+  @media(max-width:720px){.hero h1{font-size:44px}.entry{grid-template-columns:1fr;gap:12px}.entry .thumb{width:100%;height:160px}.entry .price{text-align:left}}
+  /* closing note */
+  .note{margin:96px 0;padding:56px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center}
+  .note p{font-size:28px;line-height:1.4;max-width:640px;margin:0 auto;color:var(--ink)}
+  .note .by{margin-top:22px;font-size:14px;color:var(--muted)}
+  footer{padding:50px 0 80px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+</style>
+</head>
+<body>
+  <header><div class="wrap nav">
+    <a class="logo display">Nextour</a>
+    <nav class="menu"><a>여행</a><a>테마</a><a>지역</a><a>이야기</a></nav>
+    <div class="nav-right"><a>로그인</a><a class="link-clay">시작하기 →</a></div>
+  </div></header>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="num">AI가 함께 고르는 여행</div>
+      <h1 class="display">떠나고 싶은 마음을,<br><em>한 문장으로</em> 적어보세요.</h1>
+      <p>거창한 계획은 필요 없어요. 어떤 여행이고 싶은지 들려주면, 그에 맞는 여정을 차분히 골라드릴게요.</p>
+      <div class="search">
+        <input placeholder="예: 늦가을, 조용한 바다로 사흘쯤" />
+        <button class="sbtn">→</button>
+      </div>
+    </div>
+
+    <div class="label">이번 주의 여정</div>
+
+    <a class="entry">
+      <div class="thumb"><img src="https://picsum.photos/seed/m-kyoto/240/160"></div>
+      <div><div class="dest">일본 · 교토</div><h3 class="display">고요한 사찰과 단풍길</h3><div class="meta">3박 4일 · 천천히 걷는 도심 산책</div></div>
+      <div class="price"><b>890,000원</b><small>2인 기준~</small></div>
+    </a>
+    <a class="entry">
+      <div class="thumb"><img src="https://picsum.photos/seed/m-porto/240/160"></div>
+      <div><div class="dest">포르투갈 · 포르투</div><h3 class="display">강가의 오래된 도시</h3><div class="meta">5박 6일 · 노을과 와인, 골목</div></div>
+      <div class="price"><b>1,390,000원</b><small>2인 기준~</small></div>
+    </a>
+    <a class="entry">
+      <div class="thumb"><img src="https://picsum.photos/seed/m-bali/240/160"></div>
+      <div><div class="dest">인도네시아 · 발리</div><h3 class="display">아무것도 안 해도 좋은 날</h3><div class="meta">4박 5일 · 풀빌라 온전한 휴식</div></div>
+      <div class="price"><b>1,090,000원</b><small>2인 기준~</small></div>
+    </a>
+    <a class="entry">
+      <div class="thumb"><img src="https://picsum.photos/seed/m-iceland/240/160"></div>
+      <div><div class="dest">아이슬란드</div><h3 class="display">오로라를 기다리며</h3><div class="meta">7박 8일 · 긴 밤과 빙하</div></div>
+      <div class="price"><b>2,890,000원</b><small>2인 기준~</small></div>
+    </a>
+
+    <div class="note">
+      <p class="display">“복잡한 필터 대신,<br>원하는 느낌을 말하듯 적으면 됩니다.”</p>
+      <div class="by">— Nextour는 그렇게 여행을 고릅니다</div>
+    </div>
+  </div>
+
+  <div class="wrap"><footer>
+    <span class="display" style="color:var(--ink);font-size:18px">Nextour</span>
+    <span>AI 기반 맞춤형 패키지 여행 · 고객센터 1234-5678</span>
+  </footer></div>
+</body>
+</html>

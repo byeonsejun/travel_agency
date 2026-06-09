@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nextour · B1 Claude 아이보리</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f0eee6; --paper:#faf9f5; --ink:#191917; --muted:#6b6a62;
+    --clay:#cc785c; --clay-d:#bd5d3a; --line:#e3e0d6; --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Pretendard,system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+  a{text-decoration:none;color:inherit}
+  .display{font-family:"Fraunces",Georgia,serif;font-weight:500;letter-spacing:-.01em}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  header{position:sticky;top:0;z-index:20;background:rgba(240,238,230,.8);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;height:74px;gap:36px}
+  .logo{font-size:24px}
+  .logo b{color:var(--clay)}
+  nav.menu{display:flex;gap:28px;font-size:15px;color:#44433d}
+  nav.menu a:hover{color:var(--clay)}
+  .nav-right{margin-left:auto;display:flex;gap:16px;align-items:center;font-size:14.5px}
+  .btn{background:var(--clay);color:var(--paper);padding:10px 22px;border-radius:999px;font-weight:600}
+  .btn:hover{background:var(--clay-d)}
+  /* hero */
+  .hero{padding:84px 0 56px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+  @media(max-width:860px){.hero-grid{grid-template-columns:1fr;gap:36px}}
+  .kicker{color:var(--clay);font-size:14px;font-weight:600;letter-spacing:.02em;margin-bottom:20px}
+  .hero h1{font-size:56px;line-height:1.08;letter-spacing:-.02em}
+  .hero h1 em{font-style:italic;color:var(--clay)}
+  .hero p{font-size:18.5px;color:var(--muted);margin-top:24px;max-width:440px}
+  .hero-img{border-radius:24px;overflow:hidden;aspect-ratio:4/5;background:#e6e2d6;box-shadow:0 30px 60px rgba(60,50,30,.12)}
+  .hero-img img{width:100%;height:100%;object-fit:cover}
+  /* search */
+  .search{margin-top:34px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:8px;display:flex;align-items:center;gap:8px;max-width:520px;box-shadow:0 10px 30px rgba(60,50,30,.06)}
+  .search input{flex:1;border:none;background:transparent;font-size:16px;padding:14px 16px;font-family:inherit;color:var(--ink)}
+  .search input::placeholder{color:#9c9a8f}
+  .search input:focus{outline:none}
+  .sbtn{background:var(--clay);color:var(--paper);border:none;border-radius:12px;padding:13px 26px;font-size:15px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .sbtn:hover{background:var(--clay-d)}
+  section{margin-top:90px}
+  .sec-head{display:flex;align-items:flex-end;gap:16px;margin-bottom:34px}
+  .sec-head h2{font-size:34px}
+  .sec-head .more{margin-left:auto;font-size:15px;color:var(--clay);font-weight:600}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+  @media(max-width:860px){.cards{grid-template-columns:1fr}.hero h1{font-size:40px}}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+  .card:hover{transform:translateY(-4px);box-shadow:0 22px 46px rgba(60,50,30,.1)}
+  .card .ph{height:210px;background:#e6e2d6}
+  .card .ph img{width:100%;height:100%;object-fit:cover}
+  .card .info{padding:22px}
+  .card .dest{font-size:13px;color:var(--clay);font-weight:600;letter-spacing:.02em}
+  .card .ttl{font-size:21px;margin:8px 0 12px;line-height:1.3}
+  .card .desc{font-size:14px;color:var(--muted);line-height:1.6}
+  .card .foot{margin-top:18px;display:flex;align-items:baseline;justify-content:space-between}
+  .card .foot .price{font-size:20px;font-weight:600}
+  .card .foot .small{font-size:13px;color:var(--muted)}
+  /* values strip */
+  .vals{margin-top:90px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:48px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+  @media(max-width:860px){.vals{grid-template-columns:1fr;gap:24px}}
+  .val h3{font-size:20px;margin-bottom:8px}
+  .val p{font-size:14.5px;color:var(--muted)}
+  footer{margin-top:80px;padding:54px 0 70px;color:var(--muted);font-size:14px}
+  footer .logo{font-size:22px;color:var(--ink);margin-bottom:12px}
+</style>
+</head>
+<body>
+  <header><div class="wrap nav">
+    <a class="logo display">Next<b>tour</b></a>
+    <nav class="menu"><a>여행 둘러보기</a><a>테마</a><a>지역</a><a>이야기</a></nav>
+    <div class="nav-right"><a>로그인</a><a class="btn">시작하기</a></div>
+  </div></header>
+
+  <div class="wrap">
+    <div class="hero"><div class="hero-grid">
+      <div>
+        <div class="kicker">AI가 함께 고르는 여행</div>
+        <h1 class="display">어디로 떠날지<br><em>고민될 때</em>,<br>Nextour</h1>
+        <p>가고 싶은 느낌을 문장으로 들려주세요. 당신의 결에 맞는 여정을 차분히 골라드릴게요.</p>
+        <div class="search">
+          <input placeholder="예: 조용한 바다, 가족과 5일 정도" />
+          <button class="sbtn">찾아보기</button>
+        </div>
+      </div>
+      <div class="hero-img"><img src="https://picsum.photos/seed/c-hero/700/880" alt=""></div>
+    </div></div>
+
+    <section>
+      <div class="sec-head"><h2 class="display">이번 주 추천</h2><a class="more">전체 보기 →</a></div>
+      <div class="cards">
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/c-kyoto/500/360"></div><div class="info"><div class="dest">일본 · 교토</div><div class="ttl display">고요한 사찰과 단풍길</div><div class="desc">번잡함을 피해 천천히 걷는 3일의 교토.</div><div class="foot"><span class="small">3박 · 2인</span><span class="price">890,000원~</span></div></div></a>
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/c-danang/500/360"></div><div class="info"><div class="dest">베트남 · 다낭</div><div class="ttl display">바다 곁에서 쉬는 날들</div><div class="desc">리조트와 호이안 골목, 느긋한 4일.</div><div class="foot"><span class="small">4박 · 2인</span><span class="price">599,000원~</span></div></div></a>
+        <a class="card"><div class="ph"><img src="https://picsum.photos/seed/c-porto/500/360"></div><div class="info"><div class="dest">포르투갈 · 포르투</div><div class="ttl display">강가의 오래된 도시</div><div class="desc">노을과 와인, 골목을 천천히 음미하는 5일.</div><div class="foot"><span class="small">5박 · 2인</span><span class="price">1,390,000원~</span></div></div></a>
+      </div>
+    </section>
+
+    <div class="vals">
+      <div class="val"><h3 class="display">문장으로 검색</h3><p>복잡한 필터 대신, 원하는 느낌을 말하듯 적으면 AI가 맞춰 골라요.</p></div>
+      <div class="val"><h3 class="display">투명한 가격</h3><p>위약금·환불 규정까지 예약 전에 또렷하게 보여드려요.</p></div>
+      <div class="val"><h3 class="display">사람의 손길</h3><p>자동 추천 뒤엔, 여정을 살피는 담당자가 함께합니다.</p></div>
+    </div>
+  </div>
+
+  <footer><div class="wrap"><div class="logo display">Nextour</div>AI 기반 맞춤형 패키지 여행 · 고객센터 1234-5678</div></footer>
+</body>
+</html>
