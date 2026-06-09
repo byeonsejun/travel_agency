@@ -43,7 +43,7 @@
 - Create: `src/shared/lib/utils.ts`
 - Modify: `package.json` (via npm)
 
-- [ ] **Step 1: shadcn 런타임 의존성 설치**
+- [x] **Step 1: shadcn 런타임 의존성 설치**
 
 Run:
 ```bash
@@ -51,7 +51,7 @@ npm i clsx tailwind-merge class-variance-authority tailwindcss-animate lucide-re
 ```
 Expected: 5개 패키지 added, exit 0.
 
-- [ ] **Step 2: `cn()` 유틸 작성**
+- [x] **Step 2: `cn()` 유틸 작성**
 
 Create `src/shared/lib/utils.ts`:
 ```ts
@@ -64,12 +64,12 @@ export function cn(...inputs: ClassValue[]): string {
 }
 ```
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS (에러 0).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add package.json package-lock.json src/shared/lib/utils.ts
@@ -84,7 +84,7 @@ git commit -m "chore(ui): add shadcn runtime deps + cn() util"
 - Modify: `src/app/globals.css`
 - Modify: `tailwind.config.ts`
 
-- [ ] **Step 1: globals.css 에 토큰 + base layer 작성**
+- [x] **Step 1: globals.css 에 토큰 + base layer 작성**
 
 Replace `src/app/globals.css` 전체 내용:
 ```css
@@ -125,7 +125,7 @@ Replace `src/app/globals.css` 전체 내용:
 }
 ```
 
-- [ ] **Step 2: tailwind.config.ts 에 토큰 매핑 + 플러그인**
+- [x] **Step 2: tailwind.config.ts 에 토큰 매핑 + 플러그인**
 
 Replace `tailwind.config.ts` 전체 내용:
 ```ts
@@ -179,12 +179,12 @@ const config: Config = {
 export default config;
 ```
 
-- [ ] **Step 3: build 로 토큰 컴파일 확인 (기존 화면 무파손)**
+- [x] **Step 3: build 로 토큰 컴파일 확인 (기존 화면 무파손)**
 
 Run: `npm run build`
 Expected: 빌드 성공. 토큰은 가산적이라 기존 `text-indigo-600` 등 유틸은 그대로 동작. 에러 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/globals.css tailwind.config.ts
@@ -200,7 +200,7 @@ git commit -m "feat(ui): design tokens (A1 clean-blue) in globals.css + tailwind
 - Create: `src/app/fonts.ts`
 - Modify: `src/app/layout.tsx`
 
-- [ ] **Step 1: 폰트 파일 다운로드**
+- [x] **Step 1: 폰트 파일 다운로드**
 
 Run:
 ```bash
@@ -209,7 +209,7 @@ mkdir -p src/app/fonts && curl -L -o src/app/fonts/PretendardVariable.woff2 \
 ```
 Expected: 파일 생성. 확인: `ls -la src/app/fonts/PretendardVariable.woff2` → 크기 > 1MB.
 
-- [ ] **Step 2: 폰트 로더 작성**
+- [x] **Step 2: 폰트 로더 작성**
 
 Create `src/app/fonts.ts`:
 ```ts
@@ -224,7 +224,7 @@ export const pretendard = localFont({
 });
 ```
 
-- [ ] **Step 3: layout.tsx 에 폰트 적용**
+- [x] **Step 3: layout.tsx 에 폰트 적용**
 
 Modify `src/app/layout.tsx` — `<html>`/`<body>`:
 ```tsx
@@ -238,12 +238,12 @@ import { pretendard } from "./fonts";
 ```
 (기존 `getCurrentUser` debug 블록·metadata 는 유지.)
 
-- [ ] **Step 4: build 확인**
+- [x] **Step 4: build 확인**
 
 Run: `npm run build`
 Expected: 성공. `next/font` 가 woff2 를 최적화 번들. 에러 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/fonts.ts src/app/fonts/PretendardVariable.woff2 src/app/layout.tsx
@@ -257,7 +257,7 @@ git commit -m "feat(ui): Pretendard via next/font/local"
 **Files:**
 - Create: `components.json`
 
-- [ ] **Step 1: components.json 작성** (CLI init 대신 수동 — 토큰을 이미 작성했으므로 덮어쓰기 방지)
+- [x] **Step 1: components.json 작성** (CLI init 대신 수동 — 토큰을 이미 작성했으므로 덮어쓰기 방지)
 
 Create `components.json`:
 ```json
@@ -284,12 +284,12 @@ Create `components.json`:
 }
 ```
 
-- [ ] **Step 2: tsconfig path alias 확인**
+- [x] **Step 2: tsconfig path alias 확인**
 
 Run: `grep -A3 '"paths"' tsconfig.json`
 Expected: `"@/*": ["./src/*"]` 존재. (없으면 추가 후 커밋)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add components.json
@@ -304,7 +304,7 @@ git commit -m "chore(ui): shadcn components.json (alias -> @/shared/ui)"
 - Create: `src/shared/ui/{button,card,input,tabs,badge,select,dropdown-menu,sheet}.tsx`
 - Modify: `src/shared/ui/Skeleton.tsx` (통합 검토)
 
-- [ ] **Step 1: 프리미티브 설치**
+- [x] **Step 1: 프리미티브 설치**
 
 Run:
 ```bash
@@ -312,16 +312,16 @@ npx shadcn@latest add button card input tabs badge select dropdown-menu sheet --
 ```
 Expected: 8개 컴포넌트가 `src/shared/ui/` 에 생성. Radix 의존성 자동 설치. CLI 가 `globals.css`/`tailwind.config` 추가 변경을 제안하면 **토큰 블록은 건드리지 말고** 필요한 keyframe 만 수용.
 
-- [ ] **Step 2: 설치 위치 확인**
+- [x] **Step 2: 설치 위치 확인**
 
 Run: `ls src/shared/ui/*.tsx`
 Expected: `button.tsx card.tsx input.tsx tabs.tsx badge.tsx select.tsx dropdown-menu.tsx sheet.tsx` 포함.
 
-- [ ] **Step 3: 버튼/인풋 radius 를 A1(10px)로 미세조정**
+- [x] **Step 3: 버튼/인풋 radius 를 A1(10px)로 미세조정**
 
 `src/shared/ui/button.tsx` 의 base 클래스에서 `rounded-md` → `rounded-[0.625rem]` (또는 `rounded-md` 유지 시 `--radius` 파생 그대로). `input.tsx` 동일. (시안 대조 후 결정 — 미세 조정이라 build 만 통과하면 OK)
 
-- [ ] **Step 4: build + 경계 점검**
+- [x] **Step 4: build + 경계 점검**
 
 Run:
 ```bash
@@ -330,7 +330,7 @@ grep -rl "use client" src/entities/ | wc -l
 ```
 Expected: build 성공. entities `use client` = `0`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/shared/ui package.json package-lock.json
