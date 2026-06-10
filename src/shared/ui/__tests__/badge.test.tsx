@@ -17,8 +17,10 @@ function classOf(node: React.ReactElement): string {
 }
 
 describe("<Badge /> semantic tones", () => {
-  it("success tone 은 green 의미색을 적용한다", () => {
-    expect(classOf(<Badge variant="success">완료</Badge>)).toContain("bg-green-100");
+  it("success tone 은 green 의미색을 적용한다 (대비 위해 text-800)", () => {
+    const cls = classOf(<Badge variant="success">완료</Badge>);
+    expect(cls).toContain("bg-green-100");
+    expect(cls).toContain("text-green-800");
   });
   it("warning tone 은 yellow 의미색을 적용한다", () => {
     expect(classOf(<Badge variant="warning">대기</Badge>)).toContain("bg-yellow-100");
