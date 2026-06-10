@@ -359,7 +359,7 @@ git commit -m "style(admin): migrate admin shell layout to A1 tokens"
 
 **Files:** (없음 — 검증만)
 
-- [ ] **Step 1: 타입·테스트·빌드**
+- [x] **Step 1: 타입·테스트·빌드**
 
 > ⚠️ dev 서버 가동 중이면 먼저 중단(`.next` 충돌 방지). build는 dev 중단 후 실행.
 
@@ -369,12 +369,12 @@ Expected: 전부 PASS
 Run: `npm run build`
 Expected: 빌드 성공, 에러 0
 
-- [ ] **Step 2: 클라 경계 누출 가드**
+- [x] **Step 2: 클라 경계 누출 가드**
 
 Run: `grep -rn "shared/lib/env" src/shared/ui/table.tsx src/shared/ui/badge.tsx`
 Expected: 출력 없음 (프리미티브는 env 미참조)
 
-- [ ] **Step 3: Phase 1 완료 커밋** (게이트 통과 기록, 변경 없으면 skip)
+- [x] **Step 3: Phase 1 완료 커밋** (게이트 통과 기록, 변경 없으면 skip)
 
 Phase 1 완료. 페이지 본문은 다음 Phase에서 이관.
 
