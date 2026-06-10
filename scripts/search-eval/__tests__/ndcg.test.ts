@@ -29,8 +29,15 @@ describe("ndcgAtK", () => {
     expect(ndcgAtK([], 5)).toBe(0);
   });
 
-  it("@k는 상위 k만 평가(꼬리 무관항 무시)", () => {
-    // 상위 3개가 이상정렬이면 뒤가 어떻든 nDCG@3 = 1.0
-    expect(ndcgAtK([3, 2, 1, 0, 3], 3)).toBeCloseTo(1.0, 10);
+  it("actual 랭킹의 꼬리가 0 라벨이면 무시 — 상위 k가 이상정렬이면 1.0", () => {
+    // 전체 이상정렬 = [3,2,1,0,0], top3 = [3,2,1] = actual top3 → nDCG@3 = 1.0
+    expect(ndcgAtK([3, 2, 1, 0, 0], 3)).toBeCloseTo(1.0, 10);
+  });
+
+  it("고관련 항목이 k 밖에 묻히면 nDCG@k가 떨어진다(표준 IDCG)", () => {
+    // 라벨 3이 꼬리에 묻힘 → 이상정렬 [3,3,2,1,0]의 top3=[3,3,2]가 IDCG.
+    // DCG@3([3,2,1]) / IDCG@3([3,3,2]) ≈ 0.7272 → 묻힌 우수 결과를 페널티.
+    expect(ndcgAtK([3, 2, 1, 0, 3], 3)).toBeCloseTo(0.7272, 3);
+    expect(ndcgAtK([3, 2, 1, 0, 3], 3)).toBeLessThan(1.0);
   });
 });
