@@ -1,6 +1,8 @@
 "use client";
 import { useRef, useState, useTransition } from "react";
 import { discretionaryRefundAction } from "@/features/admin-discretionary-refund/server/actions";
+import { Input } from "@/shared/ui/input";
+import { Button } from "@/shared/ui/button";
 
 interface Props {
   bookingId: string;
@@ -49,52 +51,52 @@ export function DiscretionaryRefundPanel({ bookingId, paymentId, refundable }: P
       <p className="text-xs text-amber-700">
         ⚠️ 재량 환불은 좌석·예약 인원을 변경하지 않습니다 (순수 금액 이동).
       </p>
-      <p className="text-sm text-gray-700">
+      <p className="text-sm text-foreground">
         잔여 환불가능액:{" "}
-        <span className="font-semibold text-gray-900">
+        <span className="font-semibold text-foreground">
           {refundable.toLocaleString("ko-KR")}원
         </span>
       </p>
 
       <div className="space-y-2">
-        <label className="text-xs text-gray-600">
+        <label className="text-xs text-muted-foreground">
           환불액 (원)
-          <input
+          <Input
             type="number"
             value={amount}
             min={1}
             max={refundable}
             onChange={(e) => setAmount(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
+            className="mt-1"
             placeholder={`최대 ${refundable.toLocaleString("ko-KR")}원`}
           />
         </label>
 
-        <label className="text-xs text-gray-600">
+        <label className="text-xs text-muted-foreground">
           사유 (선택)
-          <input
+          <Input
             type="text"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
+            className="mt-1"
             placeholder="환불 사유 입력..."
           />
         </label>
       </div>
 
       {error && (
-        <p className="text-sm text-red-600">오류: {error}</p>
+        <p className="text-sm text-destructive">오류: {error}</p>
       )}
 
-      <button
+      <Button
+        variant="destructive"
         disabled={isPending || !isValid}
         onClick={handleSubmit}
-        className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
       >
         {isPending
           ? "처리 중..."
           : `${isValid ? parsed.toLocaleString("ko-KR") : "—"}원 환불`}
-      </button>
+      </Button>
     </section>
   );
 }

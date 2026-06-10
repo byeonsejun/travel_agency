@@ -3,6 +3,15 @@ import {
   listAllBookings,
   BookingStatusBadge,
 } from "@/entities/booking";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/shared/ui/table";
+import { Button } from "@/shared/ui/button";
 
 // admin route는 항상 신선 (session·권한 검증 + 운영 즉시성)
 export const dynamic = "force-dynamic";
@@ -22,92 +31,78 @@ export default async function AdminBookingsPage() {
   return (
     <div>
       <div className="mb-6 flex items-baseline justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">예약 관리</h1>
-        <span className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground">예약 관리</h1>
+        <span className="text-sm text-muted-foreground">
           최근 50건 / 총 {total.toLocaleString("ko-KR")}건
         </span>
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-12 text-center text-gray-500">
+        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
           등록된 예약이 없습니다.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium text-gray-700">예약 ID</th>
-                <th className="px-4 py-3 font-medium text-gray-700">상품</th>
-                <th className="px-4 py-3 font-medium text-gray-700">출발일</th>
-                <th className="px-4 py-3 font-medium text-gray-700">고객</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-700">
-                  금액
-                </th>
-                <th className="px-4 py-3 text-center font-medium text-gray-700">
-                  상태
-                </th>
-                <th className="px-4 py-3 text-center font-medium text-gray-700">
-                  관리
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((b) => {
-                const pax = b.adultCount + b.childCount + b.infantCount;
-                return (
-                  <tr
-                    key={b.id}
-                    className="border-b border-gray-100 transition-colors hover:bg-gray-50 last:border-b-0"
-                  >
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600">
-                      ...{b.id.slice(-10)}
-                    </td>
-                    <td className="px-4 py-3 text-gray-900">
-                      <div className="font-medium">
-                        {b.departure.product.title}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>예약 ID</TableHead>
+              <TableHead>상품</TableHead>
+              <TableHead>출발일</TableHead>
+              <TableHead>고객</TableHead>
+              <TableHead className="text-right">금액</TableHead>
+              <TableHead className="text-center">상태</TableHead>
+              <TableHead className="text-center">관리</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((b) => {
+              const pax = b.adultCount + b.childCount + b.infantCount;
+              return (
+                <TableRow key={b.id}>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    ...{b.id.slice(-10)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium text-foreground">
+                      {b.departure.product.title}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {b.createdAt.toLocaleDateString("ko-KR")} 예약 · 인원{" "}
+                      {pax}명
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-foreground">{formatDate(b.departure.departureDate)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      ~ {formatDate(b.departure.returnDate)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-foreground">
+                      {b.user.name ?? b.user.email ?? "(no name)"}
+                    </div>
+                    {b.user.email && b.user.name && (
+                      <div className="text-xs text-muted-foreground">
+                        {b.user.email}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {b.createdAt.toLocaleDateString("ko-KR")} 예약 · 인원{" "}
-                        {pax}명
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-900">
-                      <div>{formatDate(b.departure.departureDate)}</div>
-                      <div className="text-xs text-gray-500">
-                        ~ {formatDate(b.departure.returnDate)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-900">
-                      <div className="text-sm">
-                        {b.user.name ?? b.user.email ?? "(no name)"}
-                      </div>
-                      {b.user.email && b.user.name && (
-                        <div className="text-xs text-gray-500">
-                          {b.user.email}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                      {b.totalPrice.toLocaleString("ko-KR")}원
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <BookingStatusBadge status={b.status} />
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <Link
-                        href={`/admin/bookings/${b.id}`}
-                        className="inline-block rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        상세
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-foreground">
+                    {b.totalPrice.toLocaleString("ko-KR")}원
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <BookingStatusBadge status={b.status} />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/admin/bookings/${b.id}`}>상세</Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

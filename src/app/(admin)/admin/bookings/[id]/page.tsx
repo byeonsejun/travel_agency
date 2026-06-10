@@ -11,6 +11,8 @@ import {
 import { PaymentStatusBadge, findActiveRefundJob, refundableAmount } from "@/entities/payment";
 import { AdminCancelBookingButton } from "@/features/admin-booking-cancel";
 import { TravelerCancelPanel, DiscretionaryRefundPanel } from "@/widgets/booking-detail";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
 
 export const dynamic = "force-dynamic";
 
@@ -49,42 +51,43 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          href="/admin/bookings"
-          className="text-sm text-gray-500 hover:text-gray-700"
-        >
-          ← 예약 목록으로
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">예약 상세</h1>
-        <p className="mt-1 font-mono text-xs text-gray-500">{booking.id}</p>
+        <Button asChild variant="link" className="px-0 text-muted-foreground hover:text-foreground">
+          <Link href="/admin/bookings">← 예약 목록으로</Link>
+        </Button>
+        <h1 className="mt-2 text-2xl font-bold text-foreground">예약 상세</h1>
+        <p className="mt-1 font-mono text-xs text-muted-foreground">{booking.id}</p>
       </div>
 
       {/* 고객 정보 */}
-      <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
-          고객 정보
-        </h2>
-        <dl className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt className="text-xs text-gray-500">이름</dt>
-            <dd className="mt-0.5 font-medium text-gray-900">
-              {booking.user.name ?? "(no name)"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-gray-500">이메일</dt>
-            <dd className="mt-0.5 text-gray-900">
-              {booking.user.email ?? "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-gray-500">user ID</dt>
-            <dd className="mt-0.5 font-mono text-xs text-gray-500">
-              {booking.user.id}
-            </dd>
-          </div>
-        </dl>
-      </section>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            고객 정보
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <dt className="text-xs text-muted-foreground">이름</dt>
+              <dd className="mt-0.5 font-medium text-foreground">
+                {booking.user.name ?? "(no name)"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">이메일</dt>
+              <dd className="mt-0.5 text-foreground">
+                {booking.user.email ?? "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">user ID</dt>
+              <dd className="mt-0.5 font-mono text-xs text-muted-foreground">
+                {booking.user.id}
+              </dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
 
       {/* 예약 요약 */}
       <BookingSummaryCard booking={booking} departure={booking.departure} />
@@ -122,23 +125,23 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
       {/* 결제 내역 */}
       {payments.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             결제 내역
           </h2>
           <ul className="space-y-2">
             {payments.map((p) => (
               <li
                 key={p.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-foreground">
                     {p.amount.toLocaleString("ko-KR")}원
                   </p>
-                  <p className="mt-0.5 font-mono text-xs text-gray-500">
+                  <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                     {p.tossPaymentKey?.slice(0, 28) ?? "no key"} ...
                   </p>
-                  <p className="mt-0.5 text-xs text-gray-500">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {p.canceledAt
                       ? `환불 ${formatDateTime(p.canceledAt)}`
                       : p.paidAt
@@ -146,7 +149,7 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
                         : `요청 ${formatDateTime(p.createdAt)}`}
                   </p>
                   {(p.status === "PAID" || p.status === "PARTIAL_CANCELED") && (
-                    <p className="mt-0.5 text-xs text-gray-500">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       환불됨: {p.refundedAmount.toLocaleString("ko-KR")}원 /
                       잔여: {refundableAmount(p).toLocaleString("ko-KR")}원
                     </p>
@@ -161,7 +164,7 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
 
       {/* 예약 이벤트 타임라인 */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           예약 이력 (BookingEvent append-only)
         </h2>
         <BookingEventTimeline events={booking.events} />
@@ -199,13 +202,13 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
 
       {/* 관리자 직권 취소 */}
       {cancelableByAgency && (
-        <section className="flex justify-end border-t border-gray-100 pt-6">
+        <section className="flex justify-end border-t border-border pt-6">
           <AdminCancelBookingButton bookingId={booking.id} />
         </section>
       )}
       {!cancelableByAgency && (
-        <section className="border-t border-gray-100 pt-6 text-right">
-          <p className="text-xs text-gray-400">
+        <section className="border-t border-border pt-6 text-right">
+          <p className="text-xs text-muted-foreground">
             {activeRefundJob
               ? "환불 처리 진행 중 — 큐 완료 후 취소 가능"
               : `현재 상태(${booking.status})에서는 직권 취소가 불가합니다.`}
@@ -214,7 +217,7 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
       )}
 
       {/* 디버그 — booking.isCancelableByUser 참고 표시 (admin 시인성) */}
-      <p className="text-right text-[10px] text-gray-300">
+      <p className="text-right text-[10px] text-muted-foreground/50">
         ref: isCancelableByUser(status) ={" "}
         {String(isCancelableByUser(booking.status))}
       </p>
