@@ -206,7 +206,7 @@ DCG/IDCG/nDCG를 순수 함수로 구현. 외부 의존 0이라 fixture·키 없
 - Create: `scripts/search-eval/ndcg.ts`
 - Create: `scripts/search-eval/__tests__/ndcg.test.ts`
 
-- [ ] **Step 1: ndcg.test.ts 작성 (FAIL 예정)**
+- [x] **Step 1: ndcg.test.ts 작성 (FAIL 예정)**
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -247,12 +247,12 @@ describe("ndcgAtK", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 FAIL 확인**
+- [x] **Step 2: 테스트 FAIL 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/ndcg.test.ts`
 Expected: FAIL — `Cannot find module '../ndcg'`.
 
-- [ ] **Step 3: ndcg.ts 구현**
+- [x] **Step 3: ndcg.ts 구현**
 
 ```ts
 /**
@@ -282,12 +282,12 @@ export function ndcgAtK(rankedRelevances: number[], k: number): number {
 }
 ```
 
-- [ ] **Step 4: 테스트 PASS 확인**
+- [x] **Step 4: 테스트 PASS 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/ndcg.test.ts`
 Expected: PASS (6 케이스).
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add scripts/search-eval/ndcg.ts scripts/search-eval/__tests__/ndcg.test.ts
