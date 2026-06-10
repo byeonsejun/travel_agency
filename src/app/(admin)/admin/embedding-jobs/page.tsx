@@ -6,21 +6,34 @@ import {
 } from "@/entities/product";
 import type { EmbeddingJobRow } from "@/entities/product";
 import { retryEmbeddingJobAction } from "@/features/admin-product/server/actions";
+import type { EmbeddingJobStatus } from "@prisma/client";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/shared/ui/table";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_LABELS: Record<string, string> = {
+type Tone = "success" | "warning" | "info" | "destructive" | "neutral";
+
+const JOB_TONE: Record<EmbeddingJobStatus, Tone> = {
+  PENDING: "warning",
+  IN_PROGRESS: "info",
+  SUCCEEDED: "success",
+  FAILED: "destructive",
+};
+
+const STATUS_LABELS: Record<EmbeddingJobStatus, string> = {
   PENDING: "대기",
   IN_PROGRESS: "처리 중",
   SUCCEEDED: "완료",
   FAILED: "실패",
-};
-
-const STATUS_BADGE_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  IN_PROGRESS: "bg-blue-100 text-blue-800",
-  SUCCEEDED: "bg-green-100 text-green-800",
-  FAILED: "bg-red-100 text-red-800",
 };
 
 const FILTER_OPTIONS = [
@@ -31,7 +44,7 @@ const FILTER_OPTIONS = [
   { value: "FAILED", label: "실패" },
 ] as const;
 
-type ValidStatus = "PENDING" | "IN_PROGRESS" | "SUCCEEDED" | "FAILED";
+type ValidStatus = EmbeddingJobStatus;
 
 function isValidStatus(s: string): s is ValidStatus {
   return ["PENDING", "IN_PROGRESS", "SUCCEEDED", "FAILED"].includes(s);
@@ -46,13 +59,11 @@ function formatDateTime(d: Date | string): string {
   });
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status: EmbeddingJobStatus }) {
   return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE_COLORS[status] ?? "bg-gray-100 text-gray-700"}`}
-    >
-      {STATUS_LABELS[status] ?? status}
-    </span>
+    <Badge variant={JOB_TONE[status]}>
+      {STATUS_LABELS[status]}
+    </Badge>
   );
 }
 
@@ -81,101 +92,79 @@ function SummaryCard({
 function EmbeddingJobTable({ jobs }: { jobs: EmbeddingJobRow[] }) {
   if (jobs.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-gray-400">
+      <p className="py-12 text-center text-sm text-muted-foreground">
         해당 조건의 임베딩 작업이 없습니다.
       </p>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-200 bg-gray-50">
-            <th className="px-4 py-3 text-left font-medium text-gray-600">
-              상품
-            </th>
-            <th className="px-4 py-3 text-center font-medium text-gray-600">
-              상태
-            </th>
-            <th className="px-4 py-3 text-center font-medium text-gray-600">
-              시도
-            </th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600">
-              다음 실행
-            </th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600">
-              오류
-            </th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600">
-              갱신
-            </th>
-            <th className="px-4 py-3 text-center font-medium text-gray-600">
-              액션
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {jobs.map((job) => (
-            <tr
-              key={job.id}
-              className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
-            >
-              <td className="max-w-[200px] px-4 py-3">
-                <Link
-                  href={`/admin/products/${job.productId}/edit`}
-                  className="block truncate font-medium text-indigo-600 hover:underline"
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>상품</TableHead>
+          <TableHead className="text-center">상태</TableHead>
+          <TableHead className="text-center">시도</TableHead>
+          <TableHead>다음 실행</TableHead>
+          <TableHead>오류</TableHead>
+          <TableHead>갱신</TableHead>
+          <TableHead className="text-center">액션</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {jobs.map((job) => (
+          <TableRow key={job.id}>
+            <TableCell className="max-w-[200px]">
+              <Link
+                href={`/admin/products/${job.productId}/edit`}
+                className="block truncate font-medium text-primary hover:underline"
+              >
+                {job.product.title}
+              </Link>
+              <p className="font-mono text-xs text-muted-foreground">
+                {job.productId.slice(-8)}
+              </p>
+            </TableCell>
+            <TableCell className="text-center">
+              <StatusBadge status={job.status as EmbeddingJobStatus} />
+            </TableCell>
+            <TableCell className="text-center text-foreground">
+              {job.attempts}회
+            </TableCell>
+            <TableCell className="text-xs text-muted-foreground">
+              {job.status === "PENDING" || job.status === "FAILED"
+                ? formatDateTime(job.nextRunAt)
+                : "—"}
+            </TableCell>
+            <TableCell className="max-w-[240px]">
+              {job.lastError ? (
+                <span
+                  className="block truncate font-mono text-xs text-red-600"
+                  title={job.lastError}
                 >
-                  {job.product.title}
-                </Link>
-                <p className="font-mono text-xs text-gray-400">
-                  {job.productId.slice(-8)}
-                </p>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <StatusBadge status={job.status} />
-              </td>
-              <td className="px-4 py-3 text-center text-gray-700">
-                {job.attempts}회
-              </td>
-              <td className="px-4 py-3 text-xs text-gray-500">
-                {job.status === "PENDING" || job.status === "FAILED"
-                  ? formatDateTime(job.nextRunAt)
-                  : "—"}
-              </td>
-              <td className="max-w-[240px] px-4 py-3">
-                {job.lastError ? (
-                  <span
-                    className="block truncate font-mono text-xs text-red-600"
-                    title={job.lastError}
-                  >
-                    {job.lastError.slice(0, 60)}
-                  </span>
-                ) : (
-                  <span className="text-xs text-gray-300">—</span>
-                )}
-              </td>
-              <td className="px-4 py-3 text-xs text-gray-500">
-                {formatDateTime(job.updatedAt)}
-              </td>
-              <td className="px-4 py-3 text-center">
-                {job.status === "FAILED" && (
-                  <form action={retryEmbeddingJobAction}>
-                    <input type="hidden" name="jobId" value={job.id} />
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700 hover:bg-orange-100"
-                    >
-                      재시도
-                    </button>
-                  </form>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                  {job.lastError.slice(0, 60)}
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground">—</span>
+              )}
+            </TableCell>
+            <TableCell className="text-xs text-muted-foreground">
+              {formatDateTime(job.updatedAt)}
+            </TableCell>
+            <TableCell className="text-center">
+              {job.status === "FAILED" && (
+                <form action={retryEmbeddingJobAction}>
+                  <input type="hidden" name="jobId" value={job.id} />
+                  <Button type="submit" variant="outline" size="sm">
+                    재시도
+                  </Button>
+                </form>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -201,13 +190,13 @@ export default async function AdminEmbeddingJobsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">임베딩 Job 모니터링</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground">임베딩 Job 모니터링</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           EmbeddingJob 큐 전체 상태 · contentHash 멱등 · 지수 백오프 재시도 현황
         </p>
       </div>
 
-      {/* 요약 카드 */}
+      {/* 요약 카드 — semantic status colors 보존 */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SummaryCard
           label="대기"
@@ -251,8 +240,8 @@ export default async function AdminEmbeddingJobsPage({
               }
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-card text-foreground hover:bg-muted"
               }`}
             >
               {opt.label}

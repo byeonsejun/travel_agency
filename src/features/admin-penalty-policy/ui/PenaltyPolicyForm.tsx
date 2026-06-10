@@ -4,6 +4,8 @@ import { startTransition, useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { savePenaltyPolicyAction } from "../server/actions";
 import type { SavePenaltyPolicyInput } from "../model/schemas";
+import { Input } from "@/shared/ui/input";
+import { Button } from "@/shared/ui/button";
 
 // 표준약관 기본 템플릿(편집 출발점). 클라이언트 번들 격리를 위해 리터럴 인라인
 // (entity barrel 의 OVERSEAS_PENALTY_TIERS 를 import 하면 server-only 체인이 따라옴).
@@ -83,11 +85,11 @@ export function PenaltyPolicyForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 rounded-2xl border border-gray-200 bg-white p-6"
+      className="space-y-5 rounded-2xl border border-border bg-card p-6"
     >
       <div>
-        <h2 className="text-lg font-bold text-gray-900">새 정책 버전 생성</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-bold text-foreground">새 정책 버전 생성</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           기존 key 로 저장하면 새 버전이 추가되고 이전 버전은 자동 비활성화됩니다
           (append-only). 예약은 생성 시점 버전으로 동결되어 소급되지 않습니다.
         </p>
@@ -97,50 +99,51 @@ export function PenaltyPolicyForm() {
         <div>
           <label
             htmlFor="policy-key"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-foreground"
           >
             정책 key (소문자/숫자/_) — 버전 간 안정 식별자
           </label>
-          <input
+          <Input
             id="policy-key"
             value={key}
             onChange={(e) => setKey(e.target.value)}
             disabled={isPending}
             placeholder="예: peak_season"
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1 font-mono"
           />
         </div>
         <div>
           <label
             htmlFor="policy-name"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-foreground"
           >
             정책 이름
           </label>
-          <input
+          <Input
             id="policy-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={isPending}
             placeholder="예: 성수기 위약 정책"
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1"
           />
         </div>
       </div>
 
       <div>
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-medium text-foreground">
             위약금 구간 (minDaysBefore 내림차순 · 마지막 행 = catch-all)
           </p>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={addRow}
             disabled={isPending}
-            className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
             + 구간 추가
-          </button>
+          </Button>
         </div>
         <div className="mt-2 space-y-2">
           {rows.map((r, i) => (
@@ -148,19 +151,19 @@ export function PenaltyPolicyForm() {
               <label className="sr-only" htmlFor={`min-${i}`}>
                 출발 N일 전
               </label>
-              <input
+              <Input
                 id={`min-${i}`}
                 type="number"
                 value={r.minDaysBefore}
                 onChange={(e) => updateRow(i, { minDaysBefore: e.target.value })}
                 disabled={isPending}
-                className="w-32 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                className="w-32"
               />
-              <span className="text-sm text-gray-500">일 전부터</span>
+              <span className="text-sm text-muted-foreground">일 전부터</span>
               <label className="sr-only" htmlFor={`rate-${i}`}>
                 위약금률 퍼센트
               </label>
-              <input
+              <Input
                 id={`rate-${i}`}
                 type="number"
                 value={r.ratePercent}
@@ -168,22 +171,24 @@ export function PenaltyPolicyForm() {
                 disabled={isPending}
                 min={0}
                 max={100}
-                className="w-24 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                className="w-24"
               />
-              <span className="text-sm text-gray-500">% 공제</span>
-              <button
+              <span className="text-sm text-muted-foreground">% 공제</span>
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 aria-label={`${i + 1}번째 구간 삭제`}
                 onClick={() => removeRow(i)}
                 disabled={isPending || rows.length <= 1}
-                className="ml-auto rounded-md px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-30"
+                className="ml-auto text-red-600 hover:bg-red-50 hover:text-red-700"
               >
                 삭제
-              </button>
+              </Button>
             </div>
           ))}
         </div>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-muted-foreground">
           catch-all 행은 minDaysBefore 를 매우 작은 값(예: {CATCH_ALL})으로 두어 모든 잔여
           구간을 포괄합니다.
         </p>
@@ -207,13 +212,12 @@ export function PenaltyPolicyForm() {
       )}
 
       <div className="flex justify-end">
-        <button
+        <Button
           type="submit"
           disabled={isPending || key.trim().length === 0 || name.trim().length === 0}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
         >
           {isPending ? "저장 중..." : "정책 버전 저장"}
-        </button>
+        </Button>
       </div>
     </form>
   );
