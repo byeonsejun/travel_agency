@@ -577,8 +577,9 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
       <div className="sticky bottom-4 rounded-xl border border-border bg-card p-4 shadow-md">
         <Button
           type="submit"
+          size="lg"
           disabled={isPending || heroUploadStatus === "uploading"}
-          className="w-full py-3"
+          className="w-full"
         >
           {isPending
             ? "저장 중..."

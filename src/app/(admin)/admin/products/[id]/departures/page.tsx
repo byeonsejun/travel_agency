@@ -16,6 +16,7 @@ export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ id: string }> };
 
+// 동기화 유지: departures/[depId]/edit/page.tsx 의 DEPARTURE_STATUS_TONE 과 동일 매핑.
 const STATUS_TONE: Record<DepartureStatus, "info" | "success" | "neutral" | "destructive"> = {
   SCHEDULED: "info",
   CONFIRMED: "success",

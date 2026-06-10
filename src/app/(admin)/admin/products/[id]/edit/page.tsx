@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 // ── 임베딩 상태 사이드바 ───────────────────────────────────────────
 
+// 동기화 유지: products/page.tsx 의 JOB_TONE 과 동일 매핑.
 const JOB_STATUS_TONE: Record<
   EmbeddingJobStatus,
   "warning" | "info" | "success" | "destructive"

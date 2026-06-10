@@ -33,6 +33,7 @@ const STATUS_TONE: Record<ProductStatus, "success" | "warning" | "neutral"> = {
   CLOSED: "neutral",
 };
 
+// 동기화 유지: products/[id]/edit/page.tsx 의 JOB_STATUS_TONE 과 동일 매핑.
 const JOB_TONE: Record<
   EmbeddingJobStatus,
   "warning" | "info" | "success" | "destructive"

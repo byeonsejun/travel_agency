@@ -41,6 +41,7 @@ const ACTION_LABEL: Record<string, string> = {
   CANCELED: "출발 취소",
 };
 
+// 동기화 유지: departures/page.tsx 의 STATUS_TONE 과 동일 매핑.
 const DEPARTURE_STATUS_TONE: Record<DepartureStatus, "info" | "success" | "neutral" | "destructive"> = {
   SCHEDULED: "info",
   CONFIRMED: "success",
