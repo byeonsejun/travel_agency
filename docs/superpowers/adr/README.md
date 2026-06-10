@@ -93,6 +93,8 @@
 | 0043  | [FULL_CANCEL 결제 terminal 마감 + 위약금 정책 reference-snapshot (Phase 14, ADR-0031 #4 부분 supersede)](./0043-full-cancel-terminal-state-and-penalty-snapshot.md) | Accepted | 2026-06-08   |
 | 0044  | [리뷰 신고를 `ReviewStatus.REPORTED` flip 대신 `ReviewReport` 이벤트 적재로 구현 (Phase 15)](./0044-review-report-queue-vs-status-flip.md) | Accepted | 2026-06-09   |
 | 0045  | [테마 부스트 이진→요청 커버리지 비율 graduated, 천장 0.1 유지 (Phase 16)](./0045-graduated-theme-boost.md) | Accepted | 2026-06-09   |
+| 0046  | [공유 Supabase 프로젝트 + env-portable hero URL — 상품 이미지 업로드 1회 전략](./0046-shared-supabase-env-portable-hero-url.md) | Accepted | 2026-06-10   |
+| 0047  | [태그 vocabulary SSOT + 중앙화된 `#` 변환 — 데이터 무결성·드리프트 방어](./0047-tag-vocabulary-ssot-and-drift-guard.md) | Accepted | 2026-06-10   |
 
 ## 향후 후보 (작성 대기)
 
