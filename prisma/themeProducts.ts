@@ -1,4 +1,5 @@
 import { Prisma, ProductStatus, DepartureStatus, InclusionKind } from "@prisma/client";
+import { buildHeroSeedPublicUrl } from "../src/shared/lib/supabase/photoMime";
 
 /**
  * themeProducts.ts — 홈 "테마별 기획전"(home-theme-bento) 4개 테마에 맞춘 상품 정의.
@@ -332,7 +333,7 @@ export function buildThemeProducts(today: Date): Prisma.ProductCreateInput[] {
     destinationCode: s.destinationCode,
     durationNights: s.nights,
     durationDays: s.nights + 1,
-    heroImageUrl: `https://picsum.photos/seed/${s.heroSeed}/800/500`,
+    heroImageUrl: buildHeroSeedPublicUrl(s.heroSeed),
     status: ProductStatus.PUBLISHED,
     basePriceAdult: s.basePriceAdult,
     tags: { create: s.tags.map((tag) => ({ tag })) },
