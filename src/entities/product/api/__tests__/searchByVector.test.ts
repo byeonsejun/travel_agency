@@ -21,9 +21,9 @@ vi.mock("@/shared/lib/db", () => ({ db: mockDb }));
 
 import {
   searchProductsByVector,
-  themeBoost,
   __resetPgvectorCacheForTest,
 } from "../searchByVector";
+import { themeBoost } from "../../model/searchWeights";
 
 const MODEL = "dev-deterministic:v1:1536";
 const qVec = Array.from({ length: 4 }, (_, i) => i * 0.1);

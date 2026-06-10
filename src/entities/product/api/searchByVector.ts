@@ -7,7 +7,7 @@
  *
  * 하이브리드 스코어링: 순수 코사인만으로는 dev 가짜 벡터에서 의미 분리가
  * 안 되고(노이즈 ±0.05), 운영에서도 명시적 키워드("일본")가 약하게 묻힌다.
- * → `코사인 유사도 * VECTOR_WEIGHT + ILIKE 일치 * KEYWORD_WEIGHT`로 결합해
+ * → `코사인 유사도 * SEARCH_WEIGHTS.vector + ILIKE 일치 * SEARCH_WEIGHTS.keyword`로 결합해
  * 정확한 단어 일치는 키워드 점수가, 추상 의도는 벡터 점수가 잡도록 한다.
  *
  * Graceful degradation (D5): pgvector 확장 부재/쿼리 실패 시 ILIKE 키워드
@@ -21,7 +21,6 @@ import { toStorageTag } from "@/shared/lib/tags";
 import { pickLowestPrice } from "./mapping";
 import type { SearchResultCard } from "../model/types";
 import { SEARCH_WEIGHTS } from "../model/searchWeights";
-export { themeBoost } from "../model/searchWeights";
 
 export interface VectorSearchFilters {
   priceMax?: number;
@@ -92,12 +91,12 @@ function normalizeThemeTags(themeTags: string[] | undefined): string[] {
 /**
  * 테마 태그 적중 → graduated 점수 가산 조각(soft boost, 없으면 0).
  *
- * themeBoost 공식의 SQL 미러: THEME_WEIGHT × matchCount / requested.
+ * themeBoost 공식의 SQL 미러: SEARCH_WEIGHTS.theme × matchCount / requested.
  *  - matchCount = 요청 태그 적중 개수 (count(*), ProductTag @@unique로 ≤ requested)
  *  - requested  = tags.length (호출부에서 1개 이상 보장 — 빈 배열은 위에서 0 반환)
  * 분모는 바인딩 파라미터로 전달(인젝션 안전 R6). ::float로 정수나눗셈 회피.
  *
- * ⚠️ themeBoost(searchByVector.ts) 공식과 동기화 유지 — 한쪽 변경 시 양쪽 갱신.
+ * ⚠️ themeBoost(searchWeights.ts) 공식과 동기화 유지 — 한쪽 변경 시 양쪽 갱신.
  */
 function buildThemeScore(tags: string[]): Prisma.Sql {
   if (tags.length === 0) return Prisma.sql`0`;
