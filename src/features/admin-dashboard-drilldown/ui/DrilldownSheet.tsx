@@ -75,9 +75,9 @@ export function DrilldownSheet({
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative flex h-full w-full max-w-3xl flex-col bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-          <h2 className="text-base font-bold text-gray-900">{DRILLDOWN_LABEL[metric]}</h2>
+      <div className="relative flex h-full w-full max-w-3xl flex-col bg-card shadow-xl">
+        <header className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="text-base font-bold text-foreground">{DRILLDOWN_LABEL[metric]}</h2>
           <div className="flex items-center gap-2">
             <button
               onClick={handleCsv}
@@ -86,7 +86,7 @@ export function DrilldownSheet({
             >
               CSV 다운로드{data ? ` (${data.result.rows.length}건)` : ""}
             </button>
-            <button onClick={onClose} aria-label="닫기" className="rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+            <button onClick={onClose} aria-label="닫기" className="rounded-md border border-border px-3 py-1.5 text-xs text-foreground hover:bg-muted">
               닫기
             </button>
           </div>
@@ -99,25 +99,25 @@ export function DrilldownSheet({
         )}
 
         <div className="flex-1 overflow-auto px-5 py-3">
-          {loading && <p className="py-10 text-center text-sm text-gray-400">불러오는 중…</p>}
+          {loading && <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>}
           {error && <p className="py-10 text-center text-sm text-red-600">{error}</p>}
           {data && data.result.rows.length === 0 && !loading && (
-            <p className="py-10 text-center text-sm text-gray-400">해당 기간 데이터가 없습니다.</p>
+            <p className="py-10 text-center text-sm text-muted-foreground">해당 기간 데이터가 없습니다.</p>
           )}
           {data && data.result.rows.length > 0 && (
             <table className="w-full text-xs">
-              <thead className="sticky top-0 border-b border-gray-200 bg-gray-50 text-left">
+              <thead className="sticky top-0 border-b border-border bg-muted text-left">
                 <tr>
                   {columns.map((c) => (
-                    <th key={c.header} className="whitespace-nowrap px-2 py-2 font-medium text-gray-700">{c.header}</th>
+                    <th key={c.header} className="whitespace-nowrap px-2 py-2 font-medium text-foreground">{c.header}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {data.result.rows.map((row, i) => (
-                  <tr key={i} className="border-b border-gray-100">
+                  <tr key={i} className="border-b border-border">
                     {columns.map((c) => (
-                      <td key={c.header} className="whitespace-nowrap px-2 py-1.5 text-gray-800">{fmtCell(c.value(row))}</td>
+                      <td key={c.header} className="whitespace-nowrap px-2 py-1.5 text-foreground">{fmtCell(c.value(row))}</td>
                     ))}
                   </tr>
                 ))}

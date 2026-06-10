@@ -17,7 +17,7 @@ import { formatKRW } from "@/shared/lib/format";
 export function RevenueTrendChart({ data }: { data: RevenueTrendPoint[] }) {
   if (data.length === 0) {
     return (
-      <div className="flex h-[220px] items-center justify-center text-sm text-gray-400">
+      <div className="flex h-[220px] items-center justify-center text-sm text-muted-foreground">
         기간 내 매출 데이터가 없습니다.
       </div>
     );

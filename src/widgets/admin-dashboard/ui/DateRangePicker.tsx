@@ -29,7 +29,7 @@ export function DateRangePicker({
 
   return (
     <div className="inline-flex flex-wrap items-center gap-2">
-      <div className="inline-flex gap-0.5 rounded-lg border border-gray-200 bg-white p-1 text-[12px]">
+      <div className="inline-flex gap-0.5 rounded-lg border border-border bg-background p-1 text-[12px]">
         {PRESETS.map((p) => (
           <button
             key={p.key}
@@ -40,7 +40,7 @@ export function DateRangePicker({
               setDraftEnd(r.end);
               pushWith(r.start, r.end);
             }}
-            className="rounded-md px-2.5 py-1 text-gray-500 hover:bg-gray-100"
+            className="rounded-md px-2.5 py-1 text-muted-foreground hover:bg-muted"
           >
             {p.label}
           </button>
@@ -56,9 +56,9 @@ export function DateRangePicker({
         type="date"
         value={draftStart}
         onChange={(e) => setDraftStart(e.target.value)}
-        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-[12.5px] text-gray-700"
+        className="rounded-lg border border-border bg-background px-2 py-1.5 text-[12.5px] text-foreground"
       />
-      <span className="text-gray-400">~</span>
+      <span className="text-muted-foreground">~</span>
       <label className="sr-only" htmlFor="dash-end">
         종료일
       </label>
@@ -68,7 +68,7 @@ export function DateRangePicker({
         type="date"
         value={draftEnd}
         onChange={(e) => setDraftEnd(e.target.value)}
-        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-[12.5px] text-gray-700"
+        className="rounded-lg border border-border bg-background px-2 py-1.5 text-[12.5px] text-foreground"
       />
       <button
         type="button"

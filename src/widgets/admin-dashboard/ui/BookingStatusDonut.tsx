@@ -22,7 +22,7 @@ export function BookingStatusDonut({ data }: { data: StatusSlice[] }) {
   const total = data.reduce((s, d) => s + d.count, 0);
   if (total === 0) {
     return (
-      <div className="flex h-[220px] items-center justify-center text-sm text-gray-400">
+      <div className="flex h-[220px] items-center justify-center text-sm text-muted-foreground">
         예약 데이터가 없습니다.
       </div>
     );
