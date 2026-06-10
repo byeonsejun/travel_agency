@@ -525,7 +525,7 @@ git commit -m "style(admin): migrate product management to A1 (Table/Badge tones
 - Modify: `src/features/admin-booking-cancel/ui/AdminCancelBookingButton.tsx`
 - Modify: `src/widgets/booking-detail/ui/DiscretionaryRefundPanel.tsx`
 
-- [ ] **Step 1: 예약 목록/상세 + 환불 jobs 이관**
+- [x] **Step 1: 예약 목록/상세 + 환불 jobs 이관**
 
 공통 레시피 적용. status 매핑(라벨은 기존 상수 보존):
 
@@ -565,7 +565,7 @@ const REFUND_TONE: Record<RefundJobStatus, Tone> = {
 - `AdminCancelBookingButton`(island, 파괴적 액션) → `<Button variant="destructive">`. `DiscretionaryRefundPanel` 입력 → `Input`, 실행 버튼 → `Button variant="destructive">`.
 - `not-found.tsx` 색 토큰화.
 
-- [ ] **Step 2: 검증**
+- [x] **Step 2: 검증**
 
 Run: `npm run typecheck`
 Expected: 에러 0 (Record 누락 enum 있으면 여기서 발견)
@@ -580,7 +580,7 @@ Expected: 성공
 
 `/admin/bookings` 목록 → 상세 → 환불 패널, `/admin/refund-jobs` 렌더 확인.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add "src/app/(admin)/admin/bookings" "src/app/(admin)/admin/refund-jobs" src/features/admin-booking-cancel src/widgets/booking-detail
