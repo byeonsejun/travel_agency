@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { formatTagLabel } from "@/shared/lib/format";
 import type { ProductCard } from "../model/types";
 import { ProductImage } from "./ProductImage";
 
@@ -67,7 +68,7 @@ export function ProductCard({ product, heart, compareButton, linkQueryString }: 
                 key={index}
                 className="inline-block rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground"
               >
-                #{tag.tag}
+                {formatTagLabel(tag.tag)}
               </span>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatKRW, formatPercent } from "../format";
+import { formatKRW, formatPercent, formatTagLabel } from "../format";
 
 describe("formatKRW", () => {
   it("천단위 콤마 + 원 기호", () => {
@@ -22,5 +22,20 @@ describe("formatPercent", () => {
   });
   it("1(=100%)", () => {
     expect(formatPercent(1)).toBe("100.0%");
+  });
+});
+
+describe("formatTagLabel", () => {
+  it("저장값에 '#'가 있으면 그대로 하나만", () => {
+    expect(formatTagLabel("#가족")).toBe("#가족");
+  });
+  it("'#'가 중복(##)이면 하나로 축약", () => {
+    expect(formatTagLabel("##온천")).toBe("#온천");
+  });
+  it("'#'가 없으면 정확히 하나 부여", () => {
+    expect(formatTagLabel("가족")).toBe("#가족");
+  });
+  it("빈 문자열 → '#'", () => {
+    expect(formatTagLabel("")).toBe("#");
   });
 });

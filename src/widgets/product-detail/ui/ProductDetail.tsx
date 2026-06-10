@@ -1,4 +1,5 @@
 import { ProductImage, InclusionList, ItineraryTimeline } from "@/entities/product";
+import { formatTagLabel } from "@/shared/lib/format";
 import type { ProductDetail } from "@/entities/product/model/types";
 import type { DepartureSummary } from "@/entities/departure/model/types";
 import { LiveDepartureList } from "@/features/live-seat";
@@ -74,7 +75,7 @@ export function ProductDetail({
                 key={`${product.id}-${tagObj.tag}`}
                 className="inline-block rounded-full bg-secondary px-3 py-1 text-sm font-medium text-muted-foreground"
               >
-                #{tagObj.tag}
+                {formatTagLabel(tagObj.tag)}
               </span>
             ))}
           </div>
