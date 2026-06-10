@@ -32,6 +32,8 @@ describe("toStorageTag — '#' 정규화 (storage 표기)", () => {
   it("'##'처럼 중복 '#'도 정확히 1개로 정규화한다", () => {
     expect(toStorageTag("##가족")).toBe("#가족");
   });
+
+  it("빈 문자열 → '#'", () => expect(toStorageTag("")).toBe("#"));
 });
 
 describe("toCanonicalTag — '#' 제거 (canonical 표기)", () => {

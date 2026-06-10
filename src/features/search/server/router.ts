@@ -15,9 +15,10 @@ import {
   parseRoutedQuery,
   type RoutedQuery,
 } from "../model/schemas";
+import type { ThemeKeywordsMap } from "@/shared/lib/tags";
 
 /** 키워드 → 정규 태그(ProductTag.tag의 '#' 제외 표기) 매핑. */
-export const THEME_KEYWORDS: Readonly<Record<string, string>> = {
+export const THEME_KEYWORDS: ThemeKeywordsMap = {
   온천: "온천",
   료칸: "료칸",
   부모님: "부모님",
