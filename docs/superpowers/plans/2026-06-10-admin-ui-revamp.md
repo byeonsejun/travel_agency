@@ -747,12 +747,12 @@ git commit -m "style(admin): align dashboard shell to A1 tokens (charts preserve
 **Files:**
 - Modify: `CLAUDE.md` (마일스톤 1단계 완료 표시 + 혼란 방지 노트)
 
-- [ ] **Step 1: 전역 리터럴 잔존 스캔**
+- [x] **Step 1: 전역 리터럴 잔존 스캔**
 
 Run: `grep -rnE "text-red-700|bg-indigo-|text-indigo-|bg-gray-50|text-gray-900" src/app/\(admin\) | grep -v "node_modules"`
 Expected: 출력 없음 (의미색 destructive/tone로 모두 이동). 잔존 시 의미색 의도 주석 필수.
 
-- [ ] **Step 2: 전체 게이트**
+- [x] **Step 2: 전체 게이트**
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: 전부 PASS
@@ -760,14 +760,14 @@ Expected: 전부 PASS
 Run: `npm run build`
 Expected: 성공
 
-- [ ] **Step 3: CLAUDE.md 마일스톤 갱신**
+- [x] **Step 3: CLAUDE.md 마일스톤 갱신**
 
 §8 로드맵의 "1. [진행 중] Admin 셸 A1 적용" → "1. [완료] Admin 셸 A1 적용"으로 변경. 혼란 방지 노트 1줄 추가:
 > "admin도 이제 A1 클린 블루(site와 동일 토큰). 상태 배지는 `Badge` 의미 tone(success/warning/info/neutral/destructive) 사용 — enum→tone 매핑은 각 페이지가 보유(shared는 tone 추상만). 테이블은 `shared/ui/table.tsx` 프리미티브. red는 파괴적 액션(destructive)+ADMIN 배지에만 잔존."
 
 다음 마일스톤 포인터를 "2. ADR 발행(REPORTED status-flip 포기)"으로 표시.
 
-- [ ] **Step 4: 커밋 + PR 준비**
+- [x] **Step 4: 커밋 + PR 준비**
 
 ```bash
 git add CLAUDE.md
