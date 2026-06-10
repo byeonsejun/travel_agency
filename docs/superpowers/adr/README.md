@@ -95,6 +95,7 @@
 | 0045  | [테마 부스트 이진→요청 커버리지 비율 graduated, 천장 0.1 유지 (Phase 16)](./0045-graduated-theme-boost.md) | Accepted | 2026-06-09   |
 | 0046  | [공유 Supabase 프로젝트 + env-portable hero URL — 상품 이미지 업로드 1회 전략](./0046-shared-supabase-env-portable-hero-url.md) | Accepted | 2026-06-10   |
 | 0047  | [태그 vocabulary SSOT + 중앙화된 `#` 변환 — 데이터 무결성·드리프트 방어](./0047-tag-vocabulary-ssot-and-drift-guard.md) | Accepted | 2026-06-10   |
+| 0048  | [Admin 셸 디자인 토큰화 + 도메인 의미색(tone) 분리 추상화 — Table 프리미티브 + FSD 경계 수호](./0048-admin-design-tokens-and-domain-tone-separation.md) | Accepted | 2026-06-10   |
 
 ## 향후 후보 (작성 대기)
 
