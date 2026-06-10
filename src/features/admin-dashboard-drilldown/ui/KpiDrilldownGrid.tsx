@@ -36,17 +36,17 @@ function Card({
   return (
     <button
       onClick={onClick}
-      className="rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition-colors hover:border-red-300 hover:bg-red-50/30"
+      className="rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition-colors hover:border-red-300 hover:bg-red-50/30"
     >
-      <div className="flex items-center gap-2 text-[12.5px] font-semibold text-gray-500">
+      <div className="flex items-center gap-2 text-[12.5px] font-semibold text-muted-foreground">
         <span className="h-2 w-2 rounded-full" style={{ background: dot }} />
         {label}
-        <span className="ml-auto text-[11px] font-normal text-gray-300">클릭 →</span>
+        <span className="ml-auto text-[11px] font-normal text-muted-foreground/60">클릭 →</span>
       </div>
-      <div className="mt-2.5 text-[25px] font-extrabold tracking-tight text-gray-900">
+      <div className="mt-2.5 text-[25px] font-extrabold tracking-tight text-foreground">
         {value}
       </div>
-      <div className="mt-1.5 text-xs text-gray-400">{caption}</div>
+      <div className="mt-1.5 text-xs text-muted-foreground">{caption}</div>
     </button>
   );
 }

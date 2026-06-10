@@ -3,6 +3,8 @@
 // Fat-finger 방어 — 강제 취소는 파급력이 크므로 제출 전 명시적 confirm.
 // page는 RSC라 confirm을 쓸 수 없으므로 이 client 아일랜드로 격리.
 // 타이머/리스너 없음 → cleanup 불필요.
+import { Button } from "@/shared/ui/button";
+
 export function ForceCancelButton({
   action,
   departureId,
@@ -26,12 +28,9 @@ export function ForceCancelButton({
     >
       <input type="hidden" name="departureId" value={departureId} />
       <input type="hidden" name="productId" value={productId} />
-      <button
-        type="submit"
-        className="w-full rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
-      >
+      <Button type="submit" variant="destructive" className="w-full">
         강제 취소 ({bookedSeats}건 환불)
-      </button>
+      </Button>
     </form>
   );
 }

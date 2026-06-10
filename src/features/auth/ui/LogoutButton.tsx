@@ -1,14 +1,12 @@
 import { signOutAction } from "../server/actions";
+import { Button } from "@/shared/ui/button";
 
 export function LogoutButton() {
   return (
     <form action={signOutAction}>
-      <button
-        type="submit"
-        className="rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-      >
+      <Button type="submit" variant="ghost" size="sm">
         로그아웃
-      </button>
+      </Button>
     </form>
   );
 }

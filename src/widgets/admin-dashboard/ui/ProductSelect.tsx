@@ -32,7 +32,7 @@ export function ProductSelect({
         onChange={handleChange}
         disabled={isPending}
         aria-busy={isPending}
-        className={`rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[12.5px] font-medium text-gray-700 hover:border-gray-400 focus:border-red-500 focus:outline-none ${
+        className={`rounded-lg border border-border bg-background px-3 py-1.5 text-[12.5px] font-medium text-foreground hover:border-muted-foreground focus:border-primary focus:outline-none ${
           isPending ? "opacity-50" : ""
         }`}
       >
@@ -46,7 +46,7 @@ export function ProductSelect({
       {isPending && (
         <span
           aria-hidden="true"
-          className="absolute right-2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"
+          className="absolute right-2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-primary"
         />
       )}
     </div>

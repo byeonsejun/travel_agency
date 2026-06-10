@@ -5,6 +5,16 @@ import {
 } from "@/entities/product";
 import type { AdminProductRow } from "@/entities/product";
 import type { ProductStatus, EmbeddingJobStatus } from "@prisma/client";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/shared/ui/table";
 
 export const dynamic = "force-dynamic";
 
@@ -17,17 +27,21 @@ const STATUS_LABELS: Record<ProductStatus, string> = {
   CLOSED: "보관",
 };
 
-const STATUS_BADGE: Record<ProductStatus, string> = {
-  DRAFT: "bg-yellow-100 text-yellow-800",
-  PUBLISHED: "bg-green-100 text-green-800",
-  CLOSED: "bg-gray-100 text-gray-700",
+const STATUS_TONE: Record<ProductStatus, "success" | "warning" | "neutral"> = {
+  DRAFT: "warning",
+  PUBLISHED: "success",
+  CLOSED: "neutral",
 };
 
-const JOB_BADGE: Record<EmbeddingJobStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  IN_PROGRESS: "bg-blue-100 text-blue-800",
-  SUCCEEDED: "bg-green-100 text-green-800",
-  FAILED: "bg-red-100 text-red-800",
+// 동기화 유지: products/[id]/edit/page.tsx 의 JOB_STATUS_TONE 과 동일 매핑.
+const JOB_TONE: Record<
+  EmbeddingJobStatus,
+  "warning" | "info" | "success" | "destructive"
+> = {
+  PENDING: "warning",
+  IN_PROGRESS: "info",
+  SUCCEEDED: "success",
+  FAILED: "destructive",
 };
 
 const JOB_LABELS: Record<EmbeddingJobStatus, string> = {
@@ -59,13 +73,7 @@ function formatDateTime(d: Date): string {
 
 // ── Sub-components ─────────────────────────────────────────────────
 function StatusBadge({ status }: { status: ProductStatus }) {
-  return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[status]}`}
-    >
-      {STATUS_LABELS[status]}
-    </span>
-  );
+  return <Badge variant={STATUS_TONE[status]}>{STATUS_LABELS[status]}</Badge>;
 }
 
 function EmbeddingJobBadge({
@@ -74,82 +82,71 @@ function EmbeddingJobBadge({
   job: AdminProductRow["latestJob"];
 }) {
   if (!job) {
-    return <span className="text-xs text-gray-300">—</span>;
+    return <span className="text-xs text-muted-foreground">—</span>;
   }
   return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${JOB_BADGE[job.status]}`}
-      title={job.lastError ?? undefined}
-    >
+    <Badge variant={JOB_TONE[job.status]} title={job.lastError ?? undefined}>
       {JOB_LABELS[job.status]}
       {job.attempts > 0 && ` (${job.attempts}회)`}
-    </span>
+    </Badge>
   );
 }
 
 function ProductTable({ items }: { items: AdminProductRow[] }) {
   if (items.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-gray-400">
+      <p className="py-12 text-center text-sm text-muted-foreground">
         해당 조건의 상품이 없습니다.
       </p>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-200 bg-gray-50">
-            <th className="px-4 py-3 text-left font-medium text-gray-600">상품명</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600">목적지</th>
-            <th className="px-4 py-3 text-center font-medium text-gray-600">상태</th>
-            <th className="px-4 py-3 text-right font-medium text-gray-600">기본가</th>
-            <th className="px-4 py-3 text-center font-medium text-gray-600">임베딩</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600">수정일</th>
-            <th className="px-4 py-3 text-center font-medium text-gray-600">관리</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((row) => (
-            <tr
-              key={row.id}
-              className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
-            >
-              <td className="max-w-[240px] px-4 py-3">
-                <span className="block truncate font-medium text-gray-900">
-                  {row.title}
-                </span>
-                <span className="font-mono text-xs text-gray-400">
-                  {row.id.slice(-8)}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-gray-600">{row.destination}</td>
-              <td className="px-4 py-3 text-center">
-                <StatusBadge status={row.status} />
-              </td>
-              <td className="px-4 py-3 text-right text-gray-900">
-                {row.basePriceAdult.toLocaleString("ko-KR")}원
-              </td>
-              <td className="px-4 py-3 text-center">
-                <EmbeddingJobBadge job={row.latestJob} />
-              </td>
-              <td className="px-4 py-3 text-xs text-gray-500">
-                {formatDateTime(row.updatedAt)}
-              </td>
-              <td className="px-4 py-3 text-center">
-                <Link
-                  href={`/admin/products/${row.id}/edit`}
-                  className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
-                >
-                  편집
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>상품명</TableHead>
+          <TableHead>목적지</TableHead>
+          <TableHead className="text-center">상태</TableHead>
+          <TableHead className="text-right">기본가</TableHead>
+          <TableHead className="text-center">임베딩</TableHead>
+          <TableHead>수정일</TableHead>
+          <TableHead className="text-center">관리</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.map((row) => (
+          <TableRow key={row.id}>
+            <TableCell className="max-w-[240px]">
+              <span className="block truncate font-medium text-foreground">
+                {row.title}
+              </span>
+              <span className="font-mono text-xs text-muted-foreground">
+                {row.id.slice(-8)}
+              </span>
+            </TableCell>
+            <TableCell className="text-muted-foreground">{row.destination}</TableCell>
+            <TableCell className="text-center">
+              <StatusBadge status={row.status} />
+            </TableCell>
+            <TableCell className="text-right text-foreground">
+              {row.basePriceAdult.toLocaleString("ko-KR")}원
+            </TableCell>
+            <TableCell className="text-center">
+              <EmbeddingJobBadge job={row.latestJob} />
+            </TableCell>
+            <TableCell className="text-xs text-muted-foreground">
+              {formatDateTime(row.updatedAt)}
+            </TableCell>
+            <TableCell className="text-center">
+              <Button asChild variant="secondary" size="sm">
+                <Link href={`/admin/products/${row.id}/edit`}>편집</Link>
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -186,18 +183,15 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">상품 관리</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-foreground">상품 관리</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             총 {total.toLocaleString("ko-KR")}개
             {statusFilter && ` · ${STATUS_LABELS[statusFilter]} 필터`}
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
-          + 상품 등록
-        </Link>
+        <Button asChild>
+          <Link href="/admin/products/new">+ 상품 등록</Link>
+        </Button>
       </div>
 
       {/* 상태 필터 탭 */}
@@ -211,8 +205,8 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
               href={buildHref({ status: opt.value, page: 1 })}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-card text-muted-foreground hover:bg-muted"
               }`}
             >
               {opt.label}
@@ -232,13 +226,13 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
             aria-disabled={page <= 1}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
               page <= 1
-                ? "pointer-events-none text-gray-300"
-                : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
+                ? "pointer-events-none text-muted-foreground opacity-50"
+                : "border border-border bg-card text-muted-foreground hover:bg-muted"
             }`}
           >
             이전
           </Link>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             {page} / {totalPages}
           </span>
           <Link
@@ -246,8 +240,8 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
             aria-disabled={page >= totalPages}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
               page >= totalPages
-                ? "pointer-events-none text-gray-300"
-                : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
+                ? "pointer-events-none text-muted-foreground opacity-50"
+                : "border border-border bg-card text-muted-foreground hover:bg-muted"
             }`}
           >
             다음

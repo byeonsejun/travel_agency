@@ -6,6 +6,7 @@ import {
   setReviewStatusAction,
   type SetReviewStatusState,
 } from "../server/actions";
+import { Button } from "@/shared/ui/button";
 
 type Props = {
   reviewId: string;
@@ -29,19 +30,17 @@ export function ReviewStatusToggle({ reviewId, status }: Props) {
   return (
     <form action={formAction} className="flex items-center gap-3">
       <input type="hidden" name="next" value={next} />
-      <button
+      {/* 숨기기(HIDDEN 전환) = destructive; 공개(PUBLISHED 전환) = secondary */}
+      <Button
         type="submit"
         disabled={isPending}
-        className={`rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
-          status === "PUBLISHED"
-            ? "bg-gray-700 hover:bg-gray-800"
-            : "bg-green-600 hover:bg-green-700"
-        }`}
+        variant={status === "PUBLISHED" ? "destructive" : "secondary"}
+        size="sm"
       >
         {isPending ? "처리 중…" : label}
-      </button>
+      </Button>
       {state?.type === "error" && (
-        <span className="text-sm text-red-600">{state.message}</span>
+        <span className="text-sm text-destructive">{state.message}</span>
       )}
     </form>
   );

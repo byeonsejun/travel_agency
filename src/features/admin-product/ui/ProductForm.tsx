@@ -12,6 +12,8 @@ import type { CreateProductState, UpdateProductState } from "../server/actions";
 import { getHeroUploadUrl } from "../server/uploadHero";
 import { ItineraryEditor } from "./ItineraryEditor";
 import type { ItineraryDayInput } from "./ItineraryEditor";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 
 // 위약금 정책 드롭다운 옵션 (page에서 getActivePenaltyPolicies로 주입).
 export type PenaltyPolicyOption = { key: string; name: string };
@@ -21,7 +23,7 @@ type ProductFormProps =
   | { mode: "create"; initial?: undefined; policies: PenaltyPolicyOption[] }
   | { mode: "edit"; initial: ProductDetail; policies: PenaltyPolicyOption[] };
 
-// 초기화 헬퍼 
+// 초기화 헬퍼
 
 function emptyProductInput(): ProductInput {
   return {
@@ -82,14 +84,14 @@ export function productDetailToInput(d: ProductDetail): ProductInput {
   };
 }
 
-// inclusion row 타입 
+// inclusion row 타입
 type InclusionRow = ProductInput["inclusions"][number];
 
 function emptyInclusion(): InclusionRow {
   return { kind: "INCLUDED", label: "", note: "" };
 }
 
-// 내부 shared form 상태 타입 
+// 내부 shared form 상태 타입
 type FormBodyProps = {
   state: CreateProductState | UpdateProductState | null;
   isPending: boolean;
@@ -203,11 +205,12 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
   }
 
   // ── CSS helpers ───────────────────────────────────────────────
-  const inputCls =
-    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400";
-  const labelCls = "mb-1 block text-sm font-medium text-gray-700";
+  const labelCls = "mb-1 block text-sm font-medium text-foreground";
   const errorCls = "mt-1 text-xs text-red-600";
-  const sectionCls = "rounded-xl border border-gray-200 bg-white p-5 space-y-4";
+  const sectionCls = "rounded-xl border border-border bg-card p-5 space-y-4";
+  // native select/textarea shared classes (Input primitive is input-only)
+  const nativeInputCls =
+    "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -220,20 +223,19 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
 
       {/* ══ 기본 정보 ══ */}
       <section className={sectionCls}>
-        <h2 className="text-base font-semibold text-gray-900">기본 정보</h2>
+        <h2 className="text-base font-semibold text-foreground">기본 정보</h2>
 
         {/* 상품명 */}
         <div>
           <label className={labelCls} htmlFor="title">
             상품명 *
           </label>
-          <input
+          <Input
             id="title"
             type="text"
             value={form.title}
             onChange={(e) => setField("title", e.target.value)}
             placeholder="예: 도쿄 4박 5일 패키지"
-            className={inputCls}
           />
           {fieldErrors?.title && (
             <p className={errorCls}>{fieldErrors.title[0]}</p>
@@ -251,7 +253,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             onChange={(e) => setField("summary", e.target.value)}
             rows={3}
             placeholder="상품 요약 설명 (10자 이상)"
-            className={inputCls}
+            className={nativeInputCls}
           />
           {fieldErrors?.summary && (
             <p className={errorCls}>{fieldErrors.summary[0]}</p>
@@ -264,13 +266,12 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             <label className={labelCls} htmlFor="destination">
               목적지 *
             </label>
-            <input
+            <Input
               id="destination"
               type="text"
               value={form.destination}
               onChange={(e) => setField("destination", e.target.value)}
               placeholder="도쿄"
-              className={inputCls}
             />
             {fieldErrors?.destination && (
               <p className={errorCls}>{fieldErrors.destination[0]}</p>
@@ -280,7 +281,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             <label className={labelCls} htmlFor="destinationCode">
               목적지 코드
             </label>
-            <input
+            <Input
               id="destinationCode"
               type="text"
               value={form.destinationCode ?? ""}
@@ -288,7 +289,6 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
                 setField("destinationCode", e.target.value || undefined)
               }
               placeholder="JP-TYO"
-              className={inputCls}
             />
           </div>
         </div>
@@ -299,7 +299,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             <label className={labelCls} htmlFor="durationNights">
               박수 *
             </label>
-            <input
+            <Input
               id="durationNights"
               type="number"
               min={1}
@@ -307,7 +307,6 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
               onChange={(e) =>
                 setField("durationNights", parseInt(e.target.value, 10) || 1)
               }
-              className={inputCls}
             />
             {fieldErrors?.durationNights && (
               <p className={errorCls}>{fieldErrors.durationNights[0]}</p>
@@ -317,7 +316,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             <label className={labelCls} htmlFor="durationDays">
               일수 *
             </label>
-            <input
+            <Input
               id="durationDays"
               type="number"
               min={1}
@@ -325,7 +324,6 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
               onChange={(e) =>
                 setField("durationDays", parseInt(e.target.value, 10) || 1)
               }
-              className={inputCls}
             />
             {fieldErrors?.durationDays && (
               <p className={errorCls}>{fieldErrors.durationDays[0]}</p>
@@ -338,7 +336,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
           <label className={labelCls} htmlFor="basePriceAdult">
             성인 기본가 (원) *
           </label>
-          <input
+          <Input
             id="basePriceAdult"
             type="number"
             min={0}
@@ -347,7 +345,6 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             onChange={(e) =>
               setField("basePriceAdult", parseInt(e.target.value, 10) || 0)
             }
-            className={inputCls}
           />
           {fieldErrors?.basePriceAdult && (
             <p className={errorCls}>{fieldErrors.basePriceAdult[0]}</p>
@@ -359,7 +356,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
           <label className={labelCls}>대표 이미지</label>
 
           {form.heroImageUrl && (
-            <div className="mb-3 overflow-hidden rounded-lg border border-gray-200">
+            <div className="mb-3 overflow-hidden rounded-lg border border-border">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={form.heroImageUrl}
@@ -378,18 +375,18 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             onChange={handleHeroFileChange}
           />
 
-          <button
+          <Button
             type="button"
+            variant="outline"
             disabled={heroUploadStatus === "uploading"}
             onClick={() => heroFileInputRef.current?.click()}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
           >
             {heroUploadStatus === "uploading"
               ? "업로드 중..."
               : form.heroImageUrl
                 ? "이미지 변경"
                 : "이미지 선택 (JPEG·PNG·WebP)"}
-          </button>
+          </Button>
 
           {heroUploadStatus === "error" && heroUploadError && (
             <p className={errorCls}>{heroUploadError}</p>
@@ -410,7 +407,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             onChange={(e) =>
               setField("status", e.target.value as ProductInput["status"])
             }
-            className={inputCls}
+            className={nativeInputCls}
           >
             <option value="DRAFT">DRAFT (임시저장)</option>
             <option value="PUBLISHED">PUBLISHED (게시)</option>
@@ -427,7 +424,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             id="penaltyPolicyKey"
             value={form.penaltyPolicyKey ?? ""}
             onChange={(e) => setField("penaltyPolicyKey", e.target.value || null)}
-            className={inputCls}
+            className={nativeInputCls}
           >
             <option value="">기본값 (시스템 표준약관)</option>
             {policies.map((p) => (
@@ -436,7 +433,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-muted-foreground">
             미지정 시 시스템 표준약관이 적용됩니다. 출발일별로 다시 오버라이드할 수
             있습니다.
           </p>
@@ -445,24 +442,23 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
 
       {/* ══ 태그 ══ */}
       <section className={sectionCls}>
-        <h2 className="text-base font-semibold text-gray-900">태그</h2>
+        <h2 className="text-base font-semibold text-foreground">태그</h2>
         <div>
           <label className={labelCls} htmlFor="tags">
             태그 (쉼표로 구분) *
           </label>
-          <input
+          <Input
             id="tags"
             type="text"
             value={tagsRaw}
             onChange={(e) => setTagsRaw(e.target.value)}
             placeholder="도쿄, 온천, 미식"
-            className={inputCls}
           />
           {fieldErrors?.tags && (
             <p className={errorCls}>{fieldErrors.tags[0]}</p>
           )}
           {tagsRaw && (
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-muted-foreground">
               미리보기:{" "}
               {tagsRaw
                 .split(",")
@@ -471,7 +467,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
                 .map((tag) => (
                   <span
                     key={tag}
-                    className="mr-1 inline-block rounded bg-indigo-50 px-2 py-0.5 text-indigo-700"
+                    className="mr-1 inline-block rounded bg-secondary px-2 py-0.5 text-secondary-foreground"
                   >
                     {tag}
                   </span>
@@ -484,25 +480,26 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
       {/* ══ 포함/불포함 ══ */}
       <section className={sectionCls}>
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-900">포함/불포함 항목</h2>
-          <button
+          <h2 className="text-base font-semibold text-foreground">포함/불포함 항목</h2>
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={addInclusion}
-            className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
           >
             + 항목 추가
-          </button>
+          </Button>
         </div>
 
         {inclusions.length === 0 && (
-          <p className="text-sm text-gray-400">항목이 없습니다.</p>
+          <p className="text-sm text-muted-foreground">항목이 없습니다.</p>
         )}
 
         {inclusions.map((inc, idx) => (
           <div key={idx} className="grid grid-cols-12 gap-2 items-start">
             <div className="col-span-2">
               <label
-                className="mb-1 block text-xs font-medium text-gray-500"
+                className="mb-1 block text-xs font-medium text-muted-foreground"
                 htmlFor={`inc-kind-${idx}`}
               >
                 종류
@@ -513,7 +510,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
                 onChange={(e) =>
                   updateInclusion(idx, { kind: e.target.value as "INCLUDED" | "EXCLUDED" })
                 }
-                className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="w-full rounded-lg border border-input bg-background px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="INCLUDED">포함</option>
                 <option value="EXCLUDED">불포함</option>
@@ -521,34 +518,32 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
             </div>
             <div className="col-span-4">
               <label
-                className="mb-1 block text-xs font-medium text-gray-500"
+                className="mb-1 block text-xs font-medium text-muted-foreground"
                 htmlFor={`inc-label-${idx}`}
               >
                 항목명 *
               </label>
-              <input
+              <Input
                 id={`inc-label-${idx}`}
                 type="text"
                 value={inc.label}
                 onChange={(e) => updateInclusion(idx, { label: e.target.value })}
                 placeholder="항공권"
-                className={inputCls}
               />
             </div>
             <div className="col-span-5">
               <label
-                className="mb-1 block text-xs font-medium text-gray-500"
+                className="mb-1 block text-xs font-medium text-muted-foreground"
                 htmlFor={`inc-note-${idx}`}
               >
                 비고
               </label>
-              <input
+              <Input
                 id={`inc-note-${idx}`}
                 type="text"
                 value={inc.note ?? ""}
                 onChange={(e) => updateInclusion(idx, { note: e.target.value })}
                 placeholder="이코노미 클래스"
-                className={inputCls}
               />
             </div>
             <div className="col-span-1 flex items-end pb-0.5">
@@ -579,11 +574,12 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
       </section>
 
       {/* ══ 제출 ══ */}
-      <div className="sticky bottom-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md">
-        <button
+      <div className="sticky bottom-4 rounded-xl border border-border bg-card p-4 shadow-md">
+        <Button
           type="submit"
+          size="lg"
           disabled={isPending || heroUploadStatus === "uploading"}
-          className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
+          className="w-full"
         >
           {isPending
             ? "저장 중..."
@@ -592,7 +588,7 @@ function FormBody({ state, isPending, onSubmit, initial, mode, policies }: FormB
               : mode === "edit"
                 ? "상품 수정 저장"
                 : "상품 등록"}
-        </button>
+        </Button>
       </div>
     </form>
   );

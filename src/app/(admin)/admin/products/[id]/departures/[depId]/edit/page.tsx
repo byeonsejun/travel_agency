@@ -15,6 +15,8 @@ import {
   forceCancelDepartureAction,
 } from "@/features/admin-departure-cancel";
 import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
+import { Badge } from "@/shared/ui/badge";
+import type { DepartureStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,14 @@ const ACTION_LABEL: Record<string, string> = {
   CANCELED: "출발 취소",
 };
 
+// 동기화 유지: departures/page.tsx 의 STATUS_TONE 과 동일 매핑.
+const DEPARTURE_STATUS_TONE: Record<DepartureStatus, "info" | "success" | "neutral" | "destructive"> = {
+  SCHEDULED: "info",
+  CONFIRMED: "success",
+  CLOSED: "neutral",
+  CANCELED: "destructive",
+};
+
 export default async function EditDeparturePage({ params, searchParams }: PageProps) {
   const { id: productId, depId } = await params;
   const { error } = await searchParams;
@@ -57,14 +67,14 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
       <div className="flex items-center gap-3">
         <Link
           href={`/admin/products/${productId}/departures`}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← 목록
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">출발일 편집</h1>
-        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+        <h1 className="text-2xl font-bold text-foreground">출발일 편집</h1>
+        <Badge variant={DEPARTURE_STATUS_TONE[dep.status]}>
           {DEPARTURE_STATUS_LABEL[dep.status]}
-        </span>
+        </Badge>
       </div>
 
       {error && (
@@ -74,7 +84,7 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
           <DepartureForm
             action={action}
             initial={dep}
@@ -84,13 +94,13 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
         </div>
 
         {/* 상태 전이 패널 — <form action> progressive enhancement */}
-        <aside className="space-y-3 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-gray-900">상태 전이</h2>
-          <p className="text-xs text-gray-500">
+        <aside className="space-y-3 rounded-xl border border-border bg-card p-5">
+          <h2 className="text-sm font-semibold text-foreground">상태 전이</h2>
+          <p className="text-xs text-muted-foreground">
             현재: {DEPARTURE_STATUS_LABEL[dep.status]} · 예약 {dep.bookedSeats}석
           </p>
           {nextStatuses.length === 0 ? (
-            <p className="text-xs text-gray-400">더 이상 전이할 수 없습니다 (종료 상태).</p>
+            <p className="text-xs text-muted-foreground">더 이상 전이할 수 없습니다 (종료 상태).</p>
           ) : (
             nextStatuses.map((to) => {
               // 취소 + 예약 존재 → 강제 취소(fan-out 환불) 진입점 (fat-finger confirm).
@@ -116,7 +126,7 @@ export default async function EditDeparturePage({ params, searchParams }: PagePr
                     className={`w-full rounded-lg px-3 py-2 text-sm font-medium ${
                       to === "CANCELED"
                         ? "bg-red-50 text-red-700 hover:bg-red-100"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-muted text-foreground hover:bg-muted/80"
                     }`}
                   >
                     {ACTION_LABEL[to] ?? to}

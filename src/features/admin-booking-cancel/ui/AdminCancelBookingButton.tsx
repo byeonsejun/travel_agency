@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { adminCancelBookingAction } from "../server/actions";
+import { Button } from "@/shared/ui/button";
 
 type Props = {
   bookingId: string;
@@ -49,13 +50,13 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant="destructive"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
       >
         관리자 직권 취소
-      </button>
+      </Button>
 
       {open && (
         <div
@@ -71,14 +72,14 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
             disabled={isPending}
             className="absolute inset-0 bg-black/40 backdrop-blur-[1px] disabled:cursor-not-allowed"
           />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-xl">
             <h2
               id="admin-cancel-dialog-title"
-              className="text-lg font-bold text-gray-900"
+              className="text-lg font-bold text-foreground"
             >
               관리자 직권 취소
             </h2>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               취소 시 좌석이 환원되며, PAID 상태였다면 환불 큐(RefundJob)가
               자동으로 PG 취소를 진행합니다.
             </p>
@@ -87,7 +88,7 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
               <div>
                 <label
                   htmlFor="admin-cancel-reason"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-foreground"
                 >
                   취소 사유 (최소 5자, 최대 200자) — 운영 로그에 기록됩니다
                 </label>
@@ -99,20 +100,20 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
                   maxLength={200}
                   rows={4}
                   placeholder="예: 천재지변으로 인한 출발 불가, 약관 위반 행위 발견 등 — 명확한 사유를 기재"
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive disabled:opacity-50"
                 />
-                <p className="mt-1 text-right text-xs text-gray-400">
+                <p className="mt-1 text-right text-xs text-muted-foreground">
                   {reason.length}/200
                 </p>
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className="flex items-center gap-2 text-sm text-foreground">
                 <input
                   type="checkbox"
                   checked={waivePenalty}
                   onChange={(e) => setWaivePenalty(e.target.checked)}
                   disabled={isPending}
-                  className="h-4 w-4 rounded border-gray-300"
+                  className="h-4 w-4 rounded border-input"
                 />
                 위약금 면제 (여행사 귀책 취소)
               </label>
@@ -120,7 +121,7 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
               {state?.type === "error" && (
                 <p
                   role="alert"
-                  className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+                  className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 >
                   {state.message}
                 </p>
@@ -135,21 +136,21 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
               )}
 
               <div className="flex justify-end gap-2 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={handleClose}
                   disabled={isPending}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                 >
                   닫기
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="destructive"
                   disabled={submitDisabled}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
                 >
                   {isPending ? "취소 처리 중..." : "직권 취소 확정"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

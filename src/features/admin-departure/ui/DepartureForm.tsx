@@ -4,6 +4,8 @@ import { startTransition, useActionState, useState } from "react";
 import type { AdminDepartureRow } from "@/entities/departure";
 import type { DepartureActionState } from "../server/actions";
 import type { DepartureFormInput } from "../model/schemas";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 
 // 위약금 정책 드롭다운 옵션 (page에서 getActivePenaltyPolicies로 주입).
 export type PenaltyPolicyOption = { key: string; name: string };
@@ -54,6 +56,10 @@ export function DepartureForm({
   const fieldErr = (k: string) =>
     state?.type === "error" ? state.fieldErrors?.[k]?.[0] : undefined;
 
+  const labelCls = "mb-1 block text-sm font-medium text-foreground";
+  const nativeSelectCls =
+    "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       {/* 가격 경고 배너 (D2) — 차단 아님, 정보성 */}
@@ -91,11 +97,11 @@ export function DepartureForm({
 
       {/* 위약금 정책 오버라이드 (Phase 14) */}
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-gray-700">위약금 정책</span>
+        <span className={labelCls}>위약금 정책</span>
         <select
           name="penaltyPolicyKey"
           defaultValue={initial?.penaltyPolicyKey ?? ""}
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2"
+          className={nativeSelectCls}
         >
           <option value="">상품 정책 상속(기본)</option>
           {policies.map((p) => (
@@ -104,7 +110,7 @@ export function DepartureForm({
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-gray-400">
+        <span className="mt-1 block text-xs text-muted-foreground">
           비워두면 상품에 지정된 정책(없으면 시스템 표준약관)을 따릅니다.
         </span>
       </label>
@@ -115,10 +121,9 @@ export function DepartureForm({
         </p>
       )}
 
-      <button type="submit" disabled={isPending}
-        className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
+      <Button type="submit" disabled={isPending}>
         {isPending ? "저장 중…" : initial ? "수정 저장" : "출발일 생성"}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -132,11 +137,14 @@ function Field({
 }) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block font-medium text-gray-700">{label}</span>
-      <input
-        name={name} type={type} defaultValue={defaultValue} min={min} required
+      <span className="mb-1 block font-medium text-foreground">{label}</span>
+      <Input
+        name={name}
+        type={type}
+        defaultValue={defaultValue}
+        min={min}
+        required
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-        className="block w-full rounded-lg border border-gray-300 px-3 py-2"
       />
       {error && <span className="mt-1 block text-xs text-red-600">{error}</span>}
     </label>

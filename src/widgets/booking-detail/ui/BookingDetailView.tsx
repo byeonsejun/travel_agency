@@ -134,18 +134,18 @@ export async function BookingDetailView({ booking, activeRefundJob }: Props) {
           revalidatePath로 RSC가 재렌더되어 자동으로 '환불 완료' 배지로 전환된다. */}
       {payments.length > 0 && (
         <section>
-          <h2 className="mb-4 text-base font-semibold text-gray-900">결제 내역</h2>
+          <h2 className="mb-4 text-base font-semibold text-foreground">결제 내역</h2>
           <ul className="space-y-2">
             {payments.map((p) => (
               <li
                 key={p.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-foreground">
                     {formatPrice(p.amount)}
                   </p>
-                  <p className="mt-0.5 text-xs text-gray-500">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {p.canceledAt
                       ? `환불 ${formatDateTime(p.canceledAt)}`
                       : p.paidAt
@@ -162,7 +162,7 @@ export async function BookingDetailView({ booking, activeRefundJob }: Props) {
 
       {/* 예약 이벤트 타임라인 */}
       <section>
-        <h2 className="mb-4 text-base font-semibold text-gray-900">예약 이력</h2>
+        <h2 className="mb-4 text-base font-semibold text-foreground">예약 이력</h2>
         <BookingEventTimeline events={booking.events} />
       </section>
 
@@ -171,7 +171,7 @@ export async function BookingDetailView({ booking, activeRefundJob }: Props) {
           버튼 자동 hide(상태머신이 한 번의 단일 source of truth).
           PAID payment가 있으면 refundBooking 경로로 자동 dispatch된다. */}
       {cancelable && (
-        <section className="flex justify-end border-t border-gray-100 pt-6">
+        <section className="flex justify-end border-t border-border pt-6">
           <CancelBookingButton bookingId={booking.id} refundPreview={refundPreview} />
         </section>
       )}

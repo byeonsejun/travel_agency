@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { travelerCancelAction } from "@/features/admin-traveler-cancel/server/actions";
+import { Button } from "@/shared/ui/button";
 
 interface TravelerInfo {
   id: string;
@@ -45,13 +46,13 @@ export function TravelerCancelPanel({ bookingId, travelers }: Props) {
   const PAX_LABEL: Record<string, string> = { ADULT: "성인", CHILD: "아동", INFANT: "유아" };
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+    <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         여행자별 부분 취소
       </h2>
 
       {active.length === 0 ? (
-        <p className="text-sm text-gray-400">취소 가능한 여행자가 없습니다.</p>
+        <p className="text-sm text-muted-foreground">취소 가능한 여행자가 없습니다.</p>
       ) : (
         <ul className="space-y-2">
           {active.map((t) => (
@@ -65,14 +66,14 @@ export function TravelerCancelPanel({ bookingId, travelers }: Props) {
                     e.target.checked ? [...s, t.id] : s.filter((x) => x !== t.id)
                   )
                 }
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-input"
               />
-              <label htmlFor={`t-${t.id}`} className="text-sm text-gray-900">
+              <label htmlFor={`t-${t.id}`} className="text-sm text-foreground">
                 {t.lastNameEn} {t.firstNameEn}{" "}
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-muted-foreground">
                   ({t.paxType ? (PAX_LABEL[t.paxType] ?? t.paxType) : "미지정"})
                 </span>{" "}
-                <span className="text-xs font-medium text-gray-600">
+                <span className="text-xs font-medium text-muted-foreground">
                   {t.unitPrice.toLocaleString("ko-KR")}원
                 </span>
               </label>
@@ -83,10 +84,10 @@ export function TravelerCancelPanel({ bookingId, travelers }: Props) {
 
       {canceled.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-gray-400 mb-1">취소된 여행자</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1">취소된 여행자</p>
           <ul className="space-y-1">
             {canceled.map((t) => (
-              <li key={t.id} className="text-xs text-gray-400 line-through">
+              <li key={t.id} className="text-xs text-muted-foreground line-through">
                 {t.lastNameEn} {t.firstNameEn} ({t.paxType ? (PAX_LABEL[t.paxType] ?? t.paxType) : "미지정"})
               </li>
             ))}
@@ -94,12 +95,12 @@ export function TravelerCancelPanel({ bookingId, travelers }: Props) {
         </div>
       )}
 
-      <label className="flex items-center gap-2 text-sm text-gray-700">
+      <label className="flex items-center gap-2 text-sm text-foreground">
         <input
           type="checkbox"
           checked={applyPenalty}
           onChange={(e) => setApplyPenalty(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300"
+          className="h-4 w-4 rounded border-input"
         />
         위약금 적용 (표준약관)
       </label>
@@ -108,13 +109,13 @@ export function TravelerCancelPanel({ bookingId, travelers }: Props) {
         <p className="text-sm text-red-600">오류: {error}</p>
       )}
 
-      <button
+      <Button
+        variant="destructive"
         disabled={isPending || sel.length === 0}
         onClick={handleSubmit}
-        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
       >
         {isPending ? "처리 중..." : `선택한 여행자 ${sel.length}명 취소`}
-      </button>
+      </Button>
     </section>
   );
 }

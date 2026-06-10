@@ -2,8 +2,10 @@
 
 import type { z } from "zod";
 import type { itineraryDaySchema } from "@/entities/product";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 
-// 타입 
+// 타입
 export type ItineraryDayInput = z.infer<typeof itineraryDaySchema>;
 type ItineraryStopInput = ItineraryDayInput["stops"][number];
 
@@ -13,7 +15,7 @@ type Props = {
   fieldErrors?: Record<string, string[]>;
 };
 
-// 팩토리 
+// 팩토리
 function emptyStop(order: number): ItineraryStopInput {
   return { order, time: "", place: "", description: "" };
 }
@@ -28,7 +30,7 @@ function emptyDay(dayNumber: number): ItineraryDayInput {
   };
 }
 
-// 컴포넌트 
+// 컴포넌트
 export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
   // 상위에서 controlled로 동작 — 로컬 state 없음
 
@@ -121,19 +123,20 @@ export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
     );
   }
 
-  const inputCls =
-    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400";
-  const labelCls = "mb-1 block text-xs font-medium text-gray-500";
+  const labelCls = "mb-1 block text-xs font-medium text-muted-foreground";
   const btnSm =
-    "rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-40";
+    "rounded border border-border bg-card px-2 py-1 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40";
+  // small native inputs (meals — text-xs, no Input primitive wrapper needed)
+  const mealInputCls =
+    "w-full rounded-lg border border-input bg-background px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring";
 
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-800">일정 (Itinerary)</h3>
-        <button type="button" onClick={addDay} className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100">
+        <h3 className="text-sm font-semibold text-foreground">일정 (Itinerary)</h3>
+        <Button type="button" variant="secondary" size="sm" onClick={addDay}>
           + Day 추가
-        </button>
+        </Button>
       </div>
 
       {/* itinerary 레벨 에러 */}
@@ -142,16 +145,16 @@ export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
       )}
 
       {days.length === 0 && (
-        <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-400">
+        <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
           Day를 추가하세요
         </p>
       )}
 
       {days.map((day, dayIdx) => (
-        <div key={dayIdx} className="rounded-xl border border-gray-200 bg-white p-4">
+        <div key={dayIdx} className="rounded-xl border border-border bg-card p-4">
           {/* Day 헤더 */}
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-700">Day {day.dayNumber}</span>
+            <span className="text-sm font-semibold text-foreground">Day {day.dayNumber}</span>
             <div className="flex gap-1">
               <button
                 type="button"
@@ -188,26 +191,24 @@ export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
               <label className={labelCls} htmlFor={`day-title-${dayIdx}`}>
                 일정 제목 *
               </label>
-              <input
+              <Input
                 id={`day-title-${dayIdx}`}
                 type="text"
                 value={day.title}
                 onChange={(e) => updateDay(dayIdx, { title: e.target.value })}
                 placeholder="예: 인천 출발 → 도쿄 나리타 도착"
-                className={inputCls}
               />
             </div>
             <div>
               <label className={labelCls} htmlFor={`day-hotel-${dayIdx}`}>
                 숙박
               </label>
-              <input
+              <Input
                 id={`day-hotel-${dayIdx}`}
                 type="text"
                 value={day.accommodation ?? ""}
                 onChange={(e) => updateDay(dayIdx, { accommodation: e.target.value })}
                 placeholder="호텔명"
-                className={inputCls}
               />
             </div>
             {/* 식사 */}
@@ -228,7 +229,7 @@ export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
                     onChange={(e) => updateMeal(dayIdx, key, e.target.value)}
                     placeholder={placeholder}
                     aria-label={`${placeholder} (Day ${day.dayNumber})`}
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className={mealInputCls}
                   />
                 ))}
               </div>
@@ -238,24 +239,24 @@ export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
           {/* Stops */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-gray-600">방문지 (Stops)</p>
+              <p className="text-xs font-medium text-muted-foreground">방문지 (Stops)</p>
               <button
                 type="button"
                 onClick={() => addStop(dayIdx)}
-                className="rounded bg-gray-50 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
+                className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground hover:bg-muted/80"
               >
                 + Stop 추가
               </button>
             </div>
 
             {day.stops.length === 0 && (
-              <p className="text-xs text-gray-400">Stop이 없습니다.</p>
+              <p className="text-xs text-muted-foreground">Stop이 없습니다.</p>
             )}
 
             {day.stops.map((stop, stopIdx) => (
-              <div key={stopIdx} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+              <div key={stopIdx} className="rounded-lg border border-border bg-muted/30 p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-500">
+                  <span className="text-xs font-medium text-muted-foreground">
                     Stop {stop.order}
                   </span>
                   <div className="flex gap-1">
@@ -292,33 +293,31 @@ export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
                     <label className={labelCls} htmlFor={`stop-place-${dayIdx}-${stopIdx}`}>
                       장소 *
                     </label>
-                    <input
+                    <Input
                       id={`stop-place-${dayIdx}-${stopIdx}`}
                       type="text"
                       value={stop.place}
                       onChange={(e) => updateStop(dayIdx, stopIdx, { place: e.target.value })}
                       placeholder="예: 센소지"
-                      className={inputCls}
                     />
                   </div>
                   <div>
                     <label className={labelCls} htmlFor={`stop-time-${dayIdx}-${stopIdx}`}>
                       시간
                     </label>
-                    <input
+                    <Input
                       id={`stop-time-${dayIdx}-${stopIdx}`}
                       type="text"
                       value={stop.time ?? ""}
                       onChange={(e) => updateStop(dayIdx, stopIdx, { time: e.target.value })}
                       placeholder="09:00"
-                      className={inputCls}
                     />
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls} htmlFor={`stop-desc-${dayIdx}-${stopIdx}`}>
                       설명
                     </label>
-                    <input
+                    <Input
                       id={`stop-desc-${dayIdx}-${stopIdx}`}
                       type="text"
                       value={stop.description ?? ""}
@@ -326,7 +325,6 @@ export function ItineraryEditor({ days, onChange, fieldErrors }: Props) {
                         updateStop(dayIdx, stopIdx, { description: e.target.value })
                       }
                       placeholder="자유 관람 후 집합"
-                      className={inputCls}
                     />
                   </div>
                 </div>
