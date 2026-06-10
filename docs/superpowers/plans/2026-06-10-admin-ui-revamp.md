@@ -398,7 +398,7 @@ Phase 1 완료. 페이지 본문은 다음 Phase에서 이관.
 - Modify: `src/features/admin-product/ui/ItineraryEditor.tsx`
 - Modify: `src/features/admin-departure/ui/DepartureForm.tsx`
 
-- [ ] **Step 1: 상품 목록 테이블 + 배지 이관 (대표 예시)**
+- [x] **Step 1: 상품 목록 테이블 + 배지 이관 (대표 예시)**
 
 `products/page.tsx`에서:
 
@@ -482,7 +482,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 
 5. 빈 상태 `text-gray-400` → `text-muted-foreground`. 필터 탭 active `bg-gray-900 text-white` → `bg-primary text-primary-foreground`, inactive `ring-1 ring-gray-200` → `border border-border bg-card`. 페이지네이션 동일 매핑.
 
-- [ ] **Step 2: 나머지 상품 페이지 + 폼 이관**
+- [x] **Step 2: 나머지 상품 페이지 + 폼 이관**
 
 `new/edit/departures*` 페이지: 토큰 매핑표 적용(`bg-white`→`Card`/`bg-card`, gray scale → foreground/muted-foreground/border, indigo → Button).
 
@@ -491,7 +491,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 - submit/secondary 버튼 → `Button` (variant: 저장=default, 취소=outline, 삭제·강제취소=destructive).
 - ⚠️ island에서 `@/shared/lib/env`·entities 배럴 import 추가 금지.
 
-- [ ] **Step 3: 검증 (섹션 게이트)**
+- [x] **Step 3: 검증 (섹션 게이트)**
 
 Run: `npm run typecheck`
 Expected: 에러 0
@@ -506,7 +506,7 @@ Expected: 성공
 
 dev 서버 기동(`npm run dev`) 후 admin 매직링크 로그인 → `/admin/products` 목록·필터·편집 폼 렌더 확인(스크린샷). A1 블루 1차 버튼·토큰 배경·tone 배지 확인.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add "src/app/(admin)/admin/products" src/features/admin-product src/features/admin-departure
