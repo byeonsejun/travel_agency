@@ -18,3 +18,4 @@ coverage
 
 # Superpowers brainstorming visual companion
 .superpowers/
+.env*

@@ -1,6 +1,7 @@
 import { ProductImage } from "@/entities/product";
 import type { ProductDetail } from "@/entities/product";
 import { CompareRemoveButton } from "@/features/product-compare";
+import { formatTagLabel } from "@/shared/lib/format";
 
 type Props = {
   products: ProductDetail[];
@@ -43,7 +44,7 @@ const ROWS: Row[] = [
               key={t.id}
               className="inline-block rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground"
             >
-              #{t.tag}
+              {formatTagLabel(t.tag)}
             </span>
           ))}
         </div>
