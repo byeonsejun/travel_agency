@@ -15,9 +15,10 @@ import {
   parseRoutedQuery,
   type RoutedQuery,
 } from "../model/schemas";
+import type { ThemeKeywordsMap } from "@/shared/lib/tags";
 
 /** 키워드 → 정규 태그(ProductTag.tag의 '#' 제외 표기) 매핑. */
-const THEME_KEYWORDS: Readonly<Record<string, string>> = {
+export const THEME_KEYWORDS: ThemeKeywordsMap = {
   온천: "온천",
   료칸: "료칸",
   부모님: "부모님",
@@ -44,6 +45,13 @@ const THEME_KEYWORDS: Readonly<Record<string, string>> = {
   역사: "역사",
   문화: "문화",
   스노클링: "스노클링",
+  // orphan 보강: 상품 태그는 있으나 키워드 매핑이 없던 정규태그.
+  나홀로: "나홀로",
+  혼자: "나홀로",
+  근거리: "근거리",
+  주말: "근거리",
+  도심: "도심",
+  시내: "도심",
 };
 
 const PRICE_RE = /(\d+)\s*만\s*원(?:\s*(?:이하|이내|미만|under))?/g;

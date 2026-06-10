@@ -59,3 +59,16 @@ export function reviewPhotoPublicUrl(path: string): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   return `${base}/storage/v1/object/public/${REVIEW_PHOTO_BUCKET}/${path}`;
 }
+
+// 시드 상품 대표 이미지의 결정적 저장 prefix (마이그레이션·재시드 공유).
+export const HERO_SEED_PREFIX = "product-hero/seed";
+
+/**
+ * 시드 상품 hero 이미지의 env-portable public URL.
+ * env.ts 미사용(client-safe 규칙) — NEXT_PUBLIC_SUPABASE_URL 직접 접근.
+ * 로컬/운영이 같은 Supabase 프로젝트라면 동일 URL 로 양쪽에서 해석된다.
+ */
+export function buildHeroSeedPublicUrl(slug: string): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return `${base}/storage/v1/object/public/${REVIEW_PHOTO_BUCKET}/${HERO_SEED_PREFIX}/${slug}.jpg`;
+}
