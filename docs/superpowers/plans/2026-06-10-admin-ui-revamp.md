@@ -599,7 +599,7 @@ git commit -m "style(admin): migrate bookings + refund monitoring to A1"
 - Modify: `src/features/admin-penalty-policy/ui/PenaltyPolicyForm.tsx`
 - Modify: `src/features/admin-departure-cancel/ui/ForceCancelButton.tsx`
 
-- [ ] **Step 1: 3개 섹션 이관**
+- [x] **Step 1: 3개 섹션 이관**
 
 공통 레시피 적용. 추가 status 매핑:
 
@@ -621,7 +621,7 @@ const BATCH_TONE: Record<DepartureCancellationStatus, Tone> = {
 - `PenaltyPolicyForm`(island) 입력 → `Input`, 버튼 → `Button`.
 - `ForceCancelButton`(island, 파괴적) → `<Button variant="destructive">`. confirm 모달 색 토큰화. ⚠️ env/배럴 누출 금지.
 
-- [ ] **Step 2: 검증**
+- [x] **Step 2: 검증**
 
 Run: `npm run typecheck`
 Expected: 에러 0
@@ -636,7 +636,7 @@ Expected: 성공
 
 `/admin/penalty-policies`, `/admin/embedding-jobs`, `/admin/departure-cancellations` 목록·상세 렌더 확인.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add "src/app/(admin)/admin/penalty-policies" "src/app/(admin)/admin/embedding-jobs" "src/app/(admin)/admin/departure-cancellations" src/features/admin-penalty-policy src/features/admin-departure-cancel
