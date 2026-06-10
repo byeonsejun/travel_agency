@@ -37,7 +37,7 @@
 - Create: `src/shared/lib/tags.ts`
 - Test: `src/shared/lib/__tests__/tags.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/shared/lib/__tests__/tags.test.ts
@@ -65,12 +65,12 @@ describe("TAG_VOCABULARY", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/shared/lib/__tests__/tags.test.ts`
 Expected: FAIL — `Cannot find module '../tags'`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 ```ts
 // src/shared/lib/tags.ts
@@ -103,12 +103,12 @@ export function toCanonicalTag(tag: string): string {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/shared/lib/__tests__/tags.test.ts`
 Expected: PASS (전체 통과)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/shared/lib/tags.ts src/shared/lib/__tests__/tags.test.ts
@@ -122,7 +122,7 @@ git commit -m "feat(tags): add canonical tag vocabulary SSOT + # converters"
 **Files:**
 - Modify: `src/features/search/server/router.ts` (THEME_KEYWORDS 정의부)
 
-- [ ] **Step 1: THEME_KEYWORDS 를 export 로 바꾸고 orphan 키워드 6개 추가**
+- [x] **Step 1: THEME_KEYWORDS 를 export 로 바꾸고 orphan 키워드 6개 추가**
 
 `const THEME_KEYWORDS` → `export const THEME_KEYWORDS`. 그리고 객체 끝(`스노클링: "스노클링",` 다음 줄)에 추가:
 
@@ -136,12 +136,12 @@ git commit -m "feat(tags): add canonical tag vocabulary SSOT + # converters"
   시내: "도심",
 ```
 
-- [ ] **Step 2: typecheck**
+- [x] **Step 2: typecheck**
 
 Run: `npx tsc --noEmit`
 Expected: 에러 없음
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add src/features/search/server/router.ts
@@ -155,7 +155,7 @@ git commit -m "feat(search): add orphan theme keywords (나홀로/근거리/도�
 **Files:**
 - Modify: `src/entities/product/api/searchByVector.ts` (`normalizeThemeTags` 함수 + import)
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 파일 상단 import 블록에 추가:
 
@@ -163,7 +163,7 @@ git commit -m "feat(search): add orphan theme keywords (나홀로/근거리/도�
 import { toStorageTag } from "@/shared/lib/tags";
 ```
 
-- [ ] **Step 2: normalizeThemeTags 본문 교체**
+- [x] **Step 2: normalizeThemeTags 본문 교체**
 
 기존:
 ```ts
@@ -180,12 +180,12 @@ function normalizeThemeTags(themeTags: string[] | undefined): string[] {
 }
 ```
 
-- [ ] **Step 3: 기존 검색 테스트 무회귀 확인**
+- [x] **Step 3: 기존 검색 테스트 무회귀 확인**
 
 Run: `npx vitest run src/entities/product/api/__tests__/searchByVector.test.ts`
 Expected: PASS (기존 테스트 전부 통과 — 동작 동일, 구현만 SSOT 경유)
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add src/entities/product/api/searchByVector.ts
@@ -199,7 +199,7 @@ git commit -m "refactor(search): route theme tag '#' normalization through tags 
 **Files:**
 - Modify: `src/shared/lib/__tests__/tags.test.ts` (가드 describe 추가)
 
-- [ ] **Step 1: 가드 테스트 추가**
+- [x] **Step 1: 가드 테스트 추가**
 
 파일 끝에 추가:
 
@@ -244,7 +244,7 @@ describe("테마 카드 회귀 (orphan 보강 검증)", () => {
 
 > 참고: `buildThemeProducts` 가 반환하는 tags 형태는 `prisma/themeProducts.ts` 의 실제 구조를 따른다. tags 가 `["#가족", ...]` 배열이면 위 `.create` 매핑 대신 `(p.tags as string[])?.map(toCanonicalTag)` 로 조정한다 (구현 시 themeProducts.ts 의 tags 필드 형태를 먼저 확인할 것).
 
-- [ ] **Step 2: themeProducts tags 형태 확인 후 테스트 정합**
+- [x] **Step 2: themeProducts tags 형태 확인 후 테스트 정합**
 
 Run: `grep -n "tags:" prisma/themeProducts.ts | head -3`
 themeProducts 의 `tags` 가 문자열 배열(`["#가족", ...]`)이면 Step 1 의 themeProducts 블록을 다음으로 교체:
@@ -254,12 +254,12 @@ themeProducts 의 `tags` 가 문자열 배열(`["#가족", ...]`)이면 Step 1 �
     );
 ```
 
-- [ ] **Step 3: 가드 통과 확인**
+- [x] **Step 3: 가드 통과 확인**
 
 Run: `npx vitest run src/shared/lib/__tests__/tags.test.ts`
 Expected: PASS — orphan 보강 덕분에 "나홀로 여행"·"주말 근거리"도 themeTags 생성
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add src/shared/lib/__tests__/tags.test.ts
@@ -270,12 +270,12 @@ git commit -m "test(tags): drift guards (vocab ⊇ keywords+seed) + theme card r
 
 ### Task 5: Phase 1 전체 회귀
 
-- [ ] **Step 1: 전체 테스트 + typecheck**
+- [x] **Step 1: 전체 테스트 + typecheck**
 
 Run: `npx vitest run && npx tsc --noEmit`
 Expected: 전부 PASS, 타입 에러 없음
 
-- [ ] **Step 2: (회귀 시) 수정 후 재실행** — 실패 테스트가 있으면 해당 Task 로 돌아가 수정.
+- [x] **Step 2: (회귀 시) 수정 후 재실행** — 실패 테스트가 있으면 해당 Task 로 돌아가 수정.
 
 ---
 
