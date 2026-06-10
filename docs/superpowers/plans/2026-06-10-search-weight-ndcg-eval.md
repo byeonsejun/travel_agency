@@ -49,12 +49,12 @@ package.json                      # 수정: "search:eval" 스크립트 — Task 
 - Modify: `src/entities/product/api/searchByVector.ts` (상수 41-44, themeBoost 58-62, buildGeoScore 113, buildThemeScore 134)
 - Modify: `src/entities/product/index.ts` (배럴 re-export)
 
-- [ ] **Step 1: 기존 themeBoost import 사용처 파악**
+- [x] **Step 1: 기존 themeBoost import 사용처 파악**
 
 Run: `grep -rn "themeBoost" src | grep -v searchByVector.ts`
 Expected: import 하는 파일 목록 출력(테스트 등). 이후 Step에서 import 경로를 배럴(`@/entities/product`)로 맞춘다.
 
-- [ ] **Step 2: searchWeights.ts 작성 (SSOT)**
+- [x] **Step 2: searchWeights.ts 작성 (SSOT)**
 
 ```ts
 /**
@@ -101,7 +101,7 @@ export function themeBoost(
 }
 ```
 
-- [ ] **Step 3: searchWeights.test.ts 작성 (FAIL 예정)**
+- [x] **Step 3: searchWeights.test.ts 작성 (FAIL 예정)**
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -134,12 +134,12 @@ describe("themeBoost", () => {
 });
 ```
 
-- [ ] **Step 4: 테스트 FAIL 확인**
+- [x] **Step 4: 테스트 FAIL 확인**
 
 Run: `npx vitest run src/entities/product/model/__tests__/searchWeights.test.ts`
 Expected: FAIL — `Cannot find module '../searchWeights'` (Step 2 파일이 아직 인식 안 되거나 import 오류).
 
-- [ ] **Step 5: searchByVector.ts에서 상수/themeBoost 제거 + import 전환**
+- [x] **Step 5: searchByVector.ts에서 상수/themeBoost 제거 + import 전환**
 
 `searchByVector.ts` 상단 import에 추가:
 ```ts
@@ -172,7 +172,7 @@ export { themeBoost } from "../model/searchWeights";
                 THEN ${SEARCH_WEIGHTS.keyword} ELSE 0 END)
 ```
 
-- [ ] **Step 6: 배럴 re-export 추가**
+- [x] **Step 6: 배럴 re-export 추가**
 
 `src/entities/product/index.ts`의 `searchProductsByVector` export(58-59줄) 부근에 추가:
 ```ts
@@ -182,12 +182,12 @@ export { themeBoost } from "./model/searchWeights";
 ```
 (`searchByVector.ts`가 `themeBoost`를 import하는 테스트가 있었다면 Step 1 결과에 따라 그 import를 `@/entities/product`로 변경.)
 
-- [ ] **Step 7: 전체 검증 (리팩터 무손상 확인)**
+- [x] **Step 7: 전체 검증 (리팩터 무손상 확인)**
 
 Run: `npx vitest run src/entities/product && npm run typecheck`
 Expected: PASS — searchWeights 신규 테스트 + 기존 searchByVector 관련 테스트 전부 통과(동작 보존), 타입 에러 0.
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add src/entities/product/model/searchWeights.ts src/entities/product/model/__tests__/searchWeights.test.ts src/entities/product/api/searchByVector.ts src/entities/product/index.ts
