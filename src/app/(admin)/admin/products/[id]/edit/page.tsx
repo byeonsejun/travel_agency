@@ -5,16 +5,21 @@ import type { AdminEmbeddingInfo, AdminLatestJobInfo } from "@/entities/product"
 import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { ProductForm } from "@/features/admin-product";
 import type { EmbeddingJobStatus } from "@prisma/client";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 
 export const dynamic = "force-dynamic";
 
 // ── 임베딩 상태 사이드바 ───────────────────────────────────────────
 
-const JOB_STATUS_BADGE: Record<EmbeddingJobStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  IN_PROGRESS: "bg-blue-100 text-blue-800",
-  SUCCEEDED: "bg-green-100 text-green-800",
-  FAILED: "bg-red-100 text-red-800",
+const JOB_STATUS_TONE: Record<
+  EmbeddingJobStatus,
+  "warning" | "info" | "success" | "destructive"
+> = {
+  PENDING: "warning",
+  IN_PROGRESS: "info",
+  SUCCEEDED: "success",
+  FAILED: "destructive",
 };
 
 const JOB_STATUS_LABELS: Record<EmbeddingJobStatus, string> = {
@@ -43,72 +48,70 @@ function EmbeddingSidebar({
   return (
     <aside className="space-y-4">
       {/* 임베딩 인덱스 현황 */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">임베딩 인덱스</h2>
+      <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-foreground">임베딩 인덱스</h2>
         {embedding ? (
           <dl className="space-y-2 text-sm">
             <div className="flex items-start justify-between gap-2">
-              <dt className="shrink-0 text-gray-500">모델</dt>
-              <dd className="font-mono text-xs text-right text-gray-700 break-all">
+              <dt className="shrink-0 text-muted-foreground">모델</dt>
+              <dd className="font-mono text-xs text-right text-foreground break-all">
                 {embedding.modelVersion}
               </dd>
             </div>
             <div className="flex items-start justify-between gap-2">
-              <dt className="shrink-0 text-gray-500">콘텐츠 해시</dt>
-              <dd className="font-mono text-xs text-right text-gray-400 break-all">
+              <dt className="shrink-0 text-muted-foreground">콘텐츠 해시</dt>
+              <dd className="font-mono text-xs text-right text-muted-foreground break-all">
                 {embedding.contentHash
                   ? embedding.contentHash.slice(0, 12) + "…"
                   : "—"}
               </dd>
             </div>
             <div className="flex items-start justify-between gap-2">
-              <dt className="shrink-0 text-gray-500">색인 시각</dt>
-              <dd className="text-xs text-gray-700">
+              <dt className="shrink-0 text-muted-foreground">색인 시각</dt>
+              <dd className="text-xs text-foreground">
                 {formatDateTime(embedding.updatedAt)}
               </dd>
             </div>
           </dl>
         ) : (
-          <p className="text-xs text-gray-400">아직 색인되지 않았습니다.</p>
+          <p className="text-xs text-muted-foreground">아직 색인되지 않았습니다.</p>
         )}
       </div>
 
       {/* 최근 Job 현황 */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">최근 임베딩 작업</h2>
+      <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-foreground">최근 임베딩 작업</h2>
         {latestJob ? (
           <dl className="space-y-2 text-sm">
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-gray-500">상태</dt>
+              <dt className="text-muted-foreground">상태</dt>
               <dd>
-                <span
-                  className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${JOB_STATUS_BADGE[latestJob.status]}`}
-                >
+                <Badge variant={JOB_STATUS_TONE[latestJob.status]}>
                   {JOB_STATUS_LABELS[latestJob.status]}
-                </span>
+                </Badge>
               </dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-gray-500">시도 횟수</dt>
-              <dd className="text-gray-700">{latestJob.attempts}회</dd>
+              <dt className="text-muted-foreground">시도 횟수</dt>
+              <dd className="text-foreground">{latestJob.attempts}회</dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-gray-500">갱신 시각</dt>
-              <dd className="text-xs text-gray-700">
+              <dt className="text-muted-foreground">갱신 시각</dt>
+              <dd className="text-xs text-foreground">
                 {formatDateTime(latestJob.updatedAt)}
               </dd>
             </div>
             {latestJob.status === "PENDING" && (
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-gray-500">예정 실행</dt>
-                <dd className="text-xs text-gray-700">
+                <dt className="text-muted-foreground">예정 실행</dt>
+                <dd className="text-xs text-foreground">
                   {formatDateTime(latestJob.nextRunAt)}
                 </dd>
               </div>
             )}
             {latestJob.lastError && (
               <div className="space-y-1">
-                <dt className="text-gray-500">오류</dt>
+                <dt className="text-muted-foreground">오류</dt>
                 <dd className="rounded-lg bg-red-50 p-2 font-mono text-xs text-red-600 break-all">
                   {latestJob.lastError.slice(0, 300)}
                 </dd>
@@ -116,21 +119,21 @@ function EmbeddingSidebar({
             )}
             {latestJob.contentHash && (
               <div className="flex items-start justify-between gap-2">
-                <dt className="shrink-0 text-gray-500">처리 해시</dt>
-                <dd className="font-mono text-xs text-right text-gray-400 break-all">
+                <dt className="shrink-0 text-muted-foreground">처리 해시</dt>
+                <dd className="font-mono text-xs text-right text-muted-foreground break-all">
                   {latestJob.contentHash.slice(0, 12)}…
                 </dd>
               </div>
             )}
           </dl>
         ) : (
-          <p className="text-xs text-gray-400">작업 이력이 없습니다.</p>
+          <p className="text-xs text-muted-foreground">작업 이력이 없습니다.</p>
         )}
 
-        <div className="pt-2 border-t border-gray-100">
+        <div className="pt-2 border-t border-border">
           <Link
             href="/admin/embedding-jobs"
-            className="text-xs text-indigo-600 hover:underline"
+            className="text-xs text-primary hover:underline"
           >
             전체 임베딩 Job 모니터링 →
           </Link>
@@ -163,20 +166,19 @@ export default async function AdminProductEditPage({ params }: PageProps) {
       <div className="flex items-center gap-3">
         <Link
           href="/admin/products"
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← 목록
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">상품 편집</h1>
-          <p className="mt-0.5 font-mono text-xs text-gray-400">{product.id}</p>
+          <h1 className="text-2xl font-bold text-foreground">상품 편집</h1>
+          <p className="mt-0.5 font-mono text-xs text-muted-foreground">{product.id}</p>
         </div>
-        <Link
-          href={`/admin/products/${product.id}/departures`}
-          className="ml-auto rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
-        >
-          출발일 관리 →
-        </Link>
+        <Button asChild className="ml-auto">
+          <Link href={`/admin/products/${product.id}/departures`}>
+            출발일 관리 →
+          </Link>
+        </Button>
       </div>
 
       {/* 2-column 레이아웃 */}
