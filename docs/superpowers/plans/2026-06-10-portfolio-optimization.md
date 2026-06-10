@@ -287,7 +287,7 @@ Expected: 전부 PASS, 타입 에러 없음
 - Modify: `src/shared/lib/supabase/photoMime.ts` (끝에 추가)
 - Create: `src/shared/lib/supabase/__tests__/photoMime.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/shared/lib/supabase/__tests__/photoMime.test.ts
@@ -312,12 +312,12 @@ describe("buildHeroSeedPublicUrl", () => {
 ```
 > `vi` 는 vitest 글로벌. 파일 상단에 `import { vi } from "vitest";` 가 없으면 추가.
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/shared/lib/supabase/__tests__/photoMime.test.ts`
 Expected: FAIL — `buildHeroSeedPublicUrl` export 없음
 
-- [ ] **Step 3: 구현 (photoMime.ts 끝에 추가)**
+- [x] **Step 3: 구현 (photoMime.ts 끝에 추가)**
 
 ```ts
 // 시드 상품 대표 이미지의 결정적 저장 prefix (마이그레이션·재시드 공유).
@@ -334,12 +334,12 @@ export function buildHeroSeedPublicUrl(slug: string): string {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/shared/lib/supabase/__tests__/photoMime.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/shared/lib/supabase/photoMime.ts src/shared/lib/supabase/__tests__/photoMime.test.ts
@@ -353,7 +353,7 @@ git commit -m "feat(storage): env-portable buildHeroSeedPublicUrl for seed hero 
 **Files:**
 - Create: `prisma/heroImageSources.ts`
 
-- [ ] **Step 1: 권위있는 슬러그 22개 추출**
+- [x] **Step 1: 권위있는 슬러그 22개 추출**
 
 Run:
 ```bash
@@ -362,7 +362,7 @@ grep -nE 'heroSeed' prisma/themeProducts.ts | head -40
 ```
 → seed.ts 인라인 슬러그 + themeProducts 의 `heroSeed` 값 전부를 모아 22개 슬러그 확정. (각 슬러그는 해당 상품의 picsum seed 와 동일하므로 1:1 매핑 보장.)
 
-- [ ] **Step 2: 슬러그별 실제 Unsplash 직링크 검증·수집**
+- [x] **Step 2: 슬러그별 실제 Unsplash 직링크 검증·수집**
 
 각 슬러그를 여행지 카테고리로 보고, 카테고리별 **실제** Unsplash 사진 직링크(`https://images.unsplash.com/photo-...`)를 수집한다. 절차(슬러그마다):
 1. `WebSearch` 또는 Unsplash 페이지에서 해당 여행지 사진을 찾는다.
@@ -375,7 +375,7 @@ curl -s -o /dev/null -w "%{http_code} %{content_type}\n" "<unsplash-direct-url>?
 # 기대: 200 image/jpeg
 ```
 
-- [ ] **Step 3: 맵 파일 작성**
+- [x] **Step 3: 맵 파일 작성**
 
 ```ts
 // prisma/heroImageSources.ts
@@ -392,7 +392,7 @@ export const HERO_IMAGE_SOURCES: Record<string, string> = {
 ```
 > ⚠️ Step 2 에서 검증하지 않은 URL 을 넣지 말 것. 미검증 URL 은 마이그레이션 fetch 404 를 유발한다.
 
-- [ ] **Step 4: 슬러그 누락 검증 테스트(가드)**
+- [x] **Step 4: 슬러그 누락 검증 테스트(가드)**
 
 Run:
 ```bash
@@ -400,7 +400,7 @@ npx tsx -e 'import { HERO_IMAGE_SOURCES } from "./prisma/heroImageSources"; cons
 ```
 Expected: `슬러그 수: 22`
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add prisma/heroImageSources.ts
@@ -414,7 +414,7 @@ git commit -m "feat(seed): curated + verified Unsplash hero image source map (22
 **Files:**
 - Create: `prisma/migrate-hero-images.ts`
 
-- [ ] **Step 1: 스크립트 작성**
+- [x] **Step 1: 스크립트 작성**
 
 ```ts
 // prisma/migrate-hero-images.ts
@@ -488,12 +488,12 @@ main().catch((e) => { console.error(e); process.exit(1); }).finally(() => db.$di
 ```
 > 슬러그 매칭이 picsum 패턴(`/seed/{slug}/`)에 의존한다. themeProducts 가 `picsum.photos/seed/${heroSeed}/800/500` 형식이므로 동일하게 매칭된다. 혹 형식이 다르면 Step 2 에서 `where` 조건을 실제 heroImageUrl 패턴에 맞춰 조정.
 
-- [ ] **Step 2: typecheck (스크립트 포함)**
+- [x] **Step 2: typecheck (스크립트 포함)**
 
 Run: `npx tsc --noEmit`
 Expected: 에러 없음. (`@supabase/supabase-js` 는 기설치 — package.json 확인됨.)
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add prisma/migrate-hero-images.ts
@@ -510,7 +510,7 @@ git commit -m "feat(seed): one-off hero image migration script (Unsplash → Sup
 - Modify: `prisma/themeProducts.ts` (line ~335)
 - Modify: `prisma/seed.ts` (9~10개 heroImageUrl 인라인)
 
-- [ ] **Step 1: themeProducts.ts 교체**
+- [x] **Step 1: themeProducts.ts 교체**
 
 상단 import 에 추가:
 ```ts
@@ -521,7 +521,7 @@ import { buildHeroSeedPublicUrl } from "../src/shared/lib/supabase/photoMime";
     heroImageUrl: buildHeroSeedPublicUrl(s.heroSeed),
 ```
 
-- [ ] **Step 2: seed.ts 교체**
+- [x] **Step 2: seed.ts 교체**
 
 상단 import 에 추가:
 ```ts
@@ -535,12 +535,12 @@ grep -n "picsum" prisma/seed.ts prisma/themeProducts.ts || echo "잔여 picsum �
 ```
 Expected: `잔여 picsum 없음 ✅`
 
-- [ ] **Step 3: typecheck**
+- [x] **Step 3: typecheck**
 
 Run: `npx tsc --noEmit`
 Expected: 에러 없음
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add prisma/seed.ts prisma/themeProducts.ts
@@ -553,7 +553,7 @@ git commit -m "feat(seed): replace picsum literals with Supabase hero URL builde
 
 > ⚠️ 운영 데이터·외부 업로드 수반. subagent 가 아니라 **오케스트레이터(메인 세션)가 직접** 실행한다.
 
-- [ ] **Step 1: 로컬 .env 로 스크립트 실행 (업로드 = 공유 프로젝트라 이 1회로 운영도 커버)**
+- [x] **Step 1: 로컬 .env 로 스크립트 실행 (업로드 = 공유 프로젝트라 이 1회로 운영도 커버)**
 
 Run:
 ```bash
@@ -562,7 +562,7 @@ npx tsx prisma/migrate-hero-images.ts
 ```
 Expected: `업로드 22 / heroImageUrl 갱신 N / 실패 0`
 
-- [ ] **Step 2: 로컬 DB 검증 (호스트가 전부 supabase.co)**
+- [x] **Step 2: 로컬 DB 검증 (호스트가 전부 supabase.co)**
 
 Run:
 ```bash
@@ -571,7 +571,7 @@ npx tsx -e 'import { PrismaClient } from "@prisma/client"; const db=new PrismaCl
 ```
 Expected: `비-supabase 0`
 
-- [ ] **Step 3: 업로드 객체 public GET 표본 확인**
+- [x] **Step 3: 업로드 객체 public GET 표본 확인**
 
 Run:
 ```bash
