@@ -17,6 +17,7 @@
 
 import { Prisma } from "@prisma/client";
 import { db } from "@/shared/lib/db";
+import { toStorageTag } from "@/shared/lib/tags";
 import { pickLowestPrice } from "./mapping";
 import type { SearchResultCard } from "../model/types";
 
@@ -115,7 +116,7 @@ function buildGeoScore(geoTerms: string[]): Prisma.Sql {
 /** themeTags를 ProductTag.tag 표기('#' 접두)로 정규화. */
 function normalizeThemeTags(themeTags: string[] | undefined): string[] {
   if (!themeTags || themeTags.length === 0) return [];
-  return themeTags.map((t) => (t.startsWith("#") ? t : `#${t}`));
+  return themeTags.map(toStorageTag);
 }
 
 /**
