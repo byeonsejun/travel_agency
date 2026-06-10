@@ -1,7 +1,8 @@
 /**
  * ndcg.ts — nDCG@k 순수 수학 (search-eval 하네스 전용).
  *
- * DCG@k  = Σ_{i=1..k} (2^rel_i − 1) / log2(i + 1)   (rel_i = 랭크 i 아이템 라벨)
+ * DCG@k  = Σ_{rank=1..k} (2^rel − 1) / log2(rank + 1)   (rel = 해당 랭크 라벨)
+ *          (코드는 0-index i 루프라 분모가 log2(i + 2) — rank = i + 1 동치)
  * IDCG@k = 전체 라벨 집합을 내림차순 정렬한 이상 순서의 DCG@k (top-k 절단)
  * nDCG@k = DCG@k / IDCG@k   (IDCG=0 이면 0)
  *
