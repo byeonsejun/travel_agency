@@ -706,7 +706,7 @@ git commit -m "style(admin): migrate review moderation to A1 + tokenize logout b
 - Modify: `src/features/admin-dashboard-drilldown/ui/DrilldownSheet.tsx`
 - Modify: `src/features/admin-dashboard-drilldown/ui/KpiDrilldownGrid.tsx`
 
-- [ ] **Step 1: 잔존 무의미 색만 토큰 정렬**
+- [x] **Step 1: 잔존 무의미 색만 토큰 정렬**
 
 Phase 6에서 이미 상당 부분 정돈됨. **차트 리프(`RevenueTrendChart`/`BookingStatusDonut`)의 색은 데이터 의미색이므로 보존**(건드리지 않음). 잔존 `indigo-`/raw gray/`bg-white`만 토큰으로:
 - KPI 카드 `bg-white` → `<Card>`. 텍스트 gray scale → foreground/muted-foreground.
@@ -715,7 +715,7 @@ Phase 6에서 이미 상당 부분 정돈됨. **차트 리프(`RevenueTrendChart
 
 > 🎨 경계 회귀 가드: `grep "use client" src/widgets/admin-dashboard/ui/` 가 차트 리프 2개만 반환하는지 확인(KPI·필터·조립은 server 유지).
 
-- [ ] **Step 2: 검증**
+- [x] **Step 2: 검증**
 
 Run: `npm run typecheck`
 Expected: 에러 0
@@ -733,7 +733,7 @@ Expected: 성공
 
 `/admin/dashboard` KPI·차트·기간필터·드릴다운 Sheet 렌더 확인.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add "src/app/(admin)/admin/dashboard" src/widgets/admin-dashboard src/features/admin-dashboard-drilldown
