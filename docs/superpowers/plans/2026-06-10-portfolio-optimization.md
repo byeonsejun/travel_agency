@@ -1,6 +1,6 @@
 # Portfolio Optimization Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** picsum 의존을 Supabase 호스팅 이미지로 완전 대체하고, 태그 vocabulary를 단일 SSOT로 규격화한다.
 
@@ -589,7 +589,7 @@ Expected: `200 image/jpeg`
 
 > ⚠️ 오케스트레이터가 직접 실행. 이미지는 이미 공유 Supabase 에 업로드됨 → 운영은 heroImageUrl 문자열만 갱신(가역).
 
-- [ ] **Step 1: 운영 DB 대상 마이그레이션 스크립트 실행 (업로드는 멱등 재실행, UPDATE 가 핵심)**
+- [x] **Step 1: 운영 DB 대상 마이그레이션 스크립트 실행 (업로드는 멱등 재실행, UPDATE 가 핵심)**
 
 Run:
 ```bash
@@ -601,7 +601,7 @@ npx tsx prisma/migrate-hero-images.ts
 ```
 Expected: `업로드 22 / heroImageUrl 갱신 ~22 / 실패 0`
 
-- [ ] **Step 2: 운영 DB 검증**
+- [x] **Step 2: 운영 DB 검증**
 
 Run:
 ```bash
@@ -615,7 +615,7 @@ Expected: `운영 잔여 picsum: 0`
 
 ### Task 12: PR + 배포 + 운영 종단 검증
 
-- [ ] **Step 1: 전체 회귀 후 푸시·PR**
+- [x] **Step 1: 전체 회귀 후 푸시·PR**
 
 Run:
 ```bash
@@ -625,14 +625,14 @@ gh pr create --base main --title "feat: Supabase hero images + tag vocabulary SS
 ```
 Expected: 테스트 PASS, PR URL 출력
 
-- [ ] **Step 2: 머지 → 배포 대기**
+- [x] **Step 2: 머지 → 배포 대기**
 
 ```bash
 gh pr merge --merge
 ```
 Vercel Production 배포가 Ready 될 때까지 `vercel ls --prod` 로 확인.
 
-- [ ] **Step 3: 운영 종단 검증**
+- [x] **Step 3: 운영 종단 검증**
 
 - 운영 사이트 홈/목록에서 상품 이미지가 Supabase 이미지로 노출되는지(picsum 아님).
 - "나홀로 여행"·"주말 근거리" 검색이 테마 부스트로 상품을 반환하는지(Phase 1 회귀가 보장하나 운영 데이터로 표본 확인).
