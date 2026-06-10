@@ -1,0 +1,51 @@
+/**
+ * heroImageSources.ts — 시드 상품 슬러그 ↔ 검증된 Unsplash 직링크.
+ * 모든 URL 은 작성 시점 HTTP 200 + image/* 로 curl 검증됨 (Unsplash License).
+ * migrate-hero-images.ts 가 이 원본을 Supabase 로 재호스팅한다.
+ */
+export const HERO_IMAGE_SOURCES: Record<string, string> = {
+  "bali-budget":
+    "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?w=1200&h=750&fit=crop",
+  "boracay-draft":
+    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=750&fit=crop",
+  "cebu-family":
+    "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&h=750&fit=crop",
+  "danang-hoian":
+    "https://images.unsplash.com/photo-1528127269322-539801943592?w=1200&h=750&fit=crop",
+  "fukuoka-food":
+    "https://images.unsplash.com/photo-1569701813229-33284b643e3c?w=1200&h=750&fit=crop",
+  "osaka-kyoto":
+    "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=1200&h=750&fit=crop",
+  "paris-rome":
+    "https://images.unsplash.com/photo-1549693578-d683be217e58?w=1200&h=750&fit=crop",
+  "phuket-villa":
+    "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=1200&h=750&fit=crop",
+  "swiss-alps":
+    "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1200&h=750&fit=crop",
+  "tokyo-hakone":
+    "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=1200&h=750&fit=crop",
+  "bali-honeymoon":
+    "https://images.unsplash.com/photo-1590559899731-a382839e5549?w=1200&h=750&fit=crop",
+  "bangkok-solo":
+    "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=1200&h=750&fit=crop",
+  "danang-family":
+    "https://images.unsplash.com/photo-1575408264798-b50b252663e6?w=1200&h=750&fit=crop",
+  "danang-solo":
+    "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=1200&h=750&fit=crop",
+  "fukuoka-weekend":
+    "https://images.unsplash.com/photo-1513407030348-c983a97b98d8?w=1200&h=750&fit=crop",
+  "guam-family":
+    "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&h=750&fit=crop",
+  "maldives-honeymoon":
+    "https://images.unsplash.com/photo-1571406252241-db0280bd36cd?w=1200&h=750&fit=crop",
+  "okinawa-family":
+    "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=1200&h=750&fit=crop",
+  "osaka-weekend":
+    "https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=1200&h=750&fit=crop",
+  "phuket-honeymoon":
+    "https://images.unsplash.com/photo-1580237541049-2d715a09486e?w=1200&h=750&fit=crop",
+  "taipei-weekend":
+    "https://images.unsplash.com/photo-1548586196-aa5803b77379?w=1200&h=750&fit=crop",
+  "tokyo-solo":
+    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&h=750&fit=crop",
+};
