@@ -2,6 +2,8 @@ import * as React from "react"
 
 import { cn } from "@/shared/lib/utils"
 
+// ref 는 내부 <table> 에 연결된다(감싸는 스크롤 wrapper <div> 에는 접근 불가).
+// TableFooter 는 현재 admin 사용처가 없어 미포함(YAGNI) — 필요 시 추가.
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>

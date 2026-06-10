@@ -33,7 +33,7 @@ describe("<Table />", () => {
     expect(table).not.toBeNull();
     expect(table.className).toContain("w-full");
     const thead = container.querySelector("thead") as HTMLElement;
-    expect(thead.className).toContain("bg-muted");
+    expect(thead.className).toContain("bg-muted/50");
     const row = container.querySelector("tbody tr") as HTMLElement;
     expect(row.className).toContain("border-border");
     const cell = container.querySelector("tbody td") as HTMLElement;
