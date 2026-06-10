@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { reviewPhotoPublicUrl } from "../photoMime";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import { reviewPhotoPublicUrl, buildHeroSeedPublicUrl, HERO_SEED_PREFIX } from "../photoMime";
 
 // env(@/shared/lib/env)를 모킹하지 않는다 — photoMime은 client-safe라
 // process.env.NEXT_PUBLIC_SUPABASE_URL을 직접 읽는다(ADR-0029). 실제 env를
@@ -19,5 +19,18 @@ describe("reviewPhotoPublicUrl", () => {
     expect(reviewPhotoPublicUrl("review-photos/abc/0.webp")).toBe(
       "/storage/v1/object/public/product-images/review-photos/abc/0.webp",
     );
+  });
+});
+
+describe("buildHeroSeedPublicUrl", () => {
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://demo.supabase.co"));
+  afterEach(() => vi.unstubAllEnvs());
+  it("결정적 public URL 을 만든다", () => {
+    expect(buildHeroSeedPublicUrl("osaka-kyoto")).toBe(
+      "https://demo.supabase.co/storage/v1/object/public/product-images/product-hero/seed/osaka-kyoto.jpg",
+    );
+  });
+  it("HERO_SEED_PREFIX 가 경로에 포함된다", () => {
+    expect(buildHeroSeedPublicUrl("x")).toContain(HERO_SEED_PREFIX);
   });
 });
