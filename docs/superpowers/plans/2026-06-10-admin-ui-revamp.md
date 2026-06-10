@@ -654,7 +654,7 @@ git commit -m "style(admin): migrate penalty/embedding/cancellation sections to 
 - Modify: `src/features/admin-review-moderation/ui/ReportModerationActions.tsx`
 - Modify: `src/features/auth/ui/LogoutButton.tsx` (Task 3에서 미룬 layout island)
 
-- [ ] **Step 1: 리뷰 관리 이관**
+- [x] **Step 1: 리뷰 관리 이관**
 
 공통 레시피. status 매핑:
 
@@ -674,7 +674,7 @@ const REVIEW_TONE: Record<ReviewStatus, Tone> = {
 - `ReportModerationActions`(island): "숨기기(인정)" → `Button variant="destructive">`, "기각" → `Button variant="outline">`. PII 마스킹·rate-limit 로직 불변.
 - `LogoutButton`: 색 토큰화(`Button variant="ghost"` 또는 outline).
 
-- [ ] **Step 2: 검증**
+- [x] **Step 2: 검증**
 
 Run: `npm run typecheck`
 Expected: 에러 0
@@ -689,7 +689,7 @@ Expected: 성공
 
 `/admin/reviews` 4개 탭 → 상세 모더레이션, 헤더 로그아웃 버튼 렌더 확인.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add "src/app/(admin)/admin/reviews" src/features/admin-review-moderation src/features/auth/ui/LogoutButton.tsx
