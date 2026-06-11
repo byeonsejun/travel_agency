@@ -831,7 +831,7 @@ fixture + 라벨을 읽어 baseline nDCG 리포트, `--sweep`으로 가중치 �
 - Create: `scripts/search-eval/__tests__/sweep.test.ts`
 - Modify: `package.json` (scripts에 `search:eval`)
 
-- [ ] **Step 1: sweep.test.ts 작성 (FAIL 예정)**
+- [x] **Step 1: sweep.test.ts 작성 (FAIL 예정)**
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -860,12 +860,12 @@ describe("simplexGrid", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 FAIL 확인**
+- [x] **Step 2: 테스트 FAIL 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/sweep.test.ts`
 Expected: FAIL — `Cannot find module '../run-eval'` 또는 `simplexGrid` export 없음.
 
-- [ ] **Step 3: run-eval.ts 구현**
+- [x] **Step 3: run-eval.ts 구현**
 
 ```ts
 /**
@@ -987,19 +987,19 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 4: 테스트 PASS 확인**
+- [x] **Step 4: 테스트 PASS 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/sweep.test.ts`
 Expected: PASS (3 케이스).
 
-- [ ] **Step 5: package.json에 스크립트 추가**
+- [x] **Step 5: package.json에 스크립트 추가**
 
 `package.json`의 `"scripts"` 블록에 추가:
 ```json
     "search:eval": "tsx scripts/search-eval/run-eval.ts",
 ```
 
-- [ ] **Step 6: baseline + sweep 실행 (증거 수집)**
+- [x] **Step 6: baseline + sweep 실행 (증거 수집)**
 
 Run:
 ```bash
@@ -1008,7 +1008,7 @@ set -a; . ./.env; set +a; npm run search:eval -- --sweep
 ```
 Expected: baseline은 쿼리별 nDCG@3/@5 테이블 + mean(0~1 값). sweep은 top15 리더보드 + 운영 가중치 순위(N/286). **두 출력을 보고서에 인용.**
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add scripts/search-eval/run-eval.ts scripts/search-eval/__tests__/sweep.test.ts package.json
