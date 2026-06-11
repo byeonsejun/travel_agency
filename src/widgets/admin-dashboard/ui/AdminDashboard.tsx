@@ -1,10 +1,17 @@
 // src/widgets/admin-dashboard/ui/AdminDashboard.tsx
-import type { DashboardData, ProductOption } from "@/entities/analytics";
+import type {
+  DashboardData,
+  ProductOption,
+  WebVitalP75,
+  RouteVitalP75,
+  VitalTrendPoint,
+} from "@/entities/analytics";
 import { KpiDrilldownGrid } from "@/features/admin-dashboard-drilldown";
 import { DateRangePicker } from "./DateRangePicker";
 import { ProductSelect } from "./ProductSelect";
 import { RevenueTrendChart } from "./RevenueTrendChart";
 import { BookingStatusDonut } from "./BookingStatusDonut";
+import { PerformancePanel } from "./PerformancePanel";
 
 export function AdminDashboard({
   data,
@@ -12,12 +19,14 @@ export function AdminDashboard({
   end,
   productId,
   productOptions,
+  rum,
 }: {
   data: DashboardData;
   start: string;
   end: string;
   productId: string | null;
   productOptions: ProductOption[];
+  rum: { summary: WebVitalP75[]; byRoute: RouteVitalP75[]; trend: VitalTrendPoint[] };
 }) {
   return (
     <div>
@@ -55,6 +64,8 @@ export function AdminDashboard({
           <BookingStatusDonut data={data.statusDistribution} />
         </section>
       </div>
+
+      <PerformancePanel summary={rum.summary} byRoute={rum.byRoute} trend={rum.trend} />
     </div>
   );
 }

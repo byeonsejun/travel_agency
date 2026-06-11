@@ -8,6 +8,9 @@ import {
   getRevenueTrend,
   getBookingStatusDistribution,
   getProductOptions,
+  getWebVitalSummary,
+  getWebVitalByRoute,
+  getWebVitalTrend,
 } from "@/entities/analytics";
 import { AdminDashboard } from "@/widgets/admin-dashboard";
 
@@ -36,6 +39,9 @@ export default async function AdminDashboardPage({
     trend,
     statusDistribution,
     productOptions,
+    rumSummary,
+    rumByRoute,
+    rumTrend,
   ] = await Promise.all([
     getRevenueSummary(filter),
     getPenaltyRevenue(filter),
@@ -44,6 +50,9 @@ export default async function AdminDashboardPage({
     getRevenueTrend(filter),
     getBookingStatusDistribution(filter),
     getProductOptions(),
+    getWebVitalSummary(),
+    getWebVitalByRoute(),
+    getWebVitalTrend(),
   ]);
 
   return (
@@ -60,6 +69,7 @@ export default async function AdminDashboardPage({
         trend,
         statusDistribution,
       }}
+      rum={{ summary: rumSummary, byRoute: rumByRoute, trend: rumTrend }}
     />
   );
 }
