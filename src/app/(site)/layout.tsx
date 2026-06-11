@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { SiteHeader } from "@/widgets/site-header";
 import { SiteFooter } from "@/widgets/site-footer";
 import { GlobalRouteProgress } from "@/shared/ui/GlobalRouteProgress";
+import { WebVitalsReporter } from "@/features/rum";
 
 export default function SiteLayout({
   children,
@@ -21,6 +22,7 @@ export default function SiteLayout({
       <SiteHeader />
       <main className="min-h-[60vh]">{children}</main>
       <SiteFooter />
+      <WebVitalsReporter />
     </>
   );
 }

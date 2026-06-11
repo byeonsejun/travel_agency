@@ -11,6 +11,7 @@ import { isCronAuthorized } from "@/shared/lib/cron/authorize";
 import { processRefundJobBatch } from "@/shared/lib/refund-job/worker";
 import { processEmailJobBatch } from "@/shared/lib/email-job/worker";
 import { processEmbeddingJobBatch } from "@/shared/lib/embedding-job/worker";
+import { processRumCleanup } from "@/shared/lib/rum-cleanup/worker";
 import { logger } from "@/shared/lib/observability";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ const WORKERS = [
   { name: "refund", run: () => processRefundJobBatch({ limit: 10 }) },
   { name: "email", run: () => processEmailJobBatch({ limit: 10 }) },
   { name: "embedding", run: () => processEmbeddingJobBatch({ limit: 5 }) },
+  { name: "rum-cleanup", run: () => processRumCleanup() },
 ] as const;
 
 export async function GET(req: NextRequest): Promise<NextResponse> {

@@ -116,3 +116,21 @@ export interface DrilldownResult<T> {
 export type DrilldownData = {
   [M in DrilldownMetric]: { metric: M; result: DrilldownResult<DrilldownRowMap[M]> };
 }[DrilldownMetric];
+
+// ─── RUM (Web Vitals p75) ───────────────────────────────────────
+export interface WebVitalP75 {
+  metric: string;
+  p75: number;
+  sampleCount: number;
+}
+export interface RouteVitalP75 {
+  route: string;
+  metric: string;
+  p75: number;
+  sampleCount: number;
+}
+export interface VitalTrendPoint {
+  date: string; // YYYY-MM-DD
+  metric: string;
+  p75: number;
+}

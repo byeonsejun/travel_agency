@@ -6,13 +6,14 @@ import {
 } from "../tiers";
 
 describe("RATE_LIMIT_TIERS catalogue", () => {
-  it("contains exactly 5 tiers (mutation 추가)", () => {
+  it("contains exactly 6 tiers (rum 추가)", () => {
     expect(Object.keys(RATE_LIMIT_TIERS).sort()).toEqual([
       "ai-search",
       "auth",
       "global",
       "mutation",
       "payment",
+      "rum",
     ]);
   });
 
@@ -45,6 +46,14 @@ describe("RATE_LIMIT_TIERS catalogue", () => {
       limit: 20,
       window: "1 m",
       idStrategy: "userFirst",
+    });
+  });
+
+  it("rum tier: limit=60, window='1 m', idStrategy='ipOnly'", () => {
+    expect(RATE_LIMIT_TIERS.rum).toMatchObject({
+      limit: 60,
+      window: "1 m",
+      idStrategy: "ipOnly",
     });
   });
 });
