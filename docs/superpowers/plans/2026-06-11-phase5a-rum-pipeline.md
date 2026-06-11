@@ -921,7 +921,7 @@ git commit -m "feat(rum): analytics read-model — p75 summary/by-route/trend ($
 
 > 차트는 `'use client'` 리프에만 격리(ADR-0033), 서버 집계 plain 배열 props 주입. 패널 본체·카드·테이블은 server. `db` import 0.
 
-- [ ] **Step 1: Recharts client 리프 구현**
+- [x] **Step 1: Recharts client 리프 구현**
 
 `src/widgets/admin-dashboard/ui/WebVitalTrendChart.tsx`:
 
@@ -988,7 +988,7 @@ export function pivotTrend(
 }
 ```
 
-- [ ] **Step 2: server 패널 구현 (p75 카드 + 테이블)**
+- [x] **Step 2: server 패널 구현 (p75 카드 + 테이블)**
 
 `src/widgets/admin-dashboard/ui/PerformancePanel.tsx`:
 
@@ -1111,7 +1111,7 @@ export function PerformancePanel({
 }
 ```
 
-- [ ] **Step 3: `AdminDashboard`에 패널 props 수용 + 렌더**
+- [x] **Step 3: `AdminDashboard`에 패널 props 수용 + 렌더**
 
 `src/widgets/admin-dashboard/ui/AdminDashboard.tsx` 수정:
 
@@ -1142,7 +1142,7 @@ props 타입에 `rum` 추가 (함수 시그니처의 구조분해 `}: {` 블록)
       <PerformancePanel summary={rum.summary} byRoute={rum.byRoute} trend={rum.trend} />
 ```
 
-- [ ] **Step 4: 대시보드 페이지에서 RUM 집계 fetch + 주입**
+- [x] **Step 4: 대시보드 페이지에서 RUM 집계 fetch + 주입**
 
 `src/app/(admin)/admin/dashboard/page.tsx` 수정:
 
@@ -1198,12 +1198,12 @@ import {
       rum={{ summary: rumSummary, byRoute: rumByRoute, trend: rumTrend }}
 ```
 
-- [ ] **Step 5: typecheck + build (server/client 경계 + 배럴)**
+- [x] **Step 5: typecheck + build (server/client 경계 + 배럴)**
 
 Run: `npm run typecheck && npm run build`
 Expected: 빌드 성공. `grep "use client" src/widgets/admin-dashboard/ui/`가 차트 3개(Revenue/Donut/WebVitalTrend) + 필터 2개 = **5개**(신규 차트 1 추가). `db` import가 `'use client'` 파일에 없음.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/widgets/admin-dashboard/ui/WebVitalTrendChart.tsx src/widgets/admin-dashboard/ui/PerformancePanel.tsx src/widgets/admin-dashboard/ui/AdminDashboard.tsx "src/app/(admin)/admin/dashboard/page.tsx"
