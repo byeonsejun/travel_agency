@@ -134,7 +134,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `package.json`
 - Verify: `next.config.mjs`, `src/middleware.ts`
 
-- [ ] **Step 1: Next 16 + React + 타입 설치**
+- [x] **Step 1: Next 16 + React + 타입 설치**
 
 Run:
 ```bash
@@ -148,7 +148,7 @@ Expected: `next@16.x`, `react`/`react-dom` 19.2.x, `eslint-config-next@16.x`.
 npm ls next react react-dom | head -6
 ```
 
-- [ ] **Step 2: `next.config.mjs` 마이그레이션 불필요 확인**
+- [x] **Step 2: `next.config.mjs` 마이그레이션 불필요 확인**
 
 다음 grep으로 16에서 옮겨야 할 키가 없음을 확인:
 ```bash
@@ -156,7 +156,7 @@ grep -nE "experimental|turbopack|webpack|serverRuntimeConfig|publicRuntimeConfig
 ```
 Expected: 출력 없음(`experimental.turbopack`/커스텀 webpack/제거된 키 미사용 → top-level `turbopack` 이전 불요).
 
-- [ ] **Step 3: `middleware.ts` 유지 확인 (proxy 전환 안 함)**
+- [x] **Step 3: `middleware.ts` 유지 확인 (proxy 전환 안 함)**
 
 `src/middleware.ts`는 그대로 둔다(확정 #1). 16 빌드 시 deprecation 경고가 뜨지만 Edge 런타임 + NextAuth `auth()` + Upstash + CSP nonce 동작은 보존된다. 파일 상단 주석에 결정 박제:
 
@@ -166,7 +166,7 @@ Expected: 출력 없음(`experimental.turbopack`/커스텀 webpack/제거된 키
 // NextAuth/rate-limit/CSP의 Edge 실행 보존 불가. deprecation 경고는 의도적 수용.
 ```
 
-- [ ] **Step 4: typecheck (16 타입 + React 19.2 타입 정합)**
+- [x] **Step 4: typecheck (16 타입 + React 19.2 타입 정합)**
 
 Run:
 ```bash
@@ -176,7 +176,7 @@ Expected: PASS. (params/searchParams가 이미 `Promise`라 타입 에러 없음
 
 > **Note:** 16의 `revalidateTag` 타입은 2번째 인자를 요구한다. 이 Step에서 9건의 TS 에러가 나올 수 있으며 이는 **예상된 것**이다(Task 3의 드라이버). 그 외 에러는 즉시 조사.
 
-- [ ] **Step 5: Commit (typecheck는 Task 3 후 최종 그린)**
+- [x] **Step 5: Commit (typecheck는 Task 3 후 최종 그린)**
 
 ```bash
 git add package.json package-lock.json src/middleware.ts
