@@ -193,7 +193,7 @@ LLM이 반환한 key 순서로 항목을 재배열하되 환각 key는 폐기, �
 - Create: `src/features/search/model/rerankOrder.ts`
 - Create: `src/features/search/model/__tests__/rerankOrder.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/features/search/model/__tests__/rerankOrder.test.ts
@@ -231,12 +231,12 @@ describe("applyRerankOrder", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 FAIL 확인**
+- [x] **Step 2: 테스트 FAIL 확인**
 
 Run: `npx vitest run src/features/search/model/__tests__/rerankOrder.test.ts`
 Expected: FAIL — `Cannot find module '../rerankOrder'`.
 
-- [ ] **Step 3: rerankOrder.ts 구현**
+- [x] **Step 3: rerankOrder.ts 구현**
 
 ```ts
 // src/features/search/model/rerankOrder.ts
@@ -271,12 +271,12 @@ export function applyRerankOrder<T>(
 }
 ```
 
-- [ ] **Step 4: 테스트 PASS 확인**
+- [x] **Step 4: 테스트 PASS 확인**
 
 Run: `npx vitest run src/features/search/model/__tests__/rerankOrder.test.ts`
 Expected: PASS (5 케이스).
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/features/search/model/rerankOrder.ts src/features/search/model/__tests__/rerankOrder.test.ts
