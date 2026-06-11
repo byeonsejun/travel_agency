@@ -748,7 +748,7 @@ git commit -m "feat(rum): WebVitalsReporter island + mount in site layout"
 
 > `percentile_cont`는 Postgres 전용 SQL이라 단위테스트 불가 → **행→결과 매핑 변환**을 mock된 `$queryRaw`로 검증. SQL 정확도는 Task 11 런타임 QA로 증명.
 
-- [ ] **Step 1: 결과 타입 추가**
+- [x] **Step 1: 결과 타입 추가**
 
 `src/entities/analytics/model/types.ts` 파일 끝에 추가:
 
@@ -772,7 +772,7 @@ export interface VitalTrendPoint {
 }
 ```
 
-- [ ] **Step 2: 실패 테스트 작성**
+- [x] **Step 2: 실패 테스트 작성**
 
 `src/entities/analytics/api/__tests__/rum.test.ts`:
 
@@ -810,12 +810,12 @@ describe("RUM read-model 매핑", () => {
 });
 ```
 
-- [ ] **Step 3: 실패 확인**
+- [x] **Step 3: 실패 확인**
 
 Run: `npx vitest run src/entities/analytics/api/__tests__/rum.test.ts`
 Expected: FAIL — `Cannot find module '../rum'`
 
-- [ ] **Step 4: read-model 구현**
+- [x] **Step 4: read-model 구현**
 
 `src/entities/analytics/api/rum.ts`:
 
@@ -888,7 +888,7 @@ export function getWebVitalTrend(): Promise<VitalTrendPoint[]> {
 }
 ```
 
-- [ ] **Step 5: barrel export 추가**
+- [x] **Step 5: barrel export 추가**
 
 `src/entities/analytics/index.ts`의 타입 export 블록에 추가:
 
@@ -897,12 +897,12 @@ export type { WebVitalP75, RouteVitalP75, VitalTrendPoint } from "./model/types"
 export { getWebVitalSummary, getWebVitalByRoute, getWebVitalTrend, TAG_RUM } from "./api/rum";
 ```
 
-- [ ] **Step 6: 통과 확인**
+- [x] **Step 6: 통과 확인**
 
 Run: `npx vitest run src/entities/analytics/api/__tests__/rum.test.ts && npm run typecheck`
 Expected: PASS (3 tests) + typecheck 그린
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/entities/analytics/api/rum.ts src/entities/analytics/model/types.ts src/entities/analytics/index.ts src/entities/analytics/api/__tests__/rum.test.ts
