@@ -307,7 +307,7 @@ SQL 하이브리드 공식을 순수 TS로 1:1 복제. 가중치/themeBoost는 T
 - Create: `scripts/search-eval/scoreReplica.ts`
 - Create: `scripts/search-eval/__tests__/scoreReplica.test.ts`
 
-- [ ] **Step 1: types.ts 작성 (fixture 데이터 계약)**
+- [x] **Step 1: types.ts 작성 (fixture 데이터 계약)**
 
 ```ts
 /**
@@ -338,7 +338,7 @@ export interface GoldenQuery {
 }
 ```
 
-- [ ] **Step 2: scoreReplica.test.ts 작성 (FAIL 예정, drift 핀)**
+- [x] **Step 2: scoreReplica.test.ts 작성 (FAIL 예정, drift 핀)**
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -415,12 +415,12 @@ describe("rankCandidates", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 FAIL 확인**
+- [x] **Step 3: 테스트 FAIL 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/scoreReplica.test.ts`
 Expected: FAIL — `Cannot find module '../scoreReplica'`.
 
-- [ ] **Step 4: scoreReplica.ts 구현**
+- [x] **Step 4: scoreReplica.ts 구현**
 
 ```ts
 /**
@@ -505,12 +505,12 @@ export function rankCandidates(
 }
 ```
 
-- [ ] **Step 5: 테스트 PASS 확인**
+- [x] **Step 5: 테스트 PASS 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/scoreReplica.test.ts`
 Expected: PASS (cosineSim 3 + scoreCandidate 3 + rankCandidates 3).
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add scripts/search-eval/types.ts scripts/search-eval/scoreReplica.ts scripts/search-eval/__tests__/scoreReplica.test.ts
