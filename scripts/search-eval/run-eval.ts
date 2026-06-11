@@ -114,4 +114,7 @@ function main(): void {
   console.log(`\n현 운영 가중치 ${fmt(SEARCH_WEIGHTS)} → ${baseline.toFixed(4)} (순위 ${rank}/286)`);
 }
 
-main();
+// 직접 실행(tsx run-eval.ts)일 때만 구동 — import(테스트) 시 stdout 오염 방지.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
+}
