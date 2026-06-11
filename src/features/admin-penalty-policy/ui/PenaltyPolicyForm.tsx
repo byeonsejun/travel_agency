@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { savePenaltyPolicyAction } from "../server/actions";
 import type { SavePenaltyPolicyInput } from "../model/schemas";
@@ -28,21 +28,12 @@ export function PenaltyPolicyForm() {
   const [name, setName] = useState("");
   const [rows, setRows] = useState<TierRow[]>(DEFAULT_ROWS);
   const [clientError, setClientError] = useState<string | null>(null);
-  const [state, dispatch, isPending] = useActionState(
-    savePenaltyPolicyAction,
-    null,
-  );
-
-  // 성공 → 폼 초기화 + RSC 목록 재렌더
-  useEffect(() => {
-    if (state?.type === "success") {
-      setKey("");
-      setName("");
-      setRows(DEFAULT_ROWS);
-      setClientError(null);
-      router.refresh();
-    }
-  }, [state, router]);
+  // useActionState 대신 수동 transition — 성공 시 편집 가능 필드(key/name/rows)를
+  // 초기화해야 하는데 이는 effect 가 아니라 액션 콜백(이벤트)에서 처리한다.
+  const [state, setState] = useState<Awaited<
+    ReturnType<typeof savePenaltyPolicyAction>
+  > | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   function updateRow(i: number, patch: Partial<TierRow>) {
     setRows((cur) => cur.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
@@ -76,7 +67,18 @@ export function PenaltyPolicyForm() {
     }
 
     const input: SavePenaltyPolicyInput = { key: key.trim(), name: name.trim(), tiers };
-    startTransition(() => dispatch(input));
+    startTransition(async () => {
+      const res = await savePenaltyPolicyAction(state, input);
+      setState(res);
+      // 성공 → 폼 초기화 + RSC 목록 재렌더 (effect 아닌 이벤트 콜백에서 1회)
+      if (res?.type === "success") {
+        setKey("");
+        setName("");
+        setRows(DEFAULT_ROWS);
+        setClientError(null);
+        router.refresh();
+      }
+    });
   }
 
   const errorMessage =

@@ -215,7 +215,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `src/features/booking-cancel/ui/CancelBookingButton.tsx`
 - Modify: `src/features/admin-penalty-policy/ui/PenaltyPolicyForm.tsx`
 
-- [ ] **Step 1: AdminCancelBookingButton — `open`을 파생값으로, effect는 router.refresh만**
+- [x] **Step 1: AdminCancelBookingButton — `open`을 파생값으로, effect는 router.refresh만**
 
 `useActionState`의 `state`는 유지. `setOpen(false)`를 effect에서 제거하고 `open`을 파생한다. line 44-49의 effect와 `open` state를 다음 구조로:
 ```ts
@@ -234,11 +234,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 > ⚠️ 구현자: 파일 전체를 읽고 모든 `open`/`setOpen` 참조를 정확히 매핑할 것. `open`(파생 읽기)과 `setOpen`(→`setRawOpen`)을 혼동하지 말 것.
 
-- [ ] **Step 2: CancelBookingButton — 동일 패턴 적용**
+- [x] **Step 2: CancelBookingButton — 동일 패턴 적용**
 
 `src/features/booking-cancel/ui/CancelBookingButton.tsx` line 62-67의 effect도 Step 1과 **동일 구조**로 변환(`rawOpen`/`settled`/`open` 파생 + effect는 `router.refresh()`만). 이 파일의 `open`/`setOpen` 참조 전부를 매핑해 치환. 도메인 주석(success/deferred 구분)은 보존.
 
-- [ ] **Step 3: PenaltyPolicyForm — useActionState→수동 transition으로 성공 시 리셋을 콜백에서**
+- [x] **Step 3: PenaltyPolicyForm — useActionState→수동 transition으로 성공 시 리셋을 콜백에서**
 
 `src/features/admin-penalty-policy/ui/PenaltyPolicyForm.tsx`는 성공 시 4개 필드를 리셋한다(파생 불가 — 사용자 편집 state). `useActionState`를 수동 `useState`+`useTransition`으로 바꿔 리셋을 액션 콜백(이벤트)에서 수행한다. line 31-45를:
 ```ts
@@ -271,7 +271,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 > ⚠️ 구현자: 이 파일 전체를 읽고 `dispatch` 사용처(폼 `action`/버튼)와 `state` 참조(에러 표시 등)를 정확히 파악해 수동 transition으로 일관 변환할 것. `savePenaltyPolicyAction`의 시그니처(prevState, formData)를 확인해 호출 인자를 맞출 것. 미사용 `useActionState` import 제거.
 
-- [ ] **Step 4: 3 파일 위반 해소 + typecheck**
+- [x] **Step 4: 3 파일 위반 해소 + typecheck**
 
 Run:
 ```bash
@@ -280,7 +280,7 @@ npm run typecheck
 ```
 Expected: 위반 0, typecheck 0 errors.
 
-- [ ] **Step 5: 관련 테스트 + 도메인 거동 확인**
+- [x] **Step 5: 관련 테스트 + 도메인 거동 확인**
 
 Run:
 ```bash
@@ -290,7 +290,7 @@ Expected: 1170 pass. booking-cancel/penalty 관련 테스트가 있으면 그린
 
 > 🔬💳 자동화 한계: 다이얼로그 닫힘·router.refresh·폼 리셋의 실거동은 단위테스트 범위 밖. 구현자는 변경된 상태 흐름이 기존과 동치임을 코드로 논증하고(특히 `deferred` 케이스 — PG 지연 시에도 다이얼로그 닫힘 유지), 실 클릭 검증은 사용자 수동 항목으로 명시(예약 직권취소/자가취소/위약금정책 저장 3 플로우의 다이얼로그·리스트 갱신).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/features/admin-booking-cancel/ui/AdminCancelBookingButton.tsx src/features/booking-cancel/ui/CancelBookingButton.tsx src/features/admin-penalty-policy/ui/PenaltyPolicyForm.tsx

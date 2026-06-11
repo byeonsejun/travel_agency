@@ -16,7 +16,8 @@ type Props = {
 
 export function AdminCancelBookingButton({ bookingId }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  // rawOpen: 사용자가 연 의도. settled: 액션 성공/지연. open: 둘의 파생.
+  const [rawOpen, setRawOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [waivePenalty, setWaivePenalty] = useState(false);
   const [state, dispatch, isPending] = useActionState(
@@ -24,12 +25,15 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
     null
   );
 
+  const settled = state?.type === "success" || state?.type === "deferred";
+  const open = rawOpen && !settled;
+
   const trimmed = reason.trim();
   const submitDisabled = isPending || trimmed.length < 5;
 
   function handleClose() {
     if (isPending) return;
-    setOpen(false);
+    setRawOpen(false);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -40,20 +44,18 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
     });
   }
 
-  // 성공/지연 → 다이얼로그 닫고 router.refresh로 RSC 재렌더 강제 (commit 단계)
+  // 성공/지연 시 RSC 재검증만 effect 로(부수효과, setState 아님 → 규칙 무관).
+  // 다이얼로그 닫힘은 open 파생으로 자동 처리.
   useEffect(() => {
-    if ((state?.type === "success" || state?.type === "deferred") && open) {
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, open, router]);
+    if (settled && rawOpen) router.refresh();
+  }, [settled, rawOpen, router]);
 
   return (
     <>
       <Button
         type="button"
         variant="destructive"
-        onClick={() => setOpen(true)}
+        onClick={() => setRawOpen(true)}
       >
         관리자 직권 취소
       </Button>
@@ -126,14 +128,8 @@ export function AdminCancelBookingButton({ bookingId }: Props) {
                   {state.message}
                 </p>
               )}
-              {state?.type === "deferred" && (
-                <p
-                  role="status"
-                  className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800"
-                >
-                  {state.message}
-                </p>
-              )}
+              {/* deferred 는 settled 라 다이얼로그가 즉시 닫힘(open 파생) →
+                  여기서 표시 불가. 지연 안내는 닫힘 + router.refresh 후 RSC 상세에서 반영. */}
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button
