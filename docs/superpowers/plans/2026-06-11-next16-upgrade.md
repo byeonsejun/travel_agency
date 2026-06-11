@@ -351,7 +351,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `package.json`
 - Delete (존재 시): `.eslintrc.json`
 
-- [ ] **Step 1: 기존 eslint 설정 형태 확인**
+- [x] **Step 1: 기존 eslint 설정 형태 확인**
 
 Run:
 ```bash
@@ -359,14 +359,14 @@ ls -la .eslintrc* eslint.config.* 2>/dev/null; cat .eslintrc.json 2>/dev/null
 ```
 기존 `.eslintrc.json` 내용(extends 등)을 파악해 flat config로 이전.
 
-- [ ] **Step 2: ESLint 9 + flat config 설치**
+- [x] **Step 2: ESLint 9 + flat config 설치**
 
 Run:
 ```bash
 npm install -D eslint@^9
 ```
 
-- [ ] **Step 3: `eslint.config.mjs` 생성**
+- [x] **Step 3: `eslint.config.mjs` 생성**
 
 ```js
 import { FlatCompat } from "@eslint/eslintrc";
@@ -387,7 +387,7 @@ export default eslintConfig;
 
 > `@eslint/eslintrc`(FlatCompat)는 `eslint-config-next`의 legacy extends를 flat으로 브리지한다. 미설치 시 `npm install -D @eslint/eslintrc`.
 
-- [ ] **Step 4: lint 스크립트 교체 + 구 설정 제거**
+- [x] **Step 4: lint 스크립트 교체 + 구 설정 제거**
 
 `package.json`:
 ```json
@@ -398,7 +398,7 @@ export default eslintConfig;
 rm -f .eslintrc.json
 ```
 
-- [ ] **Step 5: lint 실행 (그린 또는 기존과 동일 수준)**
+- [x] **Step 5: lint 실행 (그린 또는 기존과 동일 수준)**
 
 Run:
 ```bash
@@ -406,7 +406,7 @@ npm run lint
 ```
 Expected: ESLint 9 flat config로 실행됨. 신규 에러가 나오면 기존 baseline과 비교 — 업그레이드로 인한 규칙 변화면 `ignores`/rule 조정, 실제 코드 문제면 별도 기록(이번 범프 범위 밖이면 주석 처리하지 말고 후속 이슈로).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add eslint.config.mjs package.json package-lock.json
