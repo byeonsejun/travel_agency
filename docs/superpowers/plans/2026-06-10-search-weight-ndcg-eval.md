@@ -692,7 +692,7 @@ OpenAI를 1회 호출해 코퍼스·쿼리 실 임베딩을 JSON으로 박제하
 - Create: `scripts/search-eval/corpus.fixture.json` (스크립트 산출)
 - Create: `scripts/search-eval/queries.fixture.json` (스크립트 산출)
 
-- [ ] **Step 1: extract-fixtures.ts 작성**
+- [x] **Step 1: extract-fixtures.ts 작성**
 
 ```ts
 /**
@@ -788,12 +788,12 @@ main()
   });
 ```
 
-- [ ] **Step 2: 타입체크 통과 확인**
+- [x] **Step 2: 타입체크 통과 확인**
 
 Run: `npm run typecheck`
 Expected: PASS. (`p as Parameters<typeof buildEmbeddingText>[0]` 캐스트로 include된 prisma 결과를 ProductDetail로 맞춤 — `any` 미사용.)
 
-- [ ] **Step 3: 시드 + 추출 실행**
+- [x] **Step 3: 시드 + 추출 실행**
 
 Run:
 ```bash
@@ -802,7 +802,7 @@ set -a; . ./.env; set +a; npx tsx scripts/search-eval/extract-fixtures.ts
 ```
 Expected: `corpus ✓ ...` 9줄 + `query ✓ ...` 10줄 + `박제 완료: corpus 9 · queries 10`. 두 JSON 파일 생성.
 
-- [ ] **Step 4: 라벨 보정 (실제 태그 대조)**
+- [x] **Step 4: 라벨 보정 (실제 태그 대조)**
 
 Run: `cat scripts/search-eval/corpus.fixture.json | npx tsx -e "const c=require('fs').readFileSync(0,'utf8');for(const p of JSON.parse(c))console.log(p.title,'|',p.destination,'|',p.tags.join(','))"`
 Expected: 9개 상품의 title·destination·tags 출력.
@@ -811,7 +811,7 @@ Expected: 9개 상품의 title·destination·tags 출력.
 - 라벨이 상품 실제 태그와 어긋나면(예: 기대한 `#설경` 태그가 없으면) 등급을 현실화.
 - 의도 유형 균형(설계 §5)은 유지. ⭐ 8번(추상 쿼리)은 keyword/geo/theme 시그널이 0인지(cleanedQuery·themeTags·geoTerms 비어있는지) `queries.fixture.json`에서 확인 — 비어있어야 벡터 단독 격리가 성립.
 
-- [ ] **Step 5: 커밋 (fixture + 보정된 라벨)**
+- [x] **Step 5: 커밋 (fixture + 보정된 라벨)**
 
 ```bash
 git add scripts/search-eval/corpus.fixture.json scripts/search-eval/queries.fixture.json scripts/search-eval/extract-fixtures.ts scripts/search-eval/golden-queries.ts
