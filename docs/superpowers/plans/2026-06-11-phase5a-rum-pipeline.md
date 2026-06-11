@@ -650,7 +650,7 @@ git commit -m "feat(rum): POST /api/rum collector — Zod + rate-limit + route c
 
 > client island이므로 `@/shared/lib/env` import 금지(memory: feedback_client_safe_no_env_import). URL은 상대경로 `/api/rum`이라 env 불요.
 
-- [ ] **Step 1: 클라이언트 island 구현**
+- [x] **Step 1: 클라이언트 island 구현**
 
 `src/features/rum/ui/WebVitalsReporter.tsx`:
 
@@ -699,7 +699,7 @@ export function WebVitalsReporter() {
 }
 ```
 
-- [ ] **Step 2: barrel 작성**
+- [x] **Step 2: barrel 작성**
 
 `src/features/rum/index.ts`:
 
@@ -707,7 +707,7 @@ export function WebVitalsReporter() {
 export { WebVitalsReporter } from "./ui/WebVitalsReporter";
 ```
 
-- [ ] **Step 3: `(site)` 레이아웃에 마운트**
+- [x] **Step 3: `(site)` 레이아웃에 마운트**
 
 `src/app/(site)/layout.tsx` 수정 — import 추가:
 
@@ -722,14 +722,14 @@ import { WebVitalsReporter } from "@/features/rum";
       <WebVitalsReporter />
 ```
 
-- [ ] **Step 4: typecheck + build (client/server 경계 검증)**
+- [x] **Step 4: typecheck + build (client/server 경계 검증)**
 
 > client 경계·배럴 변경은 typecheck/test로 부족 — build로 검증(memory: feedback_run_build_for_boundaries). dev 서버 가동 중이면 먼저 종료(memory: feedback_no_build_during_dev).
 
 Run: `npm run typecheck && npm run build`
 Expected: 빌드 성공. `next/web-vitals` import 정상, env 누수/UnhandledScheme 에러 없음.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/rum/ui/WebVitalsReporter.tsx src/features/rum/index.ts "src/app/(site)/layout.tsx"
