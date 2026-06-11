@@ -1219,7 +1219,7 @@ git commit -m "feat(rum): admin performance panel — p75 cards + trend chart + 
 - Modify: `src/app/api/cron/dispatcher/route.ts`
 - Test: `src/shared/lib/rum-cleanup/__tests__/worker.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/shared/lib/rum-cleanup/__tests__/worker.test.ts`:
 
@@ -1254,12 +1254,12 @@ describe("rum-cleanup worker", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/shared/lib/rum-cleanup/__tests__/worker.test.ts`
 Expected: FAIL — `Cannot find module '../worker'`
 
-- [ ] **Step 3: 워커 구현**
+- [x] **Step 3: 워커 구현**
 
 `src/shared/lib/rum-cleanup/worker.ts`:
 
@@ -1286,12 +1286,12 @@ export async function processRumCleanup(): Promise<RumCleanupResult> {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/shared/lib/rum-cleanup/__tests__/worker.test.ts`
 Expected: PASS (2 tests)
 
-- [ ] **Step 5: 디스패처에 워커 등록**
+- [x] **Step 5: 디스패처에 워커 등록**
 
 `src/app/api/cron/dispatcher/route.ts` 수정 — import 추가:
 
@@ -1310,12 +1310,12 @@ const WORKERS = [
 ] as const;
 ```
 
-- [ ] **Step 6: typecheck + 기존 cron 테스트 회귀 확인**
+- [x] **Step 6: typecheck + 기존 cron 테스트 회귀 확인**
 
 Run: `npm run typecheck && npx vitest run src/app/api/cron`
 Expected: typecheck 그린 + 기존 cron 테스트 PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/shared/lib/rum-cleanup/ "src/app/api/cron/dispatcher/route.ts"
