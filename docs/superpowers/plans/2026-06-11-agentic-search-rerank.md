@@ -819,7 +819,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `scripts/search-eval/types.ts`
 - Create: `scripts/search-eval/hard-queries.ts`
 
-- [ ] **Step 1: types.ts에 RerankSnapshot 추가**
+- [x] **Step 1: types.ts에 RerankSnapshot 추가**
 
 `scripts/search-eval/types.ts` 끝에 추가:
 ```ts
@@ -830,7 +830,7 @@ export interface RerankSnapshot {
 }
 ```
 
-- [ ] **Step 2: hard-queries.ts 작성**
+- [x] **Step 2: hard-queries.ts 작성**
 
 ```ts
 // scripts/search-eval/hard-queries.ts
@@ -1004,12 +1004,12 @@ export const HARD_QUERIES: HardCase[] = [
 ];
 ```
 
-- [ ] **Step 3: 타입체크 통과 확인**
+- [x] **Step 3: 타입체크 통과 확인**
 
 Run: `npm run typecheck`
 Expected: PASS (hard-queries.ts·types.ts 타입 에러 0).
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add scripts/search-eval/types.ts scripts/search-eval/hard-queries.ts
