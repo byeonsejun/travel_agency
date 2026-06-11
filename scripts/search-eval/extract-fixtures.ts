@@ -20,7 +20,7 @@ import { env } from "@/shared/lib/env";
 import { OpenAIEmbeddingProvider } from "@/shared/lib/embedding";
 import { buildEmbeddingText } from "@/entities/product";
 import { toStorageTag } from "@/shared/lib/tags";
-import { routeQuery } from "@/features/search/server/router";
+import { routeQuery } from "@/features/search";
 import { GOLDEN_QUERIES } from "./golden-queries";
 import type { CorpusProduct, GoldenQuery } from "./types";
 
