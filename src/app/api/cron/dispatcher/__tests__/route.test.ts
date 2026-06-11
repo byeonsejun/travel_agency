@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   processRefundJobBatch: vi.fn(),
   processEmailJobBatch: vi.fn(),
   processEmbeddingJobBatch: vi.fn(),
+  processRumCleanup: vi.fn(),
   env: { CRON_SECRET: "x".repeat(32) },
 }));
 vi.mock("@/shared/lib/refund-job/worker", () => ({
@@ -15,6 +16,9 @@ vi.mock("@/shared/lib/email-job/worker", () => ({
 }));
 vi.mock("@/shared/lib/embedding-job/worker", () => ({
   processEmbeddingJobBatch: mocks.processEmbeddingJobBatch,
+}));
+vi.mock("@/shared/lib/rum-cleanup/worker", () => ({
+  processRumCleanup: mocks.processRumCleanup,
 }));
 vi.mock("@/shared/lib/env", () => ({ env: mocks.env }));
 vi.mock("@/shared/lib/observability", () => ({
@@ -37,6 +41,7 @@ describe("GET /api/cron/dispatcher", () => {
     mocks.processRefundJobBatch.mockResolvedValue({ processed: 0, summary: {}, results: [] });
     mocks.processEmailJobBatch.mockResolvedValue({ processed: 2, succeeded: 2, failed: 0, skipped: 0 });
     mocks.processEmbeddingJobBatch.mockResolvedValue({ processed: 1, succeeded: 1, failed: 0, skipped: 0 });
+    mocks.processRumCleanup.mockResolvedValue({ deleted: 0 });
   });
 
   it("미인증 → 401, 어떤 워커도 미호출", async () => {
@@ -47,18 +52,20 @@ describe("GET /api/cron/dispatcher", () => {
     expect(mocks.processEmbeddingJobBatch).not.toHaveBeenCalled();
   });
 
-  it("인증 통과 → 3개 워커 모두 호출(limit 보존) + 통합 결과", async () => {
+  it("인증 통과 → 4개 워커 모두 호출(limit 보존) + 통합 결과", async () => {
     const res = await GET(req(AUTH));
     expect(res.status).toBe(200);
     expect(mocks.processRefundJobBatch).toHaveBeenCalledWith({ limit: 10 });
     expect(mocks.processEmailJobBatch).toHaveBeenCalledWith({ limit: 10 });
     expect(mocks.processEmbeddingJobBatch).toHaveBeenCalledWith({ limit: 5 });
+    expect(mocks.processRumCleanup).toHaveBeenCalledTimes(1);
     const body = await res.json();
-    expect(body.workers).toHaveLength(3);
+    expect(body.workers).toHaveLength(4);
     expect(body.workers.map((w: { worker: string }) => w.worker)).toEqual([
       "refund",
       "email",
       "embedding",
+      "rum-cleanup",
     ]);
   });
 
