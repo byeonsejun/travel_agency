@@ -375,7 +375,7 @@ git commit -m "feat(rum): ratingFor pure fn — web-vitals threshold classificat
 - Create: `src/features/rum/model/schema.ts`
 - Test: `src/features/rum/model/__tests__/schema.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/features/rum/model/__tests__/schema.test.ts`:
 
@@ -421,12 +421,12 @@ describe("webVitalSchema", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/features/rum/model/__tests__/schema.test.ts`
 Expected: FAIL — `Cannot find module '../schema'`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/features/rum/model/schema.ts`:
 
@@ -450,12 +450,12 @@ export const webVitalSchema = z.object({
 export type WebVitalInput = z.infer<typeof webVitalSchema>;
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/features/rum/model/__tests__/schema.test.ts`
 Expected: PASS (6 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/rum/model/schema.ts src/features/rum/model/__tests__/schema.test.ts
