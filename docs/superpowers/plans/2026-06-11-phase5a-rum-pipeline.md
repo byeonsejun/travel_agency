@@ -511,7 +511,7 @@ git commit -m "feat(rum): add rum rate-limit tier (60/min, ipOnly)"
 - Create: `src/app/api/rum/route.ts`
 - Test: `src/app/api/rum/__tests__/route.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/app/api/rum/__tests__/route.test.ts`:
 
@@ -571,12 +571,12 @@ describe("/api/rum", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/app/api/rum/__tests__/route.test.ts`
 Expected: FAIL — `Cannot find module '../route'`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/app/api/rum/route.ts`:
 
@@ -627,12 +627,12 @@ export const POST = withRateLimit(
 );
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/app/api/rum/__tests__/route.test.ts`
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/api/rum/route.ts src/app/api/rum/__tests__/route.test.ts
