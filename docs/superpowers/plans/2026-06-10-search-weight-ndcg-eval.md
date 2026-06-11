@@ -1024,17 +1024,17 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-06-10-search-weight-ndcg-eval.md` (체크박스 최종 갱신)
 
-- [ ] **Step 1: 전체 QA 증거 수집**
+- [x] **Step 1: 전체 QA 증거 수집**
 
 Run: `npm run typecheck && npx vitest run scripts/search-eval src/entities/product && npm run lint`
 Expected: typecheck PASS, eval/엔티티 테스트 전부 PASS, lint 통과.
 
-- [ ] **Step 2: 미체크 항목 점검**
+- [x] **Step 2: 미체크 항목 점검**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-10-search-weight-ndcg-eval.md`
 Expected: (Task 5를 키 부재로 보류한 경우 외엔) 출력 없음.
 
-- [ ] **Step 3: 보고 (CLAUDE.md §7.1 양식)**
+- [x] **Step 3: 보고 (CLAUDE.md §7.1 양식)**
 
 baseline·sweep 출력을 인용해 보고한다:
 - 🏗️ Core Architecture: fixture 박제 → 오프라인 결정론 eval / scoreReplica가 SQL 미러(SSOT 재사용 drift 차단) / 리포트-온리.
