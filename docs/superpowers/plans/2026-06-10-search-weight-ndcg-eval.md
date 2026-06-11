@@ -530,7 +530,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 **Files:**
 - Create: `scripts/search-eval/golden-queries.ts`
 
-- [ ] **Step 1: golden-queries.ts 작성**
+- [x] **Step 1: golden-queries.ts 작성**
 
 ```ts
 /**
@@ -665,12 +665,12 @@ export const GOLDEN_QUERIES: GoldenCase[] = [
 ];
 ```
 
-- [ ] **Step 2: 타입체크 통과 확인**
+- [x] **Step 2: 타입체크 통과 확인**
 
 Run: `npm run typecheck`
 Expected: PASS (golden-queries.ts 타입 에러 0).
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add scripts/search-eval/golden-queries.ts
