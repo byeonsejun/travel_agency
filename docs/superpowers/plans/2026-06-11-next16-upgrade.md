@@ -427,7 +427,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `docs/superpowers/adr/README.md`
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: 종합 자동 증거 수집**
+- [x] **Step 1: 종합 자동 증거 수집**
 
 Run (각각 출력 인용):
 ```bash
@@ -438,7 +438,7 @@ node --version && npx next --version
 ```
 Expected: typecheck PASS / 전체 test PASS / lint 그린 / `Next.js 16.x`.
 
-- [ ] **Step 2: dev 런타임 스모크 (자동화 가능분만)**
+- [x] **Step 2: dev 런타임 스모크 (자동화 가능분만)**
 
 Run (백그라운드 dev 기동 후):
 ```bash
@@ -453,7 +453,7 @@ Expected: 홈 200, PDP 200(또는 유효 seed id로 200), middleware 경유 `/ap
 
 > 미들웨어 Edge 동작(rate-limit/CSP nonce)·ISR 캐시·결제 Mock 플로우 등 **자동화 불가 항목만** 사용자 수동 확인 요청(절차·기대·실패 시 첨부 명시).
 
-- [ ] **Step 3: ADR-0051 작성**
+- [x] **Step 3: ADR-0052 작성** (번호 정정: 0051은 RUM ADR이 선점, 0052로 발행)
 
 `docs/superpowers/adr/0051-next16-upgrade-de-risked.md` 생성 (template.md 4섹션 고정):
 - **Context:** Phase 5-B Next 16 범프. 두 변화(프레임워크 버전 + 캐시 철학)가 한 릴리스에 묶여 분리 진단 불가 위험.
@@ -463,7 +463,7 @@ Expected: 홈 200, PDP 200(또는 유효 seed id로 200), middleware 경유 `/ap
 
 ADR 작성 후 `docs/superpowers/adr/README.md` 인덱스에 한 줄 추가.
 
-- [ ] **Step 4: CLAUDE.md §8 진행 노트 갱신**
+- [x] **Step 4: CLAUDE.md §8 진행 노트 갱신**
 
 `CLAUDE.md` §8의 진행 상황 라인에 Phase 5-B 완료를 추가:
 ```
@@ -474,7 +474,7 @@ ADR 작성 후 `docs/superpowers/adr/README.md` 인덱스에 한 줄 추가.
 - "revalidateTag에 왜 `'max'`가 붙었나?" → 16 시그니처 강제. SWR 프로파일, 즉시성은 revalidatePath가 보완.
 - "빌드가 왜 Turbopack인가? webpack 폴백은?" → 16 기본 Turbopack. Sentry 10 호환. 실패 시 `next build --webpack`.
 
-- [ ] **Step 5: 플랜 체크박스 최종 반영 확인 (커밋 전)**
+- [x] **Step 5: 플랜 체크박스 최종 반영 확인 (커밋 전)**
 
 Run:
 ```bash
@@ -482,7 +482,7 @@ grep -n "\- \[ \]" docs/superpowers/plans/2026-06-11-next16-upgrade.md
 ```
 Expected: 완료된 Task의 미체크 항목 0건. 남아있으면 즉시 `[x]` 처리 후 커밋.
 
-- [ ] **Step 6: Commit (docs)**
+- [x] **Step 6: Commit (docs)**
 
 ```bash
 git add docs/superpowers/adr/0051-next16-upgrade-de-risked.md docs/superpowers/adr/README.md CLAUDE.md docs/superpowers/plans/2026-06-11-next16-upgrade.md
