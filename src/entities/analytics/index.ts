@@ -39,3 +39,5 @@ export {
   getCancellationRows,
   getOccupancyRows,
 } from "./api/drilldown";
+export type { WebVitalP75, RouteVitalP75, VitalTrendPoint } from "./model/types";
+export { getWebVitalSummary, getWebVitalByRoute, getWebVitalTrend, TAG_RUM } from "./api/rum";
