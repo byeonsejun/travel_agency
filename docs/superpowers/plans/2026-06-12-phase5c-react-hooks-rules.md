@@ -37,7 +37,7 @@
 **Files:**
 - Modify: `eslint.config.mjs`
 
-- [ ] **Step 1: 12개 `"off"` 라인 제거**
+- [x] **Step 1: 12개 `"off"` 라인 제거**
 
 `eslint.config.mjs`의 react-hooks 비활성 블록에서 다음 12줄을 **삭제**한다 (`set-state-in-effect`와 `refs` 2줄만 남긴다):
 ```
@@ -62,7 +62,7 @@
       "react-hooks/refs": "off",
 ```
 
-- [ ] **Step 2: lint 그린 확인 (신규 에러 0)**
+- [x] **Step 2: lint 그린 확인 (신규 에러 0)**
 
 Run:
 ```bash
@@ -70,7 +70,7 @@ npm run lint
 ```
 Expected: `0 errors`, 기존 10 warnings 동일(증가 없음). 12규칙 활성화로 신규 위반이 뜨면 스캔이 틀린 것 → 해당 규칙만 다시 off하고 보고.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add eslint.config.mjs
