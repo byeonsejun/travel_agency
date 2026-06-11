@@ -64,7 +64,7 @@
 
 > ⚠️ 이 repo는 Supabase pgvector 때문에 `prisma migrate dev`가 shadow DB에서 실패한다(memory: project-prisma-migration-workaround). **3-step 우회**를 따른다: `db push` → 수동 SQL → `migrate resolve`.
 
-- [ ] **Step 1: 스키마에 모델 추가**
+- [x] **Step 1: 스키마에 모델 추가**
 
 `prisma/schema.prisma` 파일 끝에 추가:
 
@@ -86,12 +86,12 @@ model WebVitalEvent {
 }
 ```
 
-- [ ] **Step 2: DB에 직접 반영 (shadow DB 우회)**
+- [x] **Step 2: DB에 직접 반영 (shadow DB 우회)**
 
 Run: `npx prisma db push --accept-data-loss`
 Expected: `Your database is now in sync with your Prisma schema` + `Generated Prisma Client`
 
-- [ ] **Step 3: 마이그레이션 SQL 수동 작성**
+- [x] **Step 3: 마이그레이션 SQL 수동 작성**
 
 `prisma/migrations/20260611000000_rum_web_vitals/migration.sql` 생성:
 
@@ -116,17 +116,17 @@ CREATE INDEX "WebVitalEvent_metric_createdAt_idx" ON "WebVitalEvent"("metric", "
 CREATE INDEX "WebVitalEvent_route_metric_createdAt_idx" ON "WebVitalEvent"("route", "metric", "createdAt");
 ```
 
-- [ ] **Step 4: 마이그레이션 히스토리에 등록**
+- [x] **Step 4: 마이그레이션 히스토리에 등록**
 
 Run: `npx prisma migrate resolve --applied 20260611000000_rum_web_vitals`
 Expected: `Migration 20260611000000_rum_web_vitals marked as applied.`
 
-- [ ] **Step 5: 타입 생성 확인**
+- [x] **Step 5: 타입 생성 확인**
 
 Run: `npx prisma generate && npm run typecheck`
 Expected: 에러 없음 (`db.webVitalEvent` 타입 사용 가능)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add prisma/schema.prisma prisma/migrations/20260611000000_rum_web_vitals/
