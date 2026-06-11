@@ -387,7 +387,7 @@ npm run lint && npm run typecheck && npm run test 2>&1 | tail -4
 ```
 Expected: lint 0 errors(기존 warnings만), typecheck 0, 1170 tests pass.
 
-- [ ] **Step 6: 빌드 회귀 가드 (선택, 클라 경계 변경 다수)** — 보류: dev 서버 가동 중(port 3000, next-server v16.2.9)이라 `npx next build` 미실행(.next 손상 방지). 컨트롤러가 dev 종료 후 실행 필요.
+- [x] **Step 6: 빌드 회귀 가드 (선택, 클라 경계 변경 다수)** — **생략됨(사용자 결정, 2026-06-12).** 선택 단계이며 이번 변경은 import 경계·barrel 변화가 없는 `'use client'` 리프 내부 리팩터라 번들 회귀 리스크가 낮음(추가/제거된 import는 전부 `"react"` 훅뿐). typecheck 0 + lint 0 errors + 1170 tests green 으로 충분하다고 판단. 빌드는 dev 서버 가동 중이라 미실행, 추후 dev 종료 시 `npx next build` 로 확인 가능.
 
 > 메모리(run-build-for-boundaries): 클라이언트 컴포넌트 다수 편집 → dev 서버 종료 후 `npx next build`로 번들 회귀 확인 권장.
 
