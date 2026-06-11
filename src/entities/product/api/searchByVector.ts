@@ -7,7 +7,7 @@
  *
  * 하이브리드 스코어링: 순수 코사인만으로는 dev 가짜 벡터에서 의미 분리가
  * 안 되고(노이즈 ±0.05), 운영에서도 명시적 키워드("일본")가 약하게 묻힌다.
- * → `코사인 유사도 * VECTOR_WEIGHT + ILIKE 일치 * KEYWORD_WEIGHT`로 결합해
+ * → `코사인 유사도 * SEARCH_WEIGHTS.vector + ILIKE 일치 * SEARCH_WEIGHTS.keyword`로 결합해
  * 정확한 단어 일치는 키워드 점수가, 추상 의도는 벡터 점수가 잡도록 한다.
  *
  * Graceful degradation (D5): pgvector 확장 부재/쿼리 실패 시 ILIKE 키워드
@@ -20,6 +20,7 @@ import { db } from "@/shared/lib/db";
 import { toStorageTag } from "@/shared/lib/tags";
 import { pickLowestPrice } from "./mapping";
 import type { SearchResultCard } from "../model/types";
+import { SEARCH_WEIGHTS } from "../model/searchWeights";
 
 export interface VectorSearchFilters {
   priceMax?: number;
@@ -28,38 +29,6 @@ export interface VectorSearchFilters {
 }
 
 const RESULT_LIMIT = 20;
-
-// 하이브리드 가중치 (합 1.0). 튜닝 용이하도록 상수화.
-//  - VECTOR_WEIGHT : 의미적 유사도(추상 의도, 예 "효도 여행") 기여분
-//  - KEYWORD_WEIGHT: 명시적 단어 일치(title/destination/summary) 부스트
-//  - GEO_WEIGHT    : gazetteer 확장 지리어가 destination에 적중한 부스트
-//                    (권역어 "동남아" → 다낭/발리/세부… 정밀 가산)
-//  - THEME_WEIGHT  : 자연어에서 추출된 테마 태그(#휴양 등) soft 가산점.
-//                    WHERE 배제(hard filter)였으나, "동남아 휴양"이 발리
-//                    1건만 반환되던 결함 → 권역 전체 노출 + 테마 상품
-//                    최상단으로 끌어올리는 가산점으로 전환.
-const VECTOR_WEIGHT = 0.5;
-const KEYWORD_WEIGHT = 0.2;
-const GEO_WEIGHT = 0.2;
-const THEME_WEIGHT = 0.1;
-
-/**
- * 테마 부스트 점수 (graduated soft boost, 공식 SSOT).
- *
- * 요청 태그 커버리지 비율에 천장(THEME_WEIGHT)을 곱한다:
- *   requested === 0 ? 0 : THEME_WEIGHT × (matchCount / requested)
- *
- * matchCount ∈ [0, requested]가 보장되므로(ProductTag @@unique([productId,tag]))
- * 반환값은 항상 [0, THEME_WEIGHT] 범위 — cap 불필요.
- *
- * ⚠️ buildThemeScore의 SQL 산술이 이 공식을 미러한다. 한쪽을 바꾸면
- *    반드시 다른 쪽도 갱신할 것(drift 방지).
- */
-export function themeBoost(matchCount: number, requested: number): number {
-  // !(requested > 0)는 0·음수·NaN을 모두 차단 → 반환값 [0, THEME_WEIGHT] 불변식 보장.
-  if (!(requested > 0)) return 0;
-  return THEME_WEIGHT * (matchCount / requested);
-}
 
 // 부팅 1회 가용성 캐시 (spec §5.1). null = 미확인.
 let pgvectorAvailable: boolean | null = null;
@@ -110,7 +79,7 @@ function buildGeoScore(geoTerms: string[]): Prisma.Sql {
   if (geoTerms.length === 0) return Prisma.sql`0`;
   const patterns = geoTerms.map((t) => `%${t}%`);
   return Prisma.sql`(CASE WHEN p.destination ILIKE ANY(${patterns}::text[])
-                          THEN ${GEO_WEIGHT} ELSE 0 END)`;
+                          THEN ${SEARCH_WEIGHTS.geo} ELSE 0 END)`;
 }
 
 /** themeTags를 ProductTag.tag 표기('#' 접두)로 정규화. */
@@ -122,16 +91,16 @@ function normalizeThemeTags(themeTags: string[] | undefined): string[] {
 /**
  * 테마 태그 적중 → graduated 점수 가산 조각(soft boost, 없으면 0).
  *
- * themeBoost 공식의 SQL 미러: THEME_WEIGHT × matchCount / requested.
+ * themeBoost 공식의 SQL 미러: SEARCH_WEIGHTS.theme × matchCount / requested.
  *  - matchCount = 요청 태그 적중 개수 (count(*), ProductTag @@unique로 ≤ requested)
  *  - requested  = tags.length (호출부에서 1개 이상 보장 — 빈 배열은 위에서 0 반환)
  * 분모는 바인딩 파라미터로 전달(인젝션 안전 R6). ::float로 정수나눗셈 회피.
  *
- * ⚠️ themeBoost(searchByVector.ts) 공식과 동기화 유지 — 한쪽 변경 시 양쪽 갱신.
+ * ⚠️ themeBoost(searchWeights.ts) 공식과 동기화 유지 — 한쪽 변경 시 양쪽 갱신.
  */
 function buildThemeScore(tags: string[]): Prisma.Sql {
   if (tags.length === 0) return Prisma.sql`0`;
-  return Prisma.sql`(${THEME_WEIGHT} * (
+  return Prisma.sql`(${SEARCH_WEIGHTS.theme} * (
     SELECT count(*) FROM "ProductTag" pt
     WHERE pt."productId" = p.id AND pt.tag = ANY(${tags})
   )::float / ${tags.length})`;
@@ -253,11 +222,11 @@ export async function searchProductsByVector(
     // 테마 상품 최상단. 전 구간 바인딩 파라미터 → 인젝션 차단 (R6).
     const rows = await db.$queryRaw<ScoredRow[]>(Prisma.sql`
       SELECT p.id AS id,
-        (1 - (e.vector <=> ${vecLiteral}::vector)) * ${VECTOR_WEIGHT}
+        (1 - (e.vector <=> ${vecLiteral}::vector)) * ${SEARCH_WEIGHTS.vector}
         + (CASE WHEN p.title ILIKE ${like}
                   OR p.destination ILIKE ${like}
                   OR p.summary ILIKE ${like}
-                THEN ${KEYWORD_WEIGHT} ELSE 0 END)
+                THEN ${SEARCH_WEIGHTS.keyword} ELSE 0 END)
         + ${geoScore}
         + ${themeScore} AS score
       FROM "Product" p
