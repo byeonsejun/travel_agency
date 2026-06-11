@@ -141,7 +141,7 @@ git commit -m "feat(rum): WebVitalEvent model + migration (raw events, 30d reten
 - Create: `src/features/rum/model/normalizeRoute.ts`
 - Test: `src/features/rum/model/__tests__/normalizeRoute.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/features/rum/model/__tests__/normalizeRoute.test.ts`:
 
@@ -192,12 +192,12 @@ describe("normalizeRoute", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/features/rum/model/__tests__/normalizeRoute.test.ts`
 Expected: FAIL — `Cannot find module '../normalizeRoute'`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/features/rum/model/normalizeRoute.ts`:
 
@@ -260,12 +260,12 @@ export function coerceRouteTemplate(route: string): string {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/features/rum/model/__tests__/normalizeRoute.test.ts`
 Expected: PASS (8 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/rum/model/normalizeRoute.ts src/features/rum/model/__tests__/normalizeRoute.test.ts
@@ -280,7 +280,7 @@ git commit -m "feat(rum): normalizeRoute pure fn — route template folding SSOT
 - Create: `src/features/rum/model/rating.ts`
 - Test: `src/features/rum/model/__tests__/rating.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `src/features/rum/model/__tests__/rating.test.ts`:
 
@@ -320,12 +320,12 @@ describe("ratingFor (web-vitals 표준 임계)", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/features/rum/model/__tests__/rating.test.ts`
 Expected: FAIL — `Cannot find module '../rating'`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `src/features/rum/model/rating.ts`:
 
@@ -355,12 +355,12 @@ export function ratingFor(metric: WebVitalMetric, value: number): WebVitalRating
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/features/rum/model/__tests__/rating.test.ts`
 Expected: PASS (5 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/rum/model/rating.ts src/features/rum/model/__tests__/rating.test.ts
