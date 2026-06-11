@@ -124,7 +124,7 @@ export async function adminCancelBookingAction(
   }
 
   // 5. 캐시 무효화 — admin 페이지 + 해당 user의 마이페이지/상세 + PDP 좌석
-  revalidateTag(tagDeparturesByProduct(productId));
+  revalidateTag(tagDeparturesByProduct(productId), "max");
   revalidatePath("/admin/bookings");
   revalidatePath(`/admin/bookings/${bookingId}`);
   revalidatePath("/mypage");

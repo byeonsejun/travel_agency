@@ -66,10 +66,10 @@ async function requireAdminSession(): Promise<
 // ── 캐시 무효화 helper ────────────────────────────────────────────
 
 function invalidateProductCaches(productId: string) {
-  revalidateTag(tagProductDetail(productId));
-  revalidateTag(TAG_PRODUCTS_LIST);
-  revalidateTag(TAG_DESTINATIONS_LIST);
-  revalidateTag(TAG_PRODUCTS_FEATURED);
+  revalidateTag(tagProductDetail(productId), "max");
+  revalidateTag(TAG_PRODUCTS_LIST, "max");
+  revalidateTag(TAG_DESTINATIONS_LIST, "max");
+  revalidateTag(TAG_PRODUCTS_FEATURED, "max");
 }
 
 // ══════════════════════════════════════════════════════════════════

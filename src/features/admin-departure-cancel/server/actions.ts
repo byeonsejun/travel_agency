@@ -149,7 +149,7 @@ export async function forceCancelDepartureAction(formData: FormData): Promise<vo
 
   // departure가 CANCELED 되었으므로 공개 PDP 좌석표 캐시 무효화 (checkout과 동일 contract).
   if (productId) {
-    revalidateTag(tagDeparturesByProduct(productId));
+    revalidateTag(tagDeparturesByProduct(productId), "max");
     revalidatePath(`/products/${productId}`);
   }
   redirect(`/admin/departure-cancellations/${batchId}`);

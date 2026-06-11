@@ -54,7 +54,7 @@ function buildZodError(error: import("zod").ZodError): DepartureActionState {
 // admin 라우트는 force-dynamic이므로 revalidatePath 불필요.
 
 function invalidate(productId: string) {
-  revalidateTag(tagDeparturesByProduct(productId));
+  revalidateTag(tagDeparturesByProduct(productId), "max");
   revalidatePath(`/products/${productId}`);
 }
 
