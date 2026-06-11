@@ -58,7 +58,7 @@
 - Modify: `package.json`
 - Modify: `next.config.mjs:42-47`
 
-- [ ] **Step 1: Sentry 10 설치 (Next 15 baseline 유지)**
+- [x] **Step 1: Sentry 10 설치 (Next 15 baseline 유지)**
 
 Run:
 ```bash
@@ -72,7 +72,7 @@ npm ls @sentry/nextjs next | head -5
 ```
 Expected: `@sentry/nextjs@10.x`, `next@15.5.18`.
 
-- [ ] **Step 2: `hideSourceMaps` 옵션 제거**
+- [x] **Step 2: `hideSourceMaps` 옵션 제거**
 
 Sentry v9에서 `hideSourceMaps`는 **무대체 삭제**됐다(SDK가 기본으로 hidden sourcemap 방출). `next.config.mjs`의 `withSentryConfig` 2번째 인자에서 제거한다.
 
@@ -86,7 +86,7 @@ export default withSentryConfig(nextConfig, {
 });
 ```
 
-- [ ] **Step 3: Sentry.init / API 회귀 점검 (코드 변경 없음, 확인만)**
+- [x] **Step 3: Sentry.init / API 회귀 점검 (코드 변경 없음, 확인만)**
 
 다음을 grep으로 확인 — 모두 v10에서 유효하므로 **변경 불필요**, 단 회귀 가드:
 ```bash
@@ -94,7 +94,7 @@ grep -rn "enableTracing\|autoSessionTracking\|transactionContext" src/
 ```
 Expected: 출력 없음 (제거된 옵션 미사용). `tracesSampleRate: 0` / `sendDefaultPii: false` / `withScope` / `captureException` / `captureMessage` / `setTag` / `setExtra`는 v10에서 그대로 유효.
 
-- [ ] **Step 4: typecheck + test (Next 15 baseline 그린 확인)**
+- [x] **Step 4: typecheck + test (Next 15 baseline 그린 확인)**
 
 Run:
 ```bash
@@ -102,7 +102,7 @@ npm run typecheck && npm run test
 ```
 Expected: typecheck PASS, 전체 테스트 PASS. (errorTracker.test.ts 포함 — Sentry mock 시그니처 불변)
 
-- [ ] **Step 5: 빌드 검증 (Next 15 = webpack, Sentry 10 플러그인)**
+- [x] **Step 5: 빌드 검증 (Next 15 = webpack, Sentry 10 플러그인)**
 
 > ⚠️ dev 서버가 떠 있으면 먼저 종료(`.next` 충돌 방지 — memory: no-build-during-dev).
 
@@ -112,7 +112,7 @@ npm run build
 ```
 Expected: 빌드 성공. Sentry 10 webpack 플러그인이 Next 15에서 정상 동작(sourcemap 업로드는 `SENTRY_AUTH_TOKEN` 부재 시 silent skip).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json next.config.mjs

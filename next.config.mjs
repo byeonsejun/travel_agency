@@ -34,5 +34,5 @@ export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,
-  hideSourceMaps: true,
+  // hideSourceMaps: Sentry v9에서 무대체 삭제됨 — SDK가 기본으로 hidden sourcemap 방출.
 });
