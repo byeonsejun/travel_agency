@@ -688,3 +688,19 @@ model ReviewPhoto {
   @@unique([reviewId, order])
   @@index([reviewId])
 }
+
+/// 실사용자 Web Vitals 원시 이벤트 (RUM). PII 0 — userId/IP 미저장.
+/// value는 측정값(ms; CLS만 무차원 비율)이라 Float가 정확 — §5 float 금지는 돈에 한정.
+/// 30일 보존(cron 정리). route는 정규화 템플릿만(cardinality 제어).
+model WebVitalEvent {
+  id        String   @id @default(cuid())
+  metric    String // "LCP" | "INP" | "CLS" | "TTFB" | "FCP"
+  value     Float
+  rating    String // "good" | "needs-improvement" | "poor"
+  route     String // 정규화 템플릿 (예: "/products/[id]")
+  navType   String?
+  createdAt DateTime @default(now())
+
+  @@index([metric, createdAt]) // p75 시계열 집계
+  @@index([route, metric, createdAt]) // route별 분해
+}
