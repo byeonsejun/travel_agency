@@ -24,3 +24,9 @@ export interface GoldenQuery {
   durationNights?: { min?: number; max?: number };
   embedding: number[];                            // 1536-dim (cleanedQuery 임베딩)
 }
+
+/** 재정렬 순서 스냅샷 1건 — 쿼리 → 재정렬된 코퍼스 title 순서(corpus는 title이 키). */
+export interface RerankSnapshot {
+  query: string;
+  rerankedTitles: string[];
+}

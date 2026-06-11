@@ -58,6 +58,7 @@ const ROUTED = {
   cleanedQuery: "동남아 휴양",
 };
 const CARDS = [{ id: "p1", title: "발리", score: 0.9 }];
+const RESPONSE = { results: CARDS, chips: [] as unknown[] };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -71,11 +72,9 @@ beforeEach(() => {
 
 describe("searchProducts — Cache HIT", () => {
   it("Redis에 값이 있으면 파이프라인을 타지 않고 캐시 반환", async () => {
-    mocks.cacheGet.mockResolvedValueOnce(CARDS);
-
+    mocks.cacheGet.mockResolvedValueOnce(RESPONSE);
     const r = await searchProducts("동남아 휴양");
-
-    expect(r).toEqual(CARDS);
+    expect(r).toEqual(RESPONSE);
     expect(mocks.routeQuery).not.toHaveBeenCalled();
     expect(mocks.searchProductsByVector).not.toHaveBeenCalled();
     expect(mocks.cacheSet).not.toHaveBeenCalled();
@@ -85,29 +84,24 @@ describe("searchProducts — Cache HIT", () => {
 describe("searchProducts — Cache MISS", () => {
   it("파이프라인 실행 후 결과를 3600s TTL로 저장", async () => {
     mocks.cacheGet.mockResolvedValueOnce(null);
-
     const r = await searchProducts("  동남아 휴양  ");
-
-    expect(r).toEqual(CARDS);
+    expect(r.results).toEqual(CARDS);
     expect(mocks.routeQuery).toHaveBeenCalledWith("동남아 휴양");
     expect(mocks.searchProductsByVector).toHaveBeenCalledOnce();
-    // 동일 키로 조회·저장, TTL 3600초
     const getKey = mocks.cacheGet.mock.calls[0][0];
     const [setKey, setVal, setTtl] = mocks.cacheSet.mock.calls[0];
     expect(setKey).toBe(getKey);
-    expect(setVal).toEqual(CARDS);
+    expect(setVal.results).toEqual(CARDS);
     expect(setTtl).toBe(3600);
   });
 });
 
 describe("searchProducts — graceful (Redis 장애)", () => {
   it("get=null·set no-op이어도 결과를 정상 반환(무중단)", async () => {
-    mocks.cacheGet.mockResolvedValueOnce(null); // wrapper가 장애를 null로 흡수
+    mocks.cacheGet.mockResolvedValueOnce(null);
     mocks.cacheSet.mockResolvedValueOnce(undefined);
-
     const r = await searchProducts("동남아 휴양");
-
-    expect(r).toEqual(CARDS);
+    expect(r.results).toEqual(CARDS);
     expect(mocks.searchProductsByVector).toHaveBeenCalledOnce();
   });
 });

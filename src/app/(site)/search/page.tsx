@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { ProductCard } from "@/entities/product";
-import type { SearchResultCard } from "@/entities/product";
-import { searchProducts, SearchBox, SearchChips } from "@/features/search";
+import { searchProducts, SearchBox, SearchChips, ClarifyingChips } from "@/features/search";
 import { EmptyState } from "@/shared/ui/EmptyState";
 
 // searchParams로 분기되므로 Next 15가 자동으로 dynamic으로 분류. searchProducts
@@ -11,23 +10,24 @@ type SearchPageProps = {
 };
 
 async function SearchResults({ q }: { q: string }) {
-  const results: SearchResultCard[] = await searchProducts(q);
-
-  if (results.length === 0) {
-    return (
-      <EmptyState
-        title="검색 결과가 없습니다"
-        description={`'${q}'에 맞는 여행 상품을 찾지 못했습니다. 다른 키워드로 검색해 보세요.`}
-      />
-    );
-  }
+  const { results, chips } = await searchProducts(q);
 
   return (
-    <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
-      {results.map((item) => (
-        <ProductCard key={item.id} product={item} />
-      ))}
-    </div>
+    <>
+      <ClarifyingChips chips={chips} query={q} />
+      {results.length === 0 ? (
+        <EmptyState
+          title="검색 결과가 없습니다"
+          description={`'${q}'에 맞는 여행 상품을 찾지 못했습니다. 다른 키워드로 검색해 보세요.`}
+        />
+      ) : (
+        <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+          {results.map((item) => (
+            <ProductCard key={item.id} product={item} />
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 

@@ -57,7 +57,7 @@ async function main(): Promise<void> {
       rt.geoTerms?.length ?? 0
     }개 cleaned="${rt.cleanedQuery}"`
   );
-  const dodRes = await searchProducts(dod);
+  const { results: dodRes } = await searchProducts(dod);
   console.log(`    결과 ${dodRes.length}건:\n     ${fmt(dodRes.slice(0, 6))}`);
   const seaSet = new Set(["베트남", "태국", "인도네시아", "필리핀"]);
   // DoD = "의미 있는 결과 반환". 카탈로그상 SEA·5박+ 상품은 다낭/푸켓
@@ -76,7 +76,7 @@ async function main(): Promise<void> {
   // ── 2. 대표 쿼리 매트릭스 ───────────────────────────────
   console.log(`\n[2] 대표 쿼리 매트릭스 (hybrid/geo/soft-boost):`);
   for (const q of ["일본", "부모님 모시고 따뜻한 효도 여행", "동남아 휴양"]) {
-    const r = await searchProducts(q);
+    const { results: r } = await searchProducts(q);
     console.log(`    q="${q}" → ${r.length}건`);
     console.log(`     ${fmt(r.slice(0, 4))}`);
   }
