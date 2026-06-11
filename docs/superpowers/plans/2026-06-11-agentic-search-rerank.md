@@ -295,7 +295,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Create: `src/features/search/server/rerank.ts`
 - Create: `src/features/search/server/__tests__/rerank.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/features/search/server/__tests__/rerank.test.ts
@@ -383,12 +383,12 @@ describe("rerankCandidates — 비-prod identity", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 FAIL 확인**
+- [x] **Step 2: 테스트 FAIL 확인**
 
 Run: `npx vitest run src/features/search/server/__tests__/rerank.test.ts`
 Expected: FAIL — `Cannot find module '../rerank'`.
 
-- [ ] **Step 3: rerank.ts 구현**
+- [x] **Step 3: rerank.ts 구현**
 
 ```ts
 // src/features/search/server/rerank.ts
@@ -511,12 +511,12 @@ export async function rerankCandidates(
 }
 ```
 
-- [ ] **Step 4: 테스트 PASS 확인**
+- [x] **Step 4: 테스트 PASS 확인**
 
 Run: `npx vitest run src/features/search/server/__tests__/rerank.test.ts`
 Expected: PASS (shouldRerank 3 + requestRerankLive 4 + rerankCandidates 2).
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/features/search/server/rerank.ts src/features/search/server/__tests__/rerank.test.ts
