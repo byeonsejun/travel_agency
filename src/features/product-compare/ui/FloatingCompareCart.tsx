@@ -29,18 +29,18 @@ function FloatingCompareCartInner() {
   const ids = parseCompareIds(searchParams.get("compareIds") ?? undefined);
   const idsKey = ids.join(",");
 
-  const [products, setProducts] = useState<CartProduct[] | null>(null);
-  const [errored, setErrored] = useState(false);
+  // 로드된 key 를 결과와 함께 저장 → isLoading 을 파생(동기 setState-in-effect 제거).
+  // idsKey==="" (빈 카트)는 이미 loaded(빈 결과)로 간주해 별도 동기 setState 불필요.
+  const [state, setState] = useState<{
+    key: string;
+    products: CartProduct[];
+    errored: boolean;
+  }>({ key: "", products: [], errored: false });
+  const isLoading = state.key !== idsKey;
 
   useEffect(() => {
-    if (ids.length === 0) {
-      setProducts([]);
-      setErrored(false);
-      return;
-    }
+    if (idsKey === "") return; // 빈 카트 — 초기 state(key==="")가 곧 loaded
     const controller = new AbortController();
-    setErrored(false);
-    setProducts(null); // loading
     fetch(`/api/compare/products?ids=${encodeURIComponent(idsKey)}`, {
       signal: controller.signal,
     })
@@ -49,28 +49,27 @@ function FloatingCompareCartInner() {
           ? (r.json() as Promise<{ products: CartProduct[] }>)
           : Promise.reject(new Error(`HTTP ${r.status}`)),
       )
-      .then((d) => setProducts(d.products))
+      .then((d) => setState({ key: idsKey, products: d.products, errored: false }))
       .catch((e: unknown) => {
         if (e instanceof DOMException && e.name === "AbortError") return;
-        setErrored(true);
+        setState({ key: idsKey, products: [], errored: true });
       });
     return () => controller.abort();
-    // idsKey 가 primitive 문자열이라 stable 비교 — eslint 가 ids 도 요구하지만
-    // ids 는 idsKey 로부터 파생되므로 중복.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsKey]);
 
   if (ids.length === 0) return null;
 
+  const errored = state.errored;
   // URL 의 ids 순서대로 정렬해 사용자가 담은 순서를 보존.
-  const items = (products ?? [])
-    .reduce<Map<string, CartProduct>>((acc, p) => acc.set(p.id, p), new Map());
+  const items = state.products.reduce<Map<string, CartProduct>>(
+    (acc, p) => acc.set(p.id, p),
+    new Map(),
+  );
   const ordered = ids
     .map((id) => items.get(id))
     .filter((p): p is CartProduct => p !== undefined);
 
   const remaining = MAX_COMPARE - ids.length;
-  const isLoading = products === null && !errored;
 
   return (
     <div

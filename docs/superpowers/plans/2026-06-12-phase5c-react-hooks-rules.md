@@ -315,7 +315,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `src/features/product-compare/ui/FloatingCompareCart.tsx`
 - Modify: `eslint.config.mjs`
 
-- [ ] **Step 1: ReviewForm — objectURL 생성을 이벤트로, effect는 revoke만**
+- [x] **Step 1: ReviewForm — objectURL 생성을 이벤트로, effect는 revoke만**
 
 현재(line 55-61) effect가 `files` 변화 시 `setPreviewUrls(urls)` (동기 setState). previewUrls를 별도 state로 두지 말고 **files와 URL을 함께** 이벤트에서 관리한다. `files: File[]`와 병행하는 `previewUrls`를 `handleFilePick`/`removeFile`에서 같이 갱신하고, effect는 unmount 시 revoke만 담당한다.
 
@@ -335,7 +335,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 > ⚠️ 구현자: `files`와 `previewUrls`의 인덱스 정합을 반드시 유지(removeFile이 둘 다 같은 idx로 필터). handleFilePick의 부분 수락(accepted) 경로에서 files와 urls가 어긋나지 않게 같은 accepted 배열로 생성. 전체 파일 읽고 정합 검증.
 
-- [ ] **Step 2: DrilldownSheet — loadedKey 파생으로 동기 setState 제거**
+- [x] **Step 2: DrilldownSheet — loadedKey 파생으로 동기 setState 제거**
 
 현재(line 37-54) effect가 `setLoading(true); setError(null); setData(null)` 동기 호출. `loading`을 state 대신 파생한다: 요청 키를 data와 함께 저장.
 ```ts
@@ -363,13 +363,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 > ⚠️ 구현자: 파일 전체를 읽고 `data`/`error`/`loading` 모든 참조를 새 파생값으로 일관 치환. `tokenRef` stale 가드는 유지.
 
-- [ ] **Step 3: FloatingCompareCart — 동일 loadedKey 파생 패턴**
+- [x] **Step 3: FloatingCompareCart — 동일 loadedKey 파생 패턴**
 
 `src/features/product-compare/ui/FloatingCompareCart.tsx`의 line 32-61도 Step 2와 동형으로: `products`/`errored` 동기 리셋 제거, `{ key, products, errored }` 단일 state + `isLoading = state.key !== idsKey` 파생, fetch 결과는 .then/.catch 콜백에서만 setState. `AbortController` cleanup은 유지. `ids.length === 0` early 처리도 콜백/파생으로 정리(동기 `setProducts([])` 제거 — `idsKey===""`를 loaded로 간주).
 
 > ⚠️ 구현자: 기존 `// eslint-disable-next-line react-hooks/exhaustive-deps`(line 60)도 재검토 — idsKey 단일 dep이 유지되면 보존, 구조 변경으로 불필요해지면 제거. AbortController abort cleanup 필수 유지(Frontend critical rule).
 
-- [ ] **Step 4: 3 파일 위반 해소 확인**
+- [x] **Step 4: 3 파일 위반 해소 확인**
 
 Run:
 ```bash
@@ -377,7 +377,7 @@ npx eslint src/features/review-upload/ui/ReviewForm.tsx src/features/admin-dashb
 ```
 Expected: 위반 0. (혹 특정 사이트가 규칙과 근본적으로 양립 불가하면 — 인라인 disable 금지 — 즉시 보고. set-state-in-effect를 `error` 대신 `warn`으로 두는 폴백을 컨트롤러가 결정.)
 
-- [ ] **Step 5: `set-state-in-effect` 규칙 활성화 + 전체 그린**
+- [x] **Step 5: `set-state-in-effect` 규칙 활성화 + 전체 그린**
 
 `eslint.config.mjs`에서 `"react-hooks/set-state-in-effect": "off",` 줄 **삭제** (이제 react-hooks 비활성 블록 전체가 비어 주석만 정리하거나 블록 제거).
 
@@ -387,7 +387,7 @@ npm run lint && npm run typecheck && npm run test 2>&1 | tail -4
 ```
 Expected: lint 0 errors(기존 warnings만), typecheck 0, 1170 tests pass.
 
-- [ ] **Step 6: 빌드 회귀 가드 (선택, 클라 경계 변경 다수)**
+- [ ] **Step 6: 빌드 회귀 가드 (선택, 클라 경계 변경 다수)** — 보류: dev 서버 가동 중(port 3000, next-server v16.2.9)이라 `npx next build` 미실행(.next 손상 방지). 컨트롤러가 dev 종료 후 실행 필요.
 
 > 메모리(run-build-for-boundaries): 클라이언트 컴포넌트 다수 편집 → dev 서버 종료 후 `npx next build`로 번들 회귀 확인 권장.
 
@@ -397,7 +397,7 @@ npx next build 2>&1 | tail -8
 ```
 Expected: Turbopack 빌드 성공, BUILD_ID 생성.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/features/review-upload/ui/ReviewForm.tsx src/features/admin-dashboard-drilldown/ui/DrilldownSheet.tsx src/features/product-compare/ui/FloatingCompareCart.tsx eslint.config.mjs

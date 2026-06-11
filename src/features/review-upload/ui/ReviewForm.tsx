@@ -49,16 +49,18 @@ export function ReviewForm({ bookingId }: Props) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // ObjectURL lifecycle — files 가 바뀌면 (1) 이전 effect 의 cleanup 이 직전 URL
-  // 들을 revoke, (2) 새 effect 가 새 URL 들을 생성. 컴포넌트 unmount 시에도
-  // cleanup 이 호출되어 메모리 누수 0건. (Frontend Expert critical rule)
+  // ObjectURL lifecycle — URL 생성은 파일 추가/삭제 이벤트 핸들러에서 files 와
+  // 함께 처리(인덱스 정합 보장). 아래 effect 는 (1) ref 동기화 (2) unmount 시
+  // 잔여 URL 일괄 revoke 만 담당 → 메모리 누수 0건. (Frontend Expert critical rule)
+  const previewUrlsRef = useRef<string[]>([]);
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviewUrls(urls);
+    previewUrlsRef.current = previewUrls;
+  }, [previewUrls]);
+  useEffect(() => {
     return () => {
-      urls.forEach((u) => URL.revokeObjectURL(u));
+      previewUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, [files]);
+  }, []);
 
   const submitting = phase !== "idle" || isPending;
   const contentTrimmed = content.trim();
@@ -94,11 +96,20 @@ export function ReviewForm({ bookingId }: Props) {
     }
 
     if (accepted.length === 0) return;
+    // files 와 previewUrls 를 동일 accepted 배열로 함께 추가 → 인덱스 정합 유지.
     setFiles((prev) => [...prev, ...accepted]);
+    setPreviewUrls((prev) => [
+      ...prev,
+      ...accepted.map((f) => URL.createObjectURL(f)),
+    ]);
   }
 
   function removeFile(idx: number) {
+    // 해당 idx 의 objectURL 즉시 revoke 후 files·previewUrls 를 같은 idx 로 필터.
+    const url = previewUrls[idx];
+    if (url) URL.revokeObjectURL(url);
     setFiles((prev) => prev.filter((_, i) => i !== idx));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== idx));
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
