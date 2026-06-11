@@ -1330,17 +1330,17 @@ git commit -m "feat(rum): rum-cleanup cron worker (30d retention, idempotent)"
 
 > 🔬 QA Engineer 발동. typecheck/test/lint/build 자동 증거 + curl/DB 런타임 증거. "이론적으로 동작" 금지 — 실행 출력 인용.
 
-- [ ] **Step 1: 전체 정적 검증**
+- [x] **Step 1: 전체 정적 검증**
 
 Run: `npm run typecheck && npm run test && npm run lint`
 Expected: 모두 그린. 신규 테스트(normalizeRoute 8 + rating 5 + schema 6 + route 4 + rum read-model 3 + cleanup 2 = 28건) 포함 PASS.
 
-- [ ] **Step 2: 프로덕션 빌드 (경계 최종 검증)**
+- [x] **Step 2: 프로덕션 빌드 (경계 최종 검증)**
 
 Run: `npm run build`
 Expected: 빌드 성공. `(site)` 레이아웃·대시보드 페이지 정상. client 번들에 `db`/`env` 누수 없음(UnhandledSchemeError 없음).
 
-- [ ] **Step 3: 런타임 수집 검증 (dev 서버 + curl)**
+- [x] **Step 3: 런타임 수집 검증 (dev 서버 + curl)**
 
 `.next` 충돌 방지: build 후 `rm -rf .next` 하고 dev 재기동(memory: feedback_no_build_during_dev).
 
@@ -1360,7 +1360,7 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/rum \
 ```
 Expected: 첫 번째 `204`, 두 번째 `400`.
 
-- [ ] **Step 4: DB 적재 + p75 집계 SQL 검증**
+- [x] **Step 4: DB 적재 + p75 집계 SQL 검증**
 
 Run:
 ```bash
@@ -1375,12 +1375,12 @@ Expected: 행 적재 확인 + p75 집계 정상 반환.
 `admin@nextour.test`로 로그인(dev 매직링크 콘솔 출력) → `/admin/dashboard` 진입 → "실사용자 성능" 패널에 LCP/INP/CLS 카드 + route 테이블 노출 확인.
 실패 시: 스크린샷 + 콘솔 에러 첨부.
 
-- [ ] **Step 6: 플랜 체크박스 최종 점검**
+- [x] **Step 6: 플랜 체크박스 최종 점검**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-11-phase5a-rum-pipeline.md`
 Expected: Task 11 외 미완료 항목 0(완료된 Task는 모두 `[x]`).
 
-- [ ] **Step 7: 최종 검증 결과 보고 (§7.1 3-포맷)**
+- [x] **Step 7: 최종 검증 결과 보고 (§7.1 3-포맷)**
 
 QA 자동 증거(typecheck/test/build/curl 출력)를 인용하고, Core Architecture / Boilerplate / Concept Insight 3섹션으로 보고. ADR 후보(RUM 자체호스팅 vs SaaS) 발행 제안 한 줄 첨부.
 
@@ -1388,13 +1388,13 @@ QA 자동 증거(typecheck/test/build/curl 출력)를 인용하고, Core Archite
 
 ## 완료 기준 (Definition of Done)
 
-- [ ] 신규 테스트 28건 전부 PASS + 기존 테스트 회귀 0
-- [ ] `npm run typecheck && npm run lint && npm run build` 그린
-- [ ] `/api/rum` 정상 204 / 악성 400 런타임 확인
-- [ ] `WebVitalEvent` 적재 + `getWebVitalSummary` p75 집계 런타임 확인
-- [ ] 어드민 "성능" 패널 렌더 확인
-- [ ] FSD 경계 위반 0 (client island에 `db`/`env` 누수 없음, entities→테이블 직접조회 유지)
-- [ ] 모든 Task 체크박스 `[x]` + plan 파일 반영 커밋
+- [x] 신규 테스트 28건 전부 PASS + 기존 테스트 회귀 0 (전체 1170 passed)
+- [x] `npm run typecheck && npm run lint && npm run build` 그린 (lint 경고 2건은 기존 checkout 파일, RUM 무관 / build exit 0)
+- [x] `/api/rum` 정상 204 / 악성 400 런타임 확인
+- [x] `WebVitalEvent` 적재 + p75 집계(percentile_cont 실DB) 런타임 확인 (LCP p75=2300, INP p75=150)
+- [ ] 어드민 "성능" 패널 렌더 확인 (사용자 수동 — 자동화 불가)
+- [x] FSD 경계 위반 0 (client island에 `db`/`env` 누수 없음, entities→테이블 직접조회 유지)
+- [x] 모든 Task 체크박스 `[x]` + plan 파일 반영 커밋
 
 ---
 
