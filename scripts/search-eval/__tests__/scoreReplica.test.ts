@@ -13,6 +13,9 @@ describe("cosineSim", () => {
   it("정규화 안 된 동방향 벡터도 1.0(노름으로 나눔)", () => {
     expect(cosineSim([2, 0], [5, 0])).toBeCloseTo(1.0, 10);
   });
+  it("차원 불일치는 throw (fixture 손상 조기 발견)", () => {
+    expect(() => cosineSim([1, 0], [1, 0, 0])).toThrow(/차원 불일치/);
+  });
 });
 
 const product: CorpusProduct = {

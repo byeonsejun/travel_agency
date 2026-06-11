@@ -12,6 +12,10 @@ import type { CorpusProduct, GoldenQuery } from "./types";
 
 /** 코사인 유사도 = dot / (‖a‖·‖b‖). 정규화 가정하지 않음(SQL 1-(v<=>q) 동치). */
 export function cosineSim(a: number[], b: number[]): number {
+  // 차원 불일치는 조용한 NaN 전파 대신 즉시 실패 — fixture 손상 조기 발견.
+  if (a.length !== b.length) {
+    throw new Error(`cosineSim 차원 불일치: ${a.length} vs ${b.length}`);
+  }
   let dot = 0;
   let na = 0;
   let nb = 0;
