@@ -11,9 +11,12 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SEARCH_WEIGHTS, type SearchWeights } from "@/entities/product";
 import { rankCandidates } from "./scoreReplica";
+import type { RankedItem } from "./scoreReplica";
 import { ndcgAtK } from "./ndcg";
 import { GOLDEN_QUERIES, type GoldenCase } from "./golden-queries";
-import type { CorpusProduct, GoldenQuery } from "./types";
+import { HARD_QUERIES } from "./hard-queries";
+import { applyRerankOrder } from "@/features/search/model/rerankOrder";
+import type { CorpusProduct, GoldenQuery, RerankSnapshot } from "./types";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -37,6 +40,16 @@ export function* simplexGrid(step = 0.1): Generator<SearchWeights> {
       }
     }
   }
+}
+
+/** 재정렬 스냅샷 title 순서로 하이브리드 후보를 재배열 → 라벨 배열 산출. */
+export function rerankRelevances(
+  hybrid: RankedItem[],
+  rerankedTitles: string[],
+  labels: Record<string, number>,
+): number[] {
+  const reordered = applyRerankOrder(hybrid, (r) => r.title, rerankedTitles);
+  return reordered.map((r) => labels[r.title] ?? 0);
 }
 
 function relevancesFor(
@@ -73,6 +86,46 @@ function main(): void {
   const queries = load<GoldenQuery[]>("queries.fixture.json");
   const byText = new Map(queries.map((q) => [q.query, q]));
   const sweep = process.argv.includes("--sweep");
+
+  const rerankMode = process.argv.includes("--rerank");
+  if (rerankMode) {
+    const hardQueries = load<GoldenQuery[]>("hard-queries.fixture.json");
+    const snapshots = load<RerankSnapshot[]>("rerank.fixture.json");
+    const hardByText = new Map(hardQueries.map((q) => [q.query, q]));
+    const snapByText = new Map(snapshots.map((s) => [s.query, s.rerankedTitles]));
+
+    console.log("=== rerank eval (hard slice, nDCG@5 hybrid vs reranked) ===\n");
+    console.log("쿼리".padEnd(26), "hybrid", "rerank", "Δ");
+    let sumH = 0;
+    let sumR = 0;
+    for (const h of HARD_QUERIES) {
+      const q = hardByText.get(h.query);
+      if (!q) throw new Error(`hard fixture 누락: "${h.query}"`);
+      const ranked = rankCandidates(corpus, q);
+      const head = ranked.slice(0, 8);
+      const tail = ranked.slice(8);
+      const relH = [...head, ...tail].map((r) => h.labels[r.title] ?? 0);
+      const titles = snapByText.get(h.query) ?? head.map((r) => r.title);
+      const relR = [...rerankRelevances(head, titles, h.labels),
+                    ...tail.map((r) => h.labels[r.title] ?? 0)];
+      const nH = ndcgAtK(relH, 5);
+      const nR = ndcgAtK(relR, 5);
+      sumH += nH;
+      sumR += nR;
+      const d = nR - nH;
+      console.log(
+        h.query.padEnd(26),
+        nH.toFixed(3), " ", nR.toFixed(3), " ",
+        (d >= 0 ? "+" : "") + d.toFixed(3),
+      );
+    }
+    const n = HARD_QUERIES.length;
+    console.log(
+      `\nmean nDCG@5  hybrid: ${(sumH / n).toFixed(4)}  rerank: ${(sumR / n).toFixed(4)}` +
+        `  Δ: ${(sumR / n - sumH / n >= 0 ? "+" : "")}${(sumR / n - sumH / n).toFixed(4)}`,
+    );
+    return;
+  }
 
   if (!sweep) {
     console.log("=== baseline (운영 가중치", fmt(SEARCH_WEIGHTS), ") ===\n");

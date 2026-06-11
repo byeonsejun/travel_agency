@@ -1154,7 +1154,7 @@ hard 슬라이스에서 nDCG@5(하이브리드) vs nDCG@5(재정렬)을 per-quer
 - Modify: `scripts/search-eval/run-eval.ts`
 - Create: `scripts/search-eval/__tests__/rerankEval.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성 (합성 fixture, 키 독립)**
+- [x] **Step 1: 실패 테스트 작성 (합성 fixture, 키 독립)**
 
 ```ts
 // scripts/search-eval/__tests__/rerankEval.test.ts
@@ -1188,12 +1188,12 @@ describe("rerankRelevances", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 FAIL 확인**
+- [x] **Step 2: 테스트 FAIL 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/rerankEval.test.ts`
 Expected: FAIL — `rerankRelevances` export 없음.
 
-- [ ] **Step 3: run-eval.ts에 --rerank 모드 추가**
+- [x] **Step 3: run-eval.ts에 --rerank 모드 추가**
 
 `scripts/search-eval/run-eval.ts`의 import 블록에 추가:
 ```ts
@@ -1261,23 +1261,23 @@ export function rerankRelevances(
 
 > `rankCandidates`·`ndcgAtK`·`load`·`GoldenQuery`는 run-eval.ts에 이미 import/정의됨.
 
-- [ ] **Step 4: 테스트 PASS 확인**
+- [x] **Step 4: 테스트 PASS 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/rerankEval.test.ts`
 Expected: PASS (2 케이스).
 
-- [ ] **Step 5: rerank eval 실행 (Task 7 fixture 있을 때 — 증거 수집)**
+- [x] **Step 5: rerank eval 실행 (Task 7 fixture 있을 때 — 증거 수집)**
 
 Run: `npx tsx scripts/search-eval/run-eval.ts --rerank`
 Expected: hard 쿼리별 hybrid/rerank/Δ 테이블 + mean nDCG@5 비교. **출력을 보고서·ADR에 인용.**
 (Task 7 미실행 시 fixture 부재로 실패 — 그 경우 Task 7 선완료 또는 보류 명시.)
 
-- [ ] **Step 6: 기존 eval 회귀 확인**
+- [x] **Step 6: 기존 eval 회귀 확인**
 
 Run: `npx tsx scripts/search-eval/run-eval.ts && npx vitest run scripts/search-eval`
 Expected: 기존 baseline 출력 무손상 + eval 테스트 전부 PASS.
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add scripts/search-eval/run-eval.ts scripts/search-eval/__tests__/rerankEval.test.ts
