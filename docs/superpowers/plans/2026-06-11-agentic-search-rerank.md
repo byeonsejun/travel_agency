@@ -1293,23 +1293,23 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-06-11-agentic-search-rerank.md` (체크박스 최종 갱신)
 
-- [ ] **Step 1: 전체 QA 증거 수집**
+- [x] **Step 1: 전체 QA 증거 수집**
 
 Run: `npm run typecheck && npx vitest run && npm run lint`
 Expected: typecheck PASS, 전체 테스트 PASS(신규 chips/rerankOrder/rerank/search/rerankEval 포함), lint 통과(기존 경고 외 신규 0).
 
-- [ ] **Step 2: 서버/클라 경계 + 빌드 검증**
+- [x] **Step 2: 서버/클라 경계 + 빌드 검증**
 
 Run: `rm -rf .next && npm run build`
 Expected: PASS — `ClarifyingChips`(client) 번들에 entities/product 서버 그래프 누출 없음(`UnhandledSchemeError` 0), 검색 페이지 정상 빌드.
 (dev 서버 가동 중이면 build 금지 — 먼저 dev 중단. feedback_no_build_during_dev.)
 
-- [ ] **Step 3: 미체크 항목 점검**
+- [x] **Step 3: 미체크 항목 점검**
 
 Run: `grep -n "\- \[ \]" docs/superpowers/plans/2026-06-11-agentic-search-rerank.md`
 Expected: (Task 7을 키 부재로 보류한 경우 외엔) 출력 없음.
 
-- [ ] **Step 4: 보고 (CLAUDE.md §7.1 양식)**
+- [x] **Step 4: 보고 (CLAUDE.md §7.1 양식)**
 
 - 🏗️ Core Architecture: 조건부 rerank(추상 의도만)·URL 칩(stateless)·fixture 스냅샷 eval 3줄 브리핑.
 - 🧠 Concept Insight: "재정렬 = 1차 추천(하이브리드) 위에 사람 감별사(LLM)를 얹어 상위 8개만 다시 줄세우기" 비유 1문단.

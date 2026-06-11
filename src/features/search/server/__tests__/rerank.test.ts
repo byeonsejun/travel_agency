@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 
 vi.mock("@/shared/lib/env", () => ({
   env: { NODE_ENV: "test", ANTHROPIC_API_KEY: undefined },
