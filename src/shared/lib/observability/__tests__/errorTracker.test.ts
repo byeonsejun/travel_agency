@@ -198,8 +198,7 @@ describe("captureException — 내부 실패 격리", () => {
 });
 
 describe("captureException — DSN 설정 시 Sentry SDK fanout (B2-A)", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  type SpyMock = MockInstance<(...args: any[]) => unknown>;
+  type SpyMock = MockInstance<(...args: unknown[]) => unknown>;
   let errorSpy: SpyMock;
   // Sentry 10 ESM: vi.mock factory로 생성된 mock fn을 vi.mocked()로 참조한다.
   // (vi.spyOn은 sealed ESM namespace에서 "Cannot redefine property" 발생 — 모듈 상단 주석 참조)
