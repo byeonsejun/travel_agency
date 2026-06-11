@@ -1188,7 +1188,7 @@ describe("rerankRelevances", () => {
 });
 ```
 
-- [x] **Step 2: 테스트 FAIL 확인**
+- [ ] **Step 2: 테스트 FAIL 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/rerankEval.test.ts`
 Expected: FAIL — `rerankRelevances` export 없음.
@@ -1261,7 +1261,7 @@ export function rerankRelevances(
 
 > `rankCandidates`·`ndcgAtK`·`load`·`GoldenQuery`는 run-eval.ts에 이미 import/정의됨.
 
-- [x] **Step 4: 테스트 PASS 확인**
+- [ ] **Step 4: 테스트 PASS 확인**
 
 Run: `npx vitest run scripts/search-eval/__tests__/rerankEval.test.ts`
 Expected: PASS (2 케이스).
@@ -1277,7 +1277,7 @@ Expected: hard 쿼리별 hybrid/rerank/Δ 테이블 + mean nDCG@5 비교. **출�
 Run: `npx tsx scripts/search-eval/run-eval.ts && npx vitest run scripts/search-eval`
 Expected: 기존 baseline 출력 무손상 + eval 테스트 전부 PASS.
 
-- [x] **Step 7: 커밋**
+- [ ] **Step 7: 커밋**
 
 ```bash
 git add scripts/search-eval/run-eval.ts scripts/search-eval/__tests__/rerankEval.test.ts
