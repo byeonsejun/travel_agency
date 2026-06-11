@@ -469,7 +469,7 @@ git commit -m "feat(rum): webVitalSchema Zod input validation"
 **Files:**
 - Modify: `src/shared/lib/rate-limit/tiers.ts`
 
-- [ ] **Step 1: `RateLimitTier` 유니온에 "rum" 추가**
+- [x] **Step 1: `RateLimitTier` 유니온에 "rum" 추가**
 
 `src/shared/lib/rate-limit/tiers.ts` 1번 줄 수정:
 
@@ -477,7 +477,7 @@ git commit -m "feat(rum): webVitalSchema Zod input validation"
 export type RateLimitTier = "global" | "auth" | "payment" | "ai-search" | "mutation" | "rum";
 ```
 
-- [ ] **Step 2: `RATE_LIMIT_TIERS`에 rum tier 추가**
+- [x] **Step 2: `RATE_LIMIT_TIERS`에 rum tier 추가**
 
 `mutation` 항목 바로 다음(`} as const satisfies` 직전)에 추가:
 
@@ -486,17 +486,17 @@ export type RateLimitTier = "global" | "auth" | "payment" | "ai-search" | "mutat
   rum: { limit: 60, window: "1 m", idStrategy: "ipOnly" },
 ```
 
-- [ ] **Step 3: typecheck (satisfies Record 완전성 확인)**
+- [x] **Step 3: typecheck (satisfies Record 완전성 확인)**
 
 Run: `npm run typecheck`
 Expected: 에러 없음 (`satisfies Record<RateLimitTier, TierConfig>`가 6개 tier 모두 충족)
 
-- [ ] **Step 4: 기존 rate-limit 테스트 회귀 확인**
+- [x] **Step 4: 기존 rate-limit 테스트 회귀 확인**
 
 Run: `npx vitest run src/shared/lib/rate-limit`
 Expected: PASS (기존 테스트 그린)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/shared/lib/rate-limit/tiers.ts
