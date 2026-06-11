@@ -49,6 +49,16 @@ describe("requestRerankLive (fetch mock)", () => {
     expect(await requestRerankLive("q", docs, "key")).toEqual(["b", "a"]);
   });
 
+  it("```json 코드펜스로 감싼 응답도 파싱한다(Haiku 실측 동작)", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        content: [{ text: '```json\n{"ids":["b","a"]}\n```' }],
+      }),
+    })));
+    expect(await requestRerankLive("q", docs, "key")).toEqual(["b", "a"]);
+  });
+
   it("non-ok 응답이면 원본 key 순서로 강등", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, json: async () => ({}) })));
     expect(await requestRerankLive("q", docs, "key")).toEqual(["a", "b"]);

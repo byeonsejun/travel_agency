@@ -28,6 +28,26 @@ const RERANK_TIMEOUT_MS = 3000;
 
 const RerankResponseSchema = z.object({ ids: z.array(z.string()) });
 
+/**
+ * LLM 응답에서 JSON 본문만 추출 — 프롬프트로 "코드블록 금지"를 줘도 Haiku는
+ * ```json … ``` 펜스로 감싸 답하는 경우가 잦다(실측). 펜스를 벗기고, 그래도 남는
+ * 잡설이 있으면 첫 `{`~마지막 `}` 구간만 취해 JSON.parse 성공률을 높인다.
+ * 강등 철학 유지: 그래도 파싱 불가면 호출부가 원본 순서로 폴백(throw 금지).
+ */
+function extractJsonObject(text: string): string {
+  let s = text.trim();
+  // ```json … ``` / ``` … ``` 펜스 제거.
+  const fence = s.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fence) s = fence[1].trim();
+  // 앞뒤 잡설 방어: 첫 '{'부터 마지막 '}'까지.
+  const first = s.indexOf("{");
+  const last = s.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    s = s.slice(first, last + 1);
+  }
+  return s;
+}
+
 const SYSTEM_PROMPT =
   "너는 여행 검색 결과 재정렬기다. 후보 상품을 사용자 의도에 대한 관련성 순으로 " +
   '재정렬한다. 응답은 JSON만: {"ids":[순서대로 후보 key 배열]}. 모든 입력 key를 ' +
@@ -70,7 +90,7 @@ export async function requestRerankLive(
       (data as { content?: Array<{ text?: string }> }).content?.[0]?.text ?? "";
     let raw: unknown;
     try {
-      raw = JSON.parse(text);
+      raw = JSON.parse(extractJsonObject(text));
     } catch {
       return original;
     }
