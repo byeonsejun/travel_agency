@@ -149,7 +149,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 **Files:**
 - Modify: `src/features/wishlist/ui/WishlistHeartButton.tsx`
 
-- [ ] **Step 1: prop-sync effect → 렌더-단계 조건부 setState**
+- [x] **Step 1: prop-sync effect → 렌더-단계 조건부 setState**
 
 `src/features/wishlist/ui/WishlistHeartButton.tsx`의 line 48-56:
 ```ts
@@ -178,7 +178,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
   }
 ```
 
-- [ ] **Step 2: 미사용 `useEffect` import 제거**
+- [x] **Step 2: 미사용 `useEffect` import 제거**
 
 line 3에서 `useEffect`를 import 목록에서 제거 (`useState`, `useTransition`만 남김):
 ```ts
@@ -186,7 +186,7 @@ import { useState, useTransition } from "react";
 ```
 (파일에 다른 useEffect 사용이 없음을 grep으로 확인: `grep -n "useEffect" src/features/wishlist/ui/WishlistHeartButton.tsx` → 출력 없어야 함.)
 
-- [ ] **Step 3: 위반 해소 + typecheck**
+- [x] **Step 3: 위반 해소 + typecheck**
 
 Run:
 ```bash
@@ -195,7 +195,7 @@ npm run typecheck
 ```
 Expected: 위반 0, typecheck 0 errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/features/wishlist/ui/WishlistHeartButton.tsx
