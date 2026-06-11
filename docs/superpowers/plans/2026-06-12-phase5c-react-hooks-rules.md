@@ -91,7 +91,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `src/shared/ui/GlobalRouteProgress.tsx`
 - Modify: `eslint.config.mjs`
 
-- [ ] **Step 1: 렌더-단계 ref 쓰기를 effect로 이동**
+- [x] **Step 1: 렌더-단계 ref 쓰기를 effect로 이동**
 
 `src/shared/ui/GlobalRouteProgress.tsx`의 line 28-29:
 ```ts
@@ -107,7 +107,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
   }, [phase]);
 ```
 
-- [ ] **Step 2: 위반 해소 확인**
+- [x] **Step 2: 위반 해소 확인**
 
 Run:
 ```bash
@@ -115,11 +115,11 @@ npx eslint src/shared/ui/GlobalRouteProgress.tsx --rule '{"react-hooks/refs":"er
 ```
 Expected: 위반 0.
 
-- [ ] **Step 3: `refs` 규칙 활성화**
+- [x] **Step 3: `refs` 규칙 활성화**
 
 `eslint.config.mjs`에서 `"react-hooks/refs": "off",` 줄을 **삭제**.
 
-- [ ] **Step 4: lint + typecheck + test 그린**
+- [x] **Step 4: lint + typecheck + test 그린**
 
 Run:
 ```bash
@@ -131,7 +131,7 @@ Expected: lint 0 errors, typecheck 0, 1170 tests pass.
 
 > 🔬 자동화 한계: 진행 바 타이밍(클릭→90% trickle→네비게이션 완료→100%→fade)은 단위테스트 불가. 구현자는 `npm run dev` 후 내부 링크 클릭 시 진행 바가 정상 동작하는지 1회 육안 확인하고, 불가하면 사용자 수동 검증 항목으로 명시(절차: 홈→상품 링크 클릭 시 상단 파란 바 0→90→100 후 사라짐).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/shared/ui/GlobalRouteProgress.tsx eslint.config.mjs

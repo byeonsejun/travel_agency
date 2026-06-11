@@ -26,7 +26,10 @@ export function GlobalRouteProgress() {
   const [width, setWidth] = useState(0);
 
   const phaseRef = useRef<Phase>(phase);
-  phaseRef.current = phase;
+  // 렌더 단계 ref 쓰기 금지(react-hooks/refs) → commit 후 동기화.
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
   const rafRef = useRef<number | null>(null);
   const doneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
