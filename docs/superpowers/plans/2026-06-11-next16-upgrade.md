@@ -203,7 +203,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `src/features/admin-departure/server/actions.ts`
 - Modify: `src/features/admin-departure-cancel/server/actions.ts`
 
-- [ ] **Step 1: 9개 호출에 `, "max"` 추가**
+- [x] **Step 1: 9개 호출에 `, "max"` 추가**
 
 각 파일의 `revalidateTag(...)` 호출을 다음과 같이 수정한다 (인자 1개 → 2개):
 
@@ -240,7 +240,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
     revalidateTag(tagDeparturesByProduct(productId), "max");
 ```
 
-- [ ] **Step 2: 잔여 단일인자 호출 0건 확인**
+- [x] **Step 2: 잔여 단일인자 호출 0건 확인**
 
 Run:
 ```bash
@@ -248,7 +248,7 @@ grep -rn "revalidateTag([^,]*)" src/ | grep -v "test\|//"
 ```
 Expected: 출력 없음 (모든 실호출이 2-인자). 출력이 있으면 누락분 수정.
 
-- [ ] **Step 3: typecheck PASS (TS 에러 해소 확인)**
+- [x] **Step 3: typecheck PASS (TS 에러 해소 확인)**
 
 Run:
 ```bash
@@ -256,7 +256,7 @@ npm run typecheck
 ```
 Expected: PASS (Task 2 Step 4에서 예상됐던 9건 에러 소멸).
 
-- [ ] **Step 4: 액션 테스트 PASS (동작 회귀 가드)**
+- [x] **Step 4: 액션 테스트 PASS (동작 회귀 가드)**
 
 Run:
 ```bash
@@ -264,7 +264,7 @@ npm run test -- actions
 ```
 Expected: checkout/booking-cancel/admin-product 등 액션 테스트 PASS. (테스트가 `revalidateTag` 호출 횟수/인자를 단언하면 mock 시그니처에 맞춰 `'max'` 반영 — 실패 시 테스트의 기대 인자를 함께 갱신.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/features/admin-product/server/actions.ts src/features/checkout/server/actions.ts src/features/booking-cancel/server/actions.ts src/features/admin-booking-cancel/server/actions.ts src/features/admin-departure/server/actions.ts src/features/admin-departure-cancel/server/actions.ts
