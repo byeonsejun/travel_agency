@@ -14,6 +14,8 @@ import {
   type RateLimitVerdict,
 } from "@/shared/lib/rate-limit";
 
+// [Next 16] proxy.ts 전환 거부 — Edge 런타임 사수 (ADR-0051). proxy는 nodejs 고정이라
+// NextAuth/rate-limit/CSP의 Edge 실행 보존 불가. deprecation 경고는 의도적 수용.
 export default auth(async (req) => {
   // Edge runtime — ALS/Prisma import 금지. crypto.randomUUID() / getRandomValues() 만 사용.
   const traceId =
