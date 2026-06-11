@@ -1029,7 +1029,7 @@ OpenAI로 hard 쿼리 임베딩 + Haiku로 실 재정렬 순서를 1회 추출�
 - Create: `scripts/search-eval/hard-queries.fixture.json` (산출)
 - Create: `scripts/search-eval/rerank.fixture.json` (산출)
 
-- [ ] **Step 1: extract-fixtures.ts 확장**
+- [x] **Step 1: extract-fixtures.ts 확장**
 
 `scripts/search-eval/extract-fixtures.ts`의 import 블록에 추가:
 ```ts
@@ -1107,12 +1107,12 @@ import type { RerankSnapshot } from "./types";
 > 호출한다(임베딩 추출이 `OpenAIEmbeddingProvider`를 직접 쓰는 것과 동형). `env`는
 > 이미 extract-fixtures 상단에서 import됨.
 
-- [ ] **Step 2: 타입체크 통과 확인**
+- [x] **Step 2: 타입체크 통과 확인**
 
 Run: `npm run typecheck`
 Expected: PASS (`requestRerankLive`/`RerankDoc`/`RerankSnapshot` 타입 정합).
 
-- [ ] **Step 3: 시드 + 추출 실행 (opt-in, 키 필요)**
+- [x] **Step 3: 시드 + 추출 실행 (opt-in, 키 필요)**
 
 Run:
 ```bash
@@ -1123,7 +1123,7 @@ Expected: 기존 `corpus ✓`/`query ✓` 출력에 더해 `hard ✓` 15줄 + `r
 `hard-queries.fixture.json`(15) + `rerank.fixture.json`(15) 생성. geo/theme 가드에서
 throw하면 해당 쿼리를 `hard-queries.ts`에서 재선정(추상어로 교체) 후 재실행.
 
-- [ ] **Step 4: 라벨 보정**
+- [x] **Step 4: 라벨 보정**
 
 Run:
 ```bash
@@ -1135,7 +1135,7 @@ Expected: 각 hard 쿼리의 재정렬 상위 3개 title 출력.
 현실화(예: 재정렬이 1위로 올린 상품이 라벨 0이면 코퍼스를 재검토). 추상 의도라
 주관적이므로 **상위/하위 구분이 합리적이면 유지**(과적합 라벨링 금지).
 
-- [ ] **Step 5: 커밋 (fixture + 보정 라벨)**
+- [x] **Step 5: 커밋 (fixture + 보정 라벨)**
 
 ```bash
 git add scripts/search-eval/extract-fixtures.ts scripts/search-eval/hard-queries.fixture.json scripts/search-eval/rerank.fixture.json scripts/search-eval/hard-queries.ts

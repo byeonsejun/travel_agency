@@ -22,7 +22,10 @@ import { buildEmbeddingText } from "@/entities/product";
 import { toStorageTag } from "@/shared/lib/tags";
 import { routeQuery } from "@/features/search";
 import { GOLDEN_QUERIES } from "./golden-queries";
-import type { CorpusProduct, GoldenQuery } from "./types";
+import { rankCandidates } from "./scoreReplica";
+import { requestRerankLive, type RerankDoc } from "@/features/search/server/rerank";
+import { HARD_QUERIES } from "./hard-queries";
+import type { CorpusProduct, GoldenQuery, RerankSnapshot } from "./types";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -91,6 +94,67 @@ async function main(): Promise<void> {
   writeFileSync(
     join(here, "queries.fixture.json"),
     JSON.stringify(queries, null, 2),
+  );
+
+  // 3) hard 쿼리: routeQuery → geo·theme 무신호 가드 → 임베딩 박제.
+  const hardQueries: GoldenQuery[] = [];
+  for (const h of HARD_QUERIES) {
+    const routed = await routeQuery(h.query);
+    const geo = (routed.geoTerms ?? []).map((t) => t);
+    const theme = (routed.themeTags ?? []).map(toStorageTag);
+    if (geo.length > 0 || theme.length > 0) {
+      throw new Error(
+        `hard 쿼리 "${h.query}"가 geo/theme 신호를 가짐 (geo=${geo}, theme=${theme}) — ` +
+          "shouldRerank=false가 되어 재정렬 경로를 못 탄다. 쿼리를 재선정하라.",
+      );
+    }
+    const embedding = await provider.embed(routed.cleanedQuery);
+    hardQueries.push({
+      query: h.query,
+      cleanedQuery: routed.cleanedQuery,
+      themeTags: theme,
+      geoTerms: geo,
+      priceMax: routed.priceMax,
+      durationNights: routed.durationNights,
+      embedding,
+    });
+    console.log(`  hard   ✓ ${h.query}`);
+  }
+
+  // 4) 재정렬 스냅샷: 각 hard 쿼리의 하이브리드 top-8을 실 Haiku로 재정렬.
+  const corpusByTitle = new Map(corpus.map((p) => [p.title, p]));
+  const rerankSnapshots: RerankSnapshot[] = [];
+  for (const hq of hardQueries) {
+    const ranked = rankCandidates(corpus, hq); // 운영 가중치 하이브리드
+    const head = ranked.slice(0, 8);
+    const docs: RerankDoc[] = head.map((r) => {
+      const p = corpusByTitle.get(r.title)!;
+      return {
+        key: p.title, // corpus는 title이 키
+        title: p.title,
+        destination: p.destination,
+        summary: p.summary,
+        tags: p.tags,
+        price: p.basePriceAdult,
+        nights: p.durationNights,
+      };
+    });
+    const rerankedTitles = await requestRerankLive(
+      hq.query,
+      docs,
+      env.ANTHROPIC_API_KEY ?? "",
+    );
+    rerankSnapshots.push({ query: hq.query, rerankedTitles });
+    console.log(`  rerank ✓ ${hq.query}`);
+  }
+
+  writeFileSync(
+    join(here, "hard-queries.fixture.json"),
+    JSON.stringify(hardQueries, null, 2),
+  );
+  writeFileSync(
+    join(here, "rerank.fixture.json"),
+    JSON.stringify(rerankSnapshots, null, 2),
   );
   console.log(`\n박제 완료: corpus ${corpus.length} · queries ${queries.length}`);
 }
