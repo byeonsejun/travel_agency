@@ -417,7 +417,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 **Files:**
 - Modify: `eslint.config.mjs` (주석 정리), `CLAUDE.md` (노트), 이 플랜 파일
 
-- [ ] **Step 1: 종합 증거**
+- [x] **Step 1: 종합 증거**
 
 Run (출력 인용):
 ```bash
@@ -426,22 +426,22 @@ npx eslint src --rule '{"react-hooks/set-state-in-effect":"error","react-hooks/r
 ```
 Expected: 전부 그린, 잔여 react-hooks 위반 0.
 
-- [ ] **Step 2: eslint.config.mjs 주석 최종 정리**
+- [x] **Step 2: eslint.config.mjs 주석 최종 정리**
 
 react-hooks 비활성 블록이 비었으면 제거하고, 헤더 JSDoc(현재 "14개 off" 설명)을 "react-hooks@7 전 규칙 활성(Phase 5-C에서 위반 사이트 리팩터 완료)"로 갱신.
 
-- [ ] **Step 3: CLAUDE.md 노트**
+- [x] **Step 3: CLAUDE.md 노트**
 
 §8에 한 줄 추가: `**Phase 5-C Task1(react-hooks@7 재활성화) 완료** — Phase 5-B에서 parity 위해 끈 14규칙 전부 error 재활성화 + 위반 8곳(7 set-state-in-effect, 1 refs) 컴파일러-친화 패턴 리팩터(서버/도메인 로직 무변경).`
 
-- [ ] **Step 4: 플랜 체크박스 최종 sweep**
+- [x] **Step 4: 플랜 체크박스 최종 sweep**
 
 ```bash
 grep -n "\- \[ \]" docs/superpowers/plans/2026-06-12-phase5c-react-hooks-rules.md
 ```
 완료 Task의 미체크 0건 확인.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add eslint.config.mjs CLAUDE.md docs/superpowers/plans/2026-06-12-phase5c-react-hooks-rules.md
