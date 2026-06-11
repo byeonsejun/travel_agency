@@ -535,7 +535,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Create: `src/features/search/ui/ClarifyingChips.tsx`
 - Modify: `src/features/search/index.ts`
 
-- [ ] **Step 1: ClarifyingChips.tsx 작성**
+- [x] **Step 1: ClarifyingChips.tsx 작성**
 
 ```tsx
 // src/features/search/ui/ClarifyingChips.tsx
@@ -592,7 +592,7 @@ export function ClarifyingChips({
 }
 ```
 
-- [ ] **Step 2: 배럴 re-export 추가**
+- [x] **Step 2: 배럴 re-export 추가**
 
 `src/features/search/index.ts` 끝에 추가:
 ```ts
@@ -601,12 +601,12 @@ export { buildClarifyingChips } from "./model/clarifyingChips";
 export type { ClarifyingChip } from "./model/clarifyingChips";
 ```
 
-- [ ] **Step 3: 타입체크 통과 확인**
+- [x] **Step 3: 타입체크 통과 확인**
 
 Run: `npm run typecheck`
 Expected: PASS (ClarifyingChips·배럴 타입 에러 0).
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add src/features/search/ui/ClarifyingChips.tsx src/features/search/index.ts
