@@ -286,7 +286,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `next.config.mjs`
 - Modify: `package.json` (필요 시)
 
-- [ ] **Step 1: 이미지 기본값 수용 결정 박제 (주석만)**
+- [x] **Step 1: 이미지 기본값 수용 결정 박제 (주석만)**
 
 `next.config.mjs`의 `images` 블록 위에 주석 추가:
 ```js
@@ -295,7 +295,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
   images: {
 ```
 
-- [ ] **Step 2: Turbopack 프로덕션 빌드 (dev 서버 종료 후)**
+- [x] **Step 2: Turbopack 프로덕션 빌드 (dev 서버 종료 후)**
 
 > ⚠️ dev 서버 종료 필수. Next 16은 dev 출력이 `.next/dev`로 분리되지만, 안전을 위해 종료.
 
@@ -305,7 +305,7 @@ npm run build
 ```
 Expected: Turbopack 빌드 성공. 출력에 `▲ Next.js 16.x (Turbopack)` 류 표기. ISR 라우트(`/` 5m, `/products/[id]` 1h) prerender 정상.
 
-- [ ] **Step 3: 빌드 실패 시에만 — `--webpack` 폴백**
+- [x] **Step 3: 빌드 실패 시에만 — `--webpack` 폴백**
 
 > Step 2가 성공하면 이 Step은 **건너뛴다**.
 
@@ -319,7 +319,7 @@ npm run build
 ```
 Expected: webpack 빌드 성공. (이 경우 ADR-0051에 "Turbopack 빌드 차단 → webpack 폴백" 사유 박제.)
 
-- [ ] **Step 4: 빌드 산출물 그린 확인**
+- [x] **Step 4: 빌드 산출물 그린 확인**
 
 Run:
 ```bash
@@ -328,7 +328,7 @@ ls .next/BUILD_ID 2>/dev/null && echo "BUILD_ID present"
 ```
 Expected: `BUILD_ID present`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add next.config.mjs package.json
