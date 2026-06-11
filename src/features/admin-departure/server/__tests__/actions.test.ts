@@ -76,7 +76,7 @@ describe("createDepartureAction", () => {
     const res = await createDepartureAction("prod_1", null, validInput);
     expect(res.type).toBe("success");
     expect(mocks.createDeparture).toHaveBeenCalledWith("prod_1", expect.any(Object));
-    expect(mocks.revalidateTag).toHaveBeenCalledWith("product:prod_1:departures");
+    expect(mocks.revalidateTag).toHaveBeenCalledWith("product:prod_1:departures", "max");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/products/prod_1");
   });
 });
@@ -141,7 +141,7 @@ describe("transitionDepartureAction — form action + redirect", () => {
       `REDIRECT:/admin/products/${PROD}/departures`,
     );
     expect(mocks.transitionDepartureStatus).toHaveBeenCalledWith(DEP, "CLOSED");
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(`product:${PROD}:departures`);
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(`product:${PROD}:departures`, "max");
   });
 
   it("DepartureHasBookingsError → edit?error=has_bookings 로 redirect", async () => {

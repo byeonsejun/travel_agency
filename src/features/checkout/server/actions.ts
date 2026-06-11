@@ -130,7 +130,7 @@ async function createCheckoutBookingImpl(
   //   - revalidatePath(`/products/${productId}`)
   //       → 페이지 자체 ISR 캐시 무효화 (force-dynamic 해제 후 의미를 가짐)
   //   타 사용자가 stale 좌석 수를 보고 매진 직전 예약을 시도하는 회귀를 차단.
-  revalidateTag(tagDeparturesByProduct(departure.productId));
+  revalidateTag(tagDeparturesByProduct(departure.productId), "max");
   revalidatePath(`/products/${departure.productId}`);
 
   return {

@@ -21,7 +21,6 @@ export function safeCallbackPath(
   if (raw.startsWith("//")) return fallback;
   if (raw.startsWith("/\\")) return fallback;
   // 제어문자(\x00-\x1f) 차단 — 리다이렉트/헤더 인젝션 방어.
-  // eslint-disable-next-line no-control-regex
   if (/[\x00-\x1f]/.test(raw)) return fallback;
   return raw;
 }

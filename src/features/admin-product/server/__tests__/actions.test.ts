@@ -274,10 +274,10 @@ describe("createProductAction", () => {
 
     // revalidateTag 4종 — ADR-0020 캐시 컨트랙트 SSOT 검증
     expect(mocks.revalidateTag).toHaveBeenCalledTimes(4);
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_PRODUCTS_FEATURED);
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_PRODUCTS_LIST);
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_DESTINATIONS_LIST);
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(tagProductDetail(PRODUCT_ID));
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_PRODUCTS_FEATURED, "max");
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_PRODUCTS_LIST, "max");
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_DESTINATIONS_LIST, "max");
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(tagProductDetail(PRODUCT_ID), "max");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/products");
   });
 

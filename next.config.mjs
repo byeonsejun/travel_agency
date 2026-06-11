@@ -15,6 +15,8 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  // [Next 16] images.qualities 기본 [75], minimumCacheTTL 기본 4h 수용.
+  // remotePatterns만 사용(images.domains는 deprecated, 우리는 미사용).
   images: {
     remotePatterns: [
       {
@@ -34,5 +36,5 @@ export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,
-  hideSourceMaps: true,
+  // hideSourceMaps: Sentry v9에서 무대체 삭제됨 — SDK가 기본으로 hidden sourcemap 방출.
 });

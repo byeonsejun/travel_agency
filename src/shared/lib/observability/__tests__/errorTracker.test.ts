@@ -14,9 +14,26 @@
  *
  * 전략: logger.error / logger.warn에 vi.spyOn을 걸어 실제 console 출력 없이 호출 검증.
  *       NODE_ENV=test여도 spy가 logger 메서드 자체를 교체하므로 silent 체크를 우회한다.
+ *
+ * [Sentry 10 호환성 노트]
+ * Sentry 10은 ESM namespace로 배포된다. ESM namespace 객체는 sealed(Object.isSealed)라
+ * vi.spyOn(Sentry, "captureException")이 "Cannot redefine property" TypeError를 발생시킨다.
+ * 해결책: vi.mock("@sentry/nextjs", factory)로 모듈 전체를 hoisted mock으로 대체하고
+ * vi.mocked()로 mock 인스턴스를 참조한다. DSN-미설정 테스트는 Sentry를 호출하지 않으므로
+ * mock factory가 있어도 동작에 영향 없다.
  */
 
 import { beforeEach, afterEach, describe, it, expect, vi, type MockInstance } from "vitest";
+
+// Sentry 10 ESM namespace가 sealed라 vi.spyOn 불가 → module-level vi.mock으로 대체.
+vi.mock("@sentry/nextjs", () => ({
+  captureException: vi.fn(),
+  captureMessage: vi.fn(),
+  withScope: vi.fn((cb: (scope: { setTag: ReturnType<typeof vi.fn>; setExtra: ReturnType<typeof vi.fn> }) => void) => {
+    cb({ setTag: vi.fn(), setExtra: vi.fn() });
+    return "test-event-id";
+  }),
+}));
 import { captureException, captureMessage } from "../errorTracker";
 import { logger } from "../logger";
 import { runWithContext } from "../context";
@@ -181,30 +198,22 @@ describe("captureException — 내부 실패 격리", () => {
 });
 
 describe("captureException — DSN 설정 시 Sentry SDK fanout (B2-A)", () => {
-  // MockInstance를 공통 시그니처로 보관 — 세부 제네릭은 spyOn 결과를 캐스팅해 통일
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  type SpyMock = MockInstance<(...args: any[]) => unknown>;
+  type SpyMock = MockInstance<(...args: unknown[]) => unknown>;
   let errorSpy: SpyMock;
-  let sentryCaptureSpy: SpyMock;
+  // Sentry 10 ESM: vi.mock factory로 생성된 mock fn을 vi.mocked()로 참조한다.
+  // (vi.spyOn은 sealed ESM namespace에서 "Cannot redefine property" 발생 — 모듈 상단 주석 참조)
+  let sentryCaptureSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     vi.unstubAllEnvs();
     vi.stubEnv("SENTRY_DSN", "https://test-key@sentry.io/12345");
     errorSpy = vi.spyOn(logger, "error").mockImplementation(() => {}) as SpyMock;
 
+    // vi.mock factory에서 생성된 mock fn을 vi.mocked()로 참조.
     const Sentry = await import("@sentry/nextjs");
-    sentryCaptureSpy = vi
-      .spyOn(Sentry, "captureException")
-      .mockImplementation(() => "test-event-id" as never) as SpyMock;
-    // withScope는 콜백을 동기로 즉시 실행하도록 stub.
-    // Sentry.Scope 클래스 타입을 리터럴 객체로 대체하기 위해 unknown 경유 이중 캐스팅 사용.
-    vi.spyOn(Sentry, "withScope").mockImplementation((cb) => {
-      (cb as unknown as (scope: { setTag: ReturnType<typeof vi.fn>; setExtra: ReturnType<typeof vi.fn> }) => void)({
-        setTag: vi.fn(),
-        setExtra: vi.fn(),
-      });
-      return "test-event-id" as never;
-    });
+    sentryCaptureSpy = vi.mocked(Sentry.captureException);
+    sentryCaptureSpy.mockClear();
+    vi.mocked(Sentry.withScope).mockClear();
   });
 
   afterEach(() => {
