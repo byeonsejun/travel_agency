@@ -49,7 +49,7 @@ scripts/search-eval/
 - Create: `src/features/search/model/clarifyingChips.ts`
 - Create: `src/features/search/model/__tests__/clarifyingChips.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/features/search/model/__tests__/clarifyingChips.test.ts
@@ -101,12 +101,12 @@ describe("buildClarifyingChips", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 FAIL 확인**
+- [x] **Step 2: 테스트 FAIL 확인**
 
 Run: `npx vitest run src/features/search/model/__tests__/clarifyingChips.test.ts`
 Expected: FAIL — `Cannot find module '../clarifyingChips'`.
 
-- [ ] **Step 3: clarifyingChips.ts 구현**
+- [x] **Step 3: clarifyingChips.ts 구현**
 
 ```ts
 // src/features/search/model/clarifyingChips.ts
@@ -169,12 +169,12 @@ export function buildClarifyingChips(
 }
 ```
 
-- [ ] **Step 4: 테스트 PASS 확인**
+- [x] **Step 4: 테스트 PASS 확인**
 
 Run: `npx vitest run src/features/search/model/__tests__/clarifyingChips.test.ts`
 Expected: PASS (5 케이스).
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/features/search/model/clarifyingChips.ts src/features/search/model/__tests__/clarifyingChips.test.ts
