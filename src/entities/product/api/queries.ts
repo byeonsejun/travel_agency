@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/shared/lib/db";
 import { pickLowestPrice } from "./mapping";
 import type { ProductCard, ProductDetail } from "../model/types";
@@ -18,106 +18,106 @@ export const tagProductDetail = (id: string) => `product:${id}`;
 
 // ─── 1. Distinct Destinations ─────────────────────────────────────────────────
 
-// unstable_cache: 1h TTL + 목적지 목록 태그. 목적지는 거의 변하지 않는 데이터.
+// use cache: 1h TTL + 목적지 목록 태그. 목적지는 거의 변하지 않는 데이터.
 // 미래 admin product CRUD 가 상품 status 변경 시 revalidateTag(TAG_DESTINATIONS_LIST)
 // 로 명시 무효화.
-export const getDistinctDestinations = unstable_cache(
-  async (): Promise<{ code: string; label: string; count: number }[]> => {
-    const rows = await db.product.groupBy({
-      by: ["destinationCode", "destination"],
-      where: { status: "PUBLISHED" },
-      _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
-    });
+export async function getDistinctDestinations(): Promise<
+  { code: string; label: string; count: number }[]
+> {
+  "use cache";
+  cacheTag(TAG_DESTINATIONS_LIST);
+  cacheLife({ revalidate: 3600 });
 
-    return rows
-      .filter((item) => item.destinationCode !== null)
-      .map((item) => ({
-        code: item.destinationCode as string,
-        label: item.destination,
-        count: item._count.id,
-      }));
-  },
-  ["product-distinct-destinations"],
-  { revalidate: 3600, tags: [TAG_DESTINATIONS_LIST] }
-);
+  const rows = await db.product.groupBy({
+    by: ["destinationCode", "destination"],
+    where: { status: "PUBLISHED" },
+    _count: { id: true },
+    orderBy: { _count: { id: "desc" } },
+  });
+
+  return rows
+    .filter((item) => item.destinationCode !== null)
+    .map((item) => ({
+      code: item.destinationCode as string,
+      label: item.destination,
+      count: item._count.id,
+    }));
+}
 
 // ─── 2. Featured Products ─────────────────────────────────────────────────────
 
-// unstable_cache: 5분 TTL + 추천상품 공통 태그. dynamic 페이지에서도 DB hit 압축.
-export const getFeaturedProducts = unstable_cache(
-  async (limit: number): Promise<ProductCard[]> => {
-    const safeLimit = Math.min(limit, 50); // clamp to reasonable maximum
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+// use cache: 5분 TTL + 추천상품 공통 태그. dynamic 페이지에서도 DB hit 압축.
+export async function getFeaturedProducts(limit: number): Promise<ProductCard[]> {
+  "use cache";
+  cacheTag(TAG_PRODUCTS_FEATURED);
+  cacheLife({ revalidate: 300 });
 
-    const products = await db.product.findMany({
-      where: { status: "PUBLISHED" },
-      orderBy: { createdAt: "desc" },
-      take: safeLimit,
-      include: {
-        tags: { select: { tag: true } },
-        departures: {
-          where: {
-            departureDate: { gte: today },
-            status: { not: "CANCELED" },
-          },
-          orderBy: { priceAdult: "asc" },
-          take: 1,
-          select: { priceAdult: true },
+  const safeLimit = Math.min(limit, 50); // clamp to reasonable maximum
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const products = await db.product.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: { createdAt: "desc" },
+    take: safeLimit,
+    include: {
+      tags: { select: { tag: true } },
+      departures: {
+        where: {
+          departureDate: { gte: today },
+          status: { not: "CANCELED" },
         },
+        orderBy: { priceAdult: "asc" },
+        take: 1,
+        select: { priceAdult: true },
       },
-    });
+    },
+  });
 
-    return products.map((product) => ({
-      id: product.id,
-      title: product.title,
-      destination: product.destination,
-      durationNights: product.durationNights,
-      durationDays: product.durationDays,
-      heroImageUrl: product.heroImageUrl,
-      basePriceAdult: product.basePriceAdult,
-      aiSummary: product.aiSummary,
-      tags: product.tags,
-      lowestPrice: pickLowestPrice(product.departures) ?? undefined,
-    }));
-  },
-  ["featured-products"],
-  { revalidate: 300, tags: [TAG_PRODUCTS_FEATURED] }
-);
+  return products.map((product) => ({
+    id: product.id,
+    title: product.title,
+    destination: product.destination,
+    durationNights: product.durationNights,
+    durationDays: product.durationDays,
+    heroImageUrl: product.heroImageUrl,
+    basePriceAdult: product.basePriceAdult,
+    aiSummary: product.aiSummary,
+    tags: product.tags,
+    lowestPrice: pickLowestPrice(product.departures) ?? undefined,
+  }));
+}
 
 // ─── 3. Product By ID ─────────────────────────────────────────────────────────
 
-// unstable_cache + per-id 태그: 1시간 TTL. 상품 정보 변경 시 admin 모듈이
-// revalidateTag(tagProductDetail(id))로 명시적 무효화. 좌석은 별도 태그로 격리.
+// use cache + per-id 태그: 1시간 TTL. id 인자가 자동 캐시 키. 상품 정보 변경 시
+// admin 모듈이 revalidateTag(tagProductDetail(id))로 명시적 무효화. 좌석은 별도 태그.
 export async function getProductById(
   id: string
 ): Promise<ProductDetail | null> {
-  return unstable_cache(
-    async (productId: string): Promise<ProductDetail | null> => {
-      const product = await db.product.findUnique({
-        where: { id: productId },
+  "use cache";
+  cacheTag(tagProductDetail(id));
+  cacheLife({ revalidate: 3600 });
+
+  const product = await db.product.findUnique({
+    where: { id },
+    include: {
+      tags: true,
+      inclusions: true,
+      itineraryDays: {
         include: {
-          tags: true,
-          inclusions: true,
-          itineraryDays: {
-            include: {
-              stops: { orderBy: { order: "asc" } },
-            },
-            orderBy: { dayNumber: "asc" },
-          },
+          stops: { orderBy: { order: "asc" } },
         },
-      });
-
-      if (!product || product.status === "DRAFT") {
-        return null;
-      }
-
-      return product;
+        orderBy: { dayNumber: "asc" },
+      },
     },
-    ["product-detail"],
-    { revalidate: 3600, tags: [tagProductDetail(id)] }
-  )(id);
+  });
+
+  if (!product || product.status === "DRAFT") {
+    return null;
+  }
+
+  return product;
 }
 
 // ─── 4. Product List ──────────────────────────────────────────────────────────
@@ -129,10 +129,12 @@ type ListParams = {
   pageSize?: number;
 };
 
-// unstable_cache: 5분 TTL + 리스팅 태그. 같은 (sort, page, destinationCode) 조합
+// use cache: 5분 TTL + 리스팅 태그. 같은 (sort, page, destinationCode) 조합
 // 반복 요청 시 DB hit 압축. 미래 admin CMS 가 상품 status 변경·신규 등록 시
 // revalidateTag(TAG_PRODUCTS_LIST) 로 일괄 무효화.
 // outer wrapper 가 params 를 primitive args 로 정규화 → cache key 안정화.
+// (use cache 키는 인자 직렬화 — 객체 params 직접 전달 시 undefined 필드로 키가
+//  불안정해지므로, 정규화된 primitive 만 _getProductListCached 로 넘긴다.)
 export async function getProductList(
   params: ListParams
 ): Promise<{ items: ProductCard[]; total: number }> {
@@ -142,23 +144,25 @@ export async function getProductList(
   const pageSize = params.pageSize ?? PAGE_SIZE;
   const destinationCode = params.filter?.destinationCode ?? null;
 
-  return unstable_cache(
-    async (
-      sortKey: NonNullable<ListParams["sort"]>,
-      pageKey: number,
-      pageSizeKey: number,
-      destinationKey: string | null
-    ): Promise<{ items: ProductCard[]; total: number }> => {
-      return getProductListInner({
-        sort: sortKey,
-        page: pageKey,
-        pageSize: pageSizeKey,
-        filter: destinationKey ? { destinationCode: destinationKey } : undefined,
-      });
-    },
-    ["product-list"],
-    { revalidate: 300, tags: [TAG_PRODUCTS_LIST] }
-  )(sort, page, pageSize, destinationCode);
+  return _getProductListCached(sort, page, pageSize, destinationCode);
+}
+
+async function _getProductListCached(
+  sortKey: NonNullable<ListParams["sort"]>,
+  pageKey: number,
+  pageSizeKey: number,
+  destinationKey: string | null
+): Promise<{ items: ProductCard[]; total: number }> {
+  "use cache";
+  cacheTag(TAG_PRODUCTS_LIST);
+  cacheLife({ revalidate: 300 });
+
+  return getProductListInner({
+    sort: sortKey,
+    page: pageKey,
+    pageSize: pageSizeKey,
+    filter: destinationKey ? { destinationCode: destinationKey } : undefined,
+  });
 }
 
 // 기존 본문 100% 보존 — inner 함수로 분리 (file-private, non-export).
@@ -280,30 +284,33 @@ export async function getProductsByIds(
   ids: string[]
 ): Promise<ProductDetail[]> {
   if (ids.length === 0) return [];
+  return _getProductsByIdsCached(ids);
+}
 
-  // unstable_cache: 1h TTL + per-id 태그 fan-out.
-  // 비교 페이지 ids 가 [A,B,C] 이면 tags=[product:A, product:B, product:C].
-  // 어떤 id 가 admin 에서 update 되어 revalidateTag(tagProductDetail(id)) 가
-  // 호출되면, 그 id 를 포함하는 모든 비교 캐시 엔트리가 한 번에 무효화된다.
-  // cache key 폭발 방지: parseCompareIds 가 MAX_COMPARE=3 으로 clamp 함.
-  return unstable_cache(
-    async (idsKey: string[]): Promise<ProductDetail[]> => {
-      const products = await db.product.findMany({
-        where: { id: { in: idsKey }, status: "PUBLISHED" },
-        include: {
-          tags: true,
-          inclusions: true,
-          itineraryDays: { include: { stops: true } },
-        },
-      });
+// use cache: 1h TTL + per-id 태그 fan-out. ids 배열이 자동 캐시 키.
+// 비교 페이지 ids 가 [A,B,C] 이면 tags=[product:A, product:B, product:C].
+// 어떤 id 가 admin 에서 update 되어 revalidateTag(tagProductDetail(id)) 가
+// 호출되면, 그 id 를 포함하는 모든 비교 캐시 엔트리가 한 번에 무효화된다.
+// cache key 폭발 방지: parseCompareIds 가 MAX_COMPARE=3 으로 clamp 함.
+async function _getProductsByIdsCached(
+  ids: string[]
+): Promise<ProductDetail[]> {
+  "use cache";
+  cacheTag(...ids.map(tagProductDetail));
+  cacheLife({ revalidate: 3600 });
 
-      return idsKey
-        .map((id) => products.find((p) => p.id === id))
-        .filter((p): p is NonNullable<typeof p> => p != null);
+  const products = await db.product.findMany({
+    where: { id: { in: ids }, status: "PUBLISHED" },
+    include: {
+      tags: true,
+      inclusions: true,
+      itineraryDays: { include: { stops: true } },
     },
-    ["products-by-ids"],
-    { revalidate: 3600, tags: ids.map(tagProductDetail) }
-  )(ids);
+  });
+
+  return ids
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => p != null);
 }
 
 // ─── 7. Static Params for ISR Prerender ───────────────────────────────────────

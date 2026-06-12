@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/shared/lib/db";
 import { computeRemainingSeats } from "./remainingSeats";
 import type {
@@ -78,47 +78,46 @@ export async function getDepartureById(
   };
 }
 
-// unstable_cache + per-product 태그: PDP는 ISR-style로 1시간 TTL, 좌석 변경 시
+// use cache + per-product 태그: PDP는 ISR-style로 1시간 TTL, 좌석 변경 시
 // revalidateTag로 즉각 무효화. 캐시 hit 시 DB query 0회 → 트래픽 부하 압축.
+// productId 인자가 자동 캐시 키.
 export async function getDeparturesByProduct(
   productId: string
 ): Promise<DepartureSummary[]> {
-  return unstable_cache(
-    async (pid: string): Promise<DepartureSummary[]> => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+  "use cache";
+  cacheTag(tagDeparturesByProduct(productId));
+  cacheLife({ revalidate: 3600 });
 
-      const departures = await db.departure.findMany({
-        where: {
-          productId: pid,
-          departureDate: { gte: today },
-          status: { not: "CANCELED" },
-        },
-        select: {
-          id: true,
-          departureDate: true,
-          returnDate: true,
-          priceAdult: true,
-          priceChild: true,
-          capacity: true,
-          bookedSeats: true,
-          minPax: true,
-          status: true,
-        },
-        orderBy: { departureDate: "asc" },
-      });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-      return departures.map((departure) => ({
-        ...departure,
-        remainingSeats: computeRemainingSeats(
-          departure.capacity,
-          departure.bookedSeats
-        ),
-      }));
+  const departures = await db.departure.findMany({
+    where: {
+      productId,
+      departureDate: { gte: today },
+      status: { not: "CANCELED" },
     },
-    ["departures-by-product"],
-    { revalidate: 3600, tags: [tagDeparturesByProduct(productId)] }
-  )(productId);
+    select: {
+      id: true,
+      departureDate: true,
+      returnDate: true,
+      priceAdult: true,
+      priceChild: true,
+      capacity: true,
+      bookedSeats: true,
+      minPax: true,
+      status: true,
+    },
+    orderBy: { departureDate: "asc" },
+  });
+
+  return departures.map((departure) => ({
+    ...departure,
+    remainingSeats: computeRemainingSeats(
+      departure.capacity,
+      departure.bookedSeats
+    ),
+  }));
 }
 
 // admin 목록 — 미래/과거/CANCELED 전부, 최신 출발일 순. 캐시하지 않음(운영 즉시성).

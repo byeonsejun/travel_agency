@@ -7,7 +7,11 @@ export interface DashboardFilter {
   bucket: "day" | "month";
   /** null = 전체 상품. */
   productId: string | null;
-  /** unstable_cache 키 파트 (직렬화 가능 string). */
+  /**
+   * range 표시용 일 경계 string. [Phase 5-C/ADR-0053] 이전엔 unstable_cache 키 파트로도
+   * 쓰였으나, use cache 전환 후 캐시 키는 from/to/productId 인자에서 자동 생성된다
+   * (from/to가 day-aligned이라 일 단위 안정). 현재는 DateRangePicker UI 표시 전용.
+   */
   cacheKey: {
     startDay: string; // "YYYY-MM-DD"
     endDay: string; // "YYYY-MM-DD"
