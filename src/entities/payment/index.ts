@@ -64,6 +64,10 @@ export type { EnqueueRefundJobArgs } from "./api/enqueueRefundJob";
 // ── 잔여 환불가능액 (순수) ─────────────────────────────────────
 export { refundableAmount } from "./model/refundable";
 
+// ── 취소·환불 내역 명세 집계 (순수) ────────────────────────────
+export { computeRefundSummary } from "./model/refundSummary";
+export type { RefundSummary } from "./model/refundSummary";
+
 // ── UI ──────────────────────────────────────────────────────────
 export { PaymentStatusBadge, PAYMENT_STATUS_LABEL } from "./ui/PaymentStatusBadge";
 

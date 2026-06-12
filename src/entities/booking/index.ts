@@ -9,8 +9,11 @@ export type {
   SafeBooking,
   BookingDetail,
   BookingListItem,
+  BookingRefundJob,
   CancelableBookingStatus,
 } from "./model/types";
+
+export { formatEventActor } from "./model/eventActor";
 
 export {
   BOOKING_STATUS_LABEL,

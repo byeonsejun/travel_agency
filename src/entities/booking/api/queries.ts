@@ -48,6 +48,7 @@ export async function listMyBookings(
         infantCount: true,
         createdAt: true,
         canceledAt: true,
+        cancelReason: true,
         departure: {
           select: {
             departureDate: true,
@@ -88,6 +89,9 @@ export async function getBookingDetail(
       terms: true,
       payments: true,
       events: { orderBy: { createdAt: "asc" } },
+      refundJobs: {
+        select: { amount: true, penaltyAmount: true, kind: true, status: true, reason: true, createdAt: true },
+      },
       departure: {
         select: {
           departureDate: true,
@@ -127,6 +131,7 @@ export async function listAllBookings(opts?: {
         infantCount: true,
         createdAt: true,
         canceledAt: true,
+        cancelReason: true,
         departure: {
           select: {
             departureDate: true,
@@ -152,6 +157,9 @@ export async function getAdminBookingDetail(
       terms: true,
       payments: true,
       events: { orderBy: { createdAt: "asc" } },
+      refundJobs: {
+        select: { amount: true, penaltyAmount: true, kind: true, status: true, reason: true, createdAt: true },
+      },
       departure: {
         select: {
           departureDate: true,
