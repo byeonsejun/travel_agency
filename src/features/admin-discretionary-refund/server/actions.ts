@@ -1,18 +1,11 @@
 "use server";
-import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import { refundDiscretionary, PaymentError } from "@/entities/payment";
+import { DiscretionaryRefundSchema, type DiscretionaryRefundInput } from "../model/schemas";
 
-export const DiscretionaryRefundSchema = z.object({
-  paymentId: z.string().min(1),
-  bookingId: z.string().min(1),
-  amount: z.number().int().positive(),
-  requestId: z.string().min(1),
-  reason: z.string().optional(),
-});
-
-export type DiscretionaryRefundInput = z.infer<typeof DiscretionaryRefundSchema>;
+// "use server" 파일은 async 함수만 export 가능 → Zod 스키마는 ../model/schemas 로 분리.
+// State 는 type-only(런타임 소거)라 여기 잔존 가능.
 export type DiscretionaryRefundState =
   | { type: "success"; bookingId: string }
   | { type: "error"; message: string };

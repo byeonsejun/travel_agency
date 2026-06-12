@@ -1,17 +1,11 @@
 "use server";
-import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import { refundTraveler, PaymentError } from "@/entities/payment";
+import { TravelerCancelSchema, type TravelerCancelInput } from "../model/schemas";
 
-export const TravelerCancelSchema = z.object({
-  bookingId: z.string().min(1),
-  travelerIds: z.array(z.string().min(1)).min(1),
-  applyPenalty: z.boolean(),
-  reason: z.string().optional(),
-});
-
-export type TravelerCancelInput = z.infer<typeof TravelerCancelSchema>;
+// "use server" 파일은 async 함수만 export 가능 → Zod 스키마는 ../model/schemas 로 분리.
+// State 는 type-only(런타임 소거)라 여기 잔존 가능.
 export type TravelerCancelState =
   | { type: "success"; bookingId: string }
   | { type: "error"; message: string };

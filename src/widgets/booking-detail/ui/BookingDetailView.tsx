@@ -6,7 +6,7 @@ import {
   isCancelableByUser,
 } from "@/entities/booking";
 import type { BookingDetail } from "@/entities/booking";
-import { PaymentStatusBadge } from "@/entities/payment";
+import { PaymentStatusBadge, computeRefundSummary } from "@/entities/payment";
 import type { ActiveRefundJob } from "@/entities/payment";
 import { computePenalty, getTiersBySnapshot } from "@/entities/penalty-policy";
 import { CancelBookingButton } from "@/features/booking-cancel";
@@ -64,6 +64,16 @@ export async function BookingDetailView({ booking, activeRefundJob }: Props) {
       })
     : null;
 
+  // 취소·환불 내역 — 취소된 예약에서만 노출. 결제/위약금/실환불 3단 명세.
+  const isCanceled =
+    booking.status === "CANCELED_BY_AGENCY" || booking.status === "CANCELED_BY_USER";
+  const cancelActorLabel =
+    booking.status === "CANCELED_BY_AGENCY" ? "여행사(관리자)" : "고객";
+  const refundSummary = computeRefundSummary(booking.payments, booking.refundJobs);
+  // SUCCEEDED 환불 job 이 합산된 경우만 "정산 완료"로 본다(처리 중이면 0).
+  const refundSettled =
+    refundSummary.refundedAmount > 0 || refundSummary.penaltyAmount > 0;
+
   return (
     <div className="space-y-8">
       {/* 예약 진행 상태 바 (PRD §4.1D) — 상세 최상단 배치 */}
@@ -71,6 +81,64 @@ export async function BookingDetailView({ booking, activeRefundJob }: Props) {
 
       {/* 예약 요약 카드 — 상태 배지 포함 */}
       <BookingSummaryCard booking={booking} departure={booking.departure} />
+
+      {/* 취소·환불 내역 — 취소된 예약 한정. 취소 주체·일시·사유 + 결제/위약금/환불 명세. */}
+      {isCanceled && (
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="text-base font-semibold text-foreground">취소·환불 내역</h2>
+
+          <dl className="mt-3 space-y-1.5 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted-foreground">취소 주체</dt>
+              <dd className="font-medium text-foreground">{cancelActorLabel}</dd>
+            </div>
+            {booking.canceledAt && (
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-muted-foreground">취소 일시</dt>
+                <dd className="text-foreground">{formatDateTime(booking.canceledAt)}</dd>
+              </div>
+            )}
+            {booking.cancelReason && (
+              <div className="flex items-start justify-between gap-4">
+                <dt className="shrink-0 text-muted-foreground">취소 사유</dt>
+                <dd className="text-right text-foreground">{booking.cancelReason}</dd>
+              </div>
+            )}
+          </dl>
+
+          {!refundSummary.hasData ? (
+            <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
+              결제 전 취소되어 환불 금액이 없습니다.
+            </p>
+          ) : refundSettled ? (
+            <div className="mt-4 border-t border-border pt-4">
+              <dl className="space-y-1.5 text-sm">
+                <div className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">결제 금액</dt>
+                  <dd className="text-foreground">{formatPrice(refundSummary.paidAmount)}</dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">취소 수수료(위약금)</dt>
+                  <dd className={refundSummary.penaltyAmount > 0 ? "text-foreground" : "text-muted-foreground"}>
+                    {refundSummary.penaltyAmount > 0
+                      ? `-${formatPrice(refundSummary.penaltyAmount)}`
+                      : "면제 (0원)"}
+                  </dd>
+                </div>
+                <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
+                  <dt className="font-semibold text-foreground">환불 금액</dt>
+                  <dd className="font-bold text-foreground">{formatPrice(refundSummary.refundedAmount)}</dd>
+                </div>
+              </dl>
+              <p className="mt-2 text-xs text-emerald-700">환불이 완료되었습니다.</p>
+            </div>
+          ) : (
+            <p className="mt-4 border-t border-border pt-4 text-sm text-amber-700">
+              환불 처리 중입니다 — 완료 후 상세 금액이 표시됩니다.
+            </p>
+          )}
+        </section>
+      )}
 
       {/* 영수증 링크 (PAID 상태에서만) */}
       {receipt?.receiptUrl && (

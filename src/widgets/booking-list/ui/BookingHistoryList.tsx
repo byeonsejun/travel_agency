@@ -71,6 +71,13 @@ export function BookingHistoryList({ bookings, bookingIdsWithReview }: Props) {
                   <p className="mt-1 text-xs text-muted-foreground">
                     예약 인원 {totalPax(booking)}명 · 예약 ID {booking.id.slice(-8)}
                   </p>
+                  {(booking.status === "CANCELED_BY_AGENCY" ||
+                    booking.status === "CANCELED_BY_USER") &&
+                    booking.cancelReason && (
+                      <p className="mt-1.5 text-xs text-red-600">
+                        취소 사유: {booking.cancelReason}
+                      </p>
+                    )}
                 </div>
                 <BookingStatusBadge status={booking.status} />
               </div>

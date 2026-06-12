@@ -8,6 +8,7 @@ import type {
   Payment,
   PaymentStatus,
   PaymentMethod,
+  RefundJob,
 } from "@prisma/client";
 
 export type {
@@ -35,12 +36,19 @@ export type SafeBooking = Pick<
   | "cancelReason"
 >;
 
-// 마이페이지 상세: traveler·payments·events 포함
+// 취소·환불 내역 명세에 필요한 RefundJob 부분필드 (금액·위약금·상태).
+export type BookingRefundJob = Pick<
+  RefundJob,
+  "amount" | "penaltyAmount" | "kind" | "status" | "reason" | "createdAt"
+>;
+
+// 마이페이지 상세: traveler·payments·events·refundJobs 포함
 export type BookingDetail = Booking & {
   travelers: Traveler[];
   terms: BookingTerms[];
   payments: Payment[];
   events: BookingEvent[];
+  refundJobs: BookingRefundJob[];
   departure: { departureDate: Date; returnDate: Date; product: { title: string } };
 };
 
@@ -48,7 +56,7 @@ export type BookingDetail = Booking & {
 // productId는 상세 페이지로 갈 필요 없이 카드에서 PDP로 되돌아가는 경로용.
 export type BookingListItem = Pick<
   Booking,
-  "id" | "status" | "totalPrice" | "adultCount" | "childCount" | "infantCount" | "createdAt" | "canceledAt"
+  "id" | "status" | "totalPrice" | "adultCount" | "childCount" | "infantCount" | "createdAt" | "canceledAt" | "cancelReason"
 > & {
   departure: {
     departureDate: Date;

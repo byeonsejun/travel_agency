@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toggleWishlistAction } from "../server/actions";
 import { LOGIN_PROMPT_MESSAGE, buildResumeCallbackUrl } from "../lib/loginPrompt";
@@ -26,7 +26,7 @@ const SIZE_CLASS: Record<Size, { btn: string; svg: string }> = {
 // 비로그인 클릭 흐름은 PDP `WishlistHeartIsland` 와 동일하게 confirm 인터셉트 →
 // /login?callbackUrl=<resume URL> 로 navigation. Server Action 은 호출하지 않는다.
 //
-// 상태 모델: `useOptimistic` 대신 `useState` + prop sync (`useEffect`).
+// 상태 모델: `useOptimistic` 대신 `useState` + prop sync (렌더 중 조건부 setState).
 // 이유 — `useOptimistic` 은 transition 종료 시 base prop 으로 즉시 복귀하지만
 // dynamic 페이지(`/products?…`)에서는 `revalidatePath` 가 의미 없고, 프로그램적
 // Server Action 호출은 자동 `router.refresh()` 를 트리거하지 않아 base prop 이
@@ -46,14 +46,17 @@ export function WishlistHeartButton({
   className = "",
 }: Props) {
   const [displayed, setDisplayed] = useState(inWishlist);
+  const [prevInWishlist, setPrevInWishlist] = useState(inWishlist);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  // 부모 RSC 가 새로운 inWishlist prop 을 내려주면 동기화. 사용자 클릭으로
-  // setDisplayed 한 직후에도 prop 이 같으면 deps 변화 없어 no-op.
-  useEffect(() => {
+  // 부모 RSC 가 새 inWishlist prop 을 내려주면 동기화. React 공식 "prop 변화 시
+  // state 조정" 패턴(렌더 중 조건부 setState) — effect 불필요. 사용자 클릭으로
+  // setDisplayed 한 직후 prop 이 같으면 prev===next 라 no-op.
+  if (prevInWishlist !== inWishlist) {
+    setPrevInWishlist(inWishlist);
     setDisplayed(inWishlist);
-  }, [inWishlist]);
+  }
 
   const sz = SIZE_CLASS[size];
   const active = displayed;

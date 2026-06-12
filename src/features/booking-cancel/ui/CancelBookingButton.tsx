@@ -20,7 +20,8 @@ const FREE_TEXT_VALUE = "__free__";
 
 export function CancelBookingButton({ bookingId, refundPreview }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  // rawOpen: 사용자가 연 의도. settled: 액션 성공/지연. open: 둘의 파생.
+  const [rawOpen, setRawOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>(
     CANCEL_REASON_PRESETS[0]
   );
@@ -30,18 +31,23 @@ export function CancelBookingButton({ bookingId, refundPreview }: Props) {
     null
   );
 
+  // success: booking 전이 + Payment CANCELED 완료 / deferred: PG cancel 지연
+  // (RefundJob PENDING 적재). 둘 다 다이얼로그를 닫아야 하므로 settled 로 묶는다.
+  const settled = state?.type === "success" || state?.type === "deferred";
+  const open = rawOpen && !settled;
+
   // 자유 입력 모드면 freeText, 아니면 선택된 프리셋이 사유.
   const effectiveReason =
     selectedPreset === FREE_TEXT_VALUE ? freeText.trim() : selectedPreset;
   const submitDisabled = isPending || effectiveReason.length === 0;
 
   function handleOpen() {
-    setOpen(true);
+    setRawOpen(true);
   }
 
   function handleClose() {
     if (isPending) return; // 진행 중에는 닫기 차단
-    setOpen(false);
+    setRawOpen(false);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -52,19 +58,13 @@ export function CancelBookingButton({ bookingId, refundPreview }: Props) {
     });
   }
 
-  // 성공/지연 시: 다이얼로그 닫고 RSC 재검증 결과를 가져오기 위해 router.refresh.
-  // useEffect로 분리 — 렌더 단계에서 router.refresh를 부르면 Router 컴포넌트의
-  // setState가 다른 컴포넌트 렌더 중 실행되어 React가 거부한다("Cannot update a
-  // component while rendering a different component"). commit 이후로 미룬다.
-  // setOpen(false) 후 open=false가 되어 deps 재실행 시 가드로 막힘(무한 루프 X).
-  // - success: booking 전이 + Payment CANCELED 모두 완료 → UI 즉시 동기
-  // - deferred: PG cancel 지연 → RefundJob PENDING 적재, booking은 아직 PAID.
+  // 성공/지연 시 RSC 재검증만 effect 로(부수효과, setState 아님 → 규칙 무관).
+  // 렌더 단계에서 router.refresh 를 부르면 Router 의 setState 가 다른 컴포넌트
+  // 렌더 중 실행되어 React 가 거부하므로 commit 이후로 미룬다.
+  // 다이얼로그 닫힘은 open 파생으로 자동 처리.
   useEffect(() => {
-    if ((state?.type === "success" || state?.type === "deferred") && open) {
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, open, router]);
+    if (settled && rawOpen) router.refresh();
+  }, [settled, rawOpen, router]);
 
   return (
     <>
@@ -184,14 +184,8 @@ export function CancelBookingButton({ bookingId, refundPreview }: Props) {
                   {state.message}
                 </p>
               )}
-              {state?.type === "deferred" && (
-                <p
-                  role="status"
-                  className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800"
-                >
-                  {state.message}
-                </p>
-              )}
+              {/* deferred 는 settled 라 다이얼로그가 즉시 닫힘(open 파생) →
+                  여기서 표시 불가. 지연 안내는 닫힘 + router.refresh 후 RSC 상세에서 반영. */}
 
               <div className="flex justify-end gap-2 pt-2">
                 <button

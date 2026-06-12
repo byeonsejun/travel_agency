@@ -1,5 +1,6 @@
 import type { BookingEvent, BookingStatus } from "@prisma/client";
 import { BOOKING_STATUS_LABEL } from "../model/constants";
+import { formatEventActor } from "../model/eventActor";
 
 function formatDateTime(date: Date): string {
   return new Date(date).toLocaleString("ko-KR", {
@@ -42,7 +43,7 @@ export function BookingEventTimeline({ events }: Props) {
 
           {/* 메타: actor + 시각 */}
           <p className="mt-1 text-xs text-gray-400">
-            {ev.actor} · {formatDateTime(ev.createdAt)}
+            {formatEventActor(ev.actor)} · {formatDateTime(ev.createdAt)}
           </p>
         </li>
       ))}

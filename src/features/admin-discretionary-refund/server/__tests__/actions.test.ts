@@ -17,7 +17,7 @@ vi.mock("@/shared/lib/env", () => ({
   },
 }));
 
-import { DiscretionaryRefundSchema } from "../actions";
+import { DiscretionaryRefundSchema } from "../../model/schemas";
 
 describe("DiscretionaryRefundSchema", () => {
   it("양의 정수 금액만 허용", () => {

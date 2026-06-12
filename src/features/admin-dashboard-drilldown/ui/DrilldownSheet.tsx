@@ -28,30 +28,36 @@ export function DrilldownSheet({
   productId: string | null;
   onClose: () => void;
 }) {
-  const [data, setData] = useState<DrilldownData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // 요청 키를 결과와 함께 저장 → loading 을 파생(동기 setState-in-effect 제거).
+  // 인플라이트 요청의 key 가 최신 reqKey 와 다른 동안이 곧 loading.
+  const reqKey = `${metric}|${start}|${end}|${productId ?? ""}`;
+  const [result, setResult] = useState<{
+    key: string;
+    data: DrilldownData | null;
+    error: string | null;
+  }>({ key: "", data: null, error: null });
+  const loading = result.key !== reqKey;
+  const data = result.data;
+  const error = result.error;
   const tokenRef = useRef(0);
 
-  // 데이터 로드 (메트릭 전환 시 stale 응답 무시).
+  // 데이터 로드 (메트릭 전환 시 stale 응답 무시 — setState 는 .then/.catch 콜백에만).
   useEffect(() => {
     const token = ++tokenRef.current;
-    setLoading(true);
-    setError(null);
-    setData(null);
     loadDrilldownAction({ metric, start, end, productId: productId ?? undefined })
       .then((res) => {
         if (token !== tokenRef.current) return; // stale
-        if (res.type === "error") setError(res.message);
-        else setData(res.data);
+        setResult(
+          res.type === "error"
+            ? { key: reqKey, data: null, error: res.message }
+            : { key: reqKey, data: res.data, error: null },
+        );
       })
       .catch(() => {
-        if (token === tokenRef.current) setError("데이터 조회 실패");
-      })
-      .finally(() => {
-        if (token === tokenRef.current) setLoading(false);
+        if (token === tokenRef.current)
+          setResult({ key: reqKey, data: null, error: "데이터 조회 실패" });
       });
-  }, [metric, start, end, productId]);
+  }, [reqKey, metric, start, end, productId]);
 
   // ESC 닫기 (리스너 cleanup 필수).
   useEffect(() => {
