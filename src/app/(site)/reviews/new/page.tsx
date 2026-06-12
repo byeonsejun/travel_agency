@@ -5,7 +5,6 @@ import { auth } from "@/features/auth/server/auth";
 import { ReviewForm } from "@/features/review-upload";
 import { db } from "@/shared/lib/db";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = {
   searchParams: Promise<{ bookingId?: string }>;

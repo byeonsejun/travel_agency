@@ -3,7 +3,6 @@ import Link from "next/link";
 import { auth } from "@/features/auth/server/auth";
 import { getBookingForRetry } from "@/entities/booking";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;

@@ -14,7 +14,6 @@ import { TravelerCancelPanel, DiscretionaryRefundPanel } from "@/widgets/booking
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;

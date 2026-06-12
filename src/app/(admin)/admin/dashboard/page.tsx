@@ -15,7 +15,6 @@ import {
 import { AdminDashboard } from "@/widgets/admin-dashboard";
 
 // admin route 는 항상 신선(권한 검증 + 운영 즉시성). 집계 SQL 은 내부 60s 캐시로 흡수.
-export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage({
   searchParams,

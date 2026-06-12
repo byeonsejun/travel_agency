@@ -8,8 +8,6 @@ import {
 import { withObservedRoute } from "@/shared/lib/observability";
 import { withRateLimit } from "@/shared/lib/rate-limit";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 /** PaymentError code → HTTP status 매핑 (spec §5, backend-expert R3-2) */
 function mapPaymentError(err: unknown): NextResponse {

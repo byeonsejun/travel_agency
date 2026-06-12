@@ -6,7 +6,6 @@ import type {
   DepartureSummary,
   DepartureLiveSeat,
 } from "@/entities/departure";
-import { DEPARTURE_BADGE_THRESHOLD } from "@/entities/departure";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { POLL_INTERVAL_MS, LOW_STOCK_THRESHOLD } from "../model/constants";
 
@@ -14,6 +13,12 @@ type Props = {
   productId: string;
   /** SSR이 그려준 초기값 — 첫 페인트는 폴링 대기 없이 즉시 노출. */
   initialDepartures: DepartureSummary[];
+  /**
+   * 마감 임박 배지 비율 임계값(DEPARTURE_BADGE_THRESHOLD). 서버 부모가 주입.
+   * [ADR-0053] 'use cache'를 품은 @/entities/departure 배럴을 client가 직접 import하면
+   * 서버 그래프가 client 번들로 누출돼 빌드가 깨진다 → 순수 상수는 prop으로 전달.
+   */
+  badgeThreshold: number;
 };
 
 type Row = DepartureSummary;
@@ -31,7 +36,8 @@ function groupByMonth(rows: Row[]): Record<string, Row[]> {
 }
 
 function getBadge(
-  dep: Row
+  dep: Row,
+  badgeThreshold: number
 ): { label: string; color: string } | null {
   if (dep.status === "CONFIRMED")
     return { label: "출발확정", color: "bg-blue-100 text-blue-800" };
@@ -44,7 +50,7 @@ function getBadge(
       color: "bg-orange-100 text-orange-800",
     };
   }
-  const ratio = Math.ceil(dep.capacity * DEPARTURE_BADGE_THRESHOLD);
+  const ratio = Math.ceil(dep.capacity * badgeThreshold);
   if (dep.remainingSeats <= ratio)
     return { label: "마감 임박", color: "bg-orange-100 text-orange-800" };
   return null;
@@ -67,7 +73,11 @@ function isLowStock(dep: Row): boolean {
   );
 }
 
-export function LiveDepartureList({ productId, initialDepartures }: Props) {
+export function LiveDepartureList({
+  productId,
+  initialDepartures,
+  badgeThreshold,
+}: Props) {
   const [rows, setRows] = useState<Row[]>(initialDepartures);
 
   // 폴링 — POLL_INTERVAL_MS 주기로 lightweight 좌석 데이터만 fetch해 머지.
@@ -150,7 +160,7 @@ export function LiveDepartureList({ productId, initialDepartures }: Props) {
               </thead>
               <tbody>
                 {grouped[monthKey].map((dep) => {
-                  const badge = getBadge(dep);
+                  const badge = getBadge(dep, badgeThreshold);
                   const bookable = isBookable(dep);
                   const lowStock = isLowStock(dep);
                   const formattedDate = new Date(

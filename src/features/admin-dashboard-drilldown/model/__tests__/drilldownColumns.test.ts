@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DRILLDOWN_COLUMNS, DRILLDOWN_LABEL } from "../columns";
+import { DRILLDOWN_COLUMNS, DRILLDOWN_LABEL } from "../drilldownColumns";
 
 describe("DRILLDOWN_COLUMNS", () => {
   it("메트릭 4종 모두 컬럼을 가진다", () => {

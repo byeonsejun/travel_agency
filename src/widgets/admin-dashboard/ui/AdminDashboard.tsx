@@ -6,6 +6,7 @@ import type {
   RouteVitalP75,
   VitalTrendPoint,
 } from "@/entities/analytics";
+import { PRESETS, presetRange } from "@/entities/analytics";
 import { KpiDrilldownGrid } from "@/features/admin-dashboard-drilldown";
 import { DateRangePicker } from "./DateRangePicker";
 import { ProductSelect } from "./ProductSelect";
@@ -34,7 +35,15 @@ export function AdminDashboard({
         <h1 className="text-2xl font-bold text-foreground">운영 대시보드</h1>
         <div className="flex flex-wrap items-center gap-2">
           <ProductSelect options={productOptions} current={productId} />
-          <DateRangePicker key={start + end} start={start} end={end} />
+          {/* presetRange를 서버에서 미리 계산해 prop으로 주입 — client(DateRangePicker)가
+              'use cache'를 품은 @/entities/analytics 배럴을 직접 import하지 않도록(서버 그래프
+              누출 방지, [ADR-0053]). 무인자 presetRange의 'now'는 요청 시점(동적) = 기존 동작 보존. */}
+          <DateRangePicker
+            key={start + end}
+            start={start}
+            end={end}
+            presets={PRESETS.map((p) => ({ ...p, ...presetRange(p.key) }))}
+          />
         </div>
       </div>
 

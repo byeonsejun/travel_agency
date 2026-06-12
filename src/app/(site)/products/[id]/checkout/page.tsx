@@ -5,7 +5,6 @@ import { getDepartureById } from "@/entities/departure";
 import { CheckoutForm } from "@/features/checkout/ui/CheckoutForm";
 import { env } from "@/shared/lib/env";
 
-export const dynamic = "force-dynamic";
 
 // 토스 공식 테스트 클라이언트 키 (공개값, 비-프로덕션 폴백용)
 const TOSS_TEST_CLIENT_KEY = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eqwd36";

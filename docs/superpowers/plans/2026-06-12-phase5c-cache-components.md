@@ -111,9 +111,15 @@
 
 > 💳 안전 도메인 우선. config export 제거 → 동적 읽기를 Suspense 격리. Phase 7 `loading.tsx` 스켈레톤 재활용.
 
-### Task 3.0: Gate 1 — config export 43곳 제거 (기계적)
-- [ ] **Step 1:** `dynamic`×31 / `runtime`×10 / `revalidate`×2 export 라인 제거(작은따옴표 webhook 포함). 주변 주석 정리.
-- [ ] **Step 2:** `runtime="nodejs"` 제거 후 route handler가 Edge 강등 안 됨 확인(default nodejs).
+### Task 3.0: Gate 1 — config export 43곳 제거 (기계적) + 잠복 누출 봉합
+- [x] **Step 1:** `dynamic`×31 / `runtime`×10 / `revalidate`×2 export 43곳 전량 제거(작은따옴표 webhook 포함). home/PDP/departures-route 주석 갱신(unstable_cache/ISR/force-dynamic 언급 정정).
+- [x] **Step 2:** `runtime="nodejs"` 제거 후 Edge 강등 0 — Next 16 route handler default=nodejs, `runtime="edge"` 0건(grep 확인)이라 구조적으로 안전.
+- [x] **Step 3 (잠복 결함 — Phase 1 회귀, 빌드만 포착):** `cacheComponents` 첫 빌드가 드러낸 **client→배럴→`use cache` 누출** 15건 봉합. client island이 `use cache`를 품은 entity 배럴을 **value import**하면 서버 그래프가 client 번들로 compile돼 `It is not allowed to define inline "use cache" ... in Client Components` 에러. 3곳:
+  - `LiveDepartureList`(departure 배럴 `DEPARTURE_BADGE_THRESHOLD`) → 서버부모 `ProductDetail`이 `badgeThreshold` prop 주입.
+  - `DateRangePicker`(analytics 배럴 `PRESETS`/`presetRange`) → 서버부모 `AdminDashboard`가 `presets`(사전계산) prop 주입, client는 `import type`만.
+  - `DrilldownSheet`(analytics 배럴 `DRILLDOWN_COLUMNS`/`DRILLDOWN_LABEL`, **접근자 함수라 non-serializable → props 불가**) → 프레젠테이션 메타데이터를 feature로 이관(`features/admin-dashboard-drilldown/model/drilldownColumns.ts`), 배럴 re-export 제거, 테스트 동반 이동.
+  - 교훈: server/client 경계·배럴 변경은 typecheck+test로 불충분 → `npm run build` 필수(memory `feedback_run_build_for_boundaries`). Phase 1 QA가 build를 안 돌려 잠복.
+- [x] **Step 4:** Gate 1 종료 검증 — use-cache-in-client 에러 0, 빌드가 **Gate 2(prerender "Uncached data outside Suspense")로 전환**(masking 해소 실증). typecheck 0 / test 157·1188 green / lint 0.
 
 ### Task 3.1: 안전 도메인 page Suspense (💳 우선)
 **Files:** `(site)/products/[id]/checkout`, `(site)/bookings/[id]{,/success,/failed}`, `(site)/mypage`, `(site)/reviews/new`

@@ -16,7 +16,6 @@ import {
   TableRow,
 } from "@/shared/ui/table";
 
-export const dynamic = "force-dynamic";
 
 const STATUS_LABELS: Record<ReviewStatus, string> = {
   PUBLISHED: "공개",

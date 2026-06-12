@@ -12,7 +12,6 @@ import {
 import { Badge } from "@/shared/ui/badge";
 
 // admin 도메인 — 캐시 비활성(§6 안전 도메인). 정책 변경 즉시 반영.
-export const dynamic = "force-dynamic";
 
 const CATCH_ALL = -99999;
 

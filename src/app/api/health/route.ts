@@ -3,8 +3,6 @@ import { db } from "@/shared/lib/db";
 import { env } from "@/shared/lib/env";
 import { withObservedRoute, metrics } from "@/shared/lib/observability";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 const DB_TIMEOUT_MS = 1_500;
 

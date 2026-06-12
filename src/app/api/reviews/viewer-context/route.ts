@@ -3,7 +3,6 @@ import { z } from "zod";
 import { auth } from "@/features/auth/server/auth";
 import { getOwnReviewIdsForProduct } from "@/entities/review";
 
-export const dynamic = "force-dynamic";
 
 const QuerySchema = z.object({ productId: z.string().cuid() });
 

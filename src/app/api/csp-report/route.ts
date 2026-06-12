@@ -55,7 +55,6 @@ function isNoiseReport(report: CspReportInner): boolean {
   );
 }
 
-export const runtime = "nodejs"; // ALS/errorTracker 의존 → Edge 금지
 
 export async function POST(req: Request): Promise<NextResponse> {
   const contentType = req.headers.get("content-type") ?? "";

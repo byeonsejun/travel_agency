@@ -2,6 +2,7 @@ import { ProductImage, InclusionList, ItineraryTimeline } from "@/entities/produ
 import { formatTagLabel } from "@/shared/lib/format";
 import type { ProductDetail } from "@/entities/product/model/types";
 import type { DepartureSummary } from "@/entities/departure/model/types";
+import { DEPARTURE_BADGE_THRESHOLD } from "@/entities/departure";
 import { LiveDepartureList } from "@/features/live-seat";
 import { WishlistHeartIsland } from "@/features/wishlist";
 
@@ -115,6 +116,7 @@ export function ProductDetail({
         <LiveDepartureList
           productId={product.id}
           initialDepartures={isClosed ? [] : departures}
+          badgeThreshold={DEPARTURE_BADGE_THRESHOLD}
         />
       </div>
 

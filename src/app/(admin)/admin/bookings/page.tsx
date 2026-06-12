@@ -14,7 +14,6 @@ import {
 import { Button } from "@/shared/ui/button";
 
 // admin route는 항상 신선 (session·권한 검증 + 운영 즉시성)
-export const dynamic = "force-dynamic";
 
 function formatDate(d: Date): string {
   return new Date(d).toLocaleDateString("ko-KR", {

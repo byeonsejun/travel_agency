@@ -18,7 +18,6 @@ import {
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 
-export const dynamic = "force-dynamic";
 
 type Tone = "success" | "warning" | "info" | "destructive" | "neutral";
 

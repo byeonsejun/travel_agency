@@ -1,3 +1,8 @@
+// 드릴다운 테이블/CSV 컬럼 정의 — 프레젠테이션 메타데이터(헤더 라벨 + 접근자 함수).
+// [ADR-0053] 원래 `entities/analytics/model/columns.ts`에 있었으나, 접근자 함수(non-serializable)라
+// props로 client에 전달 불가 + 'use cache'를 품은 analytics 배럴을 client가 import하면 서버 그래프가
+// 누출된다. 소비처가 이 feature의 client island(DrilldownSheet)뿐이고 본질이 "표현"이므로
+// FSD상 feature로 이관(entity는 순수 도메인 데이터/타입만 유지). row 타입은 type-only로 erase.
 import type { CsvColumn } from "@/shared/lib/csv/toCsv";
 import type {
   DrilldownMetric,
@@ -6,7 +11,7 @@ import type {
   PenaltyRow,
   CancellationRow,
   OccupancyRow,
-} from "./types";
+} from "@/entities/analytics";
 
 const revenue: CsvColumn<RevenueRow>[] = [
   { header: "결제일", value: (r) => r.paidAt },

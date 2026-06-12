@@ -4,7 +4,6 @@ import { getBookingDetail } from "@/entities/booking";
 import { findActiveRefundJob } from "@/entities/payment";
 import { BookingDetailView } from "@/widgets/booking-detail";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;

@@ -13,7 +13,6 @@ import {
   TableCell,
 } from "@/shared/ui/table";
 
-export const dynamic = "force-dynamic";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "대기",

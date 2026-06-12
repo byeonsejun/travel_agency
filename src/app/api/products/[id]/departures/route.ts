@@ -3,9 +3,7 @@ import { z } from "zod";
 import { listDepartureSeats } from "@/entities/departure";
 
 // 폴링 전용 엔드포인트 — 항상 신선한 좌석 데이터를 응답한다.
-// no-store + force-dynamic으로 어떤 캐시 레이어도 거치지 않도록 강제.
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+// route handler는 기본 비prerender(동적) + 응답 no-store 헤더로 어떤 캐시도 거치지 않는다.
 
 const ParamsSchema = z.object({ id: z.string().cuid() });
 

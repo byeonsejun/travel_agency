@@ -18,7 +18,6 @@ import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { Badge } from "@/shared/ui/badge";
 import type { DepartureStatus } from "@prisma/client";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string; depId: string }>;
