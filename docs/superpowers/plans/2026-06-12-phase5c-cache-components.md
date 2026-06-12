@@ -86,7 +86,7 @@
 - [x] **Step 2:** `npm run test` 전체 green (157 파일 / 1188 tests).
 - [x] **Step 3:** `npm run lint` 0 errors (10 pre-existing warnings, 변환 파일 무관).
 - [x] **Step 4:** 잔여 `unstable_cache` 0 실사용 확인(주석 2건만 — types.ts JSDoc·rum.test 주석).
-- [ ] **Step 5:** 커밋 `feat(cache): migrate entities unstable_cache to use cache (Phase 5-C/1)`.
+- [x] **Step 5:** 커밋 `feat(cache): migrate entities unstable_cache to use cache (Phase 5-C/1)` (`3f8df71`).
 
 ---
 
