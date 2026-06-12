@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   computeTotalPrice: vi.fn(),
   buildOrderId: vi.fn(),
   revalidatePath: vi.fn(),
-  revalidateTag: vi.fn(),
+  updateTag: vi.fn(),
   db: {
     departure: { findUniqueOrThrow: vi.fn() },
     payment: { count: vi.fn() },
@@ -48,7 +48,7 @@ vi.mock("@/shared/lib/env", () => ({
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
-  revalidateTag: mocks.revalidateTag,
+  updateTag: mocks.updateTag,
   unstable_cache: <T extends (...a: never[]) => unknown>(fn: T) => fn,
 }));
 

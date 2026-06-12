@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   enqueueProductEmbeddingJob: vi.fn(),
-  revalidateTag: vi.fn(),
+  updateTag: vi.fn(),
   revalidatePath: vi.fn(),
   db: {
     $transaction: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock("@/shared/lib/embedding-job/enqueue", () => ({
   enqueueProductEmbeddingJob: mocks.enqueueProductEmbeddingJob,
 }));
 vi.mock("next/cache", () => ({
-  revalidateTag: mocks.revalidateTag,
+  updateTag: mocks.updateTag,
   revalidatePath: mocks.revalidatePath,
   unstable_cache: <T extends (...a: never[]) => unknown>(fn: T) => fn,
 }));
@@ -252,7 +252,7 @@ describe("createProductAction", () => {
     expect(mocks.db.$transaction).not.toHaveBeenCalled();
   });
 
-  it("ADMIN + 유효 입력 → $transaction 1회 호출 + enqueue(tx, productId, actor) + revalidateTag×4", async () => {
+  it("ADMIN + 유효 입력 → $transaction 1회 호출 + enqueue(tx, productId, actor) + updateTag×4", async () => {
     mocks.auth.mockResolvedValue(adminSession);
 
     const result = await createProductAction(null, validProductInput);
@@ -272,12 +272,12 @@ describe("createProductAction", () => {
       `admin:${ADMIN_ID}`,
     );
 
-    // revalidateTag 4종 — ADR-0020 캐시 컨트랙트 SSOT 검증
-    expect(mocks.revalidateTag).toHaveBeenCalledTimes(4);
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_PRODUCTS_FEATURED, "max");
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_PRODUCTS_LIST, "max");
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(TAG_DESTINATIONS_LIST, "max");
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(tagProductDetail(PRODUCT_ID), "max");
+    // updateTag 4종 — ADR-0020 캐시 컨트랙트 SSOT + ADR-0053 즉시성(no-stale) 검증
+    expect(mocks.updateTag).toHaveBeenCalledTimes(4);
+    expect(mocks.updateTag).toHaveBeenCalledWith(TAG_PRODUCTS_FEATURED);
+    expect(mocks.updateTag).toHaveBeenCalledWith(TAG_PRODUCTS_LIST);
+    expect(mocks.updateTag).toHaveBeenCalledWith(TAG_DESTINATIONS_LIST);
+    expect(mocks.updateTag).toHaveBeenCalledWith(tagProductDetail(PRODUCT_ID));
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/products");
   });
 
@@ -371,7 +371,7 @@ describe("updateProductAction", () => {
     expect(mocks.db.$transaction).not.toHaveBeenCalled();
   });
 
-  it("ADMIN + 유효 입력 → deleteMany→createMany 패턴 + enqueue + revalidateTag×4", async () => {
+  it("ADMIN + 유효 입력 → deleteMany→createMany 패턴 + enqueue + updateTag×4", async () => {
     mocks.auth.mockResolvedValue(adminSession);
 
     const result = await updateProductAction(null, validUpdateInput);
@@ -397,7 +397,7 @@ describe("updateProductAction", () => {
       PRODUCT_ID,
       `admin:${ADMIN_ID}`,
     );
-    expect(mocks.revalidateTag).toHaveBeenCalledTimes(4);
+    expect(mocks.updateTag).toHaveBeenCalledTimes(4);
   });
 
   it("product not found → error", async () => {
@@ -474,7 +474,7 @@ describe("publishProductAction", () => {
     expect(result.type).toBe("error");
   });
 
-  it("DRAFT → PUBLISHED 성공 + enqueue + revalidateTag×4", async () => {
+  it("DRAFT → PUBLISHED 성공 + enqueue + updateTag×4", async () => {
     mocks.auth.mockResolvedValue(adminSession);
     mocks.db.product.findUnique.mockResolvedValue({
       ...mockCreatedProduct,
@@ -495,7 +495,7 @@ describe("publishProductAction", () => {
       PRODUCT_ID,
       `admin:${ADMIN_ID}`,
     );
-    expect(mocks.revalidateTag).toHaveBeenCalledTimes(4);
+    expect(mocks.updateTag).toHaveBeenCalledTimes(4);
   });
 
   it("이미 PUBLISHED → error (이미 게시됨)", async () => {
@@ -562,7 +562,7 @@ describe("archiveProductAction", () => {
     expect(mocks.db.product.findUnique).not.toHaveBeenCalled();
   });
 
-  it("PUBLISHED → CLOSED 성공 + enqueue 미호출 + revalidateTag×4", async () => {
+  it("PUBLISHED → CLOSED 성공 + enqueue 미호출 + updateTag×4", async () => {
     mocks.auth.mockResolvedValue(adminSession);
     mocks.db.product.findUnique.mockResolvedValue({
       ...mockCreatedProduct,
@@ -580,7 +580,7 @@ describe("archiveProductAction", () => {
     );
     // archive는 enqueue 하지 않음
     expect(mocks.enqueueProductEmbeddingJob).not.toHaveBeenCalled();
-    expect(mocks.revalidateTag).toHaveBeenCalledTimes(4);
+    expect(mocks.updateTag).toHaveBeenCalledTimes(4);
   });
 
   it("DRAFT 상태 → error (archive 불가)", async () => {

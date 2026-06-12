@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
-  revalidateTag: vi.fn(),
+  updateTag: vi.fn(),
   revalidatePath: vi.fn(),
   createDeparture: vi.fn(),
   updateDeparture: vi.fn(),
@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/features/auth/server/auth", () => ({ auth: mocks.auth }));
 vi.mock("next/cache", () => ({
-  revalidateTag: mocks.revalidateTag,
+  updateTag: mocks.updateTag,
   revalidatePath: mocks.revalidatePath,
 }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
@@ -76,7 +76,7 @@ describe("createDepartureAction", () => {
     const res = await createDepartureAction("prod_1", null, validInput);
     expect(res.type).toBe("success");
     expect(mocks.createDeparture).toHaveBeenCalledWith("prod_1", expect.any(Object));
-    expect(mocks.revalidateTag).toHaveBeenCalledWith("product:prod_1:departures", "max");
+    expect(mocks.updateTag).toHaveBeenCalledWith("product:prod_1:departures");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/products/prod_1");
   });
 });
@@ -141,7 +141,7 @@ describe("transitionDepartureAction — form action + redirect", () => {
       `REDIRECT:/admin/products/${PROD}/departures`,
     );
     expect(mocks.transitionDepartureStatus).toHaveBeenCalledWith(DEP, "CLOSED");
-    expect(mocks.revalidateTag).toHaveBeenCalledWith(`product:${PROD}:departures`, "max");
+    expect(mocks.updateTag).toHaveBeenCalledWith(`product:${PROD}:departures`);
   });
 
   it("DepartureHasBookingsError → edit?error=has_bookings 로 redirect", async () => {

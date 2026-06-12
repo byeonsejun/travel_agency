@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import {
   createDeparture,
@@ -50,11 +50,11 @@ function buildZodError(error: import("zod").ZodError): DepartureActionState {
 }
 
 // ── 캐시 무효화 helper ────────────────────────────────────────────────
-// spec §10: 공개 PDP ISR(`/products/${productId}`) + 출발일 목록 태그.
-// admin 라우트는 force-dynamic이므로 revalidatePath 불필요.
+// spec §10: 공개 PDP(`/products/${productId}`) + 출발일 목록 태그.
+// admin 좌석·가격 수정 → 공개 PDP 즉시 반영 (ADR-0053 §4): updateTag = no-stale.
 
 function invalidate(productId: string) {
-  revalidateTag(tagDeparturesByProduct(productId), "max");
+  updateTag(tagDeparturesByProduct(productId));
   revalidatePath(`/products/${productId}`);
 }
 

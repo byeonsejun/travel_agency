@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import {
   tagProductDetail,
@@ -65,11 +65,13 @@ async function requireAdminSession(): Promise<
 
 // ── 캐시 무효화 helper ────────────────────────────────────────────
 
+// admin 상품 수정 → 공개 PDP/목록 즉시 반영 (ADR-0053 §4: same-request 즉시성).
+// updateTag = no-stale-window 무효화 — 편집 직후 첫 방문자가 신선한 가격·콘텐츠를 본다.
 function invalidateProductCaches(productId: string) {
-  revalidateTag(tagProductDetail(productId), "max");
-  revalidateTag(TAG_PRODUCTS_LIST, "max");
-  revalidateTag(TAG_DESTINATIONS_LIST, "max");
-  revalidateTag(TAG_PRODUCTS_FEATURED, "max");
+  updateTag(tagProductDetail(productId));
+  updateTag(TAG_PRODUCTS_LIST);
+  updateTag(TAG_DESTINATIONS_LIST);
+  updateTag(TAG_PRODUCTS_FEATURED);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -81,7 +83,7 @@ function invalidateProductCaches(productId: string) {
  *
  * 보안: 3중 가드(middleware → admin layout → 본 action)
  * 원자성: Product + 자식(tags/inclusions/itineraryDays/stops) + EmbeddingJob 단일 $transaction
- * 캐시: revalidateTag×4 — ADR-0020 무효화 컨트랙트 준수
+ * 캐시: updateTag×4 — ADR-0020 무효화 컨트랙트 준수 (ADR-0053 즉시성)
  */
 export async function createProductAction(
   _prev: CreateProductState | null,

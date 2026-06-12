@@ -97,11 +97,13 @@
 ### Task 2.1: 무효화 호출 9곳 분류·전환
 **Files:** `src/features/{admin-product,admin-departure,admin-booking-cancel,booking-cancel,checkout,admin-departure-cancel}/server/actions.ts`
 
-- [ ] **Step 1:** 각 호출을 same-request 즉시성(admin 수정→PDP 즉시 반영) vs 백그라운드로 분류.
-- [ ] **Step 2:** 즉시성 필요처 → `updateTag(tag)`(2-arg `'max'` 제거), 백그라운드 → `revalidateTag(tag)`(1-arg 복원).
-- [ ] **Step 3:** 병렬 `revalidatePath` 보완 관계 유지 확인(ADR-0020/0052 주석 갱신).
-- [ ] **Step 4:** typecheck + 해당 features test green.
-- [ ] **Step 5:** 커밋 `refactor(cache): replace revalidateTag 'max' with updateTag/revalidateTag (Phase 5-C/2)`.
+> **⚠️ 실측 발견 (계획 가정 정정):** Next 16.2.9의 `revalidateTag` 타입 시그니처는 `revalidateTag(tag, profile)`로 **2-arg 강제**다(`node_modules/next/dist/server/web/spec-extension/revalidate.d.ts` 확인) — 본 plan과 ADR-0053 §4가 가정한 "1-arg 복원"은 **불가능**. 1-arg 무효화기는 `updateTag(tag)`(Server Action 전용, read-your-writes)뿐이다. 9곳 모두 Server Action이고, plan Final Checklist가 `revalidateTag(_, 'max')` **0**을 요구하므로 → **9곳 전부 `updateTag`로 일원화**. 좌석 무효화는 stale-window 0이 정합성에 최선이라 customer 경로(checkout/booking-cancel)도 `updateTag`가 오히려 우월. ADR-0053 §4 "백그라운드 revalidateTag" 조항은 사문화 → Phase 4.3에서 ADR 정정 필요.
+
+- [x] **Step 1:** 각 호출을 same-request 즉시성(admin 수정→PDP 즉시 반영) vs 백그라운드로 분류. → 타입 실측 결과 1-arg revalidateTag 부재 + Final Checklist "max 0" 요구로 9곳 전부 즉시성(`updateTag`)로 수렴.
+- [x] **Step 2:** 9곳 전부 `updateTag(tag)`로 전환(2-arg `'max'` 제거). admin 4곳(product×4태그/departure/departure-cancel/booking-cancel) + customer 2곳(checkout/booking-cancel).
+- [x] **Step 3:** 병렬 `revalidatePath` 보완 관계 유지(전부 보존). ADR-0020 태그 네임스페이스 무손상, 6개 actions.ts 주석 갱신(updateTag=no-stale 근거 박제).
+- [x] **Step 4:** typecheck 0 errors + 6 features test green(admin-product 36 / admin-departure 10 / admin-departure-cancel 4 / checkout 9 / booking-cancel 12 + orderSeq/schemas). 전역 test 157파일/1188 green. lint 0 errors.
+- [x] **Step 5:** 커밋 `refactor(cache): replace revalidateTag 'max' with updateTag (Phase 5-C/2)`.
 
 ---
 
