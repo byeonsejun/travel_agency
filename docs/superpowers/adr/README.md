@@ -100,6 +100,7 @@
 | 0050  | [조건부 LLM 재정렬(추상 의도 한정) + fixture-스냅샷 eval + Haiku 코드펜스 방어 — 추상쿼리 nDCG@5 +61% (Milestone 4)](./0050-conditional-llm-rerank-and-fixture-snapshot-eval.md) | Accepted | 2026-06-11   |
 | 0051  | [자체 Postgres RUM 파이프라인 + 원시 30일 보존(읽기시점 p75) — Sentry/Vercel SaaS 거부, Phase 5-C baseline 확보 (Milestone 5)](./0051-self-hosted-rum-pipeline-and-raw-30d-retention.md) | Accepted | 2026-06-11   |
 | 0052  | [Next.js 16 업그레이드 — 배선만 교체, 캐시 재설계 분리 (de-risked): middleware 유지·revalidateTag 2-arg·Sentry 10 선행 (Phase 5-B)](./0052-next16-upgrade-de-risked.md) | Accepted | 2026-06-12   |
+| 0053  | [Next 16 Cache Components 전역 전환 — 2-gate 점진 마이그레이션(Gate1 config 43 / Gate2 동적page 24): 플래그 kill-switch·안전도메인 Suspense 격리·updateTag 청산 (Phase 5-C)](./0053-next16-cache-components-global-migration.md) | Accepted | 2026-06-12   |
 
 ## 향후 후보 (작성 대기)
 
