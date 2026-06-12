@@ -1,2 +1,4 @@
-export { discretionaryRefundAction, DiscretionaryRefundSchema } from "./server/actions";
-export type { DiscretionaryRefundState, DiscretionaryRefundInput } from "./server/actions";
+export { discretionaryRefundAction } from "./server/actions";
+export type { DiscretionaryRefundState } from "./server/actions";
+export { DiscretionaryRefundSchema } from "./model/schemas";
+export type { DiscretionaryRefundInput } from "./model/schemas";
