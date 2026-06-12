@@ -8,7 +8,8 @@ import {
   TableRow,
 } from "@/shared/ui/table";
 import type { WebVitalP75, RouteVitalP75, VitalTrendPoint } from "@/entities/analytics";
-import { WebVitalTrendChart, pivotTrend } from "./WebVitalTrendChart";
+import { WebVitalTrendChart } from "./WebVitalTrendChart";
+import { pivotTrend } from "../model/pivotTrend";
 
 // p75 값을 web-vitals 임계로 tone 매핑(신호등). 단위: ms(CLS만 무차원).
 const THRESHOLDS: Record<string, [number, number]> = {

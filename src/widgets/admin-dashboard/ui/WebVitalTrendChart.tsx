@@ -9,14 +9,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { VitalTrendPoint } from "@/entities/analytics";
+import type { WebVitalTrendRow } from "../model/pivotTrend";
 
 // LCP/INP p75 추이 라인. window/ResizeObserver 의존 → 클라이언트 리프 격리.
-// 서버가 메트릭별로 pivot한 배열을 받는다. DB·env import 없음.
+// 서버가 `pivotTrend`(../model)로 메트릭별 pivot한 plain 배열을 props로 받는다.
+// 순수 변환은 client 모듈 밖(model)에 둔다 — server가 호출하므로(RSC 경계).
 export function WebVitalTrendChart({
   data,
 }: {
-  data: { date: string; LCP: number | null; INP: number | null }[];
+  data: WebVitalTrendRow[];
 }) {
   if (data.length === 0) {
     return (
@@ -43,18 +44,4 @@ export function WebVitalTrendChart({
       </LineChart>
     </ResponsiveContainer>
   );
-}
-
-/** trend 평탄 배열(메트릭별 행) → 차트용 일자별 pivot. 순수 변환. */
-export function pivotTrend(
-  points: VitalTrendPoint[],
-): { date: string; LCP: number | null; INP: number | null }[] {
-  const byDate = new Map<string, { date: string; LCP: number | null; INP: number | null }>();
-  for (const p of points) {
-    const row = byDate.get(p.date) ?? { date: p.date, LCP: null, INP: null };
-    if (p.metric === "LCP") row.LCP = p.p75;
-    if (p.metric === "INP") row.INP = p.p75;
-    byDate.set(p.date, row);
-  }
-  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
