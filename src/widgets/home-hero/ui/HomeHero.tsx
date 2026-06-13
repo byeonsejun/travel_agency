@@ -1,18 +1,12 @@
-import Image from "next/image";
 import { SearchBox, SearchChips } from "@/features/search";
+import { HeroParallaxBackground } from "./HeroParallaxBackground";
 
 export function HomeHero() {
   return (
     <section className="relative overflow-hidden rounded-2xl">
-      {/* 배경 여행 이미지 (self-host, CSP img-src 'self') — LCP 대상이라 priority */}
-      <Image
-        src="/hero-travel.jpg"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover"
-      />
+      {/* 배경 여행 이미지 (self-host, CSP img-src 'self') — LCP 대상이라 priority.
+          패럴랙스 모션만 client 리프로 격리, 셸은 RSC 유지(HeroParallaxBackground). */}
+      <HeroParallaxBackground />
       {/* 가독성 오버레이 — 블루틴트 다크 그라데이션으로 흰 텍스트 대비 확보 */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/35 via-foreground/45 to-foreground/65" />
 
