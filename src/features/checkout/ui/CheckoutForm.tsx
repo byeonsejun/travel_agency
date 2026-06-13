@@ -139,6 +139,8 @@ export function CheckoutForm({
   const totalPrice =
     priceAdult * adultCount + priceChild * childCount + priceInfant * infantCount;
   const maxSeats = Math.min(9, remainingSeats);
+  // 저잔여 강조 — 토큰만 사용(새 색 없음). paymentDueAt 미구현이라 TTL 카운트다운/타이머는 만들지 않는다.
+  const lowSeats = remainingSeats <= 5;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -148,7 +150,15 @@ export function CheckoutForm({
         <p className="mt-1 text-sm text-muted-foreground">
           출발 {departureDateLabel} · 귀국 {returnDateLabel}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">잔여 좌석 {remainingSeats}석</p>
+        <p
+          className={
+            lowSeats
+              ? "mt-1 text-sm font-semibold text-primary"
+              : "mt-1 text-xs text-muted-foreground"
+          }
+        >
+          잔여 좌석 {remainingSeats}석{lowSeats ? " · 마감 임박" : ""}
+        </p>
       </section>
 
       {/* ── 인원 선택 ── */}
