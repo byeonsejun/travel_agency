@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/features/auth/server/auth";
 import { getBookingForRetry } from "@/entities/booking";
+import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 
 
 type PageProps = {
@@ -41,7 +42,7 @@ export default function FailedPage({ params, searchParams }: PageProps) {
       {/* 제목 (정적) */}
       <h1 className="text-xl font-bold text-gray-900">결제에 실패했습니다</h1>
 
-      <Suspense fallback={<FailedDetailSkeleton />}>
+      <Suspense fallback={<TransactionFallback variant="form" />}>
         <FailedDetail params={params} searchParams={searchParams} />
       </Suspense>
     </div>
@@ -100,17 +101,5 @@ async function FailedDetail({ params, searchParams }: PageProps) {
         </Link>
       </div>
     </>
-  );
-}
-
-function FailedDetailSkeleton() {
-  return (
-    <div className="mt-3 space-y-3">
-      <div className="mx-auto h-4 w-56 animate-pulse rounded bg-gray-100" />
-      <div className="mt-10 flex flex-col gap-3">
-        <div className="h-12 animate-pulse rounded-xl bg-gray-100" />
-        <div className="h-12 animate-pulse rounded-xl bg-gray-100" />
-      </div>
-    </div>
   );
 }

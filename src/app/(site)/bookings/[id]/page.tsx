@@ -4,6 +4,7 @@ import { auth } from "@/features/auth/server/auth";
 import { getBookingDetail } from "@/entities/booking";
 import { findActiveRefundJob } from "@/entities/payment";
 import { BookingDetailView } from "@/widgets/booking-detail";
+import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 
 
 type PageProps = {
@@ -16,7 +17,7 @@ export default function BookingDetailPage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="mb-6 text-2xl font-bold text-gray-900">예약 상세</h1>
-      <Suspense fallback={<BookingDetailSkeleton />}>
+      <Suspense fallback={<TransactionFallback variant="detail" />}>
         <BookingDetailContent params={params} />
       </Suspense>
     </div>
@@ -42,13 +43,4 @@ async function BookingDetailContent({ params }: PageProps) {
   const activeRefundJob = await findActiveRefundJob(bookingId);
 
   return <BookingDetailView booking={booking} activeRefundJob={activeRefundJob} />;
-}
-
-function BookingDetailSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
-      <div className="h-48 animate-pulse rounded-xl bg-gray-100" />
-    </div>
-  );
 }

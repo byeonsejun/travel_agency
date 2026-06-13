@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/features/auth/server/auth";
 import { ConfirmPayment } from "@/features/checkout";
+import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 
 
 type PageProps = {
@@ -18,7 +19,7 @@ type PageProps = {
 export default function SuccessPage({ params, searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-lg px-4 py-20">
-      <Suspense fallback={<ConfirmSkeleton />}>
+      <Suspense fallback={<TransactionFallback variant="confirm" />}>
         <SuccessContent params={params} searchParams={searchParams} />
       </Suspense>
     </div>
@@ -49,15 +50,5 @@ async function SuccessContent({ params, searchParams }: PageProps) {
       orderId={orderId}
       amount={amount}
     />
-  );
-}
-
-function ConfirmSkeleton() {
-  return (
-    <div className="space-y-4 text-center">
-      <div className="mx-auto h-16 w-16 animate-pulse rounded-full bg-gray-100" />
-      <div className="mx-auto h-6 w-48 animate-pulse rounded bg-gray-100" />
-      <div className="mx-auto h-4 w-64 animate-pulse rounded bg-gray-100" />
-    </div>
   );
 }
