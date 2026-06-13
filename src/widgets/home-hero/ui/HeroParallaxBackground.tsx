@@ -69,7 +69,13 @@ export function HeroParallaxBackground() {
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointermove", onPointerMove);
-      if (frame.current !== null) cancelAnimationFrame(frame.current);
+      if (frame.current !== null) {
+        cancelAnimationFrame(frame.current);
+        // ⚠️ 필수: pending rAF 취소 후 ref 도 null 로 리셋.
+        // 누락 시 재마운트(Strict Mode 더블 인보크/PDP 왕복)가 stale non-null 을
+        // 물려받아 schedule() 의 `frame.current === null` 게이트가 영구 차단됨 → 패럴랙스 사망.
+        frame.current = null;
+      }
     };
   }, []);
 
