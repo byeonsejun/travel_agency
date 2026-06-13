@@ -10,6 +10,13 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams,
 }));
 
+// 서버 부모가 주입하는 prop(presetRange 사전 계산본) — [ADR-0053] 누출 방지 계약.
+const PRESETS_FIXTURE = [
+  { key: "today" as const, label: "오늘", start: "2026-05-20", end: "2026-05-20" },
+  { key: "7d" as const, label: "7일", start: "2026-05-13", end: "2026-05-20" },
+  { key: "30d" as const, label: "30일", start: "2026-04-20", end: "2026-05-20" },
+];
+
 describe("DateRangePicker", () => {
   beforeEach(() => {
     push.mockClear();
@@ -17,7 +24,9 @@ describe("DateRangePicker", () => {
   });
 
   it("적용 시 입력한 start/end 로 push, productId 보존", () => {
-    render(<DateRangePicker start="2026-05-01" end="2026-05-15" />);
+    render(
+      <DateRangePicker start="2026-05-01" end="2026-05-15" presets={PRESETS_FIXTURE} />,
+    );
     fireEvent.change(screen.getByLabelText("시작일"), {
       target: { value: "2026-04-01" },
     });
@@ -31,12 +40,15 @@ describe("DateRangePicker", () => {
     expect(url).toContain("productId=p1");
   });
 
-  it("프리셋(7일) 클릭 시 즉시 push", () => {
-    render(<DateRangePicker start="2026-05-01" end="2026-05-15" />);
+  it("프리셋(7일) 클릭 시 사전계산된 range로 즉시 push", () => {
+    render(
+      <DateRangePicker start="2026-05-01" end="2026-05-15" presets={PRESETS_FIXTURE} />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "7일" }));
     expect(push).toHaveBeenCalledTimes(1);
     const url = push.mock.calls[0][0] as string;
-    expect(url).toContain("start=");
+    expect(url).toContain("start=2026-05-13");
+    expect(url).toContain("end=2026-05-20");
     expect(url).toContain("productId=p1");
   });
 });

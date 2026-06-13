@@ -16,7 +16,6 @@ import {
   TableCell,
 } from "@/shared/ui/table";
 
-export const dynamic = "force-dynamic";
 
 // ── 상수 ────────────────────────────────────────────────────────────
 const VALID_STATUSES = ["DRAFT", "PUBLISHED", "CLOSED"] as const;

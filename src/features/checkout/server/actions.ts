@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import {
   createBooking,
@@ -124,13 +124,14 @@ async function createCheckoutBookingImpl(
   const customerName = `${booker.firstNameEn} ${booker.lastNameEn}`;
   const customerEmail = booker.email ?? null;
 
-  // Step 8: 좌석이 차감되었으므로 캐시를 즉시 무효화한다.
-  //   - revalidateTag(`product:${productId}:departures`)
-  //       → getDeparturesByProduct unstable_cache 엔트리 무효화 (PDP의 좌석 표)
-  //   - revalidatePath(`/products/${productId}`)
-  //       → 페이지 자체 ISR 캐시 무효화 (force-dynamic 해제 후 의미를 가짐)
-  //   타 사용자가 stale 좌석 수를 보고 매진 직전 예약을 시도하는 회귀를 차단.
-  revalidateTag(tagDeparturesByProduct(departure.productId), "max");
+  // Step 8: 좌석이 차감되었으므로 PDP 좌석표 캐시를 즉시 무효화한다.
+  //   - updateTag(`product:${productId}:departures`)
+  //       → getDeparturesByProduct use cache 엔트리 즉시 무효화(no-stale) → 다음 PDP 요청은 신선한 좌석 수.
+  //   - revalidatePath(`/products/${productId}`) → 페이지 단위 보완.
+  //   ADR-0053 §4: Next 16의 revalidateTag는 2-arg(cache profile) 강제 → 1-arg 복원 불가.
+  //   updateTag(Server Action 전용, 1-arg)로 일원화 — stale-window 0이 좌석 정합성에 최선.
+  //   타 사용자가 stale 좌석 수를 보고 매진 직전 예약을 시도하는 회귀를 차단(좌석 안전은 DB 가드).
+  updateTag(tagDeparturesByProduct(departure.productId));
   revalidatePath(`/products/${departure.productId}`);
 
   return {

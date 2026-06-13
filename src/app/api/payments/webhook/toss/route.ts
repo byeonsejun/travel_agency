@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { handleTossWebhook, InvalidSignatureError } from '@/entities/payment';
 import { logger, withObservedRoute } from '@/shared/lib/observability';
 
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
 
 export const POST = withObservedRoute('payments.webhook.toss', async (req: NextRequest): Promise<NextResponse> => {
   // rawBody 보존 — JSON.parse 전에 서명 검증에 필요 (domain-booking R9)

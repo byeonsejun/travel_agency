@@ -1,11 +1,12 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/features/auth/server/auth";
 import { getProductById } from "@/entities/product";
 import { getDepartureById } from "@/entities/departure";
 import { CheckoutForm } from "@/features/checkout/ui/CheckoutForm";
+import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 import { env } from "@/shared/lib/env";
 
-export const dynamic = "force-dynamic";
 
 // 토스 공식 테스트 클라이언트 키 (공개값, 비-프로덕션 폴백용)
 const TOSS_TEST_CLIENT_KEY = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eqwd36";
@@ -15,7 +16,21 @@ type PageProps = {
   searchParams: Promise<{ departureId?: string }>;
 };
 
-export default async function CheckoutPage({ params, searchParams }: PageProps) {
+// [ADR-0053] auth()/params/searchParams는 동적 → <Suspense> 안에서만 접근.
+// 정적 셸(제목)은 즉시 prerender, 결제 폼(인증·가드·좌석 조회 의존)은 스트리밍.
+// 결제 상태는 절대 캐시되지 않음(per-request 스트리밍, NO-REAL-MONEY 무손상).
+export default function CheckoutPage({ params, searchParams }: PageProps) {
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-10">
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">예약 정보 입력</h1>
+      <Suspense fallback={<TransactionFallback variant="form" />}>
+        <CheckoutContent params={params} searchParams={searchParams} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function CheckoutContent({ params, searchParams }: PageProps) {
   // Frontend R3: Next 15 async API
   const { id: productId } = await params;
   const { departureId } = await searchParams;
@@ -50,20 +65,17 @@ export default async function CheckoutPage({ params, searchParams }: PageProps) 
     env.NODE_ENV !== "production" && !env.PAYMENT_FORCE_REAL;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">예약 정보 입력</h1>
-      <CheckoutForm
-        departureId={departureId}
-        productTitle={product.title}
-        departureDateLabel={departure.departureDate.toLocaleDateString("ko-KR")}
-        returnDateLabel={departure.returnDate.toLocaleDateString("ko-KR")}
-        priceAdult={departure.priceAdult}
-        priceChild={departure.priceChild}
-        priceInfant={departure.priceInfant}
-        remainingSeats={departure.remainingSeats}
-        clientKey={clientKey}
-        devFallback={devFallback}
-      />
-    </div>
+    <CheckoutForm
+      departureId={departureId}
+      productTitle={product.title}
+      departureDateLabel={departure.departureDate.toLocaleDateString("ko-KR")}
+      returnDateLabel={departure.returnDate.toLocaleDateString("ko-KR")}
+      priceAdult={departure.priceAdult}
+      priceChild={departure.priceChild}
+      priceInfant={departure.priceInfant}
+      remainingSeats={departure.remainingSeats}
+      clientKey={clientKey}
+      devFallback={devFallback}
+    />
   );
 }

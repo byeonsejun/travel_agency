@@ -12,7 +12,6 @@ import {
   TableCell,
 } from "@/shared/ui/table";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ id: string }> };
 

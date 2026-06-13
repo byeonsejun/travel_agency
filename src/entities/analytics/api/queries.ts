@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/shared/lib/db";
 import type {
   DashboardFilter,
@@ -12,11 +12,10 @@ import type {
 } from "../model/types";
 
 export const TAG_DASHBOARD = "analytics:dashboard";
-const CACHE_OPTS: { revalidate: number; tags: string[] } = {
-  revalidate: 60,
-  tags: [TAG_DASHBOARD],
-};
 
+// [Phase 5-C/ADR-0053] day-key 보존: from/to는 filter.ts에서 UTC 자정으로 day-aligned
+// 결정론적 생성(from=startDay 00:00, to=endDay+1d 00:00)이라 use cache 인자로 직접
+// 넘겨도 키가 (from,to,product) 일 단위로 안정. [ADR-0032] 60s TTL 자연만료 정책 유지.
 const num = (v: unknown): number => (v == null ? 0 : Number(v));
 
 // productId 필터 조각 — bookingId 컬럼 보유 테이블(Payment/RefundJob)용.
@@ -48,6 +47,9 @@ async function _revenue(
   to: Date,
   productId: string | null
 ): Promise<RevenueSummary> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const pf = pidByBooking(productId);
   const rows = await db.$queryRaw<{ paid: bigint; refunded: bigint }[]>(Prisma.sql`
     SELECT
@@ -69,6 +71,9 @@ async function _penalty(
   to: Date,
   productId: string | null
 ): Promise<number> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const pf = pidByBooking(productId);
   const rows = await db.$queryRaw<{ penalty: bigint }[]>(Prisma.sql`
     SELECT COALESCE(SUM("penaltyAmount"), 0) AS penalty
@@ -84,6 +89,9 @@ async function _cancellation(
   to: Date,
   productId: string | null
 ): Promise<CancellationStats> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const pf = pidOnBooking(productId);
   const rows = await db.$queryRaw<{ total: bigint; canceled: bigint }[]>(Prisma.sql`
     SELECT
@@ -101,6 +109,9 @@ async function _cancellation(
 
 // ─── KPI 4: 좌석 점유율 (현재 스냅샷, range 무관 / product 종속) ──
 async function _occupancy(productId: string | null): Promise<SeatOccupancy> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const pf = pidOnDeparture(productId);
   const rows = await db.$queryRaw<{ booked: bigint; capacity: bigint }[]>(Prisma.sql`
     SELECT
@@ -121,6 +132,9 @@ async function _trend(
   bucket: "day" | "month",
   productId: string | null
 ): Promise<RevenueTrendPoint[]> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const pf = pidByBooking(productId);
   const rows = await db.$queryRaw<{ date: Date; paid: bigint; refunded: bigint }[]>(Prisma.sql`
     WITH paid AS (
@@ -163,6 +177,9 @@ const STATUS_GROUP: Record<string, string> = {
 async function _statusDistribution(
   productId: string | null
 ): Promise<StatusSlice[]> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const pf = pidOnBooking(productId);
   const rows = await db.$queryRaw<{ status: string; n: bigint }[]>(Prisma.sql`
     SELECT status::text AS status, COUNT(*) AS n FROM "Booking"
@@ -179,62 +196,36 @@ async function _statusDistribution(
 
 // ─── 상품 옵션 (드롭다운 소스) ──────────────────────────────────
 async function _productOptions(): Promise<ProductOption[]> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 300 });
   return db.product.findMany({
     select: { id: true, title: true },
     orderBy: { title: "asc" },
   });
 }
 
-// ─── 캐시 래핑 (range 4종: 양자화 키 / 스냅샷 2종: product 키) ───
+// ─── 캐시 래핑 (use cache) — 키는 private fn 인자에서 자동 생성 ───
+// range 종속(from,to,product) 4종 / 스냅샷(product) 2종 / 무인자 1종.
+// 함수 위치 해시가 키에 포함되므로 _revenue/_penalty 등은 자동으로 키 분리.
 export function getRevenueSummary(f: DashboardFilter) {
-  const { startDay, endDay, product } = f.cacheKey;
-  return unstable_cache(
-    () => _revenue(f.from, f.to, f.productId),
-    ["dash-revenue", startDay, endDay, product],
-    CACHE_OPTS
-  )();
+  return _revenue(f.from, f.to, f.productId);
 }
 export function getPenaltyRevenue(f: DashboardFilter) {
-  const { startDay, endDay, product } = f.cacheKey;
-  return unstable_cache(
-    () => _penalty(f.from, f.to, f.productId),
-    ["dash-penalty", startDay, endDay, product],
-    CACHE_OPTS
-  )();
+  return _penalty(f.from, f.to, f.productId);
 }
 export function getCancellationStats(f: DashboardFilter) {
-  const { startDay, endDay, product } = f.cacheKey;
-  return unstable_cache(
-    () => _cancellation(f.from, f.to, f.productId),
-    ["dash-cancel", startDay, endDay, product],
-    CACHE_OPTS
-  )();
+  return _cancellation(f.from, f.to, f.productId);
 }
 export function getSeatOccupancy(f: DashboardFilter) {
-  return unstable_cache(
-    () => _occupancy(f.productId),
-    ["dash-occupancy", f.cacheKey.product],
-    CACHE_OPTS
-  )();
+  return _occupancy(f.productId);
 }
 export function getRevenueTrend(f: DashboardFilter) {
-  const { startDay, endDay, product } = f.cacheKey;
-  return unstable_cache(
-    () => _trend(f.from, f.to, f.bucket, f.productId),
-    ["dash-trend", startDay, endDay, product],
-    CACHE_OPTS
-  )();
+  return _trend(f.from, f.to, f.bucket, f.productId);
 }
 export function getBookingStatusDistribution(f: DashboardFilter) {
-  return unstable_cache(
-    () => _statusDistribution(f.productId),
-    ["dash-status", f.cacheKey.product],
-    CACHE_OPTS
-  )();
+  return _statusDistribution(f.productId);
 }
 export function getProductOptions() {
-  return unstable_cache(_productOptions, ["dash-product-options"], {
-    revalidate: 300,
-    tags: [TAG_DASHBOARD],
-  })();
+  return _productOptions();
 }

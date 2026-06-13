@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   revalidatePath: vi.fn(),
-  revalidateTag: vi.fn(),
+  updateTag: vi.fn(),
   enqueueRefundJob: vi.fn(),
   cancelBookingByAgencyTx: vi.fn(),
   recomputeBatchStatus: vi.fn(),
@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/features/auth/server/auth", () => ({ auth: mocks.auth }));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
-  revalidateTag: mocks.revalidateTag,
+  updateTag: mocks.updateTag,
 }));
 vi.mock("@/shared/lib/db", () => ({ db: mocks.db }));
 vi.mock("@/entities/payment", () => ({ enqueueRefundJob: mocks.enqueueRefundJob }));

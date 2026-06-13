@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 
 interface Props {
@@ -27,10 +28,9 @@ const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
   },
 };
 
-export default async function LoginErrorPage({ searchParams }: Props) {
-  const { error } = await searchParams;
-  const message = ERROR_MESSAGES[error ?? "Default"] ?? ERROR_MESSAGES.Default;
-
+// [ADR-0053] searchParams는 동적 → <Suspense> 안에서만 await. 카드 프레임/아이콘/
+// 돌아가기 링크는 정적 prerender, 에러 메시지만 스트리밍.
+export default function LoginErrorPage({ searchParams }: Props) {
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white px-8 py-10 shadow text-center">
@@ -49,10 +49,16 @@ export default async function LoginErrorPage({ searchParams }: Props) {
             />
           </svg>
         </div>
-        <div className="space-y-1">
-          <h1 className="text-xl font-bold">{message.title}</h1>
-          <p className="text-sm text-gray-500">{message.description}</p>
-        </div>
+        <Suspense
+          fallback={
+            <div className="space-y-1">
+              <div className="mx-auto h-6 w-40 animate-pulse rounded bg-gray-100" />
+              <div className="mx-auto h-4 w-56 animate-pulse rounded bg-gray-100" />
+            </div>
+          }
+        >
+          <LoginErrorMessage searchParams={searchParams} />
+        </Suspense>
         <Link
           href="/login"
           className="block w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
@@ -60,6 +66,18 @@ export default async function LoginErrorPage({ searchParams }: Props) {
           로그인으로 돌아가기
         </Link>
       </div>
+    </div>
+  );
+}
+
+async function LoginErrorMessage({ searchParams }: Props) {
+  const { error } = await searchParams;
+  const message = ERROR_MESSAGES[error ?? "Default"] ?? ERROR_MESSAGES.Default;
+
+  return (
+    <div className="space-y-1">
+      <h1 className="text-xl font-bold">{message.title}</h1>
+      <p className="text-sm text-gray-500">{message.description}</p>
     </div>
   );
 }

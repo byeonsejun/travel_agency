@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { getReviewByBooking } from "@/entities/review";
@@ -5,7 +6,6 @@ import { auth } from "@/features/auth/server/auth";
 import { ReviewForm } from "@/features/review-upload";
 import { db } from "@/shared/lib/db";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = {
   searchParams: Promise<{ bookingId?: string }>;
@@ -14,7 +14,19 @@ type PageProps = {
 // 후기 작성 페이지. RSC 단계에서 4중 게이트 사전 검증 — 자격 미충족 케이스는
 // 폼을 보여주지 않고 /mypage 로 즉시 redirect. submitReview Server Action 도
 // 동일 게이트를 재실행하므로 (defense in depth) RSC 가드 우회 경로는 차단됨.
-export default async function ReviewNewPage({ searchParams }: PageProps) {
+//
+// [ADR-0053] searchParams/auth()/소유권 쿼리는 동적 → <Suspense> 안에서만 접근.
+export default function ReviewNewPage({ searchParams }: PageProps) {
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+      <Suspense fallback={<ReviewNewSkeleton />}>
+        <ReviewNewContent searchParams={searchParams} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function ReviewNewContent({ searchParams }: PageProps) {
   const { bookingId } = await searchParams;
 
   if (!bookingId) {
@@ -51,7 +63,7 @@ export default async function ReviewNewPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+    <>
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">후기 작성</h1>
         <p className="mt-1 text-sm text-gray-500">
@@ -63,6 +75,18 @@ export default async function ReviewNewPage({ searchParams }: PageProps) {
         </p>
       </header>
       <ReviewForm bookingId={bookingId} />
+    </>
+  );
+}
+
+function ReviewNewSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="h-7 w-32 animate-pulse rounded bg-gray-100" />
+        <div className="h-4 w-64 animate-pulse rounded bg-gray-100" />
+      </div>
+      <div className="h-64 animate-pulse rounded-xl bg-gray-100" />
     </div>
   );
 }

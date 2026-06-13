@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const queryRawMock = vi.fn();
 vi.mock("@/shared/lib/db", () => ({ db: { $queryRaw: (...a: unknown[]) => queryRawMock(...a) } }));
-// unstable_cache는 fn을 그대로 실행하는 pass-through로.
-vi.mock("next/cache", () => ({ unstable_cache: (fn: (...a: unknown[]) => unknown) => fn }));
+// next/cache(cacheTag/cacheLife/unstable_cache)는 vitest.setup.ts의 전역 모킹이 no-op
+// 처리한다([ADR-0053]). use cache 전환 후 cacheTag/cacheLife 호출도 전역 모킹이 흡수.
 
 describe("RUM read-model 매핑", () => {
   beforeEach(() => queryRawMock.mockReset());

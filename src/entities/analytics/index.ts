@@ -32,7 +32,8 @@ export type {
   OccupancyRow,
   DrilldownRowMap,
 } from "./model/types";
-export { DRILLDOWN_COLUMNS, DRILLDOWN_LABEL } from "./model/columns";
+// DRILLDOWN_COLUMNS/DRILLDOWN_LABEL는 client-only 프레젠테이션이라
+// features/admin-dashboard-drilldown/model/drilldownColumns.ts로 이관됨([ADR-0053], 배럴 누출 차단).
 export {
   getRevenueRows,
   getPenaltyRows,

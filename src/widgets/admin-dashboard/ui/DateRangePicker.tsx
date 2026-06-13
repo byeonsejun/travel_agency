@@ -2,14 +2,21 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PRESETS, presetRange } from "@/entities/analytics";
+import type { PresetKey } from "@/entities/analytics";
+
+// 서버 부모(AdminDashboard)가 presetRange를 미리 계산해 주입한다.
+// [ADR-0053] 'use cache'를 품은 @/entities/analytics 배럴을 client가 값(value)으로
+// import하면 서버 그래프가 client 번들로 누출돼 빌드가 깨진다 → type만 import + 나머지는 prop.
+type PresetButton = { key: PresetKey; label: string; start: string; end: string };
 
 export function DateRangePicker({
   start,
   end,
+  presets,
 }: {
   start: string;
   end: string;
+  presets: PresetButton[];
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -30,15 +37,14 @@ export function DateRangePicker({
   return (
     <div className="inline-flex flex-wrap items-center gap-2">
       <div className="inline-flex gap-0.5 rounded-lg border border-border bg-background p-1 text-[12px]">
-        {PRESETS.map((p) => (
+        {presets.map((p) => (
           <button
             key={p.key}
             type="button"
             onClick={() => {
-              const r = presetRange(p.key);
-              setDraftStart(r.start);
-              setDraftEnd(r.end);
-              pushWith(r.start, r.end);
+              setDraftStart(p.start);
+              setDraftEnd(p.end);
+              pushWith(p.start, p.end);
             }}
             className="rounded-md px-2.5 py-1 text-muted-foreground hover:bg-muted"
           >

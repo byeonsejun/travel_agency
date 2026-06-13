@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   cancelBookingByUser: vi.fn(),
   refundBooking: vi.fn(),
   revalidatePath: vi.fn(),
-  revalidateTag: vi.fn(),
+  updateTag: vi.fn(),
   db: {
     booking: { findUnique: vi.fn() },
   },
@@ -41,8 +41,8 @@ vi.mock("@/entities/payment", async (importOriginal) => {
 vi.mock("@/shared/lib/db", () => ({ db: mocks.db }));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
-  revalidateTag: mocks.revalidateTag,
-  // entities/departure가 unstable_cache를 사용하므로 테스트에선 wrap 없이 통과.
+  updateTag: mocks.updateTag,
+  // entities/departure가 use cache를 사용하므로 테스트에선 wrap 없이 통과.
   unstable_cache: <T extends (...a: never[]) => unknown>(fn: T) => fn,
 }));
 // @/entities/payment 배럴이 refund.ts → tossClient → env로 연쇄 import 되므로

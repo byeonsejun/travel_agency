@@ -15,6 +15,10 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  // [Phase 5-C / ADR-0053] Cache Components 전역 전환. 앱 전체가 PPR(정적 셸 +
+  // Suspense 동적 스트리밍) 모델. 'use cache' 지시어 활성화의 전제 플래그.
+  // Suspense 미격리 동적 읽기(cookies/headers/searchParams/auth/uncached db)는 빌드 에러.
+  cacheComponents: true,
   // [Next 16] images.qualities 기본 [75], minimumCacheTTL 기본 4h 수용.
   // remotePatterns만 사용(images.domains는 deprecated, 우리는 미사용).
   images: {

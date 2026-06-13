@@ -7,8 +7,6 @@ import { isCronAuthorized } from "@/shared/lib/cron/authorize";
 import { processEmailJobBatch } from "@/shared/lib/email-job/worker";
 import { logger, metrics } from "@/shared/lib/observability";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   if (!isCronAuthorized(req)) {

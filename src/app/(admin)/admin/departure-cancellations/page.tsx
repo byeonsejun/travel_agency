@@ -11,7 +11,6 @@ import {
 } from "@/shared/ui/table";
 import { Badge } from "@/shared/ui/badge";
 
-export const dynamic = "force-dynamic";
 
 type Tone = "success" | "warning" | "info" | "destructive" | "neutral";
 

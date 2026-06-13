@@ -18,7 +18,6 @@ const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
   DISMISSED: "반려",
 };
 
-export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ id: string }> };
 

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, OAuthLoginButtons } from "@/features/auth";
@@ -17,10 +18,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   Default: "로그인에 실패했습니다. 다시 시도해 주세요.",
 };
 
-export default async function LoginPage({ searchParams }: Props) {
-  const { callbackUrl, error } = await searchParams;
-  const safeCallback = safeCallbackPath(callbackUrl);
-
+// [ADR-0053] searchParams는 동적 → <Suspense> 안에서만 await. 제목 셸은 정적 prerender,
+// 에러 메시지·콜백 의존 폼/OAuth는 스트리밍.
+export default function LoginPage({ searchParams }: Props) {
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-secondary px-6 py-16">
       <div className="w-full max-w-sm space-y-6 rounded-2xl border border-border bg-card px-8 py-10 shadow-card">
@@ -31,61 +31,84 @@ export default async function LoginPage({ searchParams }: Props) {
           </p>
         </div>
 
-        {error && (
-          <p className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-            {ERROR_MESSAGES[error] ?? ERROR_MESSAGES.Default}
-          </p>
-        )}
-
-        <form
-          action={async (formData: FormData) => {
-            "use server";
-            const email = formData.get("email") as string;
-            const successUrl = `/login/success?callbackUrl=${encodeURIComponent(safeCallback)}`;
-            try {
-              await signIn("resend", {
-                email,
-                redirect: false,
-                redirectTo: successUrl,
-              });
-            } catch (e) {
-              if (e instanceof AuthError) {
-                redirect(
-                  `/login?error=${encodeURIComponent(e.type)}&callbackUrl=${encodeURIComponent(safeCallback)}`
-                );
-              }
-              throw e;
-            }
-            redirect(
-              `/login/verify?callbackUrl=${encodeURIComponent(safeCallback)}&email=${encodeURIComponent(email)}`
-            );
-          }}
-          className="space-y-4"
-        >
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-foreground"
-            >
-              이메일
-            </label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="hello@example.com"
-              className="mt-1.5"
-            />
-          </div>
-          <Button type="submit" className="w-full">
-            이메일로 링크 받기
-          </Button>
-        </form>
-
-        <OAuthLoginButtons callbackUrl={safeCallback} />
+        <Suspense fallback={<LoginFormSkeleton />}>
+          <LoginBody searchParams={searchParams} />
+        </Suspense>
       </div>
+    </div>
+  );
+}
+
+async function LoginBody({ searchParams }: Props) {
+  const { callbackUrl, error } = await searchParams;
+  const safeCallback = safeCallbackPath(callbackUrl);
+
+  return (
+    <>
+      {error && (
+        <p className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+          {ERROR_MESSAGES[error] ?? ERROR_MESSAGES.Default}
+        </p>
+      )}
+
+      <form
+        action={async (formData: FormData) => {
+          "use server";
+          const email = formData.get("email") as string;
+          const successUrl = `/login/success?callbackUrl=${encodeURIComponent(safeCallback)}`;
+          try {
+            await signIn("resend", {
+              email,
+              redirect: false,
+              redirectTo: successUrl,
+            });
+          } catch (e) {
+            if (e instanceof AuthError) {
+              redirect(
+                `/login?error=${encodeURIComponent(e.type)}&callbackUrl=${encodeURIComponent(safeCallback)}`
+              );
+            }
+            throw e;
+          }
+          redirect(
+            `/login/verify?callbackUrl=${encodeURIComponent(safeCallback)}&email=${encodeURIComponent(email)}`
+          );
+        }}
+        className="space-y-4"
+      >
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-foreground"
+          >
+            이메일
+          </label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="hello@example.com"
+            className="mt-1.5"
+          />
+        </div>
+        <Button type="submit" className="w-full">
+          이메일로 링크 받기
+        </Button>
+      </form>
+
+      <OAuthLoginButtons callbackUrl={safeCallback} />
+    </>
+  );
+}
+
+function LoginFormSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="h-16 animate-pulse rounded-lg bg-muted" />
+      <div className="h-9 animate-pulse rounded-lg bg-muted" />
+      <div className="h-9 animate-pulse rounded-lg bg-muted" />
     </div>
   );
 }

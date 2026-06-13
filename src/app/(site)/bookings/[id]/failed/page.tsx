@@ -1,9 +1,10 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/features/auth/server/auth";
 import { getBookingForRetry } from "@/entities/booking";
+import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -15,7 +16,40 @@ type PageProps = {
   }>;
 };
 
-export default async function FailedPage({ params, searchParams }: PageProps) {
+// [ADR-0053] auth()/params/searchParams/소유권 쿼리는 동적 → <Suspense> 안에서만 접근.
+// 정적 셸(에러 아이콘 + 제목)은 prerender, 사유/재시도 링크(booking 의존)는 스트리밍.
+export default function FailedPage({ params, searchParams }: PageProps) {
+  return (
+    <div className="mx-auto max-w-lg px-4 py-20 text-center">
+      {/* 에러 아이콘 (정적) */}
+      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+        <svg
+          className="h-8 w-8 text-red-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </div>
+
+      {/* 제목 (정적) */}
+      <h1 className="text-xl font-bold text-gray-900">결제에 실패했습니다</h1>
+
+      <Suspense fallback={<TransactionFallback variant="form" />}>
+        <FailedDetail params={params} searchParams={searchParams} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function FailedDetail({ params, searchParams }: PageProps) {
   // Frontend R3: Next 15 async API
   const { id: bookingId } = await params;
   const { reason, code, message } = await searchParams;
@@ -42,28 +76,7 @@ export default async function FailedPage({ params, searchParams }: PageProps) {
   const retryUrl = `/products/${booking.departure.productId}/checkout?departureId=${booking.departureId}`;
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-20 text-center">
-      {/* 에러 아이콘 */}
-      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-        <svg
-          className="h-8 w-8 text-red-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </div>
-
-      {/* 제목 */}
-      <h1 className="text-xl font-bold text-gray-900">결제에 실패했습니다</h1>
-
+    <>
       {/* 실패 사유 */}
       <p className="mt-3 text-sm text-gray-600">{displayReason}</p>
 
@@ -87,6 +100,6 @@ export default async function FailedPage({ params, searchParams }: PageProps) {
           홈으로 돌아가기
         </Link>
       </div>
-    </div>
+    </>
   );
 }

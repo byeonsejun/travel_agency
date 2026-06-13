@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/features/auth/server/auth";
@@ -5,11 +6,26 @@ import { LogoutButton } from "@/features/auth/ui/LogoutButton";
 
 // /admin/* 는 middleware에서 1차 ADMIN role 가드. 이 layout이 2차 belt-and-suspenders.
 // 미들웨어 우회/오설정 회귀 방지.
-export default async function AdminLayout({
+//
+// [ADR-0053] cacheComponents: auth()는 동적 읽기(쿠키) → 반드시 <Suspense> 안에서 호출해야
+// prerender를 막지 않는다. 가드(auth+redirect)와 {children}을 단일 AdminAuthedShell 안에 두어
+// (a) 동적 읽기를 Suspense로 격리하고 (b) children이 가드 통과 후에만 렌더되도록 순서를 보존하며
+// (c) 16개 admin page의 동적 데이터가 이 단일 경계 안에 들어와 페이지별 Suspense가 불요해진다.
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <div className="min-h-screen bg-muted">
+      <Suspense fallback={<AdminShellFallback />}>
+        <AdminAuthedShell>{children}</AdminAuthedShell>
+      </Suspense>
+    </div>
+  );
+}
+
+async function AdminAuthedShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/login?callbackUrl=/admin/bookings");
@@ -19,7 +35,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-muted">
+    <>
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-6">
@@ -92,6 +108,22 @@ export default async function AdminLayout({
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-    </div>
+    </>
+  );
+}
+
+// prerender되는 정적 셸 — auth() 해소 전 스트리밍 fallback.
+function AdminShellFallback() {
+  return (
+    <>
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex h-[57px] max-w-6xl items-center px-4">
+          <div className="h-5 w-28 animate-pulse rounded bg-muted" />
+        </div>
+      </header>
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <div className="h-72 animate-pulse rounded-xl border border-border bg-card" />
+      </main>
+    </>
   );
 }

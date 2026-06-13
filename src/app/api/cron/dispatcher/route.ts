@@ -14,8 +14,6 @@ import { processEmbeddingJobBatch } from "@/shared/lib/embedding-job/worker";
 import { processRumCleanup } from "@/shared/lib/rum-cleanup/worker";
 import { logger } from "@/shared/lib/observability";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 const WORKERS = [
   { name: "refund", run: () => processRefundJobBatch({ limit: 10 }) },

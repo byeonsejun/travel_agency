@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import {
   cancelBookingByAgency,
@@ -124,7 +124,8 @@ export async function adminCancelBookingAction(
   }
 
   // 5. 캐시 무효화 — admin 페이지 + 해당 user의 마이페이지/상세 + PDP 좌석
-  revalidateTag(tagDeparturesByProduct(productId), "max");
+  // admin 취소 → 좌석 복원이 공개 PDP에 즉시 반영 (ADR-0053 §4): updateTag = no-stale.
+  updateTag(tagDeparturesByProduct(productId));
   revalidatePath("/admin/bookings");
   revalidatePath(`/admin/bookings/${bookingId}`);
   revalidatePath("/mypage");

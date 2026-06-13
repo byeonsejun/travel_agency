@@ -8,7 +8,6 @@ import { BookingHistoryList, BookingPaginator } from "@/widgets/booking-list";
 import { PassportProfileForm } from "@/features/passport-profile";
 import { WishlistGrid } from "@/widgets/wishlist-list";
 
-export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 5;
 

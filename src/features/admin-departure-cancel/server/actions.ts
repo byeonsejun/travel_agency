@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import type { BookingStatus } from "@prisma/client";
 import { auth } from "@/features/auth/server/auth";
@@ -147,9 +147,10 @@ export async function forceCancelDepartureAction(formData: FormData): Promise<vo
     throw e;
   }
 
-  // departure가 CANCELED 되었으므로 공개 PDP 좌석표 캐시 무효화 (checkout과 동일 contract).
+  // departure가 CANCELED 되었으므로 공개 PDP 좌석표 캐시 즉시 무효화.
+  // admin 강제 취소 → 매진 상태가 즉시 반영되어야 함 (ADR-0053 §4): updateTag = no-stale.
   if (productId) {
-    revalidateTag(tagDeparturesByProduct(productId), "max");
+    updateTag(tagDeparturesByProduct(productId));
     revalidatePath(`/products/${productId}`);
   }
   redirect(`/admin/departure-cancellations/${batchId}`);

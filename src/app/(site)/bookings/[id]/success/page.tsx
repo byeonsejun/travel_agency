@@ -1,8 +1,9 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/features/auth/server/auth";
 import { ConfirmPayment } from "@/features/checkout";
+import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -13,7 +14,19 @@ type PageProps = {
   }>;
 };
 
-export default async function SuccessPage({ params, searchParams }: PageProps) {
+// [ADR-0053] auth()/params/searchParams는 동적 → <Suspense> 안에서만 접근.
+// 결제 confirm(2-phase)은 절대 prerender되지 않음(per-request 스트리밍, NO-REAL-MONEY 무손상).
+export default function SuccessPage({ params, searchParams }: PageProps) {
+  return (
+    <div className="mx-auto max-w-lg px-4 py-20">
+      <Suspense fallback={<TransactionFallback variant="confirm" />}>
+        <SuccessContent params={params} searchParams={searchParams} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function SuccessContent({ params, searchParams }: PageProps) {
   // Frontend R3: Next 15 async API
   const { id: bookingId } = await params;
   const { paymentKey, orderId, amount: amountStr } = await searchParams;
@@ -31,13 +44,11 @@ export default async function SuccessPage({ params, searchParams }: PageProps) {
   if (!Number.isInteger(amount) || amount <= 0) notFound();
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-20">
-      <ConfirmPayment
-        bookingId={bookingId}
-        paymentKey={paymentKey}
-        orderId={orderId}
-        amount={amount}
-      />
-    </div>
+    <ConfirmPayment
+      bookingId={bookingId}
+      paymentKey={paymentKey}
+      orderId={orderId}
+      amount={amount}
+    />
   );
 }

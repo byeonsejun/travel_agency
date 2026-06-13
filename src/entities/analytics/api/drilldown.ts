@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/shared/lib/db";
 import { TAG_DASHBOARD } from "./queries";
 import type {
@@ -12,7 +12,8 @@ import type {
 } from "../model/types";
 
 const MAX = 5000;
-const CACHE_OPTS = { revalidate: 60, tags: [TAG_DASHBOARD] };
+// [Phase 5-C/ADR-0053] day-key 보존은 queries.ts와 동형 — from/to가 day-aligned이라
+// use cache 인자(from,to,product)가 일 단위 안정 키. 60s TTL 자연만료 유지.
 const num = (v: unknown): number => (v == null ? 0 : Number(v));
 
 // productId 술어 — 모든 드릴다운 쿼리가 Product 를 별칭 `pr` 로 조인하므로
@@ -28,6 +29,9 @@ function pack<T>(rows: (T & { _total: bigint | number })[]): DrilldownResult<T> 
 }
 
 async function _revenue(from: Date, to: Date, productId: string | null): Promise<DrilldownResult<RevenueRow>> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const rows = await db.$queryRaw<(RevenueRow & { _total: bigint })[]>(Prisma.sql`
     SELECT to_char(p."paidAt", 'YYYY-MM-DD') AS "paidAt",
            p."tossOrderId" AS "orderId", pr.title AS "productTitle",
@@ -49,6 +53,9 @@ async function _revenue(from: Date, to: Date, productId: string | null): Promise
 }
 
 async function _penalty(from: Date, to: Date, productId: string | null): Promise<DrilldownResult<PenaltyRow>> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const rows = await db.$queryRaw<(PenaltyRow & { _total: bigint })[]>(Prisma.sql`
     SELECT to_char(rj."updatedAt", 'YYYY-MM-DD') AS "processedAt",
            pr.title AS "productTitle",
@@ -70,6 +77,9 @@ async function _penalty(from: Date, to: Date, productId: string | null): Promise
 }
 
 async function _cancellation(from: Date, to: Date, productId: string | null): Promise<DrilldownResult<CancellationRow>> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const rows = await db.$queryRaw<(CancellationRow & { _total: bigint })[]>(Prisma.sql`
     SELECT to_char(b."createdAt", 'YYYY-MM-DD') AS "createdAt",
            COALESCE(to_char(b."canceledAt", 'YYYY-MM-DD'), '') AS "canceledAt",
@@ -92,6 +102,9 @@ async function _cancellation(from: Date, to: Date, productId: string | null): Pr
 }
 
 async function _occupancy(productId: string | null): Promise<DrilldownResult<OccupancyRow>> {
+  "use cache";
+  cacheTag(TAG_DASHBOARD);
+  cacheLife({ revalidate: 60 });
   const rows = await db.$queryRaw<(OccupancyRow & { _total: bigint })[]>(Prisma.sql`
     SELECT to_char(d."departureDate", 'YYYY-MM-DD') AS "departureDate",
            pr.title AS "productTitle", d.capacity AS capacity,
@@ -109,20 +122,17 @@ async function _occupancy(productId: string | null): Promise<DrilldownResult<Occ
   return pack(rows);
 }
 
-// 캐시 키는 KPI 쿼리(queries.ts)와 동형 — 일 양자화된 start/end + product.
-// range 종속 3종은 날짜+상품 키, 스냅샷(occupancy)은 상품 키만.
+// 캐시는 private fn의 use cache가 담당 — 키는 인자(from,to,product)에서 자동 생성.
+// queries.ts와 동형: range 종속 3종은 (from,to,product) 키, 스냅샷(occupancy)은 product 키.
 export function getRevenueRows(f: DashboardFilter) {
-  const { startDay, endDay, product } = f.cacheKey;
-  return unstable_cache(() => _revenue(f.from, f.to, f.productId), ["dd-revenue", startDay, endDay, product], CACHE_OPTS)();
+  return _revenue(f.from, f.to, f.productId);
 }
 export function getPenaltyRows(f: DashboardFilter) {
-  const { startDay, endDay, product } = f.cacheKey;
-  return unstable_cache(() => _penalty(f.from, f.to, f.productId), ["dd-penalty", startDay, endDay, product], CACHE_OPTS)();
+  return _penalty(f.from, f.to, f.productId);
 }
 export function getCancellationRows(f: DashboardFilter) {
-  const { startDay, endDay, product } = f.cacheKey;
-  return unstable_cache(() => _cancellation(f.from, f.to, f.productId), ["dd-cancel", startDay, endDay, product], CACHE_OPTS)();
+  return _cancellation(f.from, f.to, f.productId);
 }
 export function getOccupancyRows(f: DashboardFilter) {
-  return unstable_cache(() => _occupancy(f.productId), ["dd-occupancy", f.cacheKey.product], CACHE_OPTS)();
+  return _occupancy(f.productId);
 }

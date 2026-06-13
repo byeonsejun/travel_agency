@@ -1,12 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { CsvColumn } from "@/shared/lib/csv/toCsv";
-import {
-  DRILLDOWN_COLUMNS,
-  DRILLDOWN_LABEL,
-  type DrilldownData,
-  type DrilldownMetric,
-} from "@/entities/analytics";
+import type { DrilldownData, DrilldownMetric } from "@/entities/analytics";
+import { DRILLDOWN_COLUMNS, DRILLDOWN_LABEL } from "../model/drilldownColumns";
 import { loadDrilldownAction } from "../server/actions";
 import { downloadCsv } from "../lib/downloadCsv";
 

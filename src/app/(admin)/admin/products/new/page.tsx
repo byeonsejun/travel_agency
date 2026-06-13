@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { ProductForm } from "@/features/admin-product";
 
-export const dynamic = "force-dynamic";
 
 export default async function AdminProductNewPage() {
   const policies = await getActivePenaltyPolicies();

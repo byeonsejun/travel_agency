@@ -8,7 +8,6 @@ import type { EmbeddingJobStatus } from "@prisma/client";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 
-export const dynamic = "force-dynamic";
 
 // ── 임베딩 상태 사이드바 ───────────────────────────────────────────
 

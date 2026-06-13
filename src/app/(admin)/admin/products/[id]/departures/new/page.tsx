@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { DepartureForm, createDepartureAction } from "@/features/admin-departure";
 
-export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ id: string }> };
 

@@ -10,12 +10,12 @@ import {
   FloatingCompareCart,
 } from "@/features/product-compare";
 
-// PDP 1시간 ISR 실제 활성 (A4 compareIds island + A6 wishlist island + 0018 layout
-// auth island 분리 완료). 사용자/쿠키 의존 0 → Next 가 페이지를 정적 prerender 로 승격.
-export const revalidate = 3600;
+// PDP Cache Components(PPR): getProductById/getDeparturesByProduct 가 `use cache`
+// (cacheLife revalidate:3600)라 1시간 TTL이 데이터 레이어로 이전됨. 사용자/쿠키 의존 0 →
+// 정적 셸 prerender + 캐시 데이터, 리뷰만 <Suspense> 스트리밍. [ADR-0053]
 
-// PUBLISHED 상품을 build time 에 prerender — 빌드 출력에서 `●` (ISR) 표기 활성화.
-// dynamicParams = true (default) 이므로 신규 등록 상품은 첫 요청 시 ISR-on-demand.
+// PUBLISHED 상품을 build time 에 prerender — generateStaticParams 보존.
+// dynamicParams = true (default) 이므로 신규 등록 상품은 첫 요청 시 on-demand 캐시.
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   const ids = await getAllPublishedProductIds();
   return ids.map((id) => ({ id }));

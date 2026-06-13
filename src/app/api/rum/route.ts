@@ -11,7 +11,6 @@ import { webVitalSchema } from "@/features/rum/model/schema";
 import { coerceRouteTemplate } from "@/features/rum/model/normalizeRoute";
 import { ratingFor } from "@/features/rum/model/rating";
 
-export const runtime = "nodejs";
 
 export const POST = withRateLimit(
   { tier: "rum" },

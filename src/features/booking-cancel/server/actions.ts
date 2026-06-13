@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { auth } from "@/features/auth/server/auth";
 import {
   cancelBookingByUser,
@@ -138,12 +138,12 @@ async function cancelBookingActionImpl(
     };
   }
 
-  // 5. 캐시 무효화 — 좌석이 복원되었으므로 데이터 캐시 + 페이지 캐시 모두 invalidate.
-  //   - revalidateTag(product:[id]:departures): unstable_cache로 메모이즈된
-  //     getDeparturesByProduct 결과를 직접 무효화 → 다음 PDP 요청은 신선한 좌석 수.
-  //   - revalidatePath: 페이지 단위 ISR 캐시 무효화(현재는 layout dynamic으로 효과 제한적이나
-  //     향후 PPR 도입 시 즉시 효과).
-  revalidateTag(tagDeparturesByProduct(productId), "max");
+  // 5. 캐시 무효화 — 좌석이 복원되었으므로 데이터 캐시 + 페이지 캐시 모두 즉시 invalidate.
+  //   - updateTag(product:[id]:departures): use cache 메모이즈된
+  //     getDeparturesByProduct 결과를 즉시 무효화(no-stale) → 다음 PDP 요청은 신선한 좌석 수.
+  //   - revalidatePath: 페이지 단위 보완.
+  //   ADR-0053 §4: Next 16 revalidateTag는 2-arg 강제(1-arg 복원 불가) → updateTag로 일원화.
+  updateTag(tagDeparturesByProduct(productId));
   revalidatePath("/mypage");
   revalidatePath(`/bookings/${bookingId}`);
   revalidatePath(`/products/${productId}`);
