@@ -28,9 +28,9 @@ export function PaymentWidget({
   // clientKey 누락 시 결제 비활성 + 안내 (런타임 크래시 금지, Task 7 명세)
   if (!clientKey) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-        <p className="text-sm font-medium text-red-700">결제를 진행할 수 없습니다.</p>
-        <p className="mt-1 text-xs text-red-500">
+      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-6 text-center">
+        <p className="text-sm font-medium text-destructive">결제를 진행할 수 없습니다.</p>
+        <p className="mt-1 text-xs text-destructive">
           결제 설정이 누락되었습니다. 관리자에게 문의해 주세요.
         </p>
       </div>
@@ -84,18 +84,18 @@ export function PaymentWidget({
   }
 
   return (
-    <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-6">
+    <div className="space-y-6 rounded-xl border border-border bg-card p-6">
       <div>
-        <p className="text-sm text-gray-500">결제 금액</p>
-        <p className="mt-1 text-2xl font-bold text-gray-900">
+        <p className="text-sm text-muted-foreground">결제 금액</p>
+        <p className="mt-1 text-2xl font-bold text-foreground">
           {amount.toLocaleString("ko-KR")}원
         </p>
-        <p className="mt-1 text-sm text-gray-600">{customerName} 고객님</p>
-        <p className="mt-0.5 text-xs text-gray-400">주문번호: {orderId}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{customerName} 고객님</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">주문번호: {orderId}</p>
       </div>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
       )}
@@ -105,7 +105,7 @@ export function PaymentWidget({
         onClick={handlePayClick}
         disabled={isPaying}
         aria-label="토스페이먼츠 결제창 열기"
-        className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
+        className="w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
       >
         {isPaying ? "결제창 열기 중..." : `${amount.toLocaleString("ko-KR")}원 결제하기`}
       </button>

@@ -22,9 +22,9 @@ export default function FailedPage({ params, searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-lg px-4 py-20 text-center">
       {/* 에러 아이콘 (정적) */}
-      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
         <svg
-          className="h-8 w-8 text-red-500"
+          className="h-8 w-8 text-destructive"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -40,7 +40,7 @@ export default function FailedPage({ params, searchParams }: PageProps) {
       </div>
 
       {/* 제목 (정적) */}
-      <h1 className="text-xl font-bold text-gray-900">결제에 실패했습니다</h1>
+      <h1 className="text-xl font-bold text-foreground">결제에 실패했습니다</h1>
 
       <Suspense fallback={<TransactionFallback variant="form" />}>
         <FailedDetail params={params} searchParams={searchParams} />
@@ -78,24 +78,24 @@ async function FailedDetail({ params, searchParams }: PageProps) {
   return (
     <>
       {/* 실패 사유 */}
-      <p className="mt-3 text-sm text-gray-600">{displayReason}</p>
+      <p className="mt-3 text-sm text-muted-foreground">{displayReason}</p>
 
       {/* 에러 코드 (Toss 직접 redirect 시 디버그 참고용) */}
       {code && (
-        <p className="mt-1 text-xs text-gray-400">오류 코드: {code}</p>
+        <p className="mt-1 text-xs text-muted-foreground">오류 코드: {code}</p>
       )}
 
       {/* CTA */}
       <div className="mt-10 flex flex-col gap-3">
         <Link
           href={retryUrl}
-          className="w-full rounded-xl bg-indigo-600 py-3 text-center font-semibold text-white transition-colors hover:bg-indigo-700"
+          className="w-full rounded-xl bg-primary py-3 text-center font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
           다시 결제하기
         </Link>
         <Link
           href="/"
-          className="w-full rounded-xl border border-gray-200 bg-white py-3 text-center text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="w-full rounded-xl border border-border bg-card py-3 text-center text-sm font-medium text-muted-foreground hover:bg-muted"
         >
           홈으로 돌아가기
         </Link>

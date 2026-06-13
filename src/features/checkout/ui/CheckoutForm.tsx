@@ -143,17 +143,17 @@ export function CheckoutForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* ── 여행 요약 ── */}
-      <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold text-gray-800">{productTitle}</h2>
-        <p className="mt-1 text-sm text-gray-500">
+      <section className="rounded-xl border border-border bg-card p-5">
+        <h2 className="font-semibold text-foreground">{productTitle}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           출발 {departureDateLabel} · 귀국 {returnDateLabel}
         </p>
-        <p className="mt-1 text-xs text-gray-400">잔여 좌석 {remainingSeats}석</p>
+        <p className="mt-1 text-xs text-muted-foreground">잔여 좌석 {remainingSeats}석</p>
       </section>
 
       {/* ── 인원 선택 ── */}
       <section className="space-y-3">
-        <h2 className="font-semibold text-gray-800">인원 선택</h2>
+        <h2 className="font-semibold text-foreground">인원 선택</h2>
 
         {(
           [
@@ -162,17 +162,17 @@ export function CheckoutForm({
             { label: "영아 (좌석 미차감)", count: infantCount, change: changeInfant, hint: `${priceInfant.toLocaleString("ko-KR")}원` },
           ] as const
         ).map(({ label, count, change, hint }) => (
-          <div key={label} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+          <div key={label} className="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3">
             <div>
-              <span className="text-sm font-medium text-gray-700">{label}</span>
-              <span className="ml-2 text-xs text-gray-400">{hint}</span>
+              <span className="text-sm font-medium text-muted-foreground">{label}</span>
+              <span className="ml-2 text-xs text-muted-foreground">{hint}</span>
             </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => change(-1)}
                 aria-label={`${label} 줄이기`}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-input text-muted-foreground hover:bg-muted disabled:opacity-40"
                 disabled={isPending}
               >
                 −
@@ -182,7 +182,7 @@ export function CheckoutForm({
                 type="button"
                 onClick={() => change(1)}
                 aria-label={`${label} 늘리기`}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-input text-muted-foreground hover:bg-muted disabled:opacity-40"
                 disabled={isPending || adultCount + childCount >= maxSeats}
               >
                 +
@@ -194,15 +194,15 @@ export function CheckoutForm({
 
       {/* ── 여행자 정보 ── */}
       <section className="space-y-4">
-        <h2 className="font-semibold text-gray-800">여행자 정보</h2>
+        <h2 className="font-semibold text-foreground">여행자 정보</h2>
         {travelers.map((t, idx) => (
-          <fieldset key={idx} className="rounded-xl border border-gray-200 bg-white p-4">
-            <legend className="px-1 text-sm font-medium text-gray-700">
+          <fieldset key={idx} className="rounded-xl border border-border bg-card p-4">
+            <legend className="px-1 text-sm font-medium text-muted-foreground">
               {idx === 0 ? "예약자" : `여행자 ${idx + 1}`}
             </legend>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs text-gray-500" htmlFor={`ln-${idx}`}>
+                <label className="mb-1 block text-xs text-muted-foreground" htmlFor={`ln-${idx}`}>
                   성 (영문 대문자)
                 </label>
                 <input
@@ -212,11 +212,11 @@ export function CheckoutForm({
                   onChange={(e) => updateTraveler(idx, "lastNameEn", e.target.value.toUpperCase())}
                   placeholder="KIM"
                   required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-500" htmlFor={`fn-${idx}`}>
+                <label className="mb-1 block text-xs text-muted-foreground" htmlFor={`fn-${idx}`}>
                   이름 (영문 대문자)
                 </label>
                 <input
@@ -226,11 +226,11 @@ export function CheckoutForm({
                   onChange={(e) => updateTraveler(idx, "firstNameEn", e.target.value.toUpperCase())}
                   placeholder="CHULSOO"
                   required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-500" htmlFor={`gen-${idx}`}>
+                <label className="mb-1 block text-xs text-muted-foreground" htmlFor={`gen-${idx}`}>
                   성별
                 </label>
                 <select
@@ -238,7 +238,7 @@ export function CheckoutForm({
                   value={t.gender}
                   onChange={(e) => updateTraveler(idx, "gender", e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">선택</option>
                   <option value="MALE">남성</option>
@@ -246,7 +246,7 @@ export function CheckoutForm({
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-500" htmlFor={`bd-${idx}`}>
+                <label className="mb-1 block text-xs text-muted-foreground" htmlFor={`bd-${idx}`}>
                   생년월일
                 </label>
                 <input
@@ -256,7 +256,7 @@ export function CheckoutForm({
                   onChange={(e) => updateTraveler(idx, "birthDate", e.target.value)}
                   required
                   max={new Date().toISOString().slice(0, 10)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
@@ -266,24 +266,24 @@ export function CheckoutForm({
 
       {/* ── 약관 동의 ── */}
       <section className="space-y-2">
-        <h2 className="font-semibold text-gray-800">약관 동의</h2>
+        <h2 className="font-semibold text-foreground">약관 동의</h2>
         {Object.entries(TERM_LABELS).map(([key, label]) => (
-          <label key={key} className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+          <label key={key} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-muted px-4 py-3">
             <input
               type="checkbox"
               checked={checkedTerms.has(key)}
               onChange={() => toggleTerm(key)}
-              className="h-4 w-4 accent-indigo-600"
+              className="h-4 w-4 accent-primary"
             />
-            <span className="text-sm text-gray-700">{label}</span>
+            <span className="text-sm text-muted-foreground">{label}</span>
           </label>
         ))}
       </section>
 
       {/* ── 메모 ── */}
       <section>
-        <label className="mb-1 block text-sm font-semibold text-gray-800" htmlFor="notes">
-          요청사항 <span className="font-normal text-gray-400">(선택)</span>
+        <label className="mb-1 block text-sm font-semibold text-foreground" htmlFor="notes">
+          요청사항 <span className="font-normal text-muted-foreground">(선택)</span>
         </label>
         <textarea
           id="notes"
@@ -291,29 +291,29 @@ export function CheckoutForm({
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
           placeholder="특별 요청사항을 입력해 주세요"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </section>
 
       {/* ── 서버 에러 ── */}
       {state?.type === "error" && (
-        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {state.message}
         </p>
       )}
 
       {/* ── 가격 요약 + 제출 ── */}
-      <div className="sticky bottom-4 rounded-xl border border-gray-200 bg-white p-5 shadow-md">
+      <div className="sticky bottom-4 rounded-xl border border-border bg-card p-5 shadow-card">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">결제 예정 금액</span>
-          <span className="text-xl font-bold text-gray-900">
+          <span className="text-sm text-muted-foreground">결제 예정 금액</span>
+          <span className="text-xl font-bold text-foreground">
             {totalPrice.toLocaleString("ko-KR")}원
           </span>
         </div>
         <button
           type="submit"
           disabled={isPending}
-          className="mt-4 w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
+          className="mt-4 w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
           {isPending ? "예약 처리 중..." : "다음 — 결제 진행"}
         </button>

@@ -22,7 +22,7 @@ type PageProps = {
 export default function CheckoutPage({ params, searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">예약 정보 입력</h1>
+      <h1 className="mb-6 text-2xl font-bold text-foreground">예약 정보 입력</h1>
       <Suspense fallback={<TransactionFallback variant="form" />}>
         <CheckoutContent params={params} searchParams={searchParams} />
       </Suspense>
