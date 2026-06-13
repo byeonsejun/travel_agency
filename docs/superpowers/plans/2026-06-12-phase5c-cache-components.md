@@ -122,17 +122,18 @@
 - [x] **Step 4:** Gate 1 종료 검증 — use-cache-in-client 에러 0, 빌드가 **Gate 2(prerender "Uncached data outside Suspense")로 전환**(masking 해소 실증). typecheck 0 / test 157·1188 green / lint 0.
 
 ### Task 3.1: 안전 도메인 page Suspense (💳 우선)
-**Files:** `(site)/products/[id]/checkout`, `(site)/bookings/[id]{,/success,/failed}`, `(site)/mypage`, `(site)/reviews/new`
+**Files:** `(site)/products/[id]/checkout`, `(site)/bookings/[id]{,/success,/failed}`, `(site)/reviews/new`, `(site)/login{,/error,/success,/verify}`, `(site)/compare`; 전역 차단원 `(site)/layout.tsx`
 
-- [ ] **Step 1:** 각 page의 `auth()`/`searchParams`/`cookies()`/uncached db 읽기를 `<Suspense>` 경계 child로 격리. 정적 셸은 즉시 prerender.
-- [ ] **Step 2:** 결제·예약 상태가 절대 prerender(static)되지 않음을 빌드 출력(`ƒ`/dynamic 표기)으로 확인.
+- [x] **Step 1:** 각 page의 `auth()`/`searchParams`/uncached db 읽기를 async `*Content` child로 추출 → `<Suspense fallback={skeleton}>`로 격리. 정적 셸(컨테이너·제목·아이콘)은 prerender. mypage는 기존 `loading.tsx`가 이미 경계 제공(무수정).
+- [x] **Step 1.5 (전역 차단원):** `(site)/layout.tsx`의 `<WebVitalsReporter/>`(RUM, `usePathname()` 동적)가 **모든 (site) 페이지** prerender를 막던 것을 발견 → `<Suspense fallback={null}>`로 격리(GlobalRouteProgress 동형, ADR-0035 선례). 단일 수정이 checkout 등 다수 페이지 동시 해소.
+- [x] **Step 2:** 결제·예약 상태가 prerender 셸에 baked 0임을 **실증** — `.next/server/app/{products/[id]/checkout,bookings/[id]/success,admin/bookings}.html` grep: skeleton(animate-pulse) present, session/booking/payment(`test_ck_`/`paymentKey`/`예약 ID`/`ADMIN`) **전부 ABSENT**. 라우트 표: 안전 page 16곳 `◐`(PPR=정적셸+per-request 스트리밍), route handler 10곳 `ƒ`(Dynamic), `○`는 home+not-found뿐.
 
 ### Task 3.2: admin page Suspense (16곳)
-**Files:** `(admin)/admin/**/page.tsx` 16개
+**Files:** `(admin)/admin/layout.tsx` (단일 수정으로 16 page 전부 커버)
 
-- [ ] **Step 1:** 각 admin page 동적 읽기를 Suspense 격리(운영 즉시성 보존).
-- [ ] **Step 2:** 반복 빌드로 Gate 2 에러 0까지 수렴(첫-에러-중단 특성 → 페이지별 순차).
-- [ ] **Step 3:** 커밋 `feat(routing): suspense boundaries for dynamic routes, remove force-dynamic (Phase 5-C/3)`.
+- [x] **Step 1:** admin layout의 top-level `await auth()`가 16 admin route 전부의 prerender 차단원임을 발견 → 가드(auth+redirect)+nav+`{children}`을 단일 `AdminAuthedShell` async 컴포넌트에 모으고 `<Suspense fallback={AdminShellFallback}>`로 감쌈. children이 가드 통과 후 렌더되도록 순서 보존 + 16 page 동적 데이터가 이 단일 경계에 수렴 → **페이지별 Suspense 불요**(layout 1곳 수정으로 16 page 동시 green).
+- [x] **Step 2:** 반복 빌드(7회)로 Gate 2 0까지 수렴 — 순서: admin layout → site 6 page → login 3 → `(site)` WebVitalsReporter(전역) → compare. **빌드 68/68 GREEN**(exit 0).
+- [x] **Step 3:** 커밋 `feat(routing): suspense boundaries for dynamic routes (Phase 5-C/3 Gate 2)`.
 
 ---
 

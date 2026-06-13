@@ -22,7 +22,11 @@ export default function SiteLayout({
       <SiteHeader />
       <main className="min-h-[60vh]">{children}</main>
       <SiteFooter />
-      <WebVitalsReporter />
+      {/* RUM 리포터 — usePathname() 동적 읽기 → Suspense 경계 필수
+          (정적 prerender 시 fallback=null, [ADR-0053] · GlobalRouteProgress와 동형). */}
+      <Suspense fallback={null}>
+        <WebVitalsReporter />
+      </Suspense>
     </>
   );
 }
