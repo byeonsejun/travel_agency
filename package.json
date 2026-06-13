@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "search:eval": "tsx scripts/search-eval/run-eval.ts",
+    "search:judge": "tsx scripts/search-eval/judge.ts",
+    "search:extract-catalog": "tsx scripts/search-eval/extract-catalog-queries.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",

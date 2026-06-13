@@ -30,3 +30,18 @@ export interface RerankSnapshot {
   query: string;
   rerankedTitles: string[];
 }
+
+/**
+ * LLM-as-judge 라벨 스냅샷 — judge.ts가 생성, run-eval(--catalog)이 소비.
+ * labels[query][title] = 0~3 (생략된 title은 0). meta로 재현·드리프트 추적.
+ */
+export interface JudgeLabelSnapshot {
+  meta: {
+    model: string; // 판정 LLM(예: claude-haiku-4-5-20251001)
+    rubricVersion: string; // judge-rubric.ts RUBRIC_VERSION
+    generatedAt: string; // ISO8601
+    corpusTitlesHash: string; // 코퍼스 title 집합 해시(코퍼스 변경 감지)
+    queryCount: number;
+  };
+  labels: Record<string, Record<string, number>>;
+}
