@@ -3,7 +3,7 @@
 - **상태**: Accepted
 - **결정일**: 2026-06-12
 - **영향 범위**: `next.config.mjs`, `src/app/**`(동적 page 24 + route handler 11), `src/entities/{product,departure,analytics}/api/**`(`unstable_cache` 20곳), `src/features/**/server/actions.ts`(무효화 9곳)
-- **관련 commit**: (작업 중 — Phase 1~4 순차 기록)
+- **관련 commit**: `3f8df71`(P1 캐시 레이어) · `f997a4a`(P2 updateTag 일원화) · `da10bf7`(P3 Gate1 config strip + 누출 봉합) · `66eaed4`(P3 Gate2 Suspense) · `86545cf`(TransactionFallback SSOT)
 - **관련 ADR**: [ADR-0052](./0052-next16-upgrade-de-risked.md)(이연 결정 — 본 ADR이 후속), [ADR-0009](./0009-no-real-money-env-invariant.md)/[ADR-0020](./0020-cache-tag-contracts-and-force-dynamic-audit.md)(force-dynamic 안전도메인 정책), [ADR-0035](./0035-route-loading-skeletons-and-global-progress.md)(Phase 7 Suspense 스켈레톤 — 재활용 자산)
 
 ## Context (배경)
@@ -30,7 +30,9 @@ Phase 5-C 착수 전, 격리 스파이크 브랜치(`spike/phase5c-cache-compone
 
 3. **`runtime = "nodejs"` 제거는 default가 nodejs임을 확인 후 일괄 처리한다.** route handler 10곳의 명시적 핀은 cacheComponents가 거부하므로 삭제하되, Edge로 강등되지 않음(Next 16 route handler default = nodejs)을 검증. `middleware.ts`는 별개 — 본 마이그레이션 범위 밖(ADR-0052 유지).
 
-4. **무효화는 same-request 즉시성이 필요한 곳만 `updateTag`, 그 외 `revalidateTag` 유지.** ADR-0052의 `'max'` 워크어라운드를 청산한다. admin 수정→PDP 즉시 반영처럼 같은 요청에서 신선도가 필요한 경로는 `updateTag(tag)`, 백그라운드 stale-while-revalidate로 충분한 경로는 `revalidateTag(tag)`(2-arg 강제 해소). 태그 SSOT(`TAG_PRODUCTS_*`/`tagProductDetail`/`tagDeparturesByProduct`)는 `cacheTag()` 호출로 이식하되 네임스페이스는 무손상(ADR-0020 컨트랙트 유지).
+4. **무효화는 same-request 즉시성이 필요한 곳만 `updateTag`, 그 외 `revalidateTag` 유지.** ADR-0052의 `'max'` 워크어라운드를 청산한다. ~~admin 수정→PDP 즉시 반영처럼 같은 요청에서 신선도가 필요한 경로는 `updateTag(tag)`, 백그라운드 stale-while-revalidate로 충분한 경로는 `revalidateTag(tag)`(2-arg 강제 해소).~~ **[2026-06-13 AMENDED — 아래 ⚠️ 참조]** 태그 SSOT(`TAG_PRODUCTS_*`/`tagProductDetail`/`tagDeparturesByProduct`)는 `cacheTag()` 호출로 이식하되 네임스페이스는 무손상(ADR-0020 컨트랙트 유지).
+
+   > ⚠️ **Amendment (2026-06-13, Phase 2 구현 중 실측 정정):** 위 취소선 조항의 "백그라운드는 `revalidateTag(tag)`(1-arg)" 가정은 **사실과 다르다**. Next 16.2.9의 `revalidateTag` 타입 시그니처는 `revalidateTag(tag: string, profile)`로 **2-arg가 강제**다(`node_modules/next/dist/server/web/spec-extension/revalidate.d.ts` 확인). 1-arg 무효화기는 `updateTag(tag)`(Server Action 전용, read-your-writes) 하나뿐이다. 9개 무효화 지점이 전부 Server Action이고 Final Checklist가 `revalidateTag(_, 'max')` **0**을 요구하므로, **9곳 전부 `updateTag(tag)`로 일원화**했다(`updateTag` 6 admin + checkout/booking-cancel 2 + admin-product 4태그). 좌석·가격 무효화는 stale-window 0이 정합성에 최선이라 customer 경로(checkout/booking-cancel)도 `updateTag`가 오히려 우월. 따라서 "백그라운드 `revalidateTag`로 분류" 조항은 **사문화**되었고, 정정된 결정은 "**Server Action 무효화는 `updateTag`로 통일**"이다. 배선은 Phase 2 단위테스트(`updateTag×N` 단언, 1188 green)가 증명. 커밋 `f997a4a`.
 
 ```ts
 // 전환 패턴 (unstable_cache → use cache)
@@ -81,3 +83,7 @@ export async function getProductById(id: string) {
 - 모니터링 지표: PPR 전환 후 home/PDP TTFB·LCP(RUM 파이프라인 ADR-0051로 측정), admin→PDP 무효화 즉시성(updateTag 회귀).
 - route handler 11곳은 Gate 1만 — Suspense 작업 0건임을 plan에 명시(과잉 작업 방지).
 - 테스트 영향: `cacheTag`/`cacheLife`는 `'use cache'` 스코프 밖(vitest)에서 호출 시 throw 가능 — 데이터 레이어 직접 단위테스트가 있으면 `next/cache` 모킹 필요(Phase 1에서 확인).
+- **Gate 1.5 — 잠복 누출(빌드만 포착, typecheck/test 통과):** `cacheComponents` 첫 빌드가 Phase 1의 잠복 회귀를 드러냄 — client island이 `use cache`를 품은 entity 배럴을 **value import**하면 서버 그래프가 client 번들로 compile돼 `"use cache" in Client Components` 에러. 봉합 3종: (a) 직렬화 가능 상수는 **서버부모가 prop 주입**(`LiveDepartureList.badgeThreshold`, `DateRangePicker.presets`), (b) **non-serializable(접근자 함수) 프레젠테이션은 feature로 이관**(`DRILLDOWN_COLUMNS`→`features/admin-dashboard-drilldown/model/drilldownColumns.ts`), (c) client는 `import type`만. 교훈: server/client 경계·배럴 변경은 `npm run build` 필수(typecheck+test 불충분).
+- **24 동적 page의 실제 격리는 "차단원(choke point) 우선"으로 최소화:** admin 16곳은 layout의 top-level `auth()`가 공통 차단원 → `(admin)/admin/layout.tsx` 단일 Suspense(가드+nav+children 동봉)로 16곳 동시 해소. 전 (site) 페이지는 `(site)/layout.tsx`의 `WebVitalsReporter`(`usePathname()`)가 공통 차단원 → `<Suspense fallback={null}>` 1줄로 해소. 페이지별 Suspense는 결제·예약·login·compare에만.
+- **PPR redirect 뉘앙스(런타임 스모크 실측):** 인증 가드가 Suspense 자식 안에서 발화하면 응답이 **307이 아니라 200 + 스트리밍 redirect**로 나올 수 있다(shell이 먼저 flush). 단 본문엔 skeleton + `/login` redirect만 있고 보호 페이로드(결제폼·clientKey)는 **0 누출**(`.next` 셸 grep + dev 런타임 양쪽 실증). 보안 동일.
+- **dev는 `use cache` 우회:** `next dev`는 매 요청 캐시 함수 재실행(open-kitchen) → 캐시 hit·`updateTag` 무효화는 **prod-only 관측**. dev에서 "캐시 hit 안 보임"은 정상. 무효화 배선은 Phase 2 단위테스트로 증명.

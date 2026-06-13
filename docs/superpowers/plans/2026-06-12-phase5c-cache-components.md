@@ -142,26 +142,26 @@
 ### Task 4.1: ISR 2개 (home/PDP)
 **Files:** `(site)/page.tsx`, `(site)/products/[id]/page.tsx`
 
-- [ ] **Step 1:** `export const revalidate` 제거 → 데이터 fn의 `cacheLife`로 TTL 이전(home 300s / PDP 3600s). `generateStaticParams` 보존.
-- [ ] **Step 2:** 빌드 출력에서 home/PDP가 PPR(부분 prerender)로 표기되는지 확인.
+- [x] **Step 1:** `export const revalidate`는 Gate1(Task 3.0)에서 제거됨 → TTL은 Phase 1 데이터 fn `cacheLife`로 이미 이전(getFeaturedProducts 300s / getProductById 3600s). `generateStaticParams` 보존. 주석도 Cache Components 기준으로 갱신.
+- [x] **Step 2:** 빌드 라우트 표 확인 — home `○` 5m, PDP `◐` 1h(PPR). 별도 코드 변경 불요(자동 이전).
 
 ### Task 4.2: 🔬 전역 검증 (증거 기반)
-- [ ] **Step 1:** `npm run build` green (Gate 1 + Gate 2 0 errors).
-- [ ] **Step 2:** `npm run typecheck` 0 / `npm run test` 157 green / `npm run lint` 0.
-- [ ] **Step 3:** dev 런타임 스모크 — PDP 캐시 hit, admin 수정→PDP `updateTag` 즉시 반영, 결제 페이지 동적성(매 요청 신선) 증거 수집.
-- [ ] **Step 4:** 잔여 `unstable_cache`/`force-dynamic`/`revalidate` export 0 확인.
+- [x] **Step 1:** `npm run build` GREEN — Gate1(use-cache-in-client) 0 + Gate2(uncached outside Suspense) 0, **68/68 page 생성**.
+- [x] **Step 2:** `npm run typecheck` 0 / `npm run test` 157파일·1188 green / `npm run lint` 0 errors(10 pre-existing warnings).
+- [x] **Step 3:** dev 런타임 스모크 — searchParams 동적 렌더·가드 redirect(307/PPR-200 둘 다 누출0)·admin 세션 스트리밍(AdminAuthedShell 실제 렌더)·dashboard 누출수정 실증. **무효화 E2E는 dev가 `use cache` 우회(open-kitchen)라 prod-only** → updateTag 배선은 Phase 2 단위테스트로 증명(사용자 결정: 1번 옵션 단위테스트 수용).
+- [x] **Step 4:** 잔여 `unstable_cache` 0(주석만)/`export const dynamic|runtime|revalidate` 0/`revalidateTag(_,'max')` 0 확인.
 
 ### Task 4.3: 종합 보고 + CLAUDE.md 갱신
-- [ ] **Step 1:** [ADR-0053] `관련 commit` 채움.
-- [ ] **Step 2:** CLAUDE.md §8 "Phase 5-C 완료" + 혼란 방지 노트(2-gate masking, updateTag 정책, route handler Gate1-only) 추가.
-- [ ] **Step 3:** PR 생성(§7.1 보고 양식).
+- [x] **Step 1:** [ADR-0053] `관련 commit` 5건 채움 + **§4 사문화 조항 amend**(1-arg revalidateTag 불가 정정) + Notes 5건 추가(Gate1.5 누출/choke-point/PPR redirect/dev bypass).
+- [x] **Step 2:** CLAUDE.md §8 "Phase 5-C 완료" 추가 + 혼란 방지 노트 9건(2-gate masking, ◐ vs ○ 안전, 배럴 누출, layout choke-point, PPR 200 redirect, dev bypass, TransactionFallback, cacheLife SSOT).
+- [x] **Step 3:** PR 생성(§7.1 보고 양식).
 
 ---
 
 ## Final Checklist
-- [ ] `unstable_cache` 0 (src 전역, 주석 제외)
-- [ ] `export const dynamic/runtime/revalidate` 0 (src/app)
-- [ ] `revalidateTag(_, 'max')` 0 (`updateTag` 또는 1-arg로 전환)
-- [ ] `npm run build` / `typecheck` / `test`(157) / `lint` 전부 green
-- [ ] 결제·예약 상태 prerender 0 (빌드 출력 dynamic 표기로 증명)
-- [ ] [ADR-0053] commit 채움 + CLAUDE.md 갱신
+- [x] `unstable_cache` 0 (src 전역, 주석 제외)
+- [x] `export const dynamic/runtime/revalidate` 0 (src/app)
+- [x] `revalidateTag(_, 'max')` 0 (전부 `updateTag`로 전환 — 1-arg revalidateTag는 Next 16에 부재)
+- [x] `npm run build`(68/68) / `typecheck`(0) / `test`(157·1188) / `lint`(0) 전부 green
+- [x] 결제·예약 상태 prerender 0 (안전 page 16곳 `◐` PPR + `.next` 셸 grep으로 민감데이터 0 누출 실증)
+- [x] [ADR-0053] commit 채움 + §4 amend + CLAUDE.md 갱신
