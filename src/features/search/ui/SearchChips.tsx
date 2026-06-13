@@ -11,7 +11,7 @@ export function SearchChips() {
         <a
           key={chip}
           href={`/search?q=${encodeURIComponent(chip)}`}
-          className="rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+          className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-secondary"
         >
           {chip}
         </a>

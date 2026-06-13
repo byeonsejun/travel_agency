@@ -42,7 +42,7 @@ export function ProductCard({ product, heart, compareButton, linkQueryString }: 
           <ProductImage
             src={heroImageUrl}
             alt={title}
-            className="h-full w-full transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full"
           />
         </div>
 
