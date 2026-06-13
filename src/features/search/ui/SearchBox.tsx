@@ -37,7 +37,7 @@ export function SearchBox({
         type="search"
         defaultValue={defaultValue}
         placeholder={placeholder}
-        className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        className="flex-1 rounded-lg border border-input bg-background px-4 py-3 text-sm shadow-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
         maxLength={200}
         autoComplete="off"
       />
@@ -45,12 +45,12 @@ export function SearchBox({
         type="submit"
         disabled={isPending}
         aria-busy={isPending}
-        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
       >
         {isPending && (
           <span
             aria-hidden="true"
-            className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+            className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground"
           />
         )}
         검색
