@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "search:eval": "tsx scripts/search-eval/run-eval.ts",
     "search:judge": "tsx scripts/search-eval/judge.ts",
     "search:extract-catalog": "tsx scripts/search-eval/extract-catalog-queries.ts",
@@ -49,6 +50,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
