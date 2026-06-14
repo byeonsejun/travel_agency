@@ -101,6 +101,11 @@
 | 0051  | [자체 Postgres RUM 파이프라인 + 원시 30일 보존(읽기시점 p75) — Sentry/Vercel SaaS 거부, Phase 5-C baseline 확보 (Milestone 5)](./0051-self-hosted-rum-pipeline-and-raw-30d-retention.md) | Accepted | 2026-06-11   |
 | 0052  | [Next.js 16 업그레이드 — 배선만 교체, 캐시 재설계 분리 (de-risked): middleware 유지·revalidateTag 2-arg·Sentry 10 선행 (Phase 5-B)](./0052-next16-upgrade-de-risked.md) | Accepted | 2026-06-12   |
 | 0053  | [Next 16 Cache Components 전역 전환 — 2-gate 점진 마이그레이션(Gate1 config 43 / Gate2 동적page 24): 플래그 kill-switch·안전도메인 Suspense 격리·updateTag 청산 (Phase 5-C)](./0053-next16-cache-components-global-migration.md) | Accepted | 2026-06-12   |
+| 0054  | [검색 가중치 튜닝 보류 — 작은 카탈로그 변별력 측정 우선(가중치 SSOT 미변경): baseline 64→120/286·vector≤0.1 top동률 4→0·코퍼스20=전체](./0054-search-weight-tuning-deferred.md) | Accepted | 2026-06-14   |
+| 0055  | [LLM-judge 반순환 라벨링 — 속성 기반 루브릭 + embedding/cosine/vector 금칙어 가드테스트로 점수공식 독립(judge↔수작업 within1 81.3%/exact 37.5%)](./0055-llm-judge-non-circular-labeling.md) | Accepted | 2026-06-14   |
+| 0056  | [결제 만료 cron 미구현 — known gap 박제: paymentDueAt 정의/인덱스만 존재·set/read 0·dispatcher 4워커에 만료 워커 없음(좌석 hold TTL 부재)](./0056-payment-expiry-cron-known-gap.md) | Accepted | 2026-06-14   |
+| 0057  | [예약 접근통제 = WHERE userId 소유권 인가(ID 비밀성 아님) — 잘린 ID는 표시용·라우트/조회는 전체 CUID + userId 스코프](./0057-access-control-ownership-not-id-secrecy.md) | Accepted | 2026-06-14   |
+| 0058  | [이벤트 reason 노출 — 공유 컴포넌트로 안전 수위 일원화(고객/admin 분리 아님): 시스템 reason은 admin도 못 봄·surface 분리는 prop으로 보류](./0058-event-reason-exposure-unified-safe-level.md) | Accepted | 2026-06-14   |
 
 ## 향후 후보 (작성 대기)
 
