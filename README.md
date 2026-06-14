@@ -4,11 +4,23 @@
 
 자연어 검색으로 조건에 맞는 패키지 여행을 탐색하고, 여행사 도메인 규칙(최소 출발 인원·동적 가격·실시간 좌석 차감)이 그대로 반영된 예약 플로우를 제공합니다.
 
+---
+
+### 📐 먼저 읽어주세요 — 엔지니어링 판단 기록
+
+> **▶ [코드는 AI가, 판단은 내가 — 다섯 개 결정의 회고](docs/engineering-judgment.md)**
+>
+> 프론트엔드 개발자가 AI로 검색 랭킹·결제 saga·인가·이벤트 소싱까지 닿을 때, 차별점은 코드 생성이 아니라 그 위에 내린 판단이다. 검색 가중치 튜닝 보류(과적합 회피), LLM-judge 반순환 라벨, 소유권 기반 인가(ID 비밀성 거부), 정직하게 남긴 갭 등 **다섯 개 결정**을 수치와 코드로 회고한다.
+>
+> 결정 원본 전체: **[ADR 인덱스 (0001–0058)](docs/superpowers/adr/README.md)** — 모든 주장은 ADR → 커밋/코드 라인으로 추적된다.
+
+---
+
 ## 기술 스택
 
 | 분류 | 기술 |
 |------|------|
-| Frontend / Backend | Next.js 15 (App Router) + TypeScript |
+| Frontend / Backend | Next.js 16 (App Router) + TypeScript |
 | Database | PostgreSQL + pgvector + Prisma ORM (운영: Supabase / 로컬: Docker 격리) |
 | AI | Anthropic Claude API + pgvector |
 | 인증 | Auth.js v5 (이메일 매직링크 + 카카오) |
