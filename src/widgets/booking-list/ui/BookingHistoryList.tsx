@@ -74,7 +74,7 @@ export function BookingHistoryList({ bookings, bookingIdsWithReview }: Props) {
                   {(booking.status === "CANCELED_BY_AGENCY" ||
                     booking.status === "CANCELED_BY_USER") &&
                     booking.cancelReason && (
-                      <p className="mt-1.5 text-xs text-red-600">
+                      <p className="mt-1.5 text-xs text-destructive">
                         취소 사유: {booking.cancelReason}
                       </p>
                     )}

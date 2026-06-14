@@ -22,12 +22,12 @@ describe("<BookingProgressBar /> SSR 렌더", () => {
     expect(html).toContain('aria-current="step"');
   });
 
-  it("PAID → done 스텝에 체크 SVG, 현재 스텝에 ring-blue-200", () => {
+  it("PAID → done 스텝에 체크 SVG, 현재 스텝에 ring 강조(primary 토큰)", () => {
     const html = renderToStaticMarkup(<BookingProgressBar status="PAID" />);
     // 체크 SVG path 일부 (done 표시)
     expect(html).toContain("M16.704 5.29");
-    // current step의 ring
-    expect(html).toContain("ring-4 ring-blue-200");
+    // current step의 ring — 클린 블루 primary 토큰
+    expect(html).toContain("ring-4 ring-primary/20");
     // current는 PAID 위치 (step 4 / 1-indexed)
     expect(html).toContain('aria-current="step"');
   });
@@ -46,7 +46,8 @@ describe("<BookingProgressBar /> SSR 렌더", () => {
     );
     expect(html).toContain("예약 취소됨");
     expect(html).toContain("고객 취소");
-    expect(html).toContain("bg-red-50");
+    // 취소 종결 배너는 destructive 토큰 톤(클린 블루 시스템 정합)
+    expect(html).toContain("bg-destructive/10");
     // 진행 ol 자체가 없어야 함
     expect(html).not.toContain('aria-label="예약 진행 단계"');
   });
