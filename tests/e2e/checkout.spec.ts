@@ -1,5 +1,18 @@
 import { test, expect } from "@playwright/test";
 import { createSessionCookie } from "./helpers/auth";
+import {
+  E2E_LASTNAME,
+  E2E_FIRSTNAME,
+  purgeE2EBookings,
+  closeTestDb,
+} from "./helpers/db";
+
+// self-cleaning: 이 테스트가 만든 예약(시드 customer + E2E 마커)을 삭제하고
+// 차감된 좌석을 복원한다. 결제 전 중단 등 부분 실패 예약도 마커로 잡힌다.
+test.afterAll(async () => {
+  await purgeE2EBookings();
+  await closeTestDb();
+});
 
 /**
  * 스모크 1 — 체크아웃 happy path (쿠키 주입 인증).
@@ -31,8 +44,9 @@ test("체크아웃 happy path: 예약 생성 후 결제 완료(PAID)까지 완�
   await expect(page).toHaveURL(/\/checkout\?departureId=/);
 
   // 4) 여행자 정보(예약자 1명) 입력 — 기본 인원: 성인 1
-  await page.locator("#ln-0").fill("HONG");
-  await page.locator("#fn-0").fill("GILDONG");
+  //    성(lastNameEn)에 E2E 마커를 심어 teardown이 이 예약을 결정적으로 식별.
+  await page.locator("#ln-0").fill(E2E_LASTNAME);
+  await page.locator("#fn-0").fill(E2E_FIRSTNAME);
   await page.locator("#gen-0").selectOption("MALE");
   await page.locator("#bd-0").fill("1990-01-01");
 
