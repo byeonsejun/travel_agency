@@ -75,18 +75,18 @@ export function ConfirmPayment({ bookingId, paymentKey, orderId, amount }: Props
       {state === "pending" && (
         <>
           <div
-            className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"
+            className="h-10 w-10 animate-spin rounded-full border-4 border-primary/30 border-t-primary"
             role="status"
             aria-label="결제 확인 중"
           />
-          <p className="text-sm text-gray-600">결제를 확인하는 중입니다...</p>
+          <p className="text-sm text-muted-foreground">결제를 확인하는 중입니다...</p>
         </>
       )}
       {state === "success" && (
-        <p className="text-sm text-gray-600">결제가 완료되었습니다. 예약 상세 페이지로 이동 중...</p>
+        <p className="text-sm text-muted-foreground">결제가 완료되었습니다. 예약 상세 페이지로 이동 중...</p>
       )}
       {state === "failed" && (
-        <p className="text-sm text-red-600">결제에 실패했습니다. 실패 페이지로 이동 중...</p>
+        <p className="text-sm text-destructive">결제에 실패했습니다. 실패 페이지로 이동 중...</p>
       )}
     </div>
   );

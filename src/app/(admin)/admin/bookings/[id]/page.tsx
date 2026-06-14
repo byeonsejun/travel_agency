@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getAdminBookingDetail,
-  isCancelableByUser,
   BookingStatusBadge,
   BookingSummaryCard,
   BookingEventTimeline,
@@ -214,12 +213,6 @@ export default async function AdminBookingDetailPage({ params }: PageProps) {
           </p>
         </section>
       )}
-
-      {/* 디버그 — booking.isCancelableByUser 참고 표시 (admin 시인성) */}
-      <p className="text-right text-[10px] text-muted-foreground/50">
-        ref: isCancelableByUser(status) ={" "}
-        {String(isCancelableByUser(booking.status))}
-      </p>
     </div>
   );
 }
