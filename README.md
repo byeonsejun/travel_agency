@@ -20,7 +20,7 @@
 
 | 분류 | 기술 |
 |------|------|
-| Frontend / Backend | Next.js 15 (App Router) + TypeScript |
+| Frontend / Backend | Next.js 16 (App Router) + TypeScript |
 | Database | PostgreSQL + pgvector + Prisma ORM (운영: Supabase / 로컬: Docker 격리) |
 | AI | Anthropic Claude API + pgvector |
 | 인증 | Auth.js v5 (이메일 매직링크 + 카카오) |
