@@ -106,6 +106,7 @@
 | 0056  | [결제 만료 cron 미구현 — known gap 박제: paymentDueAt 정의/인덱스만 존재·set/read 0·dispatcher 4워커에 만료 워커 없음(좌석 hold TTL 부재)](./0056-payment-expiry-cron-known-gap.md) | Accepted | 2026-06-14   |
 | 0057  | [예약 접근통제 = WHERE userId 소유권 인가(ID 비밀성 아님) — 잘린 ID는 표시용·라우트/조회는 전체 CUID + userId 스코프](./0057-access-control-ownership-not-id-secrecy.md) | Accepted | 2026-06-14   |
 | 0058  | [이벤트 reason 노출 — 공유 컴포넌트로 안전 수위 일원화(고객/admin 분리 아님): 시스템 reason은 admin도 못 봄·surface 분리는 prop으로 보류](./0058-event-reason-exposure-unified-safe-level.md) | Accepted | 2026-06-14   |
+| 0059  | [출발취소 cascade 환불의 원장 비대칭 해소 — enqueue Tx에 reserveRefund 추가로 saga Phase 1 미러: refundedAmount 음수 잠복 버그 봉합·과환불 차단·idempotencyKey 보류](./0059-cascade-refund-ledger-symmetry.md) | Accepted | 2026-06-14   |
 
 ## 향후 후보 (작성 대기)
 
