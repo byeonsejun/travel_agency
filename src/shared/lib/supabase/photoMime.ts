@@ -63,12 +63,29 @@ export function reviewPhotoPublicUrl(path: string): string {
 // 시드 상품 대표 이미지의 결정적 저장 prefix (마이그레이션·재시드 공유).
 export const HERO_SEED_PREFIX = "product-hero/seed";
 
+// 홈 테마 벤토 타일 이미지의 저장 prefix (seed/ 와 형제 — 상품 자산과 경로 분리).
+export const THEME_IMAGE_PREFIX = "product-hero/themes";
+
 /**
- * 시드 상품 hero 이미지의 env-portable public URL.
+ * 버킷 내부 `<prefix>/<slug>.jpg` 의 env-portable public URL 빌더 (client-safe).
  * env.ts 미사용(client-safe 규칙) — NEXT_PUBLIC_SUPABASE_URL 직접 접근.
  * 로컬/운영이 같은 Supabase 프로젝트라면 동일 URL 로 양쪽에서 해석된다.
  */
-export function buildHeroSeedPublicUrl(slug: string): string {
+export function buildBucketPublicUrl(prefix: string, slug: string): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  return `${base}/storage/v1/object/public/${REVIEW_PHOTO_BUCKET}/${HERO_SEED_PREFIX}/${slug}.jpg`;
+  return `${base}/storage/v1/object/public/${REVIEW_PHOTO_BUCKET}/${prefix}/${slug}.jpg`;
+}
+
+/**
+ * 시드 상품 hero 이미지의 public URL. (출력·시그니처 불변 — 기존 호출부 무영향)
+ */
+export function buildHeroSeedPublicUrl(slug: string): string {
+  return buildBucketPublicUrl(HERO_SEED_PREFIX, slug);
+}
+
+/**
+ * 홈 테마 벤토 타일 이미지의 public URL (product-hero/themes/<slug>.jpg).
+ */
+export function buildThemeImageUrl(slug: string): string {
+  return buildBucketPublicUrl(THEME_IMAGE_PREFIX, slug);
 }
