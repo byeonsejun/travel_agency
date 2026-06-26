@@ -4,6 +4,18 @@ import { redirect } from "next/navigation";
 import { auth } from "@/features/auth/server/auth";
 import { LogoutButton } from "@/features/auth/ui/LogoutButton";
 
+// admin 상단 네비 메뉴 SSOT — 라벨/링크 단일 정의. 항목 추가·수정은 이 배열만.
+const ADMIN_NAV: { label: string; href: string }[] = [
+  { label: "대시보드", href: "/admin/dashboard" },
+  { label: "예약", href: "/admin/bookings" },
+  { label: "환불", href: "/admin/refund-jobs" },
+  { label: "상품", href: "/admin/products" },
+  { label: "위약금", href: "/admin/penalty-policies" },
+  { label: "임베딩 Jobs", href: "/admin/embedding-jobs" },
+  { label: "취소", href: "/admin/departure-cancellations" },
+  { label: "리뷰", href: "/admin/reviews" },
+];
+
 // /admin/* 는 middleware에서 1차 ADMIN role 가드. 이 layout이 2차 belt-and-suspenders.
 // 미들웨어 우회/오설정 회귀 방지.
 //
@@ -45,55 +57,16 @@ async function AdminAuthedShell({ children }: { children: React.ReactNode }) {
             >
               Nextour Admin
             </Link>
-            <nav className="flex items-center gap-4 text-sm">
-              <Link
-                href="/admin/dashboard"
-                className="rounded-md px-3 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                대시보드
-              </Link>
-              <Link
-                href="/admin/bookings"
-                className="rounded-md px-3 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                예약 관리
-              </Link>
-              <Link
-                href="/admin/refund-jobs"
-                className="rounded-md px-3 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                환불 모니터링
-              </Link>
-              <Link
-                href="/admin/products"
-                className="rounded-md px-3 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                상품 관리
-              </Link>
-              <Link
-                href="/admin/penalty-policies"
-                className="rounded-md px-3 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                위약금 정책
-              </Link>
-              <Link
-                href="/admin/embedding-jobs"
-                className="rounded-md px-3 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                임베딩 Jobs
-              </Link>
-              <Link
-                href="/admin/departure-cancellations"
-                className="rounded-md px-3 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                취소 배치
-              </Link>
-              <Link
-                href="/admin/reviews"
-                className="rounded-md px-3 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                리뷰 관리
-              </Link>
+            <nav className="flex items-center gap-1 overflow-x-auto text-sm">
+              {ADMIN_NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="whitespace-nowrap rounded-md px-2 py-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
           </div>
           <div className="flex items-center gap-3">
