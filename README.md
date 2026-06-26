@@ -27,7 +27,56 @@
 
 ---
 
-<!-- TODO(readme-revamp 다음 단계): 아키텍처 다이어그램 추가 자리 — (1) FSD 5레이어 단방향 의존성(app→widgets→features→entities→shared), (2) 결제/환불 3-phase saga 흐름(Phase1 enqueue → Phase2 외부 IO → Phase3 settle). -->
+## 아키텍처
+
+### FSD 5-레이어 단방향 의존성
+
+```mermaid
+flowchart TD
+    app["app — 라우팅·페이지<br/>(site) · (admin) · api"]
+    widgets["widgets — 13 슬라이스<br/>entity UI 조합"]
+    features["features — 20 슬라이스<br/>사용자 인터랙션 단위"]
+    entities["entities — 10 슬라이스<br/>도메인 모듈 · product / booking / payment 등"]
+    shared["shared — email · lib · types · ui<br/>도메인 무지 유틸·UI·db client"]
+
+    app --> widgets --> features --> entities --> shared
+
+    classDef layer fill:#eef2ff,stroke:#6366f1,color:#1e1b4b;
+    class app,widgets,features,entities,shared layer
+```
+
+> *그림 1.* 상위 레이어만 하위 레이어를 import한다(역방향·동일 레이어 cross-slice import 금지). 강제 수단은 lint 플러그인이 아니라 **barrel `index.ts` 공개 API 컨벤션 + Architect 페르소나 자가 코드리뷰**(`docs/superpowers/skills/architect.md` R1/R2, `CLAUDE.md` §5). 외부 import는 항상 `@/entities/{name}` 형태의 barrel 경로만 사용한다.
+
+### 결제·환불 3-Phase Saga (외부 IO를 DB 트랜잭션 밖으로)
+
+```mermaid
+flowchart TD
+    start(["환불 요청"]) --> idem
+
+    subgraph P1["Phase 1 · DB Tx — 멱등 게이트 + 예약(reserve)"]
+        idem{"idempotencyKey 가진<br/>RefundJob 존재?"}
+        idem -->|있음| noop(["멱등 no-op 종료"])
+        idem -->|없음| reserve["reserveRefund · 원장 조건부 차감<br/>RefundJob = IN_PROGRESS enqueue"]
+    end
+
+    reserve --> toss
+
+    subgraph P2["Phase 2 · 외부 IO — DB Tx 바깥"]
+        toss["tossClient.cancel<br/>Idempotency-Key HTTP 헤더"]
+    end
+
+    toss -->|성공| settle
+    toss -->|실패| defer["RefundJob = PENDING<br/>지수 백오프 nextRunAt"]
+    defer -.->|cron worker 재시도 · refundRetry.ts| toss
+
+    subgraph P3["Phase 3 · DB Tx — 정산(settle)"]
+        settle["Payment = CANCELED / PARTIAL_CANCELED<br/>RefundJob = SUCCEEDED<br/>PaymentEvent providerEventId 적재<br/>EmailJob 아웃박스 enqueue"]
+    end
+
+    settle --> done(["환불 완료"])
+```
+
+> *그림 2.* 환불은 우리 DB와 Toss PG에 걸친 분산 트랜잭션이다([ADR-0003](./docs/superpowers/adr/0003-refund-saga-3-phase.md)). 외부 IO(Phase 2)를 DB Tx 밖으로 격리해 락 윈도우를 마이크로초로 줄이고, PG 실패는 `RefundJob = PENDING`으로 적재해 cron worker가 자가 치유한다(이 동안 booking 상태는 무결성을 유지). 3중 멱등성(HTTP `Idempotency-Key` + `RefundJob.idempotencyKey` 게이트 + `PaymentEvent.providerEventId`)으로 이중 환불을 차단한다.
 
 ## 기술 스택
 
