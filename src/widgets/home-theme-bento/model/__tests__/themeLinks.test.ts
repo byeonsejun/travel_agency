@@ -18,10 +18,12 @@ describe("themeLinks", () => {
     }
   });
 
-  it("이미지 슬롯은 교체용으로 비어 있다(목업) — image 를 채우면 사진 타일로 전환", () => {
-    for (const t of THEME_TILES) {
-      // 현재는 플레이스홀더(토큰 블록). 사용자가 image 에 URL 을 넣으면 next/image 로 렌더.
-      expect(t.image).toBeUndefined();
-    }
+  it("각 타일 image 는 테마 버킷(product-hero/themes/<slug>.jpg) public URL 로 연결된다", () => {
+    // recon 매칭표 순서: [0]가족→family, [1]허니문→honeymoon, [2]나홀로→solo, [3]주말근거리→weekend.
+    const expectedSlugs = ["family", "honeymoon", "solo", "weekend"];
+    THEME_TILES.forEach((t, i) => {
+      expect(t.image).toBeDefined();
+      expect(t.image).toContain(`product-hero/themes/${expectedSlugs[i]}.jpg`);
+    });
   });
 });
