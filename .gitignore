@@ -25,3 +25,6 @@ coverage
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Local image assets served from Supabase bucket — not committed to repo
+/public/images/
