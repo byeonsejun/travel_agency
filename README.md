@@ -4,7 +4,20 @@
 
 자연어 검색으로 조건에 맞는 패키지 여행을 탐색하고, 여행사 도메인 규칙(최소 출발 인원·동적 가격·실시간 좌석 차감)이 그대로 반영된 예약 플로우를 제공합니다.
 
-<!-- TODO(readme-revamp 다음 단계): 제품 스크린샷 추가 자리 — 홈 / 검색 결과 / 상품 상세(PDP) / 체크아웃 4컷. 버킷 최적화 이미지 활용. -->
+## 화면
+
+![홈](./docs/screenshots/home.png)
+
+<table>
+  <tr>
+    <td width="50%"><img src="./docs/screenshots/search.png" alt="AI 자연어 검색 결과" /><br/><sub><b>검색</b> — AI 자연어 하이브리드 랭킹 결과</sub></td>
+    <td width="50%"><img src="./docs/screenshots/pdp.png" alt="상품 상세(PDP)" /><br/><sub><b>상품 상세(PDP)</b> — 일정·출발일·실시간 좌석</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="./docs/screenshots/checkout.png" alt="체크아웃" /><br/><sub><b>체크아웃</b> — 2-phase 결제 플로우</sub></td>
+    <td width="50%"><img src="./docs/screenshots/admin-dashboard.png" alt="관리자 대시보드" /><br/><sub><b>관리자 대시보드</b> — 매출·점유율·취소율</sub></td>
+  </tr>
+</table>
 
 ---
 
