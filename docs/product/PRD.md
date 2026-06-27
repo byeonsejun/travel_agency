@@ -77,7 +77,7 @@ Nextour는 이 복잡성을 **AI 시맨틱 검색 + 핵심 요약 + 구조화된
 - [ ] 위시리스트 / 가격 알림
 - [ ] 상품 비교 모드 (2~3개 나란히)
 - [ ] 리뷰 & 사진 후기
-- [ ] 카카오/구글 소셜 로그인
+- [x] 카카오/구글 소셜 로그인 (구현됨)
 - [ ] 멀티테넌트(여러 여행사 입점) 전환
 
 ## 5. 기술 스택
@@ -90,7 +90,7 @@ Nextour는 이 복잡성을 **AI 시맨틱 검색 + 핵심 요약 + 구조화된
 | Database | **PostgreSQL** | 좌석 차감은 트랜잭션으로 동시성 처리 |
 | Vector | **pgvector** (PostgreSQL extension) | 상품 임베딩 → 시맨틱 검색 |
 | AI / LLM | **Anthropic Claude API** | 쿼리 해석, 3줄 요약, 추천 코멘트 |
-| 인증 | **Auth.js (NextAuth)** | 이메일 + 카카오 소셜 |
+| 인증 | **Auth.js (NextAuth)** | 이메일 + Google/카카오 소셜 |
 | 결제(PG) | **토스페이먼츠** | 가상계좌·부분취소·정산 대시보드 활용 |
 | 배포 | **Vercel** | Next.js 네이티브 |
 | BaaS | **Supabase** | Postgres + pgvector + Storage 통합 |
