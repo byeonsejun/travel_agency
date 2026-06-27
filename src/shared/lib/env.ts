@@ -7,6 +7,11 @@ export const envSchema = z
     DATABASE_URL: z.string().url(),
     DIRECT_URL: z.string().url(),
     AUTH_SECRET: z.string().min(32),
+    // [Auth.js v5] OAuth redirect_uri 의 origin 을 고정한다(예: https://nextour.app).
+    // NextAuth 가 이 env 를 자동 인식하므로 코드 연결은 불필요 — 여기서는 검증/문서화
+    // 목적의 optional 정의만 둔다. 미설정이면 trustHost(auth.ts)가 런타임 Host 로 폴백.
+    // ⚠️ required 로 만들지 말 것 — 로컬 부팅이 깨진다.
+    AUTH_URL: z.string().url().optional(),
     AUTH_KAKAO_ID: z.string().optional(),
     AUTH_KAKAO_SECRET: z.string().optional(),
     // Google OAuth (PRD §4.2 — 소셜 로그인). 페어 검증 + 포맷 가드는 superRefine.
