@@ -98,7 +98,7 @@ flowchart TD
 | Frontend / Backend | Next.js 16 (App Router) + TypeScript |
 | Database | PostgreSQL + pgvector + Prisma ORM (운영: Supabase / 로컬: Docker 격리) |
 | AI | Anthropic Claude API + pgvector |
-| 인증 | Auth.js v5 (이메일 매직링크 + 카카오) |
+| 인증 | Auth.js v5 (이메일 매직링크 + Google + 카카오) |
 | 결제 | 토스페이먼츠 |
 | 배포 | Vercel |
 
