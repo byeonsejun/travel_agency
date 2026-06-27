@@ -15,6 +15,12 @@ const useDevConsoleFallback = env.NODE_ENV !== "production";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
+  // [Auth.js v5] 프로덕션 OAuth — Vercel/프록시 뒤의 Host 헤더를 신뢰해
+  // redirect_uri 를 올바른 배포 도메인으로 생성한다. trustHost 가 없으면
+  // 프로덕션에서 host 인식이 불안정해 `UntrustedHost` 로 OAuth(Google/Kakao)가
+  // 전부 차단될 수 있다. 로컬(localhost)은 원래 자동 신뢰라 무변동.
+  // 정확한 origin 고정이 필요하면 `AUTH_URL` 환경변수로 지정(v5 자동 인식).
+  trustHost: true,
   providers: [
     Resend({
       apiKey: env.RESEND_API_KEY ?? "DEV_ONLY",
