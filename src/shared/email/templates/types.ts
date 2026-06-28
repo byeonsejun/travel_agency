@@ -28,3 +28,8 @@ export interface PartialRefundCompletedEmailProps {
   refundAmount: number; // 최종 환불 금액 (원)
   paymentMethod: string; // "카드"
 }
+
+export interface MagicLinkEmailProps {
+  url: string; // Auth.js가 생성한 매직링크 URL (가공 금지 — 그대로 연결)
+  expiresInHours: number; // 토큰 만료 시간 (Auth.js Resend maxAge 기준, 기본 24h)
+}
