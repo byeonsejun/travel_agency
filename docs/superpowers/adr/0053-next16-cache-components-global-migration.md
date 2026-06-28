@@ -87,3 +87,10 @@ export async function getProductById(id: string) {
 - **24 동적 page의 실제 격리는 "차단원(choke point) 우선"으로 최소화:** admin 16곳은 layout의 top-level `auth()`가 공통 차단원 → `(admin)/admin/layout.tsx` 단일 Suspense(가드+nav+children 동봉)로 16곳 동시 해소. 전 (site) 페이지는 `(site)/layout.tsx`의 `WebVitalsReporter`(`usePathname()`)가 공통 차단원 → `<Suspense fallback={null}>` 1줄로 해소. 페이지별 Suspense는 결제·예약·login·compare에만.
 - **PPR redirect 뉘앙스(런타임 스모크 실측):** 인증 가드가 Suspense 자식 안에서 발화하면 응답이 **307이 아니라 200 + 스트리밍 redirect**로 나올 수 있다(shell이 먼저 flush). 단 본문엔 skeleton + `/login` redirect만 있고 보호 페이로드(결제폼·clientKey)는 **0 누출**(`.next` 셸 grep + dev 런타임 양쪽 실증). 보안 동일.
 - **dev는 `use cache` 우회:** `next dev`는 매 요청 캐시 함수 재실행(open-kitchen) → 캐시 hit·`updateTag` 무효화는 **prod-only 관측**. dev에서 "캐시 hit 안 보임"은 정상. 무효화 배선은 Phase 2 단위테스트로 증명.
+
+### 운영 메모 — 프로덕션 디버깅 후속 (2026-06)
+
+> 아래 두 항목은 본 ADR의 결정을 바꾸지 않는다. Cache Components 운영 중 비싸게 배운 교훈을 보강한다.
+
+- **서버리스 DB 커넥션은 `connection_limit=1`이 정답 (Vercel + Supabase 풀러):** prod `DATABASE_URL`은 Supabase 트랜잭션 풀러(`:6543` + `?pgbouncer=true`)를 경유하며 **`connection_limit=1`** 을 명시한다 — 서버리스 인스턴스마다 커넥션을 1개만 잡아 free 플랜 풀러 고갈을 막는다. 배경: `connection_limit=10`이면 **단일 페이지의 RSC fan-out(여러 `use cache`/쿼리)** 이 다중 서버리스 호출 × 10 커넥션으로 풀러를 고갈시켜 **매직링크 발송 지연·`/mypage` Server Component 에러·`POST /api/rum` 500이 동시 발생**했다(전부 `P2024` 커넥션 풀 타임아웃의 다른 얼굴). 코드는 in-code 풀링이 없고(`shared/lib/db.ts`) 이 값을 전적으로 `DATABASE_URL`에 위임하므로, prod DB 증상의 1순위 점검 대상은 **풀러 경유 + `connection_limit=1`** 여부다.
+- **빌드 prerender 0 + 전량 on-demand는 `generateStaticParams` *제거*로 (≠ `return []`):** 라우트를 빌드 표본 없이 순수 on-demand로 두려면 `generateStaticParams`를 **빈 배열로 두지 말고 함수 자체를 제거**한다. `return []`은 Cache Components가 **`EmptyGenerateStaticParamsError`로 거부**한다("빌드 검증 표본이 0이라 동적 누출을 검증할 수 없음" — `npm run build`에서만 포착, typecheck/lint는 통과). 함수 부재는 "빌드 표본 불필요, 순수 on-demand"로 해석돼 통과하며, `dynamicParams` 기본 `true`라 첫 요청 시 `◐`(PPR) 셸을 생성·캐시한다. 실사례: PDP(`/products/[id]`)가 `generateStaticParams`로 **전체 PUBLISHED 상품을 빌드 prerender**하며 페이지당 2쿼리(`product.findUnique` + `departure.findMany`)를 `connection_limit=1`에 동시 투입 → 빌드가 `P2024`로 실패 → **함수 제거로 해소**(커밋 `d5f7f51`). 교훈: 빌드 prerender 정책 변경은 `npm run build`로만 검증된다(앞의 Gate 1.5와 동일 계열).
