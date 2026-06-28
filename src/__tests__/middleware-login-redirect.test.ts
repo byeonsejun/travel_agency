@@ -12,18 +12,17 @@ import { NextRequest } from "next/server";
  * 규칙은 *로그인 폼*(`/login` 정확히 일치)에만 적용되어야 하고, 완료 플로우
  * 하위 경로(`/login/success`, `/login/verify`)는 통과시켜야 한다.
  */
-vi.mock("@/features/auth/server/auth", () => ({
-  auth: (handler: unknown) => handler,
+// 세션은 이제 middleware 가 next-auth/jwt 의 getToken 으로 *읽기 전용* 디코드한다
+// (auth() 래퍼의 rolling 쿠키 재발급 제거 — 로그아웃 경합 버그 수정). 인증 사용자
+// 시나리오이므로 getToken 이 디코드된 JWT payload(id/role)를 반환하도록 mock.
+vi.mock("next-auth/jwt", () => ({
+  getToken: vi.fn(async () => ({ id: "user_1", role: "USER" })),
 }));
 
 type MiddlewareFn = (req: NextRequest) => Promise<Response> | Response;
 
 function buildAuthedReq(url: string): NextRequest {
   const req = new NextRequest(url);
-  Object.defineProperty(req, "auth", {
-    value: { user: { id: "user_1", role: "USER" } },
-    configurable: true,
-  });
   Object.defineProperty(req, "nextUrl", {
     value: new URL(url),
     configurable: true,
@@ -33,7 +32,7 @@ function buildAuthedReq(url: string): NextRequest {
 
 async function loadMiddleware(): Promise<MiddlewareFn> {
   vi.resetModules();
-  return (await import("../middleware")).default as MiddlewareFn;
+  return (await import("../middleware")).middleware as MiddlewareFn;
 }
 
 describe("middleware — 인증 사용자 /login 바운스 범위 (매직링크 완료 플로우 보존)", () => {

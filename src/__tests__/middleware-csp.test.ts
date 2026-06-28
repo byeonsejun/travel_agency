@@ -2,29 +2,28 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
 /**
- * `auth()` wrapper 는 NextAuth 가 주입하는 verifyAuth/sessionMerge 로직.
- * 본 테스트는 *CSP 박제 동작* 만 검증하므로 wrapper 를 패스스루로 mock.
+ * 본 테스트는 *CSP 박제 동작* 만 검증한다. 세션 읽기는 middleware 가
+ * next-auth/jwt 의 getToken 으로 수행하므로(미인증 시나리오) null 을 반환하도록 mock.
  *
  * ADR-0025 (경로별 CSP 분기): dynamic 경로(`/login`, `/checkout`, `/admin` 등) 만
  * nonce + 'strict-dynamic' 적용, 정적/ISR 경로(`/`, `/products/*`) 는 `script-src 'self'`
  * 로 완화. ISR 캐시-nonce 미스매치 차단이 동기.
  */
-vi.mock("@/features/auth/server/auth", () => ({
-  auth: (handler: unknown) => handler,
+vi.mock("next-auth/jwt", () => ({
+  getToken: vi.fn(async () => null),
 }));
 
 type MiddlewareFn = (req: NextRequest) => Promise<Response> | Response;
 
 function buildReq(url: string): NextRequest {
   const req = new NextRequest(url);
-  Object.defineProperty(req, "auth", { value: null, configurable: true });
   Object.defineProperty(req, "nextUrl", { value: new URL(url), configurable: true });
   return req;
 }
 
 async function loadMiddleware(): Promise<MiddlewareFn> {
   vi.resetModules();
-  return (await import("../middleware")).default as MiddlewareFn;
+  return (await import("../middleware")).middleware as MiddlewareFn;
 }
 
 describe("middleware — CSP 경로별 분기 (ADR-0025)", () => {
