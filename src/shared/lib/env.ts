@@ -19,6 +19,14 @@ export const envSchema = z
     AUTH_GOOGLE_SECRET: z.string().optional(),
     RESEND_API_KEY: z.string().optional(),
     RESEND_FROM_EMAIL: z.string().optional(),
+    // 매직링크 로그인 메일 발송 transport (Gmail SMTP via nodemailer).
+    // Resend 샌드박스(onboarding@resend.dev)가 본인 메일로만 발송되는 제약을
+    // 우회하기 위해 도메인 인증 없이 임의 수신자에게 발송 가능한 Gmail SMTP로 교체.
+    // GMAIL_APP_PASSWORD는 일반 비밀번호가 아니라 Google 계정 2단계 인증 후
+    // 발급하는 16자리 "앱 비밀번호"다. production에서 superRefine으로 required.
+    // ⚠️ 아웃박스(예약/환불) 메일은 여전히 RESEND_* 경로를 쓰므로 둘 다 유지.
+    GMAIL_USER: z.string().optional(),
+    GMAIL_APP_PASSWORD: z.string().optional(),
     ANTHROPIC_API_KEY: z.string().optional(),
     // M-AI-SEARCH 하이브리드 검색: 실 임베딩 provider 키 (OpenAI).
     OPENAI_API_KEY: z.string().optional(),
@@ -112,6 +120,8 @@ export const envSchema = z
         "CRON_SECRET",
         "RESEND_API_KEY",
         "RESEND_FROM_EMAIL",
+        "GMAIL_USER",
+        "GMAIL_APP_PASSWORD",
         "ENCRYPTION_KEY",
       ] as const) {
         if (!env[key]) {
