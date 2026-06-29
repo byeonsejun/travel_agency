@@ -6,16 +6,18 @@ import Google from "next-auth/providers/google";
 import { db } from "@/shared/lib/db";
 import { env } from "@/shared/lib/env";
 import { logger } from "@/shared/lib/logger";
-import { brandedFrom, renderMagicLinkEmail } from "@/shared/email/magicLink";
+import { renderMagicLinkEmail } from "@/shared/email/magicLink";
+import { sendMagicLinkEmail } from "@/shared/email/smtp";
 import type { UserRole } from "@prisma/client";
 
-// dev/test 환경에서는 RESEND_API_KEY 존재 여부와 무관하게 항상 콘솔 폴백.
-// production에서만 실제 Resend API 호출. 로컬에서 실수로 테스트 키가
-// 설정되어 있어도 외부 발송이 일어나지 않도록 보장한다.
+// dev/test 환경에서는 항상 콘솔 폴백. production에서만 실제 Gmail SMTP 발송.
+// 로컬에서 실수로 자격증명이 설정되어 있어도 외부 발송이 일어나지 않도록 보장한다.
 const useDevConsoleFallback = env.NODE_ENV !== "production";
 
-// 클로저로 캡처 — prod 발송 분기에서 `string`으로 타입 보장(env.*는 optional이라
-// 직접 쓰면 undefined 가능). 값은 provider 설정과 동일 SSOT.
+// Resend provider의 설정 필드용 — 매직링크 토큰/URL 생성 플로우(Auth.js Email
+// provider 메커니즘)를 구동하기 위해 type상 필요. 실제 발송 transport는
+// sendVerificationRequest 오버라이드에서 Gmail SMTP로 교체했으므로 이 값들은
+// 발송에 쓰이지 않는다(아웃박스 Resend 경로는 provider.ts가 env를 직접 읽음).
 const resendApiKey = env.RESEND_API_KEY ?? "DEV_ONLY";
 const resendFrom = env.RESEND_FROM_EMAIL ?? "Nextour <noreply@nextour.example>";
 
@@ -32,8 +34,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       apiKey: resendApiKey,
       from: resendFrom,
       // 매직링크 메일을 Nextour 브랜드로 발송. URL/토큰은 Auth.js가 생성한 값을
-      // 그대로 연결만 한다(인증 흐름·토큰·URL 생성 로직 무변경). 기본 provider의
-      // 발송 메커니즘(Resend REST)을 동일하게 미러링하고 from표시명/subject/본문만 교체.
+      // 그대로 연결만 한다(인증 흐름·토큰·URL 생성 로직 무변경). 발송 transport는
+      // Gmail SMTP(smtp.ts) — 도메인 인증 없이 임의 수신자에게 발송하기 위함.
+      // 렌더 템플릿/subject/본문은 동일하게 재사용.
       async sendVerificationRequest({ identifier, url }) {
         // dev/test: 실 발송 금지 — 매직링크 URL을 콘솔로 출력(로컬 로그인 수단).
         if (useDevConsoleFallback) {
@@ -42,24 +45,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return;
         }
 
-        const { subject, html, text } = await renderMagicLinkEmail(url);
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: brandedFrom(resendFrom),
-            to: identifier,
-            subject,
-            html,
-            text,
-          }),
-        });
-        if (!res.ok) {
-          throw new Error("Resend error: " + JSON.stringify(await res.json()));
-        }
+        const rendered = await renderMagicLinkEmail(url);
+        await sendMagicLinkEmail(identifier, rendered);
       },
     }),
     // OAuth providers — 매직링크와 동일 이메일로 가입한 사용자는 자동 병합.
