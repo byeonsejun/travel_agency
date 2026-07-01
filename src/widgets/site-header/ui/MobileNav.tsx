@@ -7,7 +7,8 @@ import { Button } from "@/shared/ui/button";
 
 const LINKS = [
   { href: "/products", label: "해외여행" },
-  { href: "/products?destination=domestic", label: "국내여행" },
+  // 국내여행 콘텐츠 기획 전까지 노출 보류. 기획 완료 시 아래 주석 해제.
+  // { href: "/products?destination=domestic", label: "국내여행" },
 ];
 
 export function MobileNav() {

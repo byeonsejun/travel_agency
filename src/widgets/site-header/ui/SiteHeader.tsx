@@ -4,7 +4,8 @@ import { MobileNav } from "./MobileNav";
 
 const LINKS = [
   { href: "/products", label: "해외여행" },
-  { href: "/products?destination=domestic", label: "국내여행" },
+  // 국내여행 콘텐츠 기획 전까지 노출 보류. 기획 완료 시 아래 주석 해제.
+  // { href: "/products?destination=domestic", label: "국내여행" },
 ];
 
 // 서버 컴포넌트 — cookies 의존 0 유지(auth 는 UserNavIsland 내부 client-fetch, ADR-0018).
