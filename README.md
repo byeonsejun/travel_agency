@@ -189,8 +189,10 @@ npm run dev
 | `DIRECT_URL` | 마이그레이션용 직결 URL (로컬은 `DATABASE_URL` 과 동일) |
 | `ENCRYPTION_KEY` | PII 암호화 키(base64 32B). 로컬은 운영과 격리된 전용 난수 사용 |
 | `AUTH_SECRET` | Auth.js 시크릿 (`openssl rand -base64 32`) |
-| `RESEND_API_KEY` | 이메일 발송용 Resend API 키 |
-| `RESEND_FROM_EMAIL` | 발신자 이메일 주소 |
+| `RESEND_API_KEY` | 아웃박스(예약확정·환불완료) 메일 발송용 Resend API 키 |
+| `RESEND_FROM_EMAIL` | 아웃박스 메일 발신자 이메일 주소 |
+| `GMAIL_USER` | 매직링크 로그인 메일 transport(Gmail SMTP) — 발신 Gmail 계정 |
+| `GMAIL_APP_PASSWORD` | 위 Gmail 계정의 Google 앱 비밀번호(2단계 인증 후 발급한 16자리). 일반 로그인 비밀번호 아님 |
 
 전체 환경변수 목록은 [`.env.example`](./.env.example) 참고.
 

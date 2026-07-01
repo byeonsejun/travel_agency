@@ -87,6 +87,6 @@ await db.$transaction(async (tx) => {
 
 ## Notes
 
-- 이 패턴은 NextAuth Resend 매직링크·결제 confirm 등 모든 외부 IO 도메인에 같은 원칙 적용 — Tx 안에 fetch/axios/외부 SDK 호출 금지
+- 이 패턴은 NextAuth 매직링크·결제 confirm 등 모든 외부 IO 도메인에 같은 원칙 적용 — Tx 안에 fetch/axios/외부 SDK 호출 금지
 - CLAUDE.md §5 Domain Booking 절대 규칙으로 명문화돼 있음: `❌ 단일 DB 트랜잭션에 외부 PG 호출 포함`
 - 후속 ADR 후보: cron worker(retry 자동화) 도입 시 ADR-0011
