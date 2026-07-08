@@ -7,8 +7,9 @@ export function HomeHero() {
       {/* 배경 여행 이미지 (self-host, CSP img-src 'self') — LCP 대상이라 priority.
           패럴랙스 모션만 client 리프로 격리, 셸은 RSC 유지(HeroParallaxBackground). */}
       <HeroParallaxBackground />
-      {/* 가독성 오버레이 — 블루틴트 다크 그라데이션으로 흰 텍스트 대비 확보 */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/35 via-foreground/45 to-foreground/65" />
+      {/* 가독성 오버레이 — 블루틴트 다크 그라데이션으로 흰 텍스트 대비 확보.
+          장식 레이어라 pointer-events-none: 검색창·칩 등 전경 인터랙션만 hit-test 소유. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/35 via-foreground/45 to-foreground/65" />
 
       <div className="relative z-10 px-6 py-20 text-center md:py-28">
         <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] md:text-5xl">

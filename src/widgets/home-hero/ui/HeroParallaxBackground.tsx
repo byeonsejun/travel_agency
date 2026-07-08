@@ -83,7 +83,11 @@ export function HeroParallaxBackground() {
     <div
       ref={layerRef}
       aria-hidden="true"
-      className="absolute inset-0 motion-reduce:!transform-none"
+      // pointer-events-none 필수: 이 레이어는 pointermove 마다 transform 을 갱신하는
+      // will-change 합성 레이어라, hit-test 경로에 남아 있으면 커서 아래에서 transform 이
+      // 바뀔 때 브라우저가 커서를 한 프레임 기본값으로 되돌려 "hover 시 커서 깜빡임"을 유발한다.
+      // 장식(aria-hidden)이라 상호작용도 불필요 → hit-test 에서 완전히 제외.
+      className="pointer-events-none absolute inset-0 motion-reduce:!transform-none"
       style={{ transform: `scale(${BASE_SCALE})`, willChange: "transform" }}
     >
       <Image
