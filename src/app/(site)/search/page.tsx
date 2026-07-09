@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { ProductCard } from "@/entities/product";
 import { searchProducts, SearchBox, SearchChips, ClarifyingChips } from "@/features/search";
 import { EmptyState } from "@/shared/ui/EmptyState";
+import { CompassLoader } from "@/shared/ui/CompassLoader";
 
 // searchParams로 분기되므로 Next 15가 자동으로 dynamic으로 분류. searchProducts
 // 자체는 Upstash Redis 캐시(M-CACHE)로 동일 q에 대한 반복 비용을 흡수한다.
@@ -51,7 +52,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <span className="font-semibold text-foreground">&ldquo;{query}&rdquo;</span> 검색
             결과
           </p>
-          <Suspense fallback={<SearchSkeleton />}>
+          {/* key={query}: 재검색(같은 세그먼트의 q 변경) 시 이 서브트리를 강제 재마운트해
+              fallback을 재노출한다 — Next는 searchParams만 바뀌는 이동에선 자동으로
+              재-suspend하지 않기 때문(같은 인스턴스로 취급). CompassLoader는 라우트
+              loading.tsx(2단계)와 동일 비주얼을 공유해 나침반이 링크 네비와 동일하게 보이도록 함. */}
+          <Suspense
+            key={query}
+            fallback={
+              <>
+                <SearchSkeleton />
+                <CompassLoader />
+              </>
+            }
+          >
             <SearchResults q={query} />
           </Suspense>
         </section>

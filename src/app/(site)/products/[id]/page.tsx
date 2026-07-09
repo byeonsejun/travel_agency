@@ -5,6 +5,7 @@ import { getDeparturesByProduct } from "@/entities/departure";
 import { ProductDetail } from "@/widgets/product-detail/ui/ProductDetail";
 import { ProductReviewsSection } from "@/widgets/product-detail/ui/ProductReviewsSection";
 import { ReviewsSkeleton } from "@/widgets/product-detail/ui/ReviewsSkeleton";
+import { PdpScrollReset } from "@/widgets/product-detail/ui/PdpScrollReset";
 import {
   CompareToggleButton,
   FloatingCompareCart,
@@ -41,6 +42,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <PdpScrollReset productId={id} />
       <ProductDetail
         product={product}
         departures={departures}
