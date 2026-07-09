@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CompassLoader } from "./CompassLoader";
 import { useNavigationSignal } from "./useNavigationSignal";
 
 /** START 후 이만큼 지나도 여전히 pending 이면 오버레이 노출 (순간 이동은 스킵). */
@@ -13,9 +14,12 @@ const AUTO_DISMISS_MS = 8000;
  *
  * 이동 시작/완료 신호는 진행 바와 **같은** `useNavigationSignal` 훅에서 받는다.
  * 시작 후 400ms 안에 끝나는 순간 이동은 오버레이를 띄우지 않고, 그보다 느린 이동에서만
- * 얕은 딤 + 회전 나침반 + 안내 문구를 보여준다. 완료(URL 커밋) 시 즉시 사라진다.
+ * 나침반 로딩 비주얼(`CompassLoader`)을 보여준다. 완료(URL 커밋) 시 즉시 사라진다.
  *
- * z-index 는 헤더(20)·모달(50) 위, 진행 바(100) 아래(z-[90]) — 진행 바가 오버레이 위에 계속 보인다.
+ * 이 1단계 오버레이와 2단계 라우트 `loading.tsx` 는 **같은 `CompassLoader`** 를 공유한다 →
+ * URL 커밋 순간 1단계 hide 와 2단계 loading.tsx show 가 동일 렌더 커밋에서 교대되어 나침반이 끊기지 않는다.
+ * 진입 페이드(`animate-in fade-in`)는 1단계 최초 노출에만 적용(2단계는 인계라 즉시 표시 → 깜빡임 없음).
+ *
  * 'use client' leaf, env import 없음. 모든 타이머는 cleanup(메모리 누수 방어).
  */
 export function NavigationLoadingOverlay() {
@@ -57,50 +61,6 @@ export function NavigationLoadingOverlay() {
 
   if (!visible) return null;
 
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label="페이지를 불러오는 중입니다"
-      className="fixed inset-0 z-[90] flex items-center justify-center animate-in fade-in duration-200"
-      style={{ backgroundColor: "rgba(15, 22, 38, 0.10)" }}
-    >
-      {/* 얕은 딤 위에서도 문구가 또렷하도록 옅은 글래스 백킹 */}
-      <div className="flex flex-col items-center gap-3 rounded-2xl bg-white/75 px-8 py-7 shadow-float ring-1 ring-black/5 backdrop-blur-sm">
-        {/* 회전 나침반 — 파비콘과 동일한 컴퍼스 로즈. reduced-motion 시 회전 정지. */}
-        <div
-          className="h-12 w-12 animate-spin motion-reduce:animate-none"
-          style={{ animationDuration: "1.6s" }}
-          aria-hidden="true"
-        >
-          <svg viewBox="0 0 64 64" className="h-full w-full">
-            {/* 고정 다이얼 링 (회전 불변) */}
-            <circle
-              cx="32"
-              cy="32"
-              r="27"
-              fill="none"
-              stroke="hsl(var(--primary) / 0.16)"
-              strokeWidth="3"
-            />
-            {/* 컴퍼스 로즈 = 회전하는 needle */}
-            <path
-              d="M32 12 L36 28 L52 32 L36 36 L32 52 L28 36 L12 32 L28 28 Z"
-              fill="hsl(var(--primary))"
-            />
-            {/* 중심점 (회전 불변) */}
-            <circle cx="32" cy="32" r="3" fill="hsl(var(--primary))" />
-          </svg>
-        </div>
-        <div className="text-center">
-          <p className="text-sm font-semibold text-foreground">
-            잠시만 기다려주세요
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            페이지를 불러오는 중입니다
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  // 최초 노출에만 진입 페이드. 2단계 loading.tsx 는 이 페이드 없이 즉시 표시(인계 seamless).
+  return <CompassLoader className="animate-in fade-in duration-200" />;
 }
