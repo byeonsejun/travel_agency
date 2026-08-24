@@ -2,10 +2,12 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getProductById } from "@/entities/product";
 import { getDeparturesByProduct } from "@/entities/departure";
-import { ProductDetail } from "@/widgets/product-detail/ui/ProductDetail";
-import { ProductReviewsSection } from "@/widgets/product-detail/ui/ProductReviewsSection";
-import { ReviewsSkeleton } from "@/widgets/product-detail/ui/ReviewsSkeleton";
-import { PdpScrollReset } from "@/widgets/product-detail/ui/PdpScrollReset";
+import {
+  ProductDetail,
+  ProductReviewsSection,
+  ReviewsSkeleton,
+  PdpScrollReset,
+} from "@/widgets/product-detail";
 import {
   CompareToggleButton,
   FloatingCompareCart,
