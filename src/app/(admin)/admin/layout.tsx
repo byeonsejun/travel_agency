@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/features/auth/server";
-import { LogoutButton } from "@/features/auth/ui/LogoutButton";
+import { LogoutButton } from "@/features/auth";
 
 // admin 상단 네비 메뉴 SSOT — 라벨/링크 단일 정의. 항목 추가·수정은 이 배열만.
 const ADMIN_NAV: { label: string; href: string }[] = [
