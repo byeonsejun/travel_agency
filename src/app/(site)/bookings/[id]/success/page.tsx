@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { ConfirmPayment } from "@/features/checkout";
 import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 

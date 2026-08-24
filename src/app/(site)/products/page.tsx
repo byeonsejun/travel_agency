@@ -15,7 +15,7 @@ import {
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { CompassLoader } from "@/shared/ui/CompassLoader";
 import Link from "next/link";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { getMyWishlistProductIds } from "@/entities/wishlist";
 import {
   parseCompareIds,

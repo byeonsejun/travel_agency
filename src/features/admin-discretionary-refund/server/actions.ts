@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { refundDiscretionary, PaymentError } from "@/entities/payment";
 import { DiscretionaryRefundSchema, type DiscretionaryRefundInput } from "../model/schemas";
 

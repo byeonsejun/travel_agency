@@ -1,7 +1,7 @@
 "use server";
 
 import { createReviewReport } from "@/entities/review";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { withRateLimitAction } from "@/shared/lib/rate-limit";
 
 import { ReportInputSchema, type ReportInput } from "../model/reportSchema";

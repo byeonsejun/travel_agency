@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath, updateTag } from "next/cache";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import {
   cancelBookingByAgency,
   InvalidTransitionError,

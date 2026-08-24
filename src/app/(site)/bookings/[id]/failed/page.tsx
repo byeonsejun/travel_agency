@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { getBookingForRetry } from "@/entities/booking";
 import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 

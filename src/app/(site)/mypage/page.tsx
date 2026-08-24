@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { getCurrentUser, getPassportProfile } from "@/entities/user";
 import { listMyBookings } from "@/entities/booking";
 import { getReviewedBookingIds } from "@/entities/review";

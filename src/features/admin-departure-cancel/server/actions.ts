@@ -3,7 +3,7 @@
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import type { BookingStatus } from "@prisma/client";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { db } from "@/shared/lib/db";
 import { enqueueRefundJob } from "@/entities/payment";
 import { cancelBookingByAgencyTx } from "@/entities/booking";

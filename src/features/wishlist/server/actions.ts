@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { db } from "@/shared/lib/db";
 import { safeReturnTo } from "@/entities/wishlist";
 
