@@ -6,10 +6,12 @@ import {
   PAGE_SIZE,
 } from "@/entities/product";
 import type { ProductListParams } from "@/entities/product";
-import { ProductFilterBar } from "@/widgets/product-card-list/ui/ProductFilterBar";
-import { ProductCardList } from "@/widgets/product-card-list/ui/ProductCardList";
-import { ProductCardSkeleton } from "@/widgets/product-card-list/ui/ProductCardSkeleton";
-import { Pagination } from "@/widgets/product-card-list/ui/Pagination";
+import {
+  ProductFilterBar,
+  ProductCardList,
+  ProductCardSkeleton,
+  Pagination,
+} from "@/widgets/product-card-list";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { CompassLoader } from "@/shared/ui/CompassLoader";
 import Link from "next/link";

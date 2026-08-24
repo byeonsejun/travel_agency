@@ -1,6 +1,6 @@
 import { CompassLoader } from "@/shared/ui/CompassLoader";
 import { Skeleton } from "@/shared/ui/Skeleton";
-import { ProductCardSkeleton } from "@/widgets/product-card-list/ui/ProductCardSkeleton";
+import { ProductCardSkeleton } from "@/widgets/product-card-list";
 
 export default function ProductsLoading() {
   return (
