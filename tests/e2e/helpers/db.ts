@@ -6,7 +6,7 @@
  *
  * 식별 기준(절대 실데이터 미접촉):
  *   - userId === 시드 customer(테스트 전용 계정)  AND
- *   - traveler.lastNameEn === E2E 마커("E2ETEST")
+ *   - traveler.lastNameEn === E2E 마커("ETESTSMOKE")
  * 두 조건을 동시에 만족하는 예약만 대상. 시드 booking(KIM/…)·실사용자 예약은 제외된다.
  */
 
