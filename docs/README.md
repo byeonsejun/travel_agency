@@ -31,7 +31,7 @@ docs/
 | 문서 | 설명 | 대상 |
 |------|------|------|
 | [engineering-judgment.md](./engineering-judgment.md) | 엔지니어링 판단 회고 — 일곱 개 결정(검색 가중치 보류·LLM-judge 반순환·소유권 인가·정직한 갭·E2E rigor·요구 재정의) | 전체 |
-| [superpowers/adr/README.md](./superpowers/adr/README.md) | ADR 인덱스 — 설계 결정 기록(0001–0059), 글→ADR→커밋 추적 | 개발자 |
+| [superpowers/adr/README.md](./superpowers/adr/README.md) | ADR 인덱스 — 설계 결정 기록(0001–0060), 글→ADR→커밋 추적 | 개발자 |
 | [credits.md](./credits.md) | 이미지 출처/크레딧 — 상품·테마 이미지 Unsplash 라이선스 출처 | 참고용 |
 
 ## 문서 작성 규칙
