@@ -58,7 +58,7 @@ flowchart TD
     class app,widgets,features,entities,shared layer
 ```
 
-> *그림 1.* 상위 레이어만 하위 레이어를 import한다(역방향·동일 레이어 cross-slice import 금지). 강제 수단은 lint 플러그인이 아니라 **barrel `index.ts` 공개 API 컨벤션 + Architect 페르소나 자가 코드리뷰**(`docs/superpowers/skills/architect.md` R1/R2, `CLAUDE.md` §5). 외부 import는 항상 `@/entities/{name}` 형태의 barrel 경로만 사용한다.
+> *그림 1.* 상위 레이어만 하위 레이어를 import한다(역방향·동일 레이어 cross-slice import 금지). 외부 import는 항상 `@/entities/{name}` 형태의 barrel 경로만 사용한다. 강제는 **세 겹**으로 작동한다 — ① **barrel `index.ts` 공개 API 컨벤션**: 각 슬라이스가 외부에 노출할 심볼만 명시적 named export로 선언(`export *` 금지). ② **ESLint `no-restricted-imports`**([ADR-0061](./docs/superpowers/adr/0061-fsd-barrel-enforcement-and-second-public-api.md)): 깊은 경로 import를 **lint 에러로 차단**하는 기계적 강제. 예외는 정식 2번째 공개 API 두 종류(`@/entities/*/client`, `@/features/*/server`)뿐이다. ③ **Architect 페르소나 자가 코드리뷰**(`docs/superpowers/skills/architect.md` R1/R2, `CLAUDE.md` §5): lint가 보지 못하는 레이어 방향(R1)·책임 분리(R3)를 담당. ②는 ①을 지킬 수 있게 만든 뒤에 켰다 — 그 순서와 근거가 ADR-0061에 있다.
 
 ### 결제·환불 3-Phase Saga (외부 IO를 DB 트랜잭션 밖으로)
 

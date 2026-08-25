@@ -161,7 +161,7 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
 - 사용자가 명시적으로 이 제약을 철회하기 전까지 유효. 관련 요청을 받으면 즉시 중단하고 이 규칙을 인용해 확인 요청.
 
 **🏛️ Architect**
-- ❌ `entities/`, `widgets/`, `features/`, `shared/`의 깊은 경로 import (`@/entities/product/ui/...`).
+- ❌ `entities/`, `widgets/`, `features/`, `shared/`의 깊은 경로 import (`@/entities/product/ui/...`). (lint 강제 — [ADR-0061])
 - ❌ `entities/**/ui/*.tsx`에 `'use client'` 추가.
 - ❌ 동일 레이어 cross-slice import (`widgets/A`가 `widgets/B` import 등).
 
