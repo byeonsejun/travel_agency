@@ -175,4 +175,4 @@ saga 환불 경로(`refund.ts:65`)는 enqueue Phase 1에서 `reserveRefund`로 `
 
 이 글의 모든 주장은 ADR로, ADR은 커밋과 코드 라인으로 이어진다.
 
-→ **[전체 결정 기록: ADR 인덱스 (0001–0060)](./superpowers/adr/README.md)**
+→ **[전체 결정 기록: ADR 인덱스 (0001–0061)](./superpowers/adr/README.md)**
