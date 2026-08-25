@@ -85,6 +85,13 @@ entities/booking/
 
 ## Action (Output Format)
 
+> ⚠️ 아래 블록은 **출력 형식 샘플**이다. 인용된 파일·라인은 현재 코드가 아니므로 그대로 찾아가지 말 것.
+> `[Critical] R1`·`[Minor] R3` 항목은 형식 설명용 가상 사례다.
+> `[Major] R2` 항목만은 **과거 이 저장소에 실재했던 위반**을 기록한 것이다 — `products/page.tsx`가
+> `@/widgets/product-card-list/ui/ProductCardList`를 깊은 경로로 import하던 상태로, 문서에
+> 위반 예시로 박제돼 있는 동안에도 코드는 그대로 남아 있었다. **현재는 해소됨**(배럴 신설
+> `e924f09` + lint 강제 `56a6188`) — 문서 규칙만으로는 경계가 지켜지지 않는다는 근거로 남긴다.
+
 ```
 ## Architect Review
 
