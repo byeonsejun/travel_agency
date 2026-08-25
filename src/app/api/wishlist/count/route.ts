@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { countMyWishlist } from "@/entities/wishlist";
 
 // GET /api/wishlist/count

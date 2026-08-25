@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { getReviewByBooking } from "@/entities/review";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { ReviewForm } from "@/features/review-upload";
 import { db } from "@/shared/lib/db";
 

@@ -8,7 +8,7 @@ import { cacheGet, cacheSet } from "@/shared/lib/cache";
 import { getEmbeddingProvider } from "@/shared/lib/embedding";
 import { searchProductsByVector } from "@/entities/product";
 import type { SearchResultCard } from "@/entities/product";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { withRateLimitAction } from "@/shared/lib/rate-limit";
 import { routeQuery } from "./router";
 import { shouldRerank, rerankCandidates } from "./rerank";

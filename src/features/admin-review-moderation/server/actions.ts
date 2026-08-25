@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import {
   setReviewStatus,
   resolveReportsByHiding,

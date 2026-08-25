@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { encrypt } from "@/shared/lib/crypto";
-import { maskPassportNo } from "@/entities/user/model/mask";
+import { maskPassportNo } from "@/entities/user";
 
 const authMock = vi.fn();
 const findUniqueMock = vi.fn();

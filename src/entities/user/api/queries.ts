@@ -1,4 +1,4 @@
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { db } from "@/shared/lib/db";
 import type { SafeUser, SafePassportProfile } from "../model/types";
 import { maskPassportNo } from "../model/mask";

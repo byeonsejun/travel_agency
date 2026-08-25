@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getProductsByIds } from "@/entities/product";
-import { parseCompareIds } from "@/features/product-compare/model/compareIds";
+import { parseCompareIds } from "@/features/product-compare";
 
 // GET /api/compare/products?ids=<cuid>,<cuid>,...
 //

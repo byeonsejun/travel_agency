@@ -16,7 +16,7 @@ vi.mock("@/entities/analytics", () => ({
   getOccupancyRows: vi.fn(async () => ({ rows: [], total: 0, capped: false })),
 }));
 
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { loadDrilldownAction } from "../actions";
 import { DrilldownInputSchema } from "../schema";
 

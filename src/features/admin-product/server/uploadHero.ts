@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import {
   ALLOWED_REVIEW_PHOTO_MIMES,
   createProductHeroSignedUploadUrl,

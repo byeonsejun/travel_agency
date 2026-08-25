@@ -34,6 +34,7 @@ app → widgets → features → entities → shared
 - `@/entities/product/ui/ProductCard` 같은 깊은 경로 import 금지.
 - 같은 slice 내부(예: entity 내 api/ui 상호 참조)는 상대경로 허용.
 - barrel은 명시적 named export만. `export *` 금지(tree-shaking 방해, 충돌 위험).
+- **이 규칙은 `eslint.config.mjs`의 `no-restricted-imports`가 강제한다** — 문서 규칙이 아니라 lint 에러다. 예외는 정식 2번째 공개 API로 선언된 서브배럴 두 종류뿐: `@/entities/*/client`(client가 server 그래프를 끌어오지 않게), `@/features/*/server`(server가 client 그래프를 끌어오지 않게). 새 심볼이 필요하면 예외를 늘리지 말고 해당 슬라이스 `index.ts`에 named export를 추가할 것.
 
 ### R3. 레이어별 책임
 - `entities/{name}/model/` — Zod 스키마·타입·상수만. 비즈니스 로직 금지.
@@ -83,6 +84,13 @@ entities/booking/
 | entity api 내부에서 React hook 호출 | 서버 함수에 클라이언트 의존 | hook은 features/ui에서만 |
 
 ## Action (Output Format)
+
+> ⚠️ 아래 블록은 **출력 형식 샘플**이다. 인용된 파일·라인은 현재 코드가 아니므로 그대로 찾아가지 말 것.
+> `[Critical] R1`·`[Minor] R3` 항목은 형식 설명용 가상 사례다.
+> `[Major] R2` 항목만은 **과거 이 저장소에 실재했던 위반**을 기록한 것이다 — `products/page.tsx`가
+> `@/widgets/product-card-list/ui/ProductCardList`를 깊은 경로로 import하던 상태로, 문서에
+> 위반 예시로 박제돼 있는 동안에도 코드는 그대로 남아 있었다. **현재는 해소됨**(배럴 신설
+> `e924f09` + lint 강제 `56a6188`) — 문서 규칙만으로는 경계가 지켜지지 않는다는 근거로 남긴다.
 
 ```
 ## Architect Review

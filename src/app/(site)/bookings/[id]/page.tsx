@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { getBookingDetail } from "@/entities/booking";
 import { findActiveRefundJob } from "@/entities/payment";
 import { BookingDetailView } from "@/widgets/booking-detail";

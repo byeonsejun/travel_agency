@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { SessionPoll } from "@/features/auth/ui/SessionPoll";
+import { SessionPoll } from "@/features/auth";
 
 interface Props {
   searchParams: Promise<{ callbackUrl?: string; email?: string }>;

@@ -7,9 +7,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { withRateLimit } from "@/shared/lib/rate-limit";
 import { db } from "@/shared/lib/db";
-import { webVitalSchema } from "@/features/rum/model/schema";
-import { coerceRouteTemplate } from "@/features/rum/model/normalizeRoute";
-import { ratingFor } from "@/features/rum/model/rating";
+import { webVitalSchema, coerceRouteTemplate, ratingFor } from "@/features/rum";
 
 
 export const POST = withRateLimit(

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AuthSuccessClient } from "@/features/auth/ui/AuthSuccessClient";
+import { AuthSuccessClient } from "@/features/auth";
 
 interface Props {
   searchParams: Promise<{ callbackUrl?: string }>;

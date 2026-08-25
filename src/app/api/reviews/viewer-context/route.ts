@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@/features/auth/server/auth";
+import { auth } from "@/features/auth/server";
 import { getOwnReviewIdsForProduct } from "@/entities/review";
 
 
