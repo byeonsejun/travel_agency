@@ -249,8 +249,8 @@
   - `search` 이벤트에는 이벤트 매개변수 `search_term` = 데이터 영역 변수 `search_term`을 추가로 매핑
 - [x] **Step 4: Preview 검증** — GTM 미리보기에 `http://localhost:3000` 연결 → 6종 이벤트 발화와 태그 Fired 확인 → GA4 관리 → DebugView에서 수신 확인
   - Preview 모드는 추가 Google 도메인을 사용하므로 `CSP_MODE` report-only(기본) 상태에서 진행한다
-- [ ] **Step 5: 컨테이너 게시(Submit → Publish)**, 버전 이름 `v1 ecommerce funnel`
-- [ ] **Step 6: GA4 전환 설정** — GA4 관리 → 이벤트 → `purchase`를 "주요 이벤트(key event)"로 표시
+- [x] **Step 5: 컨테이너 게시(Submit → Publish)**, 버전 이름 `v1 ecommerce funnel`
+- [x] **Step 6: GA4 전환 설정** — GA4 관리 → 이벤트 → `purchase`를 "주요 이벤트(key event)"로 표시
 
 > **Task 7 실측 (2026-10-14, 사용자 수행):** Tag Assistant 미리보기에서 `GA4 - Google 태그` 실행 + `GA4 - ecommerce events` 3회 실행(view_item / add_to_wishlist / begin_checkout), 실행 안 됨 0.
 > ⚠️ **함정 2건 (다음 작업자 참고):** (1) 트리거의 "정규 표현식 일치 사용" 미체크 시 조건이 `_event 같음 ^(...)$` 로 표시되며 전부 실패 — 반드시 체크. (2) 미리보기가 "localhost에 연결할 수 없음(시간 초과)"이면 원인은 우리 보안 헤더 `Cross-Origin-Opener-Policy: same-origin`(ADR-0039)이 Tag Assistant 의 window.opener 통신을 끊는 것 — 헤더를 풀지 말고 Chrome 확장 **Tag Assistant Companion** 설치로 해결. 확장이 `<html>` 에 data-* 속성을 주입해 dev hydration 경고가 나므로 root layout `<html suppressHydrationWarning>` 적용(커밋 494b3ec).
@@ -317,14 +317,16 @@
 
 **Files:** `src/features/checkout/server/actions.ts`, `src/entities/booking`(createBooking 입력 타입), 테스트
 
-- [ ] **Step 1: 테스트 먼저 작성** — `_ga` 쿠키가 있으면 `createBooking`에 `gaClientId`가 전달되고, 없거나 형식이 깨졌으면 `null`이 전달되는지 확인한다(`next/headers`의 `cookies` mock)
-- [ ] **Step 2: FAIL 확인**
-- [ ] **Step 3: 구현**
+- [x] **Step 1: 테스트 먼저 작성** — `_ga` 쿠키가 있으면 `createBooking`에 `gaClientId`가 전달되고, 없거나 형식이 깨졌으면 `null`이 전달되는지 확인한다(`next/headers`의 `cookies` mock)
+- [x] **Step 2: FAIL 확인**
+- [x] **Step 3: 구현**
   - action에서 `(await cookies()).get("_ga")?.value` → `parseGaClientId()`로 파싱 → `createBooking({ ..., gaClientId })`
   - `CreateBookingSchema`에 `gaClientId: z.string().max(64).nullable().optional()` 추가
   - **가격·좌석·상태 로직 0줄 변경** (💳 Domain Booking 자가점검)
-- [ ] **Step 4: PASS + 기존 checkout/booking 테스트 전부 green**
-- [ ] **Step 5: 커밋** — `feat(checkout): snapshot GA client id on booking`
+- [x] **Step 4: PASS + 기존 checkout/booking 테스트 전부 green**
+- [x] **Step 5: 커밋** — `feat(checkout): snapshot GA client id on booking`
+
+> **Task 9 실측 (2026-10-14, Playwright, dev):** 게시된 GTM 의 GA4 태그가 실제 발급한 `_ga=GA1.1.730834906.1791944543` 로 체크아웃 → DB `Booking.gaClientId = "730834906.1791944543"` 저장 확인 후 E2E 마커 예약 purge. 💳 자가점검: `mutations.ts` diff 는 `gaClientId` 저장 1줄뿐 — 가격·좌석·상태 로직 무변경.
 
 ---
 

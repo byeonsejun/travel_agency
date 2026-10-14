@@ -77,6 +77,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
         notes: data.notes,
         penaltyPolicyKey: policyKey,
         penaltyPolicyVersion: policyVersion,
+        gaClientId: data.gaClientId ?? null,
         travelers: {
           create: data.travelers.map((t, i) => ({
             role: t.role ?? "TRAVELER",

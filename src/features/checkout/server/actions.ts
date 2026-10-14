@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, updateTag } from "next/cache";
+import { cookies } from "next/headers";
 import { auth } from "@/features/auth/server";
 import {
   createBooking,
@@ -11,6 +12,7 @@ import { buildOrderId } from "@/entities/payment";
 import { tagDeparturesByProduct } from "@/entities/departure";
 import { db } from "@/shared/lib/db";
 import { withRateLimitAction } from "@/shared/lib/rate-limit";
+import { parseGaClientId } from "@/shared/lib/analytics";
 import { CheckoutFormSchema } from "../model/schemas";
 import type { CheckoutFormInput } from "../model/schemas";
 import { nextOrderSeq } from "./orderSeq";
@@ -77,6 +79,10 @@ async function createCheckoutBookingImpl(
     infantCount: data.infantCount,
   });
 
+  // Step 3.5: GA4 client_id 스냅샷 (ADR-0062) — 서버 MP purchase/refund 를 이 브라우저
+  //           세션에 귀속시키는 익명 키. 쿠키 없음(광고차단·동의 거부)이면 null, 예약은 무관하게 진행.
+  const gaClientId = parseGaClientId((await cookies()).get("_ga")?.value);
+
   // Step 4: 예약 생성 (좌석 CAS 차감 + travelers + terms, 단일 Tx — Domain R1)
   let booking;
   try {
@@ -90,6 +96,7 @@ async function createCheckoutBookingImpl(
       travelers: data.travelers,
       termKeys: data.termKeys,
       notes: data.notes,
+      gaClientId,
     });
   } catch (err) {
     const message =
