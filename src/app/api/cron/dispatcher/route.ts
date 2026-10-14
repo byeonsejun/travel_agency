@@ -1,5 +1,5 @@
 /**
- * Master cron Dispatcher — 단일 진입점. refund/email/embedding 워커를
+ * Master cron Dispatcher — 단일 진입점. refund/email/embedding/rum-cleanup/analytics 워커를
  * Promise.allSettled로 병렬 실행(워커 단위 격리). 한 워커 throw가 전체를
  * 죽이지 않음(각 워커는 내부에서 per-job 격리). Vercel cron은 이 1개만 호출
  * (Hobby 제한 우회), 실시간 2분 주기는 외부 트리거가 담당.
@@ -12,6 +12,7 @@ import { processRefundJobBatch } from "@/shared/lib/refund-job/worker";
 import { processEmailJobBatch } from "@/shared/lib/email-job/worker";
 import { processEmbeddingJobBatch } from "@/shared/lib/embedding-job/worker";
 import { processRumCleanup } from "@/shared/lib/rum-cleanup/worker";
+import { processAnalyticsJobBatch } from "@/shared/lib/analytics-job/worker";
 import { logger } from "@/shared/lib/observability";
 
 
@@ -20,6 +21,8 @@ const WORKERS = [
   { name: "email", run: () => processEmailJobBatch({ limit: 10 }) },
   { name: "embedding", run: () => processEmbeddingJobBatch({ limit: 5 }) },
   { name: "rum-cleanup", run: () => processRumCleanup() },
+  // GA4 서버 매출 이벤트(purchase/refund) — MP 발송, 72h 백데이트 한도 내 처리 [ADR-0062]
+  { name: "analytics", run: () => processAnalyticsJobBatch({ limit: 20 }) },
 ] as const;
 
 export async function GET(req: NextRequest): Promise<NextResponse> {

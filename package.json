@@ -14,6 +14,7 @@
     "search:eval": "tsx scripts/search-eval/run-eval.ts",
     "search:judge": "tsx scripts/search-eval/judge.ts",
     "search:extract-catalog": "tsx scripts/search-eval/extract-catalog-queries.ts",
+    "analytics:validate": "tsx --env-file=.env scripts/analytics/mp-validate.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",

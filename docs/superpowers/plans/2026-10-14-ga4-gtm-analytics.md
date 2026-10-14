@@ -386,11 +386,15 @@
 
 **Files:** `src/app/api/cron/dispatcher/route.ts`, `scripts/analytics/mp-validate.ts`, `package.json`
 
-- [ ] **Step 1: dispatcher WORKERS에 추가** — `{ name: "analytics", run: () => processAnalyticsJobBatch({ limit: 20 }) }`
-- [ ] **Step 2: dispatcher 런타임 검증** — dev에서 `curl -s -H "Authorization: Bearer $CRON_SECRET" localhost:3000/api/cron/dispatcher | jq '.workers'` → `analytics` 워커가 `fulfilled`인지 확인
-- [ ] **Step 3: MP 검증 스크립트** — `scripts/analytics/mp-validate.ts`: 샘플 purchase body를 `https://www.google-analytics.com/debug/mp/collect`로 POST하고 `validationMessages`를 출력한다(debug 엔드포인트는 데이터를 적재하지 않으므로 안전). `package.json`에 `"analytics:validate": "tsx scripts/analytics/mp-validate.ts"` 추가
-- [ ] **Step 4: 실행** — `npm run analytics:validate` → `validationMessages: []`(빈 배열)인지 출력을 인용
-- [ ] **Step 5: 커밋** — `feat(analytics): register MP worker in cron dispatcher`
+- [x] **Step 1: dispatcher WORKERS에 추가** — `{ name: "analytics", run: () => processAnalyticsJobBatch({ limit: 20 }) }`
+- [x] **Step 2: dispatcher 런타임 검증** — dev에서 `curl -s -H "Authorization: Bearer $CRON_SECRET" localhost:3000/api/cron/dispatcher | jq '.workers'` → `analytics` 워커가 `fulfilled`인지 확인
+- [x] **Step 3: MP 검증 스크립트** — `scripts/analytics/mp-validate.ts`: 샘플 purchase body를 `https://www.google-analytics.com/debug/mp/collect`로 POST하고 `validationMessages`를 출력한다(debug 엔드포인트는 데이터를 적재하지 않으므로 안전). `package.json`에 `"analytics:validate": "tsx scripts/analytics/mp-validate.ts"` 추가
+- [x] **Step 4: 실행** — `npm run analytics:validate` → `validationMessages: []`(빈 배열)인지 출력을 인용
+- [x] **Step 5: 커밋** — `feat(analytics): register MP worker in cron dispatcher`
+
+> **Task 12 실측 (2026-10-14):** dispatcher 테스트(5워커·`analytics` limit 20) GREEN. `npm run analytics:validate` → GA4 `/debug/mp/collect` 에 purchase·refund(srv.* 폴백) 모두 `HTTP 200 validationMessages=[] → PASS`.
+> ⚠️ Step 2(dev dispatcher curl) **의도적 생략**: 호출 시 다른 워커도 함께 돌아 로컬 대기 embedding 1건이 `USE_REAL_EMBEDDING=1` 로 **실 OpenAI 호출**, 대기 메일 3건도 처리된다(작업 범위 밖 부작용). analytics 워커 자체는 Task 10·11 에서 실 DB 로 실측 완료, dispatcher 배선은 route 테스트로 커버.
+> 한계: debug 엔드포인트는 **payload 스키마**만 검증하고 api_secret 유효성은 검증하지 않는다 → 실제 수신은 배포 후 GA4 실시간/DebugView 에서 확인(Task 15 Step 8).
 
 ---
 
