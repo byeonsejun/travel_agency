@@ -62,6 +62,8 @@ export { SEARCH_WEIGHTS } from "./model/searchWeights";
 export type { SearchWeights } from "./model/searchWeights";
 export { themeBoost } from "./model/searchWeights";
 
+export { toGa4ItemInput } from "./model/analytics";
+
 export { buildEmbeddingText } from "./api/buildEmbeddingText";
 export type { EmbeddingTextResult } from "./api/buildEmbeddingText";
 

@@ -1,4 +1,4 @@
-import { ProductCard } from "@/entities/product";
+import { ProductCard, toGa4ItemInput } from "@/entities/product";
 import type { ProductCardType } from "@/entities/product";
 import { WishlistHeartButton } from "@/features/wishlist";
 import { CompareToggleButton, serializeCompareIds } from "@/features/product-compare";
@@ -41,6 +41,7 @@ export function ProductCardList({
               loggedIn={loggedIn}
               returnTo={wishlistReturnTo}
               size="sm"
+              analyticsItem={toGa4ItemInput(item)}
             />
           ) : undefined;
         const compareButton = showCompareButton ? (

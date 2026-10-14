@@ -1,4 +1,4 @@
-import { ProductImage, InclusionList, ItineraryTimeline } from "@/entities/product";
+import { ProductImage, InclusionList, ItineraryTimeline, toGa4ItemInput } from "@/entities/product";
 import { formatTagLabel } from "@/shared/lib/format";
 import type { ProductDetail } from "@/entities/product";
 import type { DepartureSummary } from "@/entities/departure";
@@ -42,6 +42,7 @@ export function ProductDetail({
             productId={product.id}
             returnTo={`/products/${product.id}`}
             size="md"
+            analyticsItem={toGa4ItemInput(product)}
           />
         </div>
 

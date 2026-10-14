@@ -39,6 +39,8 @@ export const CreateBookingSchema = z
     travelers: z.array(TravelerSchema).min(1, "여행자 정보를 입력하세요"),
     termKeys: z.array(z.string()).min(1, "필수 약관에 동의해 주세요"),
     notes: z.string().optional(),
+    // GA4 client_id 스냅샷 (ADR-0062). _ga 쿠키 파싱값 — 길이 상한으로 변조 쿠키 차단.
+    gaClientId: z.string().max(64).nullable().optional(),
   })
   .refine((data) => data.infantCount <= data.adultCount, {
     message: "영아 수는 성인 수를 초과할 수 없습니다",

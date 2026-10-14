@@ -24,6 +24,7 @@ import { PaymentError } from "./errors";
 import { backoff } from "./refund";
 import { releaseRefund } from "./ledger";
 import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
+import { enqueueAnalyticsJob } from "@/shared/lib/analytics-job/enqueue";
 
 // IN_PROGRESS인 채로 멈춰 있는 job을 stuck으로 판정하는 임계 시간.
 // worker death / 배포 도중 중단 등으로 인한 영구 lock 회복용.
@@ -270,6 +271,17 @@ export async function retryRefundJob(jobId: string): Promise<RetryRefundResult> 
         dedupeKey: `partial-refund-completed:${jobId}`,
         bookingId: job.bookingId,
         refundJobId: jobId,
+      });
+    }
+    // GA4 refund 아웃박스 (ADR-0062) — refund.ts settle 과 동일 규칙(모든 kind, 0원 제외).
+    // dedupeKey 가 refundJobId 기준이라 첫 시도/재시도 어느 경로가 settle 해도 1건만 적재.
+    if (job.amount > 0) {
+      await enqueueAnalyticsJob(tx, {
+        type: "REFUND",
+        dedupeKey: `ga-refund:${jobId}`,
+        bookingId: job.bookingId,
+        refundJobId: jobId,
+        occurredAt: new Date(),
       });
     }
   });

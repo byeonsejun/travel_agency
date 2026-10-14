@@ -104,6 +104,24 @@ export const envSchema = z
     // base64 인코딩된 32바이트 키. production에서 superRefine으로 required.
     // 존재 시 디코드 후 32바이트인지 검증(포맷 가드).
     ENCRYPTION_KEY: z.string().optional(),
+    // GA4 + GTM 분석 파이프라인 (ADR-0062). 셋 다 optional — 미설정 시 분석은 no-op.
+    // NEXT_PUBLIC_GTM_ID: (site) 셸에 GTM 컨테이너 로드(클라이언트 퍼널 이벤트).
+    // GA4_MEASUREMENT_ID + GA4_API_SECRET: 서버 사이드 purchase/refund 를
+    //   Measurement Protocol 로 발송(AnalyticsJob 아웃박스 워커). 페어는 superRefine.
+    // ⚠️ GA4_API_SECRET 은 서버 전용 — NEXT_PUBLIC_ 접두사 금지(클라이언트 번들 누출).
+    // 빈 문자열("")은 미설정으로 간주 (SENTRY_DSN 패턴 — vi.stubEnv 호환).
+    NEXT_PUBLIC_GTM_ID: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.string().regex(/^GTM-[A-Z0-9]+$/, "GTM-XXXXXXX 포맷이어야 합니다").optional()
+    ),
+    GA4_MEASUREMENT_ID: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.string().regex(/^G-[A-Z0-9]+$/, "G-XXXXXXX 포맷이어야 합니다").optional()
+    ),
+    GA4_API_SECRET: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.string().optional()
+    ),
   })
   .superRefine((env, ctx) => {
     // 빌드 phase(NEXT_PHASE=phase-production-build)는 실 runtime이 아니다.
@@ -193,6 +211,17 @@ export const envSchema = z
             `(현재 한쪽만 설정됨 — provider half-config 차단).`,
         });
       }
+    }
+    // (4) GA4 Measurement Protocol 페어 검증 (ADR-0062).
+    //     한쪽만 있으면 MP 발송이 영구 실패하는 half-config → 부팅에서 차단.
+    if (!!env.GA4_MEASUREMENT_ID !== !!env.GA4_API_SECRET) {
+      ctx.addIssue({
+        code: "custom",
+        path: [env.GA4_MEASUREMENT_ID ? "GA4_API_SECRET" : "GA4_MEASUREMENT_ID"],
+        message:
+          "GA4_MEASUREMENT_ID 와 GA4_API_SECRET 은 항상 함께 설정되어야 합니다 " +
+          "(현재 한쪽만 설정됨 — Measurement Protocol half-config 차단).",
+      });
     }
     if (env.AUTH_GOOGLE_ID && !env.AUTH_GOOGLE_ID.endsWith(".apps.googleusercontent.com")) {
       ctx.addIssue({

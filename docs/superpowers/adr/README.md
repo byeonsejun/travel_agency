@@ -109,6 +109,7 @@
 | 0059  | [출발취소 cascade 환불의 원장 비대칭 해소 — enqueue Tx에 reserveRefund 추가로 saga Phase 1 미러: refundedAmount 음수 잠복 버그 봉합·과환불 차단·idempotencyKey 보류](./0059-cascade-refund-ledger-symmetry.md) | Accepted | 2026-06-14   |
 | 0060  | [매직링크 transport는 Gmail SMTP로 분리, 아웃박스 메일은 Resend 유지 — Resend 샌드박스 본인-메일 제약 회피(무료·임의 수신자 도달), 아웃박스 멱등은 Resend 유지](./0060-magic-link-gmail-smtp-outbox-resend.md) | Accepted | 2026-06-29   |
 | 0061  | [FSD R2(배럴 공개 API)를 lint로 강제 — 예외 목록 대신 두 번째 공개 API 설계: `features/auth/server.ts`를 `entities/booking/client.ts`와 대칭 승격, 깊은 경로 import 50→0 후 `no-restricted-imports` 적용](./0061-fsd-barrel-enforcement-and-second-public-api.md) | Accepted | 2026-08-25   |
+| 0062  | [GA4 분석은 GTM 단일 설치 + 클라이언트 퍼널/서버 매출 하이브리드 — purchase·refund는 트랜잭셔널 아웃박스 → Measurement Protocol(광고차단·이탈 유실 0), 클라이언트 purchase·confirm 동기 호출·sGTM 거부, 동의 배너 보류](./0062-ga4-gtm-hybrid-analytics-outbox.md) | Accepted | 2026-10-14   |
 
 ## 향후 후보 (작성 대기)
 

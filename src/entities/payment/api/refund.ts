@@ -28,6 +28,7 @@ import {
   fullCancelKey,
 } from "../model/refundKeys";
 import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
+import { enqueueAnalyticsJob } from "@/shared/lib/analytics-job/enqueue";
 
 interface SagaCore {
   bookingId: string;
@@ -158,6 +159,17 @@ async function runRefundSaga(
         dedupeKey: `partial-refund-completed:${created.id}`,
         bookingId: core.bookingId,
         refundJobId: created.id,
+      });
+    }
+    // GA4 refund 아웃박스 (ADR-0062) — 메일과 달리 FULL_CANCEL 포함 모든 kind 를 보고해야
+    // GA4 매출이 상쇄된다. 실환불액 0(100% 위약금, Toss-skip)은 머니무브가 없으므로 제외.
+    if (core.refundAmount > 0) {
+      await enqueueAnalyticsJob(tx, {
+        type: "REFUND",
+        dedupeKey: `ga-refund:${created.id}`,
+        bookingId: core.bookingId,
+        refundJobId: created.id,
+        occurredAt: new Date(),
       });
     }
   });

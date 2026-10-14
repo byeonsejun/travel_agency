@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toggleWishlistAction } from "../server/actions";
 import { LOGIN_PROMPT_MESSAGE, buildResumeCallbackUrl } from "../lib/loginPrompt";
 import { dispatchWishlistChanged } from "@/entities/wishlist";
+import { buildAddToWishlist, trackEvent, type Ga4ItemInput } from "@/shared/lib/analytics";
 
 type Size = "sm" | "md";
 
@@ -13,6 +14,12 @@ type Props = {
   returnTo: string;
   size?: Size;
   className?: string;
+  /**
+   * GA4 add_to_wishlist 용 상품 정보 (ADR-0062). 서버 부모(widget)가 주입한다 —
+   * client 가 `@/entities/product` 배럴을 import 하면 서버 그래프가 번들로 누출되므로 금지.
+   * 미주입 시 이벤트 미발화(옵트인).
+   */
+  analyticsItem?: Ga4ItemInput;
 };
 
 const SIZE_CLASS: Record<Size, { btn: string; svg: string }> = {
@@ -42,6 +49,7 @@ export function WishlistHeartIsland({
   returnTo,
   size = "sm",
   className = "",
+  analyticsItem,
 }: Props) {
   const [inWishlist, setInWishlist] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -85,6 +93,8 @@ export function WishlistHeartIsland({
         setInWishlist(next);
         startTransition(async () => {
           await toggleWishlistAction(formData);
+          // 액션 성공(throw 없음) 후, 추가일 때만 — 해제는 GA4 표준 이벤트가 없다.
+          if (next && analyticsItem) trackEvent(buildAddToWishlist(analyticsItem));
           dispatchWishlistChanged();
         });
       }}

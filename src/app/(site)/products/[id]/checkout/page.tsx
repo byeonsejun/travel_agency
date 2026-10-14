@@ -3,7 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/features/auth/server";
 import { getProductById } from "@/entities/product";
 import { getDepartureById } from "@/entities/departure";
-import { CheckoutForm } from "@/features/checkout";
+import { CheckoutForm, buildPaxItems } from "@/features/checkout";
+import { buildBeginCheckout } from "@/shared/lib/analytics";
+import { TrackEvent } from "@/shared/ui/TrackEvent";
 import { TransactionFallback } from "@/shared/ui/TransactionFallback";
 import { env } from "@/shared/lib/env";
 
@@ -64,18 +66,36 @@ async function CheckoutContent({ params, searchParams }: PageProps) {
   const devFallback =
     env.NODE_ENV !== "production" && !env.PAYMENT_FORCE_REAL;
 
+  // GA4 begin_checkout — 인증·좌석 가드 통과 후에만. 폼 기본값(성인 1명) 기준.
+  const analyticsBase = {
+    productId: product.id,
+    title: product.title,
+    destination: product.destination,
+  };
+  const beginCheckout = buildBeginCheckout(
+    buildPaxItems(
+      analyticsBase,
+      { priceAdult: departure.priceAdult, priceChild: departure.priceChild, priceInfant: departure.priceInfant },
+      { adult: 1, child: 0, infant: 0 },
+    ),
+  );
+
   return (
-    <CheckoutForm
-      departureId={departureId}
-      productTitle={product.title}
-      departureDateLabel={departure.departureDate.toLocaleDateString("ko-KR")}
-      returnDateLabel={departure.returnDate.toLocaleDateString("ko-KR")}
-      priceAdult={departure.priceAdult}
-      priceChild={departure.priceChild}
-      priceInfant={departure.priceInfant}
-      remainingSeats={departure.remainingSeats}
-      clientKey={clientKey}
-      devFallback={devFallback}
-    />
+    <>
+      <TrackEvent payload={beginCheckout} dedupeKey={`checkout:${departureId}`} />
+      <CheckoutForm
+        departureId={departureId}
+        productTitle={product.title}
+        departureDateLabel={departure.departureDate.toLocaleDateString("ko-KR")}
+        returnDateLabel={departure.returnDate.toLocaleDateString("ko-KR")}
+        priceAdult={departure.priceAdult}
+        priceChild={departure.priceChild}
+        priceInfant={departure.priceInfant}
+        remainingSeats={departure.remainingSeats}
+        clientKey={clientKey}
+        devFallback={devFallback}
+        analyticsBase={analyticsBase}
+      />
+    </>
   );
 }

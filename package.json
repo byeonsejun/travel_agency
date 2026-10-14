@@ -14,6 +14,7 @@
     "search:eval": "tsx scripts/search-eval/run-eval.ts",
     "search:judge": "tsx scripts/search-eval/judge.ts",
     "search:extract-catalog": "tsx scripts/search-eval/extract-catalog-queries.ts",
+    "analytics:validate": "tsx --env-file=.env scripts/analytics/mp-validate.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
@@ -23,6 +24,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
     "@auth/prisma-adapter": "^2.7.0",
+    "@next/third-parties": "^16.2.9",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-dialog": "^1.1.16",
     "@radix-ui/react-dropdown-menu": "^2.1.17",

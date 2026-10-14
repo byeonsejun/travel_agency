@@ -9,6 +9,8 @@ import { reserveSeats, releaseSeats } from "./seatLock";
 import { ForbiddenError, PriceMismatchError } from "./errors";
 import { emailJobForTransition } from "../model/emailPolicy";
 import { enqueueEmailJob } from "@/shared/lib/email-job/enqueue";
+import { analyticsJobForTransition } from "../model/analyticsPolicy";
+import { enqueueAnalyticsJob } from "@/shared/lib/analytics-job/enqueue";
 import { assignPaxTypes } from "../model/paxAssignment";
 import { encrypt } from "@/shared/lib/crypto";
 import { resolvePenaltyPolicyKey, getActivePenaltyTiers } from "@/entities/penalty-policy";
@@ -77,6 +79,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
         notes: data.notes,
         penaltyPolicyKey: policyKey,
         penaltyPolicyVersion: policyVersion,
+        gaClientId: data.gaClientId ?? null,
         travelers: {
           create: data.travelers.map((t, i) => ({
             role: t.role ?? "TRAVELER",
@@ -175,6 +178,13 @@ export async function transitionStatusTx(
   const emailDescriptor = emailJobForTransition(current.status, to, bookingId);
   if (emailDescriptor) {
     await enqueueEmailJob(tx, { ...emailDescriptor, bookingId });
+  }
+
+  // GA4 purchase 아웃박스 (ADR-0062): PAID 전이와 같은 Tx 에 적재 → 결제 확정과 원자적(유실 0).
+  // MP 발송(외부 IO)은 cron 워커가 Tx 밖에서 수행.
+  const analyticsDescriptor = analyticsJobForTransition(current.status, to, bookingId);
+  if (analyticsDescriptor) {
+    await enqueueAnalyticsJob(tx, { ...analyticsDescriptor, bookingId, occurredAt: new Date() });
   }
 
   return updated;

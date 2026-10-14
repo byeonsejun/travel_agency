@@ -4,6 +4,9 @@ import { startTransition, useActionState, useState } from "react";
 import { createCheckoutBooking } from "../server/actions";
 import { TERM_KEYS } from "@/entities/booking/client";
 import { PaymentWidget } from "./PaymentWidget";
+import { buildPaxItems, type CheckoutAnalyticsBase } from "../model/analytics";
+import { buildAddPaymentInfo } from "@/shared/lib/analytics";
+import { TrackEvent } from "@/shared/ui/TrackEvent";
 
 // ── Props (RSC → client 직렬화 가능 타입만) ─────────────────────
 type Props = {
@@ -17,6 +20,8 @@ type Props = {
   remainingSeats: number;
   clientKey: string;
   devFallback: boolean;
+  /** GA4 add_payment_info 용 상품 식별 정보 (ADR-0062). PII 없음. */
+  analyticsBase: CheckoutAnalyticsBase;
 };
 
 // ── 여행자 폼 상태 타입 (서버 Zod 검증 전 로컬 상태) ────────────
@@ -48,6 +53,7 @@ export function CheckoutForm({
   remainingSeats,
   clientKey,
   devFallback,
+  analyticsBase,
 }: Props) {
   const [state, dispatch, isPending] = useActionState(createCheckoutBooking, null);
 
@@ -124,15 +130,29 @@ export function CheckoutForm({
   // 성공 → PaymentWidget으로 전환 (결제창 진입)
   if (state?.type === "success") {
     return (
-      <PaymentWidget
-        bookingId={state.bookingId}
-        orderId={state.orderId}
-        amount={state.amount}
-        customerName={state.customerName}
-        customerEmail={state.customerEmail}
-        clientKey={clientKey}
-        devFallback={devFallback}
-      />
+      <>
+        {/* GA4 add_payment_info — 예약 생성 성공 후 결제창 진입 직전. value 는 서버 재계산 금액. */}
+        <TrackEvent
+          payload={buildAddPaymentInfo(
+            buildPaxItems(
+              analyticsBase,
+              { priceAdult, priceChild, priceInfant },
+              { adult: adultCount, child: childCount, infant: infantCount },
+            ),
+            { value: state.amount, paymentType: "toss" },
+          )}
+          dedupeKey={state.bookingId}
+        />
+        <PaymentWidget
+          bookingId={state.bookingId}
+          orderId={state.orderId}
+          amount={state.amount}
+          customerName={state.customerName}
+          customerEmail={state.customerEmail}
+          clientKey={clientKey}
+          devFallback={devFallback}
+        />
+      </>
     );
   }
 

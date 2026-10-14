@@ -1,8 +1,10 @@
 import { Suspense } from "react";
-import { ProductCard } from "@/entities/product";
+import { ProductCard, toGa4ItemInput } from "@/entities/product";
 import { searchProducts, SearchBox, SearchChips, ClarifyingChips } from "@/features/search";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { CompassLoader } from "@/shared/ui/CompassLoader";
+import { TrackEvent } from "@/shared/ui/TrackEvent";
+import { buildSearch, buildViewItemList } from "@/shared/lib/analytics";
 
 // searchParams로 분기되므로 Next 15가 자동으로 dynamic으로 분류. searchProducts
 // 자체는 Upstash Redis 캐시(M-CACHE)로 동일 q에 대한 반복 비용을 흡수한다.
@@ -12,9 +14,18 @@ type SearchPageProps = {
 
 async function SearchResults({ q }: { q: string }) {
   const { results, chips } = await searchProducts(q);
+  // GA4 search — SearchBox 제출뿐 아니라 칩 클릭·URL 직접 진입까지 "결과를 본 검색"을 단일 지점에서 수집.
+  const searchEvent = buildSearch(q);
 
   return (
     <>
+      {searchEvent && <TrackEvent payload={searchEvent} dedupeKey={`search:${q}`} />}
+      {results.length > 0 && (
+        <TrackEvent
+          payload={buildViewItemList("search", results.map(toGa4ItemInput))}
+          dedupeKey={`search-results:${q}`}
+        />
+      )}
       <ClarifyingChips chips={chips} query={q} />
       {results.length === 0 ? (
         <EmptyState

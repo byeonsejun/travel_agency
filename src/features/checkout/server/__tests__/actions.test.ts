@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   buildOrderId: vi.fn(),
   revalidatePath: vi.fn(),
   updateTag: vi.fn(),
+  cookieGet: vi.fn(),
   db: {
     departure: { findUniqueOrThrow: vi.fn() },
     payment: { count: vi.fn() },
@@ -50,6 +51,11 @@ vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   updateTag: mocks.updateTag,
   unstable_cache: <T extends (...a: never[]) => unknown>(fn: T) => fn,
+}));
+
+// GA4 client_id 캡처(ADR-0062) — _ga 쿠키 읽기만 mock.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: mocks.cookieGet }),
 }));
 
 import { createCheckoutBooking } from "../actions";
@@ -109,6 +115,7 @@ describe("createCheckoutBooking", () => {
     mocks.transitionStatus.mockResolvedValue({ ...mockBooking, status: "DEPARTURE_CONFIRMED" });
     mocks.db.payment.count.mockResolvedValue(0);
     mocks.buildOrderId.mockReturnValue(ORDER_ID);
+    mocks.cookieGet.mockReturnValue(undefined);
   });
 
   // ── 시나리오 1: 미인증 ────────────────────────────────────────
@@ -210,5 +217,25 @@ describe("createCheckoutBooking", () => {
 
     expect(result.type).toBe("error");
     expect(mocks.transitionStatus).not.toHaveBeenCalled();
+  });
+
+  // ── GA4 client_id 스냅샷 (ADR-0062) ──────────────────────────
+  it("_ga 쿠키가 있으면 파싱한 client_id 를 createBooking 에 전달", async () => {
+    mocks.cookieGet.mockImplementation((name: string) =>
+      name === "_ga" ? { name: "_ga", value: "GA1.1.123456789.1700000000" } : undefined,
+    );
+    await createCheckoutBooking(null, validInput);
+    expect(mocks.createBooking).toHaveBeenCalledWith(
+      expect.objectContaining({ gaClientId: "123456789.1700000000" }),
+    );
+  });
+
+  it("_ga 쿠키가 없거나 형식이 깨졌으면 gaClientId=null (예약은 정상 진행)", async () => {
+    mocks.cookieGet.mockReturnValue({ name: "_ga", value: "garbage" });
+    const result = await createCheckoutBooking(null, validInput);
+    expect(mocks.createBooking).toHaveBeenCalledWith(
+      expect.objectContaining({ gaClientId: null }),
+    );
+    expect(result.type).toBe("success");
   });
 });

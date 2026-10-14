@@ -30,6 +30,7 @@ const mocks = vi.hoisted(() => {
     transitionStatusTx: vi.fn(),
     releaseSeats: vi.fn(),
     enqueueEmailJob: vi.fn(),
+    enqueueAnalyticsJob: vi.fn(),
   };
 });
 
@@ -46,6 +47,9 @@ vi.mock("@/shared/lib/observability", () => ({
 }));
 vi.mock("@/shared/lib/email-job/enqueue", () => ({
   enqueueEmailJob: mocks.enqueueEmailJob,
+}));
+vi.mock("@/shared/lib/analytics-job/enqueue", () => ({
+  enqueueAnalyticsJob: mocks.enqueueAnalyticsJob,
 }));
 // penalty-policy: 순수 computePenalty/OVERSEAS_PENALTY_TIERS 는 실제 유지, DB read 인
 // getTiersBySnapshot 만 stub (시스템 기본 tiers 반환 → 기존 위약금 단가 검증 불변).
@@ -811,5 +815,87 @@ describe("backoff", () => {
     const result4 = backoff(4).getTime();
     const result99 = backoff(99).getTime();
     expect(Math.abs(result99 - result4)).toBeLessThan(200);
+  });
+});
+
+// ── GA4 refund 아웃박스 (ADR-0062) ─────────────────────────────────────
+describe("runRefundSaga — GA4 AnalyticsJob(REFUND) enqueue", () => {
+  const JOB = "refundjob_ga_001";
+  const BK = "booking_ga_001";
+  const PAY = "payment_ga_001";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.db.$transaction.mockImplementation(
+      async (arg: ((tx: typeof mocks.tx) => unknown) | Array<Promise<unknown>>) => {
+        if (typeof arg === "function") return arg(mocks.tx);
+        if (Array.isArray(arg)) return Promise.all(arg);
+      }
+    );
+    mocks.tx.refundJob.findUnique.mockResolvedValue(null);
+    mocks.tx.payment.updateMany.mockResolvedValue({ count: 1 });
+    mocks.tx.refundJob.create.mockResolvedValue({ id: JOB, attempts: 0 });
+    mocks.tx.refundJob.findFirstOrThrow.mockResolvedValue({ id: JOB });
+    mocks.tx.payment.update.mockResolvedValue({});
+    mocks.tx.refundJob.update.mockResolvedValue({});
+    mocks.tx.paymentEvent.create.mockResolvedValue({ id: "pevt_ga" });
+    mocks.tx.traveler.updateMany.mockResolvedValue({ count: 1 });
+    mocks.db.refundJob.update.mockResolvedValue({});
+    mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
+    mocks.releaseSeats.mockResolvedValue(undefined);
+    mocks.transitionStatusTx.mockResolvedValue({});
+    mocks.enqueueEmailJob.mockResolvedValue(undefined);
+    mocks.enqueueAnalyticsJob.mockResolvedValue(undefined);
+  });
+
+  it("DISCRETIONARY 성공 → settle tx 에 REFUND 적재 (dedupeKey=ga-refund:<refundJobId>)", async () => {
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: PAY, amount: 100_000, refundedAmount: 0, tossPaymentKey: "tk_ga",
+    });
+    const { refundDiscretionary } = await import("../refund");
+    await refundDiscretionary({
+      bookingId: BK, paymentId: PAY, amount: 50_000, actor: "admin:mgr01", requestId: "req_ga_1",
+    });
+    expect(mocks.enqueueAnalyticsJob).toHaveBeenCalledOnce();
+    expect(mocks.enqueueAnalyticsJob).toHaveBeenCalledWith(mocks.tx, {
+      type: "REFUND",
+      dedupeKey: `ga-refund:${JOB}`,
+      bookingId: BK,
+      refundJobId: JOB,
+      occurredAt: expect.any(Date),
+    });
+  });
+
+  it("FULL_CANCEL 도 적재 — 메일과 달리 GA4 refund 는 전체취소도 보고해야 매출이 상쇄된다", async () => {
+    mocks.db.booking.findUnique
+      .mockResolvedValueOnce({ travelers: [{ id: "t_A" }] })
+      .mockResolvedValueOnce({
+        id: BK, status: "PAID", departureId: "dep_ga",
+        penaltyPolicyKey: null, penaltyPolicyVersion: null,
+        departure: { departureDate: futureDateUtcMidnight(40) },
+        travelers: [{ id: "t_A", paxType: "ADULT", unitPrice: 100_000, canceledAt: null }],
+      });
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: PAY, amount: 100_000, refundedAmount: 0, tossPaymentKey: "tk_ga",
+    });
+    await refundBooking({ bookingId: BK, actor: "user:u1", applyPenalty: false });
+    expect(mocks.enqueueAnalyticsJob).toHaveBeenCalledWith(
+      mocks.tx,
+      expect.objectContaining({ type: "REFUND", refundJobId: JOB }),
+    );
+  });
+
+  it("refundAmount===0(100% 위약금, Toss-skip)이면 적재하지 않는다 — 머니무브 없음", async () => {
+    mocks.db.booking.findUnique.mockResolvedValue({
+      id: BK, status: "PAID", departureId: "dp0",
+      penaltyPolicyKey: null, penaltyPolicyVersion: null,
+      departure: { departureDate: new Date("2026-12-25") },
+      travelers: [{ id: "t0", paxType: "ADULT", unitPrice: 0, canceledAt: null }],
+    });
+    mocks.db.payment.findFirst.mockResolvedValue({
+      id: PAY, amount: 100_000, refundedAmount: 0, tossPaymentKey: "tk0",
+    });
+    await refundTraveler({ bookingId: BK, travelerIds: ["t0"], actor: "admin:a", applyPenalty: false });
+    expect(mocks.enqueueAnalyticsJob).not.toHaveBeenCalled();
   });
 });

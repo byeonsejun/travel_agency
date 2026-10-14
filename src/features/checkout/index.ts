@@ -11,3 +11,5 @@ export type {
 export { CheckoutForm } from "./ui/CheckoutForm";
 export { PaymentWidget } from "./ui/PaymentWidget";
 export { ConfirmPayment } from "./ui/ConfirmPayment";
+export { buildPaxItems } from "./model/analytics";
+export type { CheckoutAnalyticsBase } from "./model/analytics";

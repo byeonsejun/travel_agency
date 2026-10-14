@@ -26,10 +26,19 @@ vi.mock("@/entities/wishlist", () => ({
   dispatchWishlistChanged: mocks.dispatchWishlistChanged,
 }));
 
+
+// GA4 add_to_wishlist 검증용 — 빌더는 실물, dataLayer push 만 spy (ADR-0062).
+const analyticsMocks = vi.hoisted(() => ({ trackEvent: vi.fn() }));
+vi.mock("@/shared/lib/analytics", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/lib/analytics")>()),
+  trackEvent: analyticsMocks.trackEvent,
+}));
+
 import { WishlistHeartButton } from "../WishlistHeartButton";
 
 const PRODUCT_ID = "clfake000000000000000001";
 const RETURN_TO = "/products?page=2";
+const ANALYTICS_ITEM = { productId: PRODUCT_ID, title: "오사카", destination: "오사카, 일본", unitPrice: 890000 };
 
 describe("<WishlistHeartButton />", () => {
   let container: HTMLDivElement;
@@ -44,6 +53,7 @@ describe("<WishlistHeartButton />", () => {
     mocks.routerPush.mockReset();
     mocks.routerRefresh.mockReset();
     mocks.dispatchWishlistChanged.mockReset();
+    analyticsMocks.trackEvent.mockReset();
   });
 
   afterEach(async () => {
@@ -62,6 +72,7 @@ describe("<WishlistHeartButton />", () => {
     inWishlist: boolean;
     productId?: string;
     returnTo?: string;
+    withAnalytics?: boolean;
   }) {
     return act(async () => {
       root = createRoot(container);
@@ -71,6 +82,7 @@ describe("<WishlistHeartButton />", () => {
           inWishlist={props.inWishlist}
           loggedIn={props.loggedIn}
           returnTo={props.returnTo ?? RETURN_TO}
+          analyticsItem={props.withAnalytics ? ANALYTICS_ITEM : undefined}
         />,
       );
     });
@@ -185,5 +197,27 @@ describe("<WishlistHeartButton />", () => {
       );
     });
     expect(container.querySelector("button")?.getAttribute("aria-pressed")).toBe("true");
+  });
+  // ── GA4 add_to_wishlist (ADR-0062) ─────────────────────────────────
+  it("(ga-1) 찜 추가(false→true) 액션 완료 후 add_to_wishlist 1회 push", async () => {
+    await render({ loggedIn: true, inWishlist: false, withAnalytics: true });
+    await submitForm();
+    expect(analyticsMocks.trackEvent).toHaveBeenCalledOnce();
+    expect(analyticsMocks.trackEvent.mock.calls[0][0]).toMatchObject({
+      event: "add_to_wishlist",
+      ecommerce: { currency: "KRW", value: 890000 },
+    });
+  });
+
+  it("(ga-2) 찜 해제(true→false)는 이벤트 미발화", async () => {
+    await render({ loggedIn: true, inWishlist: true, withAnalytics: true });
+    await submitForm();
+    expect(analyticsMocks.trackEvent).not.toHaveBeenCalled();
+  });
+
+  it("(ga-3) analyticsItem 미주입 시 추가해도 이벤트 미발화(옵트인)", async () => {
+    await render({ loggedIn: true, inWishlist: false });
+    await submitForm();
+    expect(analyticsMocks.trackEvent).not.toHaveBeenCalled();
   });
 });
