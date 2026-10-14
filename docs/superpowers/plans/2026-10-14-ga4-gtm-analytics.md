@@ -74,11 +74,11 @@
 
 > 에이전트가 자동화할 수 없는 유일한 구간이다. 값이 준비되기 전에도 Task 1~6은 진행할 수 있다(ID 미설정 시 no-op으로 설계했기 때문).
 
-- [ ] **Step 1: GA4 속성 생성** — analytics.google.com → 관리 → 속성 만들기 (통화 **KRW**, 시간대 Asia/Seoul) → 웹 데이터 스트림 추가 → **측정 ID(`G-XXXXXXX`)** 확보
+- [x] **Step 1: GA4 속성 생성** — analytics.google.com → 관리 → 속성 만들기 (통화 **KRW**, 시간대 Asia/Seoul) → 웹 데이터 스트림 추가 → **측정 ID(`G-XXXXXXX`)** 확보
   - 권장: 개발/스테이징용 속성을 별도로 만든다(테스트 결제 데이터가 운영 리포트를 오염시키지 않게).
 - [ ] **Step 2: 향상된 측정 설정** — 데이터 스트림 → 향상된 측정 → "페이지 조회 → 브라우저 기록 이벤트 기반 페이지 변경" **ON** (App Router의 SPA 이동을 page_view로 잡기 위해 필요)
-- [ ] **Step 3: MP API Secret 발급** — 데이터 스트림 → Measurement Protocol API secrets → 생성 → **api_secret** 확보 (서버 전용, 절대 클라이언트로 노출 금지)
-- [ ] **Step 4: GTM 컨테이너 생성** — tagmanager.google.com → 컨테이너(웹) → **컨테이너 ID(`GTM-XXXXXXX`)** 확보
+- [x] **Step 3: MP API Secret 발급** — 데이터 스트림 → Measurement Protocol API secrets → 생성 → **api_secret** 확보 (서버 전용, 절대 클라이언트로 노출 금지)
+- [x] **Step 4: GTM 컨테이너 생성** — tagmanager.google.com → 컨테이너(웹) → **컨테이너 ID(`GTM-XXXXXXX`)** 확보
 - [ ] **Step 5: `.env`에 값 기입** (커밋 금지)
   ```
   NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
@@ -131,7 +131,7 @@
 
 **Files:** `src/app/(site)/layout.tsx`
 
-- [ ] **Step 1: 설치** — `(site)/layout.tsx`에 다음을 추가한다:
+- [x] **Step 1: 설치** — `(site)/layout.tsx`에 다음을 추가한다:
   ```tsx
   import { GoogleTagManager } from "@next/third-parties/google";
   import { env } from "@/shared/lib/env";
@@ -140,18 +140,19 @@
   ```
   - **root `app/layout.tsx`가 아니라 `(site)`에 넣는 이유:** `(admin)` 셸 트래픽이 GA4 데이터에 섞이지 않게 하기 위함. 주석으로 남긴다.
   - layout 본체는 `headers()`/`cookies()`를 읽으면 안 된다. 읽으면 홈 `○`과 PDP `◐`가 dynamic으로 강등된다.
-- [ ] **Step 2: dev 동작 확인** — `npm run dev`로 홈을 연 뒤 Playwright(또는 Chrome MCP)로 다음을 확인한다:
+- [x] **Step 2: dev 동작 확인** — `npm run dev`로 홈을 연 뒤 Playwright(또는 Chrome MCP)로 다음을 확인한다:
   - `window.dataLayer`가 존재하고 `gtm.js` 요청이 200인지
   - `/admin/*`에서는 `gtm.js` 요청이 0건인지
-- [ ] **Step 3: ⚠️ CSP enforce 실측 게이트 (가장 중요)** — 현재 CSP는 기본이 report-only라 차단이 드러나지 않는다. `CSP_MODE=enforce`로 dev를 띄운 뒤 다음 3개 경로에서 콘솔의 CSP violation이 0건이고 `gtm.js`가 로드되는지 확인한다:
+- [x] **Step 3: ⚠️ CSP enforce 실측 게이트 (가장 중요)** — 현재 CSP는 기본이 report-only라 차단이 드러나지 않는다. `CSP_MODE=enforce`로 dev를 띄운 뒤 다음 3개 경로에서 콘솔의 CSP violation이 0건이고 `gtm.js`가 로드되는지 확인한다:
   1. `/` (static 모드)
   2. `/products/<id>` (static 모드, ISR)
   3. `/products/<id>/checkout` (dynamic 모드, nonce + strict-dynamic)
   - **예상:** `@next/third-parties`는 `next/script`(afterInteractive)로 **JS가 동적 삽입**하므로, strict-dynamic 하에서도 신뢰된 Next 런타임이 삽입한 스크립트로 전파되어 허용될 것이다.
   - **실패 시 대안 B:** middleware에서 `requestHeaders.set("Content-Security-Policy", csp.value)`를 dynamic 경로에 추가한다. Next가 요청 헤더의 nonce를 읽어 자체 스크립트에 자동으로 nonce를 부여하는 공식 패턴이다. 그 후 같은 3개 경로를 재검증한다.
   - 결과(어느 경로에서 무엇이 됐는지)를 이 Step 아래에 한 줄로 기록한다 → ADR-0062 근거로 사용
-- [ ] **Step 4: 빌드 검증** — dev를 끈 상태(또는 클론 워크트리)에서 `npm run build`를 실행한다. 출력에서 **홈 `○`, PDP `◐` 유지, 신규 `ƒ` 0건**을 확인한다.
-- [ ] **Step 5: 커밋** — `feat(analytics): load GTM in public site shell`
+  - **실측 결과 (2026-10-14, Playwright, `CSP_MODE=enforce`):** `/`(enforce/static)·`/products/<id>`(enforce/static)·`/products/<id>/checkout`(enforce/dynamic, strict-dynamic) 3경로 모두 `gtm.js` 200 + `window.google_tag_manager` 로드 + dataLayer `gtm.js/gtm.dom/gtm.load` + **CSP violation 0건** → **대안 B 불필요**(next/script 동적 삽입이 strict-dynamic 신뢰 전파로 통과). `/admin/dashboard`(ADMIN 세션) gtm 요청 0건·`dataLayer` 부재 확인.
+- [x] **Step 4: 빌드 검증** — dev를 끈 상태(또는 클론 워크트리)에서 `npm run build`를 실행한다. 출력에서 **홈 `○`, PDP `◐` 유지, 신규 `ƒ` 0건**을 확인한다.
+- [x] **Step 5: 커밋** — `feat(analytics): load GTM in public site shell`
 
 ---
 

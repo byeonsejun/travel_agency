@@ -4,6 +4,8 @@ import { SiteFooter } from "@/widgets/site-footer";
 import { GlobalRouteProgress } from "@/shared/ui/GlobalRouteProgress";
 import { NavigationLoadingOverlay } from "@/shared/ui/NavigationLoadingOverlay";
 import { WebVitalsReporter } from "@/features/rum";
+import { GoogleTagManager } from "@next/third-parties/google";
+import { env } from "@/shared/lib/env";
 
 export default function SiteLayout({
   children,
@@ -34,6 +36,11 @@ export default function SiteLayout({
       <Suspense fallback={null}>
         <WebVitalsReporter />
       </Suspense>
+      {/* GTM(→ GA4) 로더 — [ADR-0062]. root layout 이 아니라 (site) 셸에만 둬서 (admin)
+          운영 트래픽을 분석에서 제외한다. next/script(afterInteractive)가 JS 로 동적 삽입하므로
+          strict-dynamic 경로에서도 신뢰 전파로 통과. 동적 훅 미사용 → Suspense 불요.
+          ID 미설정(dev/test 기본)이면 렌더 0 — 분석 no-op. */}
+      {env.NEXT_PUBLIC_GTM_ID ? <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM_ID} /> : null}
     </>
   );
 }
