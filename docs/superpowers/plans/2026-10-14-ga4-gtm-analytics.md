@@ -334,17 +334,17 @@
 
 **Files:** `src/entities/booking/model/analyticsPolicy.ts`, `src/shared/lib/analytics-job/{enqueue,mp,worker,index}.ts`, 각 `__tests__`
 
-- [ ] **Step 1: `analyticsPolicy` 테스트 → 구현**
+- [x] **Step 1: `analyticsPolicy` 테스트 → 구현**
   - `analyticsJobForTransition(from, to, bookingId)` → `to === "PAID"`이면 `{ type: "PURCHASE", dedupeKey: "ga-purchase:<bookingId>" }`, 그 외에는 `null`
   - 환불은 여기서 다루지 않는다(RefundJob settle에서 직접 적재 — 부분 환불이 전이 없이 발생하기 때문)
-- [ ] **Step 2: `enqueue` 테스트 → 구현** — `enqueueEmailJob`과 동형인 find-then-create 멱등 처리(P2002 Tx abort 회피). 같은 dedupeKey로 두 번 호출 시 1행만 생성되는지 확인
-- [ ] **Step 3: `mp.ts` 테스트 → 구현** (`fetch` mock)
+- [x] **Step 2: `enqueue` 테스트 → 구현** — `enqueueEmailJob`과 동형인 find-then-create 멱등 처리(P2002 Tx abort 회피). 같은 dedupeKey로 두 번 호출 시 1행만 생성되는지 확인
+- [x] **Step 3: `mp.ts` 테스트 → 구현** (`fetch` mock)
   - `POST https://www.google-analytics.com/mp/collect?measurement_id=..&api_secret=..`
   - body: `{ client_id, timestamp_micros, non_personalized_ads: false, events: [{ name, params: { transaction_id, value, currency: "KRW", items, engagement_time_msec: 1 } }] }`
   - `client_id`가 null이면 `"srv.<bookingId>"` 폴백(귀속은 잃지만 매출 집계는 보존). 주석으로 트레이드오프 명시
   - **dev/test 폴백:** `NODE_ENV !== "production"`이거나 키가 미설정이면 실제 fetch 없이 `logger.info("analytics.mp.dev", { body })`만 남기고 성공 처리(외부 IO 분기는 NODE_ENV만 기준 — 프로젝트 규칙)
   - 응답이 2xx가 아니면 throw (MP collect는 보통 2xx를 반환하므로 네트워크·5xx만 재시도 대상)
-- [ ] **Step 4: `worker.ts` 테스트 → 구현** — `processAnalyticsJobBatch({ limit })`
+- [x] **Step 4: `worker.ts` 테스트 → 구현** — `processAnalyticsJobBatch({ limit })`
   - `status=PENDING AND nextRunAt<=now` 픽업 (EmailJob 워커 구조를 그대로 따른다)
   - hydrate:
     - PURCHASE: `Booking`(totalPrice, gaClientId, departure → product title·destination, 인원) → `transaction_id = bookingId`, `value = totalPrice`
@@ -353,8 +353,11 @@
   - 실패 시 attempts++, 지수 백오프로 nextRunAt 설정, 최대 시도 후 `FAILED`
   - per-job 격리(한 건 실패가 배치를 죽이지 않음)
   - `index.ts` 배럴은 `import "server-only"` 포함
-- [ ] **Step 5: PASS 확인** — `npx vitest run src/shared/lib/analytics-job src/entities/booking`
-- [ ] **Step 6: 커밋** — `feat(analytics): add server-side GA4 MP outbox worker`
+- [x] **Step 5: PASS 확인** — `npx vitest run src/shared/lib/analytics-job src/entities/booking`
+- [x] **Step 6: 커밋** — `feat(analytics): add server-side GA4 MP outbox worker`
+
+> **Task 10 실측 (2026-10-14, 로컬 DB + tsx):** 실제 PAID 예약으로 enqueue ×2 → 1행(멱등), 배치 실행 → `analytics.mp.dev` 로그(dev 폴백, 외부 IO 0) 후 `SUCCEEDED`, 80h 전 occurredAt 은 `SKIPPED`("beyond MP 72h backdate limit"). Task 9 이전 예약은 gaClientId=null → `client_id: srv.<bookingId>` 폴백 확인. 프로브 행 삭제.
+> 구현 노트: purchase items 는 출발일 현재가가 아니라 **Traveler.paxType/unitPrice 예약 시점 스냅샷**으로 구성(paxType 없는 레거시는 totalPrice 단일 item). 상태값은 EmailJob 과 맞춰 `SUCCEEDED`(plan 초안의 `SENT` 대체).
 
 ---
 
