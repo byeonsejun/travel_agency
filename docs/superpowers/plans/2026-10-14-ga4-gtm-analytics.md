@@ -79,7 +79,7 @@
 - [x] **Step 2: 향상된 측정 설정** — 데이터 스트림 → 향상된 측정 → "페이지 조회 → 브라우저 기록 이벤트 기반 페이지 변경" **ON** (App Router의 SPA 이동을 page_view로 잡기 위해 필요)
 - [x] **Step 3: MP API Secret 발급** — 데이터 스트림 → Measurement Protocol API secrets → 생성 → **api_secret** 확보 (서버 전용, 절대 클라이언트로 노출 금지)
 - [x] **Step 4: GTM 컨테이너 생성** — tagmanager.google.com → 컨테이너(웹) → **컨테이너 ID(`GTM-XXXXXXX`)** 확보
-- [ ] **Step 5: `.env`에 값 기입** (커밋 금지)
+- [x] **Step 5: `.env`에 값 기입** (커밋 금지)
   ```
   NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
   GA4_MEASUREMENT_ID=G-XXXXXXX
@@ -186,12 +186,12 @@
 
 **Files:** `src/features/analytics/ui/TrackEvent.tsx`, `src/features/analytics/index.ts`, 테스트
 
-- [ ] **Step 1: 테스트 먼저 작성** (jsdom, `@testing-library/react`)
+- [x] **Step 1: 테스트 먼저 작성** (jsdom, `@testing-library/react`)
   - mount 시 `trackEvent`가 1회 호출된다
   - StrictMode 이중 effect에서도 1회만 호출된다 (`useRef` 가드 — `ConfirmPayment.tsx`의 `calledRef` 패턴)
   - 같은 payload로 리렌더해도 재호출되지 않는다. `dedupeKey` prop이 바뀌면(예: 다른 상품 PDP로 client 이동) 재호출된다
-- [ ] **Step 2: FAIL 확인**
-- [ ] **Step 3: 구현**
+- [x] **Step 2: FAIL 확인**
+- [x] **Step 3: 구현**
   ```tsx
   "use client";
   // props: { payload: Ga4EventPayload; dedupeKey: string } — 직렬화 가능한 값만
@@ -199,8 +199,8 @@
   // return null;
   ```
   - react-hooks@7 규칙(`refs`, `set-state-in-effect`)을 위반하지 않는지 lint로 확인한다
-- [ ] **Step 4: PASS + `npm run lint` 0 errors**
-- [ ] **Step 5: 커밋** — `feat(analytics): add TrackEvent client island`
+- [x] **Step 4: PASS + `npm run lint` 0 errors**
+- [x] **Step 5: 커밋** — `feat(analytics): add TrackEvent client island`
 
 ---
 
