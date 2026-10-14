@@ -231,7 +231,7 @@
 - [x] **Step 7: 커밋** — `feat(analytics): wire client-side GA4 funnel events`
 
 > **Task 6 실측 (2026-10-14, Playwright, dev):** dataLayer 덤프로 6종 확인 — `view_item_list`(/products 목록·/search 20건), `search`(`"오사카 온천"`), `view_item`(value 790000), `add_to_wishlist`(추가 시만), `begin_checkout`(성인1·`item_variant:"adult"`), `add_payment_info`(value=서버 금액·`payment_type:"toss"`). 빌드: 홈 `○` / products·PDP·checkout·search `◐` 유지, 비-API `ƒ` 0.
-> ⚠️ **발견:** 시드 출발일이 전부 과거(2026-10-14 기준 미래 출발편 0건)라 PDP에 "예약하기" 링크가 없다 → 기존 `tests/e2e/checkout.spec.ts`가 현재 데이터로는 실패한다. Task 13 착수 전 시드 날짜를 상대일(`today + N일`)로 바꾸는 선행 작업 필요(사용자 확인 후).
+> ⚠️ **발견:** 시드 출발일이 전부 과거(2026-10-14 기준 미래 출발편 0건)라 PDP에 "예약하기" 링크가 없다 → 기존 `tests/e2e/checkout.spec.ts`가 현재 데이터로는 실패한다. ~~시드 수정 필요~~ → **해소(2026-10-14):** `prisma/seed.ts`는 이미 상대일(`addDays(today, N)`)이라 코드 문제가 아니라 5월에 적재된 로컬 DB가 낡은 것. 재시드는 비-시드 상품·임베딩·찜을 삭제하므로 사용자 결정으로 **로컬 Departure 43건의 출발/귀국일을 +160일 일괄 이동**(최소 10/15, 미래 SCHEDULED 39건). 다른 에이전트가 같은 증상을 보면 동일하게 날짜 이동 또는 `npm run db:seed` 후 임베딩 cron 재생성.
 
 ---
 
@@ -258,7 +258,7 @@
 
 **Files:** `prisma/schema.prisma`, `prisma/migrations/<ts>_analytics_job/migration.sql`
 
-- [ ] **Step 1: 스키마 작성**
+- [x] **Step 1: 스키마 작성**
   ```prisma
   // Booking 모델에 추가
   gaClientId String? // GA4 client_id 스냅샷(_ga 쿠키). 체크아웃 시점 캡처, MP 발송 시 귀속용. PII 아님.
@@ -271,7 +271,8 @@
 
   enum AnalyticsJobStatus {
     PENDING
-    SENT
+    IN_PROGRESS // CAS claim (EmailJob 워커 동형, stale reaper 대상)
+    SUCCEEDED
     FAILED
     SKIPPED // MP 72h 백데이트 한도 초과 등 영구 미발송
   }
@@ -296,14 +297,16 @@
   }
   ```
   - payload 컬럼 없음 → 워커가 발송 시점에 hydrate한다(EmailJob과 동형, ADR-0030)
-- [ ] **Step 2: 마이그레이션** — `npx prisma migrate dev --name analytics_job`
+- [x] **Step 2: 마이그레이션** — `npx prisma migrate dev --name analytics_job`
   - **shadow DB pgvector 에러로 실패하면** 이 프로젝트의 우회 절차를 따른다:
     1. `npx prisma db push`
     2. `prisma/migrations/<YYYYMMDDHHMMSS>_analytics_job/migration.sql`을 수동 작성(CREATE TYPE ×2, CREATE TABLE, ALTER TABLE "Booking" ADD COLUMN, 인덱스·FK)
     3. `npx prisma migrate resolve --applied <폴더명>`
   - `npm run build`는 `prisma migrate deploy`를 선실행하므로 migration.sql이 정확해야 운영 배포가 성공한다
-- [ ] **Step 3: 검증** — `npx prisma migrate status`가 "up to date"인지, `npm run typecheck` 0인지 확인. seed 영향 없음 확인(`npm run db:seed` 1회 실행)
-- [ ] **Step 4: 커밋** — `feat(db): add AnalyticsJob outbox and Booking.gaClientId`
+- [x] **Step 3: 검증** — `npx prisma migrate status`가 "up to date"인지, `npm run typecheck` 0인지 확인. seed 영향 없음 확인(`npm run db:seed` 1회 실행)
+- [x] **Step 4: 커밋** — `feat(db): add AnalyticsJob outbox and Booking.gaClientId`
+
+> **Task 8 실측 (2026-10-14):** shadow DB 우회를 db push 대신 `prisma migrate diff --from-url <DB> --to-schema-datamodel` 로 정확한 diff SQL 을 뽑아 `20261014000000_analytics_job/migration.sql` 로 저장 → `prisma migrate deploy` 적용(drift 0, `migrate status` up to date). seed 영향: `Booking` 삭제 시 FK `ON DELETE CASCADE` 로 AnalyticsJob 자동 정리 — seed/e2e teardown 수정 불요.
 
 ---
 

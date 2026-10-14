@@ -311,6 +311,9 @@ model Booking {
   paymentDueAt         DateTime? // DEPARTURE_CONFIRMED 진입 시 set (결제 만료 cron용)
   penaltyPolicyKey     String? // 예약 시점 동결 (legacy=null → 시스템 기본 상수)
   penaltyPolicyVersion Int? // 동결 버전 → 취소 시 정확한 tiers 복원
+  // GA4 client_id 스냅샷(_ga 쿠키, 체크아웃 시점 캡처). 서버 MP purchase/refund 를
+  // 브라우저 세션에 귀속시키는 키 — PII 아님(익명 랜덤값). 쿠키 없으면 null. [ADR-0062]
+  gaClientId           String?
 
   user          User           @relation(fields: [userId], references: [id])
   departure     Departure      @relation(fields: [departureId], references: [id])
@@ -321,6 +324,7 @@ model Booking {
   paymentEvents PaymentEvent[]
   refundJobs    RefundJob[]
   emailJobs     EmailJob[]
+  analyticsJobs AnalyticsJob[]
   review        Review?
 
   @@index([userId, status])
@@ -577,6 +581,47 @@ enum EmailJobStatus {
   IN_PROGRESS
   SUCCEEDED
   FAILED
+}
+
+// ─────────────────────────────────────────────────────────────
+// GA4 서버 사이드 매출 이벤트 아웃박스 [ADR-0062]
+// ─────────────────────────────────────────────────────────────
+
+enum AnalyticsEventType {
+  PURCHASE // booking PAID 전이 (transitionStatusTx 아웃박스)
+  REFUND // RefundJob settle (refund.ts / refundRetry.ts 아웃박스)
+}
+
+enum AnalyticsJobStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+  SKIPPED // 영구 미발송 — MP timestamp 72h 백데이트 한도 초과 등
+}
+
+// EmailJob 동형 트랜잭셔널 아웃박스. payload 없음 — 워커가 발송 시점에 hydrate
+// (Booking.totalPrice / RefundJob.amount 동결 스냅샷만 읽음). 외부 IO(GA4 MP)는 Tx 밖.
+model AnalyticsJob {
+  id          String             @id @default(cuid())
+  type        AnalyticsEventType
+  // 멱등 enqueue 키. "ga-purchase:<bookingId>" / "ga-refund:<refundJobId>"
+  dedupeKey   String             @unique
+  bookingId   String
+  // REFUND 일 때만. 워커가 금액(RefundJob.amount) 조회 — back-relation 없이 스칼라만.
+  refundJobId String?
+  // 이벤트 발생 시각 → MP timestamp_micros (cron 지연과 무관하게 GA4 일자 정확)
+  occurredAt  DateTime
+  status      AnalyticsJobStatus @default(PENDING)
+  attempts    Int                @default(0)
+  lastError   String?            @db.Text
+  nextRunAt   DateTime           @default(now()) // 지수 백오프
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRunAt]) // cron picker
 }
 
 // 거래 종료 알림 메일 비동기 큐. EmbeddingJob/RefundJob과 동형
