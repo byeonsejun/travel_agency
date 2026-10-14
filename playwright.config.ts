@@ -58,6 +58,9 @@ export default defineConfig({
       env: {
         PAYMENT_FORCE_REAL: "0",
         TOSS_API_BASE_URL: "http://localhost:4242",
+        // GA4/GTM 격리(ADR-0062): .env 의 실 GTM ID 를 가짜로 덮어 E2E 트래픽이 실 GA4 에
+        // 적재되지 않게 한다. spec 은 Google 도메인 요청도 route 로 차단(네트워크 비의존).
+        NEXT_PUBLIC_GTM_ID: "GTM-E2ETEST",
       },
     },
   ],

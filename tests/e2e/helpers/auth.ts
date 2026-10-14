@@ -26,13 +26,26 @@ export const SEED_CUSTOMER = {
   role: "CUSTOMER",
 } as const;
 
+/** 시드 admin (prisma/seed.ts) — admin 셸 회귀 검증용(예: GA 미로드 단언). */
+export const SEED_ADMIN = {
+  id: "cseedadmin00000000000000001",
+  email: "admin@nextour.test",
+  name: "테스트 관리자",
+  role: "ADMIN",
+} as const;
+
+type SeedUser = typeof SEED_CUSTOMER | typeof SEED_ADMIN;
+
 const SESSION_MAX_AGE = 60 * 60; // 1h — 테스트 1회 실행에 충분
 
 /**
  * 시드 customer 세션을 담은 Playwright 쿠키 객체를 생성한다.
  * `context.addCookies([await createSessionCookie(baseURL)])`로 주입.
  */
-export async function createSessionCookie(baseURL: string): Promise<Cookie> {
+export async function createSessionCookie(
+  baseURL: string,
+  user: SeedUser = SEED_CUSTOMER,
+): Promise<Cookie> {
   loadEnvFromDotenv();
 
   const secret = process.env.AUTH_SECRET;
@@ -49,11 +62,11 @@ export async function createSessionCookie(baseURL: string): Promise<Cookie> {
     secret,
     maxAge: SESSION_MAX_AGE,
     token: {
-      sub: SEED_CUSTOMER.id,
-      id: SEED_CUSTOMER.id,
-      role: SEED_CUSTOMER.role,
-      name: SEED_CUSTOMER.name,
-      email: SEED_CUSTOMER.email,
+      sub: user.id,
+      id: user.id,
+      role: user.role,
+      name: user.name,
+      email: user.email,
     },
   });
 

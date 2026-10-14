@@ -402,11 +402,14 @@
 
 **Files:** `tests/e2e/analytics.spec.ts`, `playwright.config.ts`(webServer.env)
 
-- [ ] **Step 1: 설정** — `webServer.env`에 `NEXT_PUBLIC_GTM_ID=GTM-E2ETEST` 주입. spec에서 `page.route("**/gtm.js*", r => r.fulfill({ body: "" }))`로 외부 GTM 호출을 차단한다(네트워크 비의존)
-- [ ] **Step 2: 클라이언트 퍼널 spec** — 목록 → PDP → 체크아웃 이동 후 `page.evaluate(() => window.dataLayer)`에서 `view_item_list`, `view_item`, `begin_checkout` 존재와 `currency === "KRW"`, `value`가 정수인지 단언한다. `/admin`에서는 gtm.js 요청 0건을 단언한다
-- [ ] **Step 3: 서버 purchase spec** — 기존 `checkout.spec.ts`의 Mock 결제 흐름(localhost:4242)을 재사용해 결제 완료 후 `tests/e2e/helpers/db.ts`로 `AnalyticsJob(type=PURCHASE, dedupeKey=ga-purchase:<bookingId>)` 1행 존재를 단언한다. teardown에 해당 행 정리를 추가한다(자기정리 원칙)
-- [ ] **Step 4: 실행** — `npm run test:e2e` 그린 출력 인용
-- [ ] **Step 5: 커밋** — `test(e2e): cover GA4 funnel dataLayer and purchase outbox`
+- [x] **Step 1: 설정** — `webServer.env`에 `NEXT_PUBLIC_GTM_ID=GTM-E2ETEST` 주입. spec에서 `page.route("**/gtm.js*", r => r.fulfill({ body: "" }))`로 외부 GTM 호출을 차단한다(네트워크 비의존)
+- [x] **Step 2: 클라이언트 퍼널 spec** — 목록 → PDP → 체크아웃 이동 후 `page.evaluate(() => window.dataLayer)`에서 `view_item_list`, `view_item`, `begin_checkout` 존재와 `currency === "KRW"`, `value`가 정수인지 단언한다. `/admin`에서는 gtm.js 요청 0건을 단언한다
+- [x] **Step 3: 서버 purchase spec** — 기존 `checkout.spec.ts`의 Mock 결제 흐름(localhost:4242)을 재사용해 결제 완료 후 `tests/e2e/helpers/db.ts`로 `AnalyticsJob(type=PURCHASE, dedupeKey=ga-purchase:<bookingId>)` 1행 존재를 단언한다. teardown에 해당 행 정리를 추가한다(자기정리 원칙)
+- [x] **Step 4: 실행** — `npm run test:e2e` 그린 출력 인용
+- [x] **Step 5: 커밋** — `test(e2e): cover GA4 funnel dataLayer and purchase outbox`
+
+> **Task 13 실측 (2026-10-14):** `npm run test:e2e` 2회 연속 **5 passed** (analytics 3 + 기존 auth-gate·checkout 2) — 기존 checkout.spec 도 출발일 이동 후 정상. teardown 후 E2E 예약·AnalyticsJob 잔여 0.
+> 구현 노트: (1) `.env` 실 GTM ID 로 E2E 트래픽이 실 GA4 에 적재되는 것을 막기 위해 webServer.env 에 `NEXT_PUBLIC_GTM_ID=GTM-E2ETEST` + spec 에서 Google 도메인 route 차단(이중 격리). (2) admin 셸 검증 위해 `createSessionCookie(baseURL, SEED_ADMIN)` 옵션 추가. (3) 상품 선택은 DB 에서 미래 SCHEDULED 출발편을 직접 골라 시드 날짜 노후화에 비의존. (4) dev 로그의 `CSP violation: script-src blocked eval`(react-server-dom-turbopack)은 dev 전용·report-only 기존 현상으로 본 작업과 무관.
 
 ---
 
