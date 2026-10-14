@@ -3,7 +3,7 @@
 - **상태**: Accepted
 - **결정일**: 2026-10-14
 - **영향 범위**: `src/app/(site)/layout.tsx`, `src/shared/lib/security/csp.ts`, `src/shared/lib/analytics/`(신규), `src/shared/lib/analytics-job/`(신규), `src/shared/ui/TrackEvent.tsx`(신규), `src/entities/booking/{api/mutations.ts,model/analyticsPolicy.ts}`, `src/entities/payment/api/{refund,refundRetry}.ts`, `src/features/{checkout,wishlist}/**`, `src/app/api/cron/dispatcher/route.ts`, `prisma/schema.prisma`(+ `20261014000000_analytics_job`), `src/app/layout.tsx`
-- **관련 commit**: `c854111`(env) · `af2166a`(CSP) · `cbfe1bf`(GTM) · `26d64f6`(이벤트 SSOT) · `a4caee7`·`a8d1b7f`(퍼널 배선, TrackEvent shared 이관) · `7d3fb53`(스키마) · `494b3ec`(hydration) · `973bc20`(gaClientId) · `290a976`(MP 워커) · `fa17004`(아웃박스 배선) · `d58f6d3`(cron) · `35d6753`(E2E) — plan: `docs/superpowers/plans/2026-10-14-ga4-gtm-analytics.md`
+- **관련 commit**: `c854111`(env) · `af2166a`(CSP) · `cbfe1bf`(GTM) · `26d64f6`(이벤트 SSOT) · `a4caee7`·`a8d1b7f`(퍼널 배선, TrackEvent shared 이관) · `7d3fb53`(스키마) · `494b3ec`(hydration) · `973bc20`(gaClientId) · `290a976`(MP 워커) · `fa17004`(아웃박스 배선) · `d58f6d3`(cron) · `35d6753`(E2E) — plan: `docs/superpowers/plans/done/2026-10-14-ga4-gtm-analytics.md`
 
 ## Context (배경)
 

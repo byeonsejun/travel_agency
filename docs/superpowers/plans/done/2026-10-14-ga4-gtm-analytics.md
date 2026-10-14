@@ -25,7 +25,7 @@
 ## 0. 핸드오프 규칙 (Cursor 등 다른 에이전트가 이어받을 때 필독)
 
 1. **먼저 읽을 것:** `CLAUDE.md` 전체(특히 §4.1·§4.2 체크박스 규칙, §5 절대 규칙, §7.1 보고 양식). 그다음 `docs/superpowers/skills/`의 `architect.md`, `frontend-expert.md`, `backend-expert.md`, `qa-engineer.md`, `domain-booking.md`.
-2. **진행 위치 파악:** `grep -n "\- \[ \]" docs/superpowers/plans/2026-10-14-ga4-gtm-analytics.md`를 실행해 처음으로 미체크인 Task부터 재개한다. 체크된 Task는 다시 하지 않는다. 단, 직전 Task의 커밋이 실제로 있는지는 `git log --oneline -15`로 검증한다.
+2. **진행 위치 파악:** `grep -n "\- \[ \]" docs/superpowers/plans/done/2026-10-14-ga4-gtm-analytics.md`를 실행해 처음으로 미체크인 Task부터 재개한다. 체크된 Task는 다시 하지 않는다. 단, 직전 Task의 커밋이 실제로 있는지는 `git log --oneline -15`로 검증한다.
 3. **커밋:** 영문 Conventional Commits(`feat(analytics): ...`). Task 단위 커밋. `--no-verify`, force push, `git reset --hard`는 금지.
 4. **결제·예약 도메인 경계:** Task 9·11에서 결제/환불 코드에는 **아웃박스 enqueue 호출 한 줄과 gaClientId 캡처**만 추가한다. 금액 계산·상태 전이·좌석 로직은 0줄 변경이다. 실거래(live 키)는 절대 금지(§5 NO-REAL-MONEY).
 5. **금지 패턴 재확인:**
@@ -452,9 +452,9 @@
   grep -rn "GA4_API_SECRET" src --include=*.tsx               # 기대: 0 (서버 전용)
   grep -rn "'use client'\|\"use client\"" src/app --include=page.tsx  # 기대: 0
   ```
-- [ ] **Step 8 (운영 키가 있을 때):** GA4 DebugView / 실시간 보고서에서 클라이언트 퍼널 이벤트 수신 확인. 서버 purchase는 staging에서 Mock 결제 1건 → dispatcher 수동 트리거 → GA4 실시간에서 `purchase` 확인. **토스 샌드박스/Mock 결제만 사용 (NO-REAL-MONEY)**
-- [ ] **Step 9: 체크박스 최종 점검** — `grep -n "\- \[ \]" docs/superpowers/plans/2026-10-14-ga4-gtm-analytics.md` → 0건 확인 후 plan을 `docs/superpowers/plans/done/`으로 이동
-- [ ] **Step 10:** 사용자 확인 후 PR 생성 (main 대상)
+- [ ] **Step 8 (운영 키가 있을 때) — ⏳ 사용자 확인 대기(선택, 배포 후 GA4 실시간 보고서). 미확인 상태로 done 이동은 사용자 지시(2026-10-14):** GA4 DebugView / 실시간 보고서에서 클라이언트 퍼널 이벤트 수신 확인. 서버 purchase는 staging에서 Mock 결제 1건 → dispatcher 수동 트리거 → GA4 실시간에서 `purchase` 확인. **토스 샌드박스/Mock 결제만 사용 (NO-REAL-MONEY)**
+- [x] **Step 9: 체크박스 최종 점검** — `grep -n "\- \[ \]" docs/superpowers/plans/done/2026-10-14-ga4-gtm-analytics.md` → 0건 확인 후 plan을 `docs/superpowers/plans/done/`으로 이동
+- [x] **Step 10:** 사용자 확인 후 PR 생성 (main 대상) — PR #30, merge `4bc9ad2` (2026-10-14)
 
 > **Task 15 실측 (2026-10-14):** typecheck 0 / test **1417 passed (176 files)** / lint 0 errors(기존 warning 10) / build 성공(`No pending migrations`, 홈 `○` 5m·`/_not-found`·`/icon.svg` 만 `○`, 목록·PDP·체크아웃·검색·bookings `◐`, 비-API `ƒ` 0) / E2E **5 passed** / 경계 grep 전부 0(analytics 의 env 매치 1건은 금지 *주석*, 실제 import 0).
 > **Step 6 결과 — 범위 밖 선행 결함 발견:** prod 빌드(`next start`, `CSP_MODE=enforce`)에서 `/`·`/products`·PDP(static CSP)는 gtm.js 허용·위반 0. 그러나 `/products/[id]/checkout`(PPR + strict-dynamic)은 **Next 자체 청크까지 전부 차단** — 스크립트 39개 중 헤더 nonce 일치 16개(스트리밍분)뿐, prerender 셸 23개 nonce 부재. GA 변경은 허용 출처 *추가* 뿐이라 원인 아님 → [ADR-0053] PPR 이후 잠복 결함. 운영 `CSP_MODE` 미설정(report-only)이라 사용자 영향 0. ADR-0062 Notes·CLAUDE.md §8 에 기록, Task 3 의 strict-dynamic "위반 0"은 dev 한정임을 정정. **CSP enforce 전환 전 별도 ADR 필요.**
