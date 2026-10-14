@@ -85,7 +85,7 @@
   GA4_MEASUREMENT_ID=G-XXXXXXX
   GA4_API_SECRET=xxxxxxxx
   ```
-  Vercel에는 `vercel env add`로 Production/Preview에 등록한다(`GA4_API_SECRET`은 Sensitive로 설정).
+  Vercel에는 3개 모두 **Production 환경에만** 등록한다(`GA4_API_SECRET`은 Sensitive). Preview는 의도적 제외 — Vercel Preview도 `NODE_ENV=production`이라 키가 있으면 프리뷰 배포의 테스트 결제가 MP로 실제 GA4에 적재되어 리포트를 오염시킨다. `NEXT_PUBLIC_*`는 빌드 타임 인라인이므로 등록 후 **재배포 필요**.
 
 ---
 
