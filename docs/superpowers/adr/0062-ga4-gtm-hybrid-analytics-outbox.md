@@ -39,7 +39,7 @@ if (core.refundAmount > 0) await enqueueAnalyticsJob(tx, { type: "REFUND", dedup
 - **멱등**: `dedupeKey` @unique(`ga-purchase:<bookingId>` / `ga-refund:<refundJobId>`) + find-then-create(P2002 Tx abort 회피) + GA4 의 `transaction_id` 중복제거.
 - **72h 한도**: MP 는 `timestamp_micros` 를 72시간까지만 백데이트 허용 → 초과 job 은 발송 없이 `SKIPPED`.
 - **환경 분기**: `NODE_ENV !== "production"` 이면 MP fetch 0(로그만). GTM 은 `(site)` 셸에만(admin 제외), ID 미설정 시 렌더 0.
-- **CSP**: `script-src`/`connect-src`/`img-src` 에 GTM·GA4 출처 추가(양 모드). `CSP_MODE=enforce` 실측에서 strict-dynamic 경로 포함 위반 0 — `next/script` 가 신뢰된 Next 런타임에 의해 동적 삽입되어 nonce 없이도 신뢰 전파로 통과.
+- **CSP**: `script-src`/`connect-src`/`img-src` 에 GTM·GA4 출처 추가(양 모드, 허용 출처 *추가*만). `CSP_MODE=enforce` 실측: **prod 빌드(`next start`)** 의 정적/ISR 경로(`/`·`/products`·PDP)는 gtm.js 허용·위반 0. strict-dynamic 경로는 **dev 에서만** 위반 0(요청마다 렌더 → 전 스크립트에 nonce) — prod 의 PPR 셸 문제는 Notes 참조.
 
 ## Consequences (결과)
 
@@ -83,7 +83,7 @@ if (core.refundAmount > 0) await enqueueAnalyticsJob(tx, { type: "REFUND", dedup
 
 ### 옵션 G: CSP 를 위해 middleware 가 요청 헤더에 CSP 를 실어 Next 자동 nonce 부여
 - strict-dynamic 경로에서 GTM 이 막힐 경우의 대비책(plan Task 3 "대안 B").
-- **불필요로 판명**: enforce 실측에서 `next/script` 동적 삽입이 신뢰 전파로 통과(위반 0). middleware 변경 없이 해결되어 채택하지 않음.
+- **이번 범위에선 미채택**: dev enforce 실측에서 `next/script` 동적 삽입이 신뢰 전파로 통과(위반 0)해 GTM 단독 문제로는 불필요했다. 단 prod PPR 셸은 GTM 이전에 **Next 자체 청크부터** nonce 부재로 차단되므로(Notes), 이 옵션은 GA 가 아니라 *CSP enforce 롤아웃* 과제에서 재검토 대상이다.
 
 ## Notes
 
@@ -94,4 +94,5 @@ if (core.refundAmount > 0) await enqueueAnalyticsJob(tx, { type: "REFUND", dedup
 - **Vercel env**: 3종 모두 Production 에만 등록. Preview 도 `NODE_ENV=production` 이라 키가 있으면 프리뷰의 테스트 결제가 실 GA4 에 MP 로 적재된다.
 - **NO-REAL-MONEY**: 본 결정은 결제 경로를 변경하지 않는다. 운영 purchase 도 토스 샌드박스(`test_`) 결제다 — GA4 매출 수치는 데모 데이터임을 전제로 읽을 것.
 - 모니터링: `AnalyticsJob` 의 `FAILED`·`SKIPPED` 비율. `SKIPPED` 가 생기면 cron 이 72h 이상 멈췄다는 신호.
+- ⚠️ **발견된 선행 결함(본 ADR 범위 밖, 2026-10-14 Task 15 실측):** prod 빌드 + `CSP_MODE=enforce` 에서 `◐`(PPR) 동적-CSP 경로(예: `/products/[id]/checkout`)는 **Next 자체 청크 23개가 nonce 없이 prerender 된 정적 셸에 박혀** strict-dynamic 에 전부 차단된다(스크립트 39개 중 헤더 nonce 일치 16개 = 스트리밍 부분만). GA 출처 추가와 무관(허용 목록 *추가* 만으로는 기존 허용 스크립트가 차단될 수 없음)하며 [ADR-0053] PPR 도입 이후의 잠복 결함. 운영은 `CSP_MODE` 미설정 = report-only 라 현재 사용자 영향 0. **enforce 전환 전에 반드시 해결**해야 하며 후보는 (a) 해당 경로를 `connection()` 등으로 완전 동적화 (b) 옵션 G (c) PPR 경로를 static CSP 로 분류 — 별도 ADR 로 결정.
 - 6개월 뒤 의심받을 부분: "왜 purchase 가 dataLayer 에 없지?" → 옵션 B/C. "왜 GA 실시간에 매출이 하루 늦게 뜨지?" → Consequences 첫 항목(일 1회 cron).

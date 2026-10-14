@@ -152,6 +152,7 @@
   - **예상:** `@next/third-parties`는 `next/script`(afterInteractive)로 **JS가 동적 삽입**하므로, strict-dynamic 하에서도 신뢰된 Next 런타임이 삽입한 스크립트로 전파되어 허용될 것이다.
   - **실패 시 대안 B:** middleware에서 `requestHeaders.set("Content-Security-Policy", csp.value)`를 dynamic 경로에 추가한다. Next가 요청 헤더의 nonce를 읽어 자체 스크립트에 자동으로 nonce를 부여하는 공식 패턴이다. 그 후 같은 3개 경로를 재검증한다.
   - 결과(어느 경로에서 무엇이 됐는지)를 이 Step 아래에 한 줄로 기록한다 → ADR-0062 근거로 사용
+  - **정정(Task 15):** 아래 실측은 **dev 서버** 기준이다. prod 빌드의 PPR 동적-CSP 경로는 GA 와 무관하게 Next 청크부터 차단됨 — Task 15 기록 참조.
   - **실측 결과 (2026-10-14, Playwright, `CSP_MODE=enforce`):** `/`(enforce/static)·`/products/<id>`(enforce/static)·`/products/<id>/checkout`(enforce/dynamic, strict-dynamic) 3경로 모두 `gtm.js` 200 + `window.google_tag_manager` 로드 + dataLayer `gtm.js/gtm.dom/gtm.load` + **CSP violation 0건** → **대안 B 불필요**(next/script 동적 삽입이 strict-dynamic 신뢰 전파로 통과). `/admin/dashboard`(ADMIN 세션) gtm 요청 0건·`dataLayer` 부재 확인.
 - [x] **Step 4: 빌드 검증** — dev를 끈 상태(또는 클론 워크트리)에서 `npm run build`를 실행한다. 출력에서 **홈 `○`, PDP `◐` 유지, 신규 `ƒ` 0건**을 확인한다.
 - [x] **Step 5: 커밋** — `feat(analytics): load GTM in public site shell`
@@ -439,13 +440,13 @@
 
 ## Task 15: 최종 QA (🔬 증거 기반 — 완료 보고 전 필수)
 
-- [ ] **Step 1:** `npm run typecheck` → 0 errors (출력 인용)
-- [ ] **Step 2:** `npm run test` → 전체 green (출력 인용)
-- [ ] **Step 3:** `npm run lint` → 0 errors (ADR-0061 배럴 규칙 포함)
-- [ ] **Step 4:** `npm run build` (dev 종료 상태 또는 클론 워크트리) → 홈 `○` / PDP `◐` / 안전 도메인 `◐` 유지, 신규 `ƒ` 0건
-- [ ] **Step 5:** `npm run test:e2e` → green
-- [ ] **Step 6:** `CSP_MODE=enforce`로 `/`, `/products/<id>`, `/products/<id>/checkout` 콘솔 CSP violation 0건 (Task 3 재확인)
-- [ ] **Step 7:** 경계 grep
+- [x] **Step 1:** `npm run typecheck` → 0 errors (출력 인용)
+- [x] **Step 2:** `npm run test` → 전체 green (출력 인용)
+- [x] **Step 3:** `npm run lint` → 0 errors (ADR-0061 배럴 규칙 포함)
+- [x] **Step 4:** `npm run build` (dev 종료 상태 또는 클론 워크트리) → 홈 `○` / PDP `◐` / 안전 도메인 `◐` 유지, 신규 `ƒ` 0건
+- [x] **Step 5:** `npm run test:e2e` → green
+- [x] **Step 6:** `CSP_MODE=enforce`로 `/`, `/products/<id>`, `/products/<id>/checkout` 콘솔 CSP violation 0건 (Task 3 재확인)
+- [x] **Step 7:** 경계 grep
   ```bash
   grep -rn "shared/lib/env" src/shared/lib/analytics          # 기대: 0
   grep -rn "GA4_API_SECRET" src --include=*.tsx               # 기대: 0 (서버 전용)
@@ -454,6 +455,10 @@
 - [ ] **Step 8 (운영 키가 있을 때):** GA4 DebugView / 실시간 보고서에서 클라이언트 퍼널 이벤트 수신 확인. 서버 purchase는 staging에서 Mock 결제 1건 → dispatcher 수동 트리거 → GA4 실시간에서 `purchase` 확인. **토스 샌드박스/Mock 결제만 사용 (NO-REAL-MONEY)**
 - [ ] **Step 9: 체크박스 최종 점검** — `grep -n "\- \[ \]" docs/superpowers/plans/2026-10-14-ga4-gtm-analytics.md` → 0건 확인 후 plan을 `docs/superpowers/plans/done/`으로 이동
 - [ ] **Step 10:** 사용자 확인 후 PR 생성 (main 대상)
+
+> **Task 15 실측 (2026-10-14):** typecheck 0 / test **1417 passed (176 files)** / lint 0 errors(기존 warning 10) / build 성공(`No pending migrations`, 홈 `○` 5m·`/_not-found`·`/icon.svg` 만 `○`, 목록·PDP·체크아웃·검색·bookings `◐`, 비-API `ƒ` 0) / E2E **5 passed** / 경계 grep 전부 0(analytics 의 env 매치 1건은 금지 *주석*, 실제 import 0).
+> **Step 6 결과 — 범위 밖 선행 결함 발견:** prod 빌드(`next start`, `CSP_MODE=enforce`)에서 `/`·`/products`·PDP(static CSP)는 gtm.js 허용·위반 0. 그러나 `/products/[id]/checkout`(PPR + strict-dynamic)은 **Next 자체 청크까지 전부 차단** — 스크립트 39개 중 헤더 nonce 일치 16개(스트리밍분)뿐, prerender 셸 23개 nonce 부재. GA 변경은 허용 출처 *추가* 뿐이라 원인 아님 → [ADR-0053] PPR 이후 잠복 결함. 운영 `CSP_MODE` 미설정(report-only)이라 사용자 영향 0. ADR-0062 Notes·CLAUDE.md §8 에 기록, Task 3 의 strict-dynamic "위반 0"은 dev 한정임을 정정. **CSP enforce 전환 전 별도 ADR 필요.**
+> Step 8 은 머지·배포 후 사용자 확인, Step 9(plan → done 이동)·10(PR)은 사용자 승인 후 진행.
 
 ---
 
