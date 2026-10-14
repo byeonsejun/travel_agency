@@ -241,7 +241,8 @@
 
 - [ ] **Step 1: 변수 생성**
   - 상수 변수 `GA4 Measurement ID` = `G-XXXXXXX`
-  - 데이터 영역 변수 `ecommerce`(버전 2)
+  - 데이터 영역 변수 `DLV - search_term` (데이터 영역 변수 이름 `search_term`)
+  - ※ `ecommerce` 변수는 불필요 — GA4 이벤트 태그의 "전자상거래 데이터 보내기(Data Layer)"가 직접 읽는다
 - [ ] **Step 2: GA4 기본 태그** — 태그 유형 "Google 태그", 태그 ID = `{{GA4 Measurement ID}}`, 트리거 = **Initialization - All Pages**
 - [ ] **Step 3: 전자상거래 이벤트 태그** — 태그 유형 "GA4 이벤트", 이벤트 이름 = `{{Event}}`, "전자상거래 데이터 보내기" ON (데이터 소스: Data Layer)
   - 트리거: 맞춤 이벤트, 정규식 `^(view_item_list|view_item|search|add_to_wishlist|begin_checkout|add_payment_info)$`
