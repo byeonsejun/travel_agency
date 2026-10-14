@@ -37,6 +37,18 @@ export function isDynamicCspPath(pathname: string): boolean {
   return DYNAMIC_CSP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
+/**
+ * GTM + GA4 출처 (ADR-0062). (site) 셸의 GTM 컨테이너가 gtm.js → gtag.js 를 로드하고
+ * GA4 수집 엔드포인트(지역 서브도메인 region1.* 포함)로 비콘을 보낸다.
+ * - script: dynamic 모드에선 CSP3 브라우저가 host 를 무시하고 'strict-dynamic' 전파로
+ *   허용하지만, CSP2 폴백 브라우저를 위해 양쪽 모드에 동일하게 둔다.
+ * - frame-src 는 추가하지 않는다 — GTM <noscript> iframe 폴백은 미사용.
+ */
+const GA_SCRIPT_SOURCES = "https://www.googletagmanager.com";
+const GA_CONNECT_SOURCES =
+  "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com";
+const GA_IMG_SOURCES = "https://*.google-analytics.com https://*.googletagmanager.com";
+
 export type CspBuildInput =
   | { mode: "dynamic"; nonce: string; reportOnly: boolean }
   | { mode: "static"; reportOnly: boolean };
@@ -54,18 +66,18 @@ export function buildCspHeader(input: CspBuildInput): CspBuildOutput {
   // 악성 도메인 로딩 차단은 유지하는 트레이드오프 (ADR-0025 Addendum).
   const scriptSrc =
     input.mode === "dynamic"
-      ? `script-src 'self' 'nonce-${input.nonce}' 'strict-dynamic'`
-      : `script-src 'self' 'unsafe-inline'`;
+      ? `script-src 'self' 'nonce-${input.nonce}' 'strict-dynamic' ${GA_SCRIPT_SOURCES}`
+      : `script-src 'self' 'unsafe-inline' ${GA_SCRIPT_SOURCES}`;
 
   const directives = [
     `default-src 'self'`,
     scriptSrc,
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' data: blob: https://*.supabase.co https://picsum.photos`,
+    `img-src 'self' data: blob: https://*.supabase.co https://picsum.photos ${GA_IMG_SOURCES}`,
     `font-src 'self' data:`,
     // 토스 결제: SDK script(js.) + 결제 iframe(payment-gateway-sandbox.) + API 서브도메인을
     // 와일드카드 하나로 통일 — enforce 모드 전환 시에도 결제 경로가 깨지지 않게 한다.
-    `connect-src 'self' https://*.ingest.sentry.io https://*.tosspayments.com https://*.supabase.co`,
+    `connect-src 'self' https://*.ingest.sentry.io https://*.tosspayments.com https://*.supabase.co ${GA_CONNECT_SOURCES}`,
     `frame-src 'self' https://*.tosspayments.com`,
     `frame-ancestors 'none'`,
     `form-action 'self' https://*.tosspayments.com`,

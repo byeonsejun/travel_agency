@@ -119,11 +119,11 @@
 | `connect-src` | `https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com` | GA4 수집 엔드포인트(region1 등 포함) |
 | `img-src` | `https://*.google-analytics.com https://*.googletagmanager.com` | 픽셀 폴백 |
 
-- [ ] **Step 1: 테스트 먼저 작성** — static/dynamic 양쪽 모드에서 위 도메인이 각 지시어에 포함되는지 단언한다. 기존 Toss·Sentry·Supabase 도메인이 그대로 남아 있는지 회귀 단언도 추가한다. `frame-ancestors 'none'`, `object-src 'none'`이 불변인지도 단언한다.
-- [ ] **Step 2: FAIL 확인** — `npx vitest run src/shared/lib/security`
-- [ ] **Step 3: 구현** — 도메인 문자열을 `GOOGLE_ANALYTICS_SOURCES` 같은 상수로 모으고 주석에 ADR-0062를 참조한다. 기존 주석 스타일을 유지한다.
-- [ ] **Step 4: PASS 확인 + fixtures 테스트 갱신** (스냅샷이면 diff를 확인한 뒤 갱신)
-- [ ] **Step 5: 커밋** — `feat(security): allow GTM/GA4 origins in CSP`
+- [x] **Step 1: 테스트 먼저 작성** — static/dynamic 양쪽 모드에서 위 도메인이 각 지시어에 포함되는지 단언한다. 기존 Toss·Sentry·Supabase 도메인이 그대로 남아 있는지 회귀 단언도 추가한다. `frame-ancestors 'none'`, `object-src 'none'`이 불변인지도 단언한다.
+- [x] **Step 2: FAIL 확인** — `npx vitest run src/shared/lib/security`
+- [x] **Step 3: 구현** — 도메인 문자열을 `GOOGLE_ANALYTICS_SOURCES` 같은 상수로 모으고 주석에 ADR-0062를 참조한다. 기존 주석 스타일을 유지한다.
+- [x] **Step 4: PASS 확인 + fixtures 테스트 갱신** (스냅샷이면 diff를 확인한 뒤 갱신)
+- [x] **Step 5: 커밋** — `feat(security): allow GTM/GA4 origins in CSP`
 
 ---
 

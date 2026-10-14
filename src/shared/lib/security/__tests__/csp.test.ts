@@ -134,3 +134,54 @@ describe("isDynamicCspPath — 경로별 CSP 분기 classifier", () => {
     },
   );
 });
+
+describe("GTM/GA4 출처 허용 (ADR-0062)", () => {
+  const NONCE = "AbCdEfGh0123456789==";
+  const directive = (value: string, name: string): string =>
+    value.split("; ").find((d) => d.startsWith(`${name} `)) ?? "";
+
+  const modes = [
+    { label: "static", out: () => buildCspHeader({ mode: "static", reportOnly: false }) },
+    { label: "dynamic", out: () => buildCspHeader({ mode: "dynamic", nonce: NONCE, reportOnly: false }) },
+  ] as const;
+
+  for (const { label, out } of modes) {
+    describe(`${label} 모드`, () => {
+      it("script-src 에 googletagmanager.com 허용 (gtm.js / gtag.js 로더)", () => {
+        expect(directive(out().value, "script-src")).toContain("https://www.googletagmanager.com");
+      });
+
+      it("connect-src 에 GA4 수집 엔드포인트(지역 서브도메인 포함) 허용", () => {
+        const connect = directive(out().value, "connect-src");
+        expect(connect).toContain("https://*.google-analytics.com");
+        expect(connect).toContain("https://*.analytics.google.com");
+        expect(connect).toContain("https://www.googletagmanager.com");
+      });
+
+      it("img-src 에 GA4/GTM 픽셀 폴백 허용", () => {
+        const img = directive(out().value, "img-src");
+        expect(img).toContain("https://*.google-analytics.com");
+        expect(img).toContain("https://*.googletagmanager.com");
+      });
+
+      it("기존 출처(Toss·Sentry·Supabase)와 차단 지시어는 회귀 없음", () => {
+        const v = out().value;
+        expect(directive(v, "connect-src")).toContain("https://*.ingest.sentry.io");
+        expect(directive(v, "connect-src")).toContain("https://*.tosspayments.com");
+        expect(directive(v, "connect-src")).toContain("https://*.supabase.co");
+        expect(directive(v, "img-src")).toContain("https://*.supabase.co");
+        expect(v).toContain("frame-ancestors 'none'");
+        expect(v).toContain("object-src 'none'");
+        // GTM 은 iframe 을 쓰지 않는다(noscript 폴백 제외) — frame-src 는 Toss 만 유지.
+        expect(directive(v, "frame-src")).not.toContain("googletagmanager");
+      });
+    });
+  }
+
+  it("dynamic 모드의 nonce + 'strict-dynamic' 구성은 그대로 유지", () => {
+    const v = buildCspHeader({ mode: "dynamic", nonce: NONCE, reportOnly: false }).value;
+    expect(directive(v, "script-src")).toMatch(
+      new RegExp(`^script-src 'self' 'nonce-${NONCE.replace(/[+=]/g, "\\$&")}' 'strict-dynamic'`),
+    );
+  });
+});
