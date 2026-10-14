@@ -365,17 +365,20 @@
 
 **Files:** `src/entities/booking/api/mutations.ts`, `src/entities/payment/api/refund.ts`, `src/entities/payment/api/refundRetry.ts`
 
-- [ ] **Step 1: 테스트 먼저 작성**
+- [x] **Step 1: 테스트 먼저 작성**
   - `transitionStatusTx` PAID 전이 → 같은 tx에서 AnalyticsJob(PURCHASE) 적재. 기존 `updateTag×N`·EmailJob 단언은 불변
   - refund settle(첫 시도 성공 경로 `refund.ts`, cron 재시도 성공 경로 `refundRetry.ts`) → AnalyticsJob(REFUND, `ga-refund:<refundJobId>`) 적재. **FULL_CANCEL 포함 모든 kind**에서 적재
   - `refundAmount === 0`(100% 위약금, Toss-skip)이면 적재하지 않음
-- [ ] **Step 2: FAIL 확인**
-- [ ] **Step 3: 구현**
+- [x] **Step 2: FAIL 확인**
+- [x] **Step 3: 구현**
   - `mutations.ts`: `emailJobForTransition` 블록 바로 아래에 `analyticsJobForTransition` → `enqueueAnalyticsJob(tx, { ..., occurredAt: new Date() })` 추가
   - `refund.ts`/`refundRetry.ts`: settle `$transaction` 안의 기존 `enqueueEmailJob` 근처에 추가. `if` 분기(`kind !== FULL_CANCEL`) **밖**에 둔다
   - **💳 자가점검:** 외부 IO 0(enqueue는 DB insert뿐), 금액은 RefundJob 동결 스냅샷만 참조, 상태 전이·좌석 로직 diff 0
-- [ ] **Step 4: PASS + 결제/환불 관련 기존 테스트 전체 green** — `npx vitest run src/entities/booking src/entities/payment`
-- [ ] **Step 5: 커밋** — `feat(analytics): enqueue purchase/refund jobs in transactional outbox`
+- [x] **Step 4: PASS + 결제/환불 관련 기존 테스트 전체 green** — `npx vitest run src/entities/booking src/entities/payment`
+- [x] **Step 5: 커밋** — `feat(analytics): enqueue purchase/refund jobs in transactional outbox`
+
+> **Task 11 실측 (2026-10-14, 로컬 DB + Mock 토스 :4242 + tsx):** E2E 마커 예약 생성 → PAID 전이 → `ga-purchase:<bk>` PENDING 적재 → `refundDiscretionary(100,000)` → `ga-refund:<rj>` PENDING 적재 → 워커 실행 → 두 건 모두 `analytics.mp.dev`(purchase 3,990,000 / refund 100,000, client_id=저장된 gaClientId) 후 `SUCCEEDED` → purge 후 잔여 0. 💳 diff 는 enqueue 호출 + import 만(가격·상태·좌석 로직 0줄). 기존 테스트 2파일(observability-hooks, refundLedger)에 analytics enqueue no-op mock 추가.
+> 실행 팁: 도메인 함수를 tsx 로 직접 돌릴 때 `server-only` 미설치로 실패 → vitest 와 동일 no-op alias 를 임시 tsconfig `paths` 로 주입해 해결.
 
 ---
 

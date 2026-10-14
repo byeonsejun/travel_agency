@@ -55,6 +55,8 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("@/shared/lib/db", () => ({ db: mocks.db }));
+// GA4 refund 아웃박스(ADR-0062) — 관측성 훅 검증과 무관하므로 no-op.
+vi.mock("@/shared/lib/analytics-job/enqueue", () => ({ enqueueAnalyticsJob: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/shared/lib/toss", () => ({
   tossClient: mocks.tossClient,
 }));

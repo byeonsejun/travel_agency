@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => {
     transitionStatusTx: vi.fn(),
     releaseSeats: vi.fn(),
     enqueueEmailJob: vi.fn(),
+    enqueueAnalyticsJob: vi.fn(),
   };
 });
 
@@ -38,6 +39,9 @@ vi.mock("@/entities/booking", async (importOriginal) => {
 });
 vi.mock("@/shared/lib/email-job/enqueue", () => ({
   enqueueEmailJob: mocks.enqueueEmailJob,
+}));
+vi.mock("@/shared/lib/analytics-job/enqueue", () => ({
+  enqueueAnalyticsJob: mocks.enqueueAnalyticsJob,
 }));
 // refundRetry → ../refund 가 @/entities/penalty-policy(server-only DB 로더) 를 transitive import.
 // 순수부는 실제 유지, getTiersBySnapshot 만 stub 해 실제 DB 체인 진입 차단.
@@ -481,5 +485,46 @@ describe("retryRefundJob — job.amount===0 Toss-skip 가드", () => {
 
     expect(mocks.tossClient.cancel).not.toHaveBeenCalled();
     expect(res).toMatchObject({ type: "succeeded" });
+  });
+});
+
+// ── GA4 refund 아웃박스 — cron 재시도 성공 경로 (ADR-0062) ──────────────
+describe("retryRefundJob — GA4 AnalyticsJob(REFUND) enqueue", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("재시도 성공(FULL_CANCEL 포함) 시 settle tx 에 REFUND 적재, dedupeKey=ga-refund:<jobId>", async () => {
+    setupClaimSucceeds();
+    mockJobLoad({ kind: "FULL_CANCEL", actor: "user:usr001" });
+    mocks.tossClient.cancel.mockResolvedValue({ status: "CANCELED" });
+    mocks.transitionStatusTx.mockResolvedValue({} as never);
+
+    await retryRefundJob(JOB_ID);
+
+    expect(mocks.enqueueAnalyticsJob).toHaveBeenCalledWith(mocks.tx, {
+      type: "REFUND",
+      dedupeKey: `ga-refund:${JOB_ID}`,
+      bookingId: BOOKING_ID,
+      refundJobId: JOB_ID,
+      occurredAt: expect.any(Date),
+    });
+  });
+
+  it("job.amount===0 이면 적재하지 않는다", async () => {
+    setupClaimSucceeds();
+    mockJobLoad({
+      amount: 0, penaltyAmount: 100000, paymentStatus: "PAID",
+      kind: "DISCRETIONARY", paymentAmount: 100000, refundedAmount: 100000,
+    });
+    await retryRefundJob(JOB_ID);
+    expect(mocks.enqueueAnalyticsJob).not.toHaveBeenCalled();
+  });
+
+  it("PG 실패(deferred)면 적재하지 않는다 — 환불이 실제 완료된 경우에만 보고", async () => {
+    setupClaimSucceeds();
+    mockJobLoad({ kind: "DISCRETIONARY" });
+    mocks.tossClient.cancel.mockRejectedValue(new Error("PG down"));
+    mocks.db.refundJob.update.mockResolvedValue({});
+    await retryRefundJob(JOB_ID);
+    expect(mocks.enqueueAnalyticsJob).not.toHaveBeenCalled();
   });
 });

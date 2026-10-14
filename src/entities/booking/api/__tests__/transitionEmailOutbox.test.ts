@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 
 const mocks = vi.hoisted(() => ({
   enqueueEmailJob: vi.fn(),
+  enqueueAnalyticsJob: vi.fn(),
   tx: {
     booking: { findUniqueOrThrow: vi.fn(), update: vi.fn() },
     bookingEvent: { create: vi.fn() },
@@ -13,6 +14,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/shared/lib/email-job/enqueue", () => ({
   enqueueEmailJob: mocks.enqueueEmailJob,
+}));
+vi.mock("@/shared/lib/analytics-job/enqueue", () => ({
+  enqueueAnalyticsJob: mocks.enqueueAnalyticsJob,
 }));
 vi.mock("../seatLock", () => ({
   reserveSeats: vi.fn(),
@@ -75,5 +79,28 @@ describe("transitionStatusTx 아웃박스 훅", () => {
       actor: "system:test",
     });
     expect(mocks.enqueueEmailJob).not.toHaveBeenCalled();
+  });
+});
+
+describe("transitionStatusTx GA4 purchase 아웃박스 (ADR-0062)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("→ PAID 전이 시 같은 tx 에 AnalyticsJob(PURCHASE) 적재", async () => {
+    mockBooking("DEPARTURE_CONFIRMED");
+    await transitionStatusTx(tx, { bookingId: BID, to: "PAID", actor: "system:test" });
+    expect(mocks.enqueueAnalyticsJob).toHaveBeenCalledWith(tx, {
+      type: "PURCHASE",
+      dedupeKey: `ga-purchase:${BID}`,
+      bookingId: BID,
+      occurredAt: expect.any(Date),
+    });
+  });
+
+  it("취소·READY 등 그 외 전이는 적재 안 함 (환불은 RefundJob settle 에서)", async () => {
+    mockBooking("PAID");
+    await transitionStatusTx(tx, { bookingId: BID, to: "CANCELED_BY_USER", actor: "user:x" });
+    mockBooking("PAID");
+    await transitionStatusTx(tx, { bookingId: BID, to: "READY", actor: "system:test" });
+    expect(mocks.enqueueAnalyticsJob).not.toHaveBeenCalled();
   });
 });
