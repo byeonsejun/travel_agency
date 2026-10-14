@@ -239,18 +239,21 @@
 
 > GTM은 코드가 아니라 콘솔에서 설정한다. 에이전트는 이 절차를 사용자에게 안내하고, 완료 후 Preview로 검증한다.
 
-- [ ] **Step 1: 변수 생성**
+- [x] **Step 1: 변수 생성**
   - 상수 변수 `GA4 Measurement ID` = `G-XXXXXXX`
   - 데이터 영역 변수 `DLV - search_term` (데이터 영역 변수 이름 `search_term`)
   - ※ `ecommerce` 변수는 불필요 — GA4 이벤트 태그의 "전자상거래 데이터 보내기(Data Layer)"가 직접 읽는다
-- [ ] **Step 2: GA4 기본 태그** — 태그 유형 "Google 태그", 태그 ID = `{{GA4 Measurement ID}}`, 트리거 = **Initialization - All Pages**
-- [ ] **Step 3: 전자상거래 이벤트 태그** — 태그 유형 "GA4 이벤트", 이벤트 이름 = `{{Event}}`, "전자상거래 데이터 보내기" ON (데이터 소스: Data Layer)
+- [x] **Step 2: GA4 기본 태그** — 태그 유형 "Google 태그", 태그 ID = `{{GA4 Measurement ID}}`, 트리거 = **Initialization - All Pages**
+- [x] **Step 3: 전자상거래 이벤트 태그** — 태그 유형 "GA4 이벤트", 이벤트 이름 = `{{Event}}`, "전자상거래 데이터 보내기" ON (데이터 소스: Data Layer)
   - 트리거: 맞춤 이벤트, 정규식 `^(view_item_list|view_item|search|add_to_wishlist|begin_checkout|add_payment_info)$`
   - `search` 이벤트에는 이벤트 매개변수 `search_term` = 데이터 영역 변수 `search_term`을 추가로 매핑
-- [ ] **Step 4: Preview 검증** — GTM 미리보기에 `http://localhost:3000` 연결 → 6종 이벤트 발화와 태그 Fired 확인 → GA4 관리 → DebugView에서 수신 확인
+- [x] **Step 4: Preview 검증** — GTM 미리보기에 `http://localhost:3000` 연결 → 6종 이벤트 발화와 태그 Fired 확인 → GA4 관리 → DebugView에서 수신 확인
   - Preview 모드는 추가 Google 도메인을 사용하므로 `CSP_MODE` report-only(기본) 상태에서 진행한다
 - [ ] **Step 5: 컨테이너 게시(Submit → Publish)**, 버전 이름 `v1 ecommerce funnel`
 - [ ] **Step 6: GA4 전환 설정** — GA4 관리 → 이벤트 → `purchase`를 "주요 이벤트(key event)"로 표시
+
+> **Task 7 실측 (2026-10-14, 사용자 수행):** Tag Assistant 미리보기에서 `GA4 - Google 태그` 실행 + `GA4 - ecommerce events` 3회 실행(view_item / add_to_wishlist / begin_checkout), 실행 안 됨 0.
+> ⚠️ **함정 2건 (다음 작업자 참고):** (1) 트리거의 "정규 표현식 일치 사용" 미체크 시 조건이 `_event 같음 ^(...)$` 로 표시되며 전부 실패 — 반드시 체크. (2) 미리보기가 "localhost에 연결할 수 없음(시간 초과)"이면 원인은 우리 보안 헤더 `Cross-Origin-Opener-Policy: same-origin`(ADR-0039)이 Tag Assistant 의 window.opener 통신을 끊는 것 — 헤더를 풀지 말고 Chrome 확장 **Tag Assistant Companion** 설치로 해결. 확장이 `<html>` 에 data-* 속성을 주입해 dev hydration 경고가 나므로 root layout `<html suppressHydrationWarning>` 적용(커밋 494b3ec).
 
 ---
 
