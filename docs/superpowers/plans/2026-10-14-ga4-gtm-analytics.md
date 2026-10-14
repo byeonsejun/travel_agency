@@ -415,7 +415,7 @@
 
 ## Task 14: 문서화
 
-- [ ] **Step 1: ADR-0062 작성** — `docs/superpowers/adr/0062-ga4-gtm-hybrid-analytics-outbox.md` (`template.md`의 4섹션 형식)
+- [x] **Step 1: ADR-0062 작성** — `docs/superpowers/adr/0062-ga4-gtm-hybrid-analytics-outbox.md` (`template.md`의 4섹션 형식)
   - Decision: GTM 단일 설치 + GA4는 GTM 내부 / 클라이언트 퍼널 + 서버 purchase·refund 하이브리드 / 트랜잭셔널 아웃박스 / CSP 확장
   - **Alternatives Considered (필수):**
     - (a) gtag.js 직접 설치 — 마케터가 코드 배포 없이 태그를 바꿀 수 없어서 거부
@@ -424,13 +424,16 @@
     - (d) 결제 confirm 핸들러에서 MP 동기 호출 — 외부 IO가 결제 경로에 직결되고 롤백 시 불일치가 생겨서 거부(ADR-0003)
     - (e) 쿠키 동의 배너(Consent Mode v2) — 국내 대상 서비스라 현 범위 밖, 개인정보처리방침 고지로 대체. EEA 확장 시 재논의
   - Task 3 Step 3의 CSP 실측 결과를 근거로 인용
-- [ ] **Step 2: `docs/superpowers/adr/README.md`** 인덱스에 한 줄 추가하고, README의 ADR 범위 표기(0001-0061)를 0062로 갱신
-- [ ] **Step 3: CLAUDE.md §8** — 완료 내용 한 줄과 "다음 작업자 혼란 방지 노트" 3개 추가:
+- [x] **Step 2: `docs/superpowers/adr/README.md`** 인덱스에 한 줄 추가하고, README의 ADR 범위 표기(0001-0061)를 0062로 갱신
+- [x] **Step 3: CLAUDE.md §8** — 완료 내용 한 줄과 "다음 작업자 혼란 방지 노트" 3개 추가:
   - "purchase가 왜 dataLayer에 없나?" → 서버 MP 단일 경로
   - "GA4 리포트에 purchase가 하루 늦게 뜬다?" → daily cron dispatcher, 72h 한도 내 timestamp_micros 백데이트라 날짜는 정확
   - "GTM 태그를 바꾸려면?" → 코드가 아니라 GTM 콘솔
-- [ ] **Step 4: 개인정보처리방침 고지 확인** — 사이트에 처리방침/약관 페이지가 있으면 "Google Analytics 사용 및 쿠키 수집" 문구를 추가한다. 없으면 백로그로 기록하고 사용자에게 보고한다
-- [ ] **Step 5: 커밋** — `docs(adr): 0062 GA4/GTM hybrid analytics with outbox`
+- [x] **Step 4: 개인정보처리방침 고지 확인** — 사이트에 처리방침/약관 페이지가 있으면 "Google Analytics 사용 및 쿠키 수집" 문구를 추가한다. 없으면 백로그로 기록하고 사용자에게 보고한다
+- [x] **Step 5: 커밋** — `docs(adr): 0062 GA4/GTM hybrid analytics with outbox`
+
+> **Task 14 결과 (2026-10-14):** ADR-0062 발행(Alternatives A~G — plan 의 5개 + sGTM·middleware nonce 대안 B 2개 추가), ADR 인덱스 1행, README·engineering-judgment ADR 범위 0001–0062, CLAUDE.md §8 상태 갱신 + 혼란 방지 노트 8개. 참조 ADR(0003/0025/0027/0030/0036/0039/0053) 실존·주제 일치 확인.
+> Step 4 결과: **개인정보처리방침 페이지가 존재하지 않음**(푸터 `SiteFooter.tsx` 에 "개인정보처리방침" 텍스트만, 링크·라우트 없음) → 고지 문구 추가 불가, **백로그로 기록**하고 사용자 보고. 처리방침 페이지를 만들 때 "Google Analytics(GA4) 사용 및 `_ga` 쿠키 수집" 고지를 포함할 것.
 
 ---
 
