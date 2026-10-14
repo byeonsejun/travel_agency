@@ -426,3 +426,70 @@ describe("envSchema — ENCRYPTION_KEY 가드 (Phase 12 PII 암호화)", () => {
     }
   });
 });
+
+describe("envSchema — GA4/GTM 분석 env (ADR-0062)", () => {
+  it("3종 모두 미설정이어도 통과 (optional — 미설정 시 분석 no-op)", () => {
+    expect(envSchema.safeParse(validBase).success).toBe(true);
+  });
+
+  it("빈 문자열은 미설정으로 간주", () => {
+    const result = envSchema.safeParse({
+      ...validBase,
+      NEXT_PUBLIC_GTM_ID: "",
+      GA4_MEASUREMENT_ID: "",
+      GA4_API_SECRET: "",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.NEXT_PUBLIC_GTM_ID).toBeUndefined();
+      expect(result.data.GA4_MEASUREMENT_ID).toBeUndefined();
+      expect(result.data.GA4_API_SECRET).toBeUndefined();
+    }
+  });
+
+  it("정상 포맷 3종 설정 시 통과", () => {
+    const result = envSchema.safeParse({
+      ...validBase,
+      NEXT_PUBLIC_GTM_ID: "GTM-ABC123",
+      GA4_MEASUREMENT_ID: "G-XYZ789",
+      GA4_API_SECRET: "secret_value",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("NEXT_PUBLIC_GTM_ID 포맷 위반(GTM- 접두 아님) 이면 실패", () => {
+    const result = envSchema.safeParse({ ...validBase, NEXT_PUBLIC_GTM_ID: "G-ABC123" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "NEXT_PUBLIC_GTM_ID")).toBe(true);
+    }
+  });
+
+  it("GA4_MEASUREMENT_ID 포맷 위반(UA- 레거시) 이면 실패", () => {
+    const result = envSchema.safeParse({
+      ...validBase,
+      GA4_MEASUREMENT_ID: "UA-12345-1",
+      GA4_API_SECRET: "secret_value",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "GA4_MEASUREMENT_ID")).toBe(true);
+    }
+  });
+
+  it("GA4_MEASUREMENT_ID 만 설정(API_SECRET 누락) 이면 페어 위반으로 실패", () => {
+    const result = envSchema.safeParse({ ...validBase, GA4_MEASUREMENT_ID: "G-XYZ789" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "GA4_API_SECRET")).toBe(true);
+    }
+  });
+
+  it("GA4_API_SECRET 만 설정(MEASUREMENT_ID 누락) 이면 페어 위반으로 실패", () => {
+    const result = envSchema.safeParse({ ...validBase, GA4_API_SECRET: "secret_value" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "GA4_MEASUREMENT_ID")).toBe(true);
+    }
+  });
+});
