@@ -22,6 +22,8 @@ export interface Ga4ItemInput {
   unitPrice: number;
   /** 인원 수. 기본 1. */
   quantity?: number;
+  /** 인원 유형 등 변형(예: "adult" | "child" | "infant") → GA4 item_variant. */
+  variant?: string;
 }
 
 export interface Ga4Item {
@@ -30,6 +32,7 @@ export interface Ga4Item {
   item_category: string;
   price: number;
   quantity: number;
+  item_variant?: string;
   index?: number;
 }
 
@@ -90,6 +93,8 @@ export function toGa4Item(input: Ga4ItemInput): Ga4Item {
     item_category: categoryOf(input.destination),
     price: input.unitPrice,
     quantity,
+    // undefined 키를 만들지 않는다 — GA4/GTM 이 "undefined" 문자열로 수집하는 사고 방지.
+    ...(input.variant ? { item_variant: input.variant } : {}),
   };
 }
 

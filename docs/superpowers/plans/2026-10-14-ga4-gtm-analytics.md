@@ -50,7 +50,9 @@
 - `src/shared/lib/analytics-job/` — server 전용 (`import "server-only"`)
   - `enqueue.ts`, `mp.ts`(Measurement Protocol 클라이언트), `worker.ts`, `index.ts`, `__tests__/`
 - `src/entities/booking/model/analyticsPolicy.ts` (+ test) — 전이 → AnalyticsJob 매핑(순수, `emailPolicy.ts` 동형)
-- `src/features/analytics/` — `ui/TrackEvent.tsx`, `index.ts`
+- ~~`src/features/analytics/`~~ → **`src/shared/ui/TrackEvent.tsx`** (Task 6에서 이관: features/checkout 이 렌더해야 하는데 features 간 cross-slice import 는 FSD 금지. 도메인 무지 컴포넌트라 shared 가 맞음)
+- `src/entities/product/model/analytics.ts` — `toGa4ItemInput()` (상품→GA4 item 입력, 배럴 export)
+- `src/features/checkout/model/analytics.ts` — `buildPaxItems()` (인원 유형별 item + `item_variant`)
 - `scripts/analytics/mp-validate.ts` — GA4 MP debug 엔드포인트 검증 스크립트
 - `tests/e2e/analytics.spec.ts`
 - `prisma/migrations/<timestamp>_analytics_job/migration.sql`
@@ -211,22 +213,25 @@
 | 이벤트 | 위치 | 비고 |
 |---|---|---|
 | `view_item_list` | `(site)/products/page.tsx`, `(site)/search/page.tsx` | 이미 렌더하는 상품 배열로 생성. Suspense 안의 결과 컴포넌트에 둔다. `item_list_name`: `"products"` / `"search"` |
-| `search` | `features/search/ui/SearchBox.tsx` submit 핸들러 | `search_term` = 정규화한 쿼리 |
+| `search` | ~~SearchBox submit~~ → **`search/page.tsx`의 `SearchResults`** | 구현 변경: 칩 클릭·URL 직접 진입까지 "결과를 본 검색"을 단일 지점에서 수집. SearchBox 무변경 |
 | `view_item` | `(site)/products/[id]/page.tsx` | `dedupeKey=productId`. PDP `◐` 1h 캐시 유지 — payload는 캐시된 상품 데이터에서 생성 |
-| `add_to_wishlist` | `features/wishlist/ui/WishlistHeartIsland.tsx` | **추가 성공 시에만** (해제·실패 시 없음). 상품 정보는 island가 이미 받는 prop을 쓰고, 부족하면 서버 부모가 prop으로 주입(entities 배럴 import 금지) |
+| `add_to_wishlist` | `WishlistHeartIsland`(PDP) + `WishlistHeartButton`(목록 카드) — `analyticsItem` prop 옵트인, 위젯(서버)이 주입. 마이페이지 `WishlistGrid`는 해제 전용이라 제외 | **추가 성공 시에만** (해제·실패 시 없음). 상품 정보는 island가 이미 받는 prop을 쓰고, 부족하면 서버 부모가 prop으로 주입(entities 배럴 import 금지) |
 | `begin_checkout` | `(site)/products/[id]/checkout/page.tsx`의 `CheckoutContent` | 인증 가드 **통과 후**에 렌더. 인원 미정이면 quantity=1·성인가 기준 |
 | `add_payment_info` | `features/checkout/ui/CheckoutForm.tsx` | `createCheckoutBooking` 성공(type=success) 후 토스 결제창 호출 직전. `value`=서버가 반환한 `amount` |
 | ~~`purchase`~~ | **클라이언트에서 보내지 않음** | 서버 MP 단일 경로(Task 8~12). 이중 집계 방지 — ADR-0062 |
 
-- [ ] **Step 1: `view_item_list` + `search`** 배선
-- [ ] **Step 2: `view_item`** 배선
-- [ ] **Step 3: `add_to_wishlist`** 배선 (기존 wishlist 테스트 green 유지)
-- [ ] **Step 4: `begin_checkout` + `add_payment_info`** 배선 (기존 checkout 테스트 green 유지)
-- [ ] **Step 5: 검증** — dev에서 각 화면 이동 후 `window.dataLayer`를 덤프해 이벤트 6종의 payload를 확인한다(Playwright/Chrome MCP로 직접 확인, 사용자에게 떠넘기지 않음). 확인된 payload 1건씩을 보고에 인용한다.
-- [ ] **Step 6: 경계 회귀 검사**
+- [x] **Step 1: `view_item_list` + `search`** 배선
+- [x] **Step 2: `view_item`** 배선
+- [x] **Step 3: `add_to_wishlist`** 배선 (기존 wishlist 테스트 green 유지)
+- [x] **Step 4: `begin_checkout` + `add_payment_info`** 배선 (기존 checkout 테스트 green 유지)
+- [x] **Step 5: 검증** — dev에서 각 화면 이동 후 `window.dataLayer`를 덤프해 이벤트 6종의 payload를 확인한다(Playwright/Chrome MCP로 직접 확인, 사용자에게 떠넘기지 않음). 확인된 payload 1건씩을 보고에 인용한다.
+- [x] **Step 6: 경계 회귀 검사**
   - `git diff main --stat -- 'src/app/**/page.tsx'`에 `'use client'` 추가 0건
   - `grep -rn "@/entities/product\"\|@/entities/departure\"" src/features/analytics src/shared/lib/analytics` → 0건
-- [ ] **Step 7: 커밋** — `feat(analytics): wire client-side GA4 funnel events`
+- [x] **Step 7: 커밋** — `feat(analytics): wire client-side GA4 funnel events`
+
+> **Task 6 실측 (2026-10-14, Playwright, dev):** dataLayer 덤프로 6종 확인 — `view_item_list`(/products 목록·/search 20건), `search`(`"오사카 온천"`), `view_item`(value 790000), `add_to_wishlist`(추가 시만), `begin_checkout`(성인1·`item_variant:"adult"`), `add_payment_info`(value=서버 금액·`payment_type:"toss"`). 빌드: 홈 `○` / products·PDP·checkout·search `◐` 유지, 비-API `ƒ` 0.
+> ⚠️ **발견:** 시드 출발일이 전부 과거(2026-10-14 기준 미래 출발편 0건)라 PDP에 "예약하기" 링크가 없다 → 기존 `tests/e2e/checkout.spec.ts`가 현재 데이터로는 실패한다. Task 13 착수 전 시드 날짜를 상대일(`today + N일`)로 바꾸는 선행 작업 필요(사용자 확인 후).
 
 ---
 

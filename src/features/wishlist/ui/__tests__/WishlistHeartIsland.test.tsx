@@ -22,6 +22,14 @@ vi.mock("@/entities/wishlist", () => ({
   dispatchWishlistChanged: mocks.dispatchWishlistChanged,
 }));
 
+
+// GA4 add_to_wishlist 검증용 — 빌더는 실물, dataLayer push 만 spy (ADR-0062).
+const analyticsMocks = vi.hoisted(() => ({ trackEvent: vi.fn() }));
+vi.mock("@/shared/lib/analytics", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/lib/analytics")>()),
+  trackEvent: analyticsMocks.trackEvent,
+}));
+
 import { WishlistHeartIsland } from "../WishlistHeartIsland";
 
 const PRODUCT_ID = "clfake000000000000000001";
@@ -39,6 +47,7 @@ describe("<WishlistHeartIsland />", () => {
     mocks.toggleWishlistAction.mockResolvedValue(undefined);
     mocks.routerPush.mockReset();
     mocks.dispatchWishlistChanged.mockReset();
+    analyticsMocks.trackEvent.mockReset();
   });
 
   afterEach(async () => {
@@ -309,5 +318,34 @@ describe("<WishlistHeartIsland />", () => {
 
     expect(mocks.toggleWishlistAction).toHaveBeenCalledOnce();
     expect(mocks.dispatchWishlistChanged).toHaveBeenCalledOnce();
+  });
+  // ── GA4 add_to_wishlist (ADR-0062) ─────────────────────────────────
+  async function renderAndSubmit(inWishlist: boolean) {
+    vi.stubGlobal("fetch", makeFetch(inWishlist, true));
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        <WishlistHeartIsland
+          productId={PRODUCT_ID}
+          returnTo="/products/test"
+          analyticsItem={{ productId: PRODUCT_ID, title: "오사카", destination: "오사카, 일본", unitPrice: 890000 }}
+        />,
+      );
+    });
+    const form = container.querySelector("form")!;
+    await act(async () => {
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+  }
+
+  it("(ga-1) PDP 찜 추가 → add_to_wishlist 1회 push", async () => {
+    await renderAndSubmit(false);
+    expect(analyticsMocks.trackEvent).toHaveBeenCalledOnce();
+    expect(analyticsMocks.trackEvent.mock.calls[0][0]).toMatchObject({ event: "add_to_wishlist" });
+  });
+
+  it("(ga-2) PDP 찜 해제 → 이벤트 미발화", async () => {
+    await renderAndSubmit(true);
+    expect(analyticsMocks.trackEvent).not.toHaveBeenCalled();
   });
 });

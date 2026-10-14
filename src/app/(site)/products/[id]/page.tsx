@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getProductById } from "@/entities/product";
+import { getProductById, toGa4ItemInput } from "@/entities/product";
 import { getDeparturesByProduct } from "@/entities/departure";
 import {
   ProductDetail,
@@ -12,6 +12,8 @@ import {
   CompareToggleButton,
   FloatingCompareCart,
 } from "@/features/product-compare";
+import { buildViewItem } from "@/shared/lib/analytics";
+import { TrackEvent } from "@/shared/ui/TrackEvent";
 
 // PDP Cache Components(PPR): getProductById/getDeparturesByProduct 가 `use cache`
 // (cacheLife revalidate:3600)라 1시간 TTL이 데이터 레이어로 이전됨. 사용자/쿠키 의존 0 →
@@ -45,6 +47,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
   return (
     <>
       <PdpScrollReset productId={id} />
+      {/* GA4 view_item — 캐시된 상품 데이터로 payload 생성(추가 쿼리 0), client island 가 발화. */}
+      <TrackEvent payload={buildViewItem(toGa4ItemInput(product))} dedupeKey={id} />
       <ProductDetail
         product={product}
         departures={departures}

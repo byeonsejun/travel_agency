@@ -120,3 +120,13 @@ describe("buildSearch", () => {
     expect(buildSearch("   ")).toBeNull();
   });
 });
+
+describe("toGa4Item — item_variant (인원 유형 구분)", () => {
+  it("variant 지정 시 item_variant 로 매핑", () => {
+    expect(toGa4Item({ ...osaka, variant: "child" }).item_variant).toBe("child");
+  });
+
+  it("variant 미지정 시 item_variant 키 자체가 없다(undefined 키 금지)", () => {
+    expect("item_variant" in toGa4Item(osaka)).toBe(false);
+  });
+});

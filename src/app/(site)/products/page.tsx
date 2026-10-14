@@ -4,6 +4,7 @@ import {
   getDistinctDestinations,
   parseProductListParams,
   PAGE_SIZE,
+  toGa4ItemInput,
 } from "@/entities/product";
 import type { ProductListParams } from "@/entities/product";
 import {
@@ -14,6 +15,8 @@ import {
 } from "@/widgets/product-card-list";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { CompassLoader } from "@/shared/ui/CompassLoader";
+import { TrackEvent } from "@/shared/ui/TrackEvent";
+import { buildViewItemList } from "@/shared/lib/analytics";
 import Link from "next/link";
 import { auth } from "@/features/auth/server";
 import { getMyWishlistProductIds } from "@/entities/wishlist";
@@ -84,6 +87,11 @@ async function ProductResults({
 
   return (
     <>
+      {/* GA4 view_item_list — 필터·정렬·페이지 조합마다 1회. */}
+      <TrackEvent
+        payload={buildViewItemList("products", items.map(toGa4ItemInput))}
+        dedupeKey={`products:${params.destination ?? ""}:${params.sort ?? ""}:${params.page}`}
+      />
       <ProductCardList
         items={items}
         wishlistIds={wishlistIds}

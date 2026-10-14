@@ -17,6 +17,8 @@ type Props = {
 /**
  * GA4 노출 이벤트 island (ADR-0062). RSC 페이지가 'use client' 전환 없이 이벤트를 쏘게 하는
  * 최소 리프 — UI 없음(null 렌더), 부수효과 전용(WebVitalsReporter 와 동형).
+ * shared 에 두는 이유: app 페이지뿐 아니라 features(checkout 등)도 렌더해야 하는데,
+ * features 슬라이스 간 import 는 FSD 금지 — 도메인 무지(payload 만 앎)이므로 shared 가 맞다.
  * 동적 훅(usePathname 등) 미사용 → Suspense 경계 불요(정적 셸 무손상).
  */
 export function TrackEvent({ payload, dedupeKey }: Props) {
