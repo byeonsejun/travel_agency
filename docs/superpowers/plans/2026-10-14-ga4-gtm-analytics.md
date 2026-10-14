@@ -76,7 +76,7 @@
 
 - [x] **Step 1: GA4 속성 생성** — analytics.google.com → 관리 → 속성 만들기 (통화 **KRW**, 시간대 Asia/Seoul) → 웹 데이터 스트림 추가 → **측정 ID(`G-XXXXXXX`)** 확보
   - 권장: 개발/스테이징용 속성을 별도로 만든다(테스트 결제 데이터가 운영 리포트를 오염시키지 않게).
-- [ ] **Step 2: 향상된 측정 설정** — 데이터 스트림 → 향상된 측정 → "페이지 조회 → 브라우저 기록 이벤트 기반 페이지 변경" **ON** (App Router의 SPA 이동을 page_view로 잡기 위해 필요)
+- [x] **Step 2: 향상된 측정 설정** — 데이터 스트림 → 향상된 측정 → "페이지 조회 → 브라우저 기록 이벤트 기반 페이지 변경" **ON** (App Router의 SPA 이동을 page_view로 잡기 위해 필요)
 - [x] **Step 3: MP API Secret 발급** — 데이터 스트림 → Measurement Protocol API secrets → 생성 → **api_secret** 확보 (서버 전용, 절대 클라이언트로 노출 금지)
 - [x] **Step 4: GTM 컨테이너 생성** — tagmanager.google.com → 컨테이너(웹) → **컨테이너 ID(`GTM-XXXXXXX`)** 확보
 - [ ] **Step 5: `.env`에 값 기입** (커밋 금지)
@@ -162,12 +162,12 @@
 
 **규칙:** 이 모듈은 client island가 import한다 → `@/shared/lib/env`, `@/shared/lib/db`, `server-only`, entities import는 **모두 금지**. 입력은 plain 객체만 받는다.
 
-- [ ] **Step 1: 테스트 먼저 작성**
+- [x] **Step 1: 테스트 먼저 작성**
   - `toGa4Item({ productId, title, destination, unitPrice, quantity })` → `{ item_id, item_name, item_category, price, quantity }`
     - `item_category`는 destination `"도시, 국가"`에서 국가 suffix를 뽑는다(`오사카, 일본` → `일본`). 기존 `regionOf` 로직이 `widgets` 레이어에 있으므로 shared에서 import하지 않고 같은 규칙을 순수 함수로 재구현한다. 주석에 SSOT 위치를 명시한다.
     - `price`는 정수(원) 단언. 소수가 입력되면 throw
   - 이벤트 빌더: `buildViewItemList`, `buildViewItem`, `buildSearch`, `buildAddToWishlist`, `buildBeginCheckout`, `buildAddPaymentInfo` → `{ event, ecommerce: { currency: "KRW", value, items } }` 형태
-    - `value === Σ price×quantity` 불변식
+    - `value === Σ price×quantity` 불변식 (※ 구현 노트: GA4 스펙상 `view_item_list` 는 value/currency 를 받지 않아 `item_list_name`+`index` 만 담는다. `add_payment_info` 의 value 는 서버 재계산 금액 우선)
     - 입력 배열을 변이하지 않음(§5 공통)
   - `trackEvent(payload)`:
     - `window.dataLayer`가 없으면 생성 후 push
@@ -175,10 +175,10 @@
     - SSR(`typeof window === "undefined"`)에서는 no-op
   - `parseGaClientId("GA1.1.123456789.1700000000")` → `"123456789.1700000000"`. 형식이 다르거나 undefined이면 `null`
   - **PII 가드:** 빌더 입력 타입에 email/name/phone 필드가 존재하지 않음(타입 레벨). 테스트에 그 의도를 주석으로 남긴다
-- [ ] **Step 2: FAIL 확인** — `npx vitest run src/shared/lib/analytics`
-- [ ] **Step 3: 구현** (index.ts는 named export만, `export *` 금지)
-- [ ] **Step 4: PASS 확인** — 같은 명령
-- [ ] **Step 5: 커밋** — `feat(analytics): add GA4 ecommerce event schema SSOT`
+- [x] **Step 2: FAIL 확인** — `npx vitest run src/shared/lib/analytics`
+- [x] **Step 3: 구현** (index.ts는 named export만, `export *` 금지)
+- [x] **Step 4: PASS 확인** — 같은 명령
+- [x] **Step 5: 커밋** — `feat(analytics): add GA4 ecommerce event schema SSOT`
 
 ---
 
