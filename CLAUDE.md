@@ -264,6 +264,11 @@ grep -n "\- \[x\]" docs/superpowers/plans/<new-plan>.md
   - **남은 작업(최종 전면 손질)**: 데모 이미지 교체, 엔지니어링 글에 E2E·cascade 챕터 추가, README 다듬기, SMS/카카오 알림 채널 **의도적 제외** 결정 박제.
   - **[완료, 2026-10-14] GA4 + GTM 분석 파이프라인 ([ADR-0062], PR #30, merge `4bc9ad2`)** — plan: `docs/superpowers/plans/done/2026-10-14-ga4-gtm-analytics.md` 클라이언트 퍼널 6종(GTM dataLayer) + 서버 purchase/refund(GA4 Measurement Protocol, `AnalyticsJob` 트랜잭셔널 아웃박스) 하이브리드. 남은 것: 배포 후 GA4 실시간 수신 확인(사용자, 선택). 후속 과제: PPR 경로 nonce 부재로 인한 CSP enforce 전환 불가 — 별도 ADR 필요.
   - 백로그(현 범위 밖, 의도적 보류): 추가 알림 채널(SMS/카카오) — 의도적 제외 방향, 출발취소 cascade 위약금 옵션.
+- **다음 작업자의 혼란 방지 노트 (데모 출발일 노후화, 2026-10-15)**:
+  - "배포 사이트 특가가 전부 '출발일 미정'이고 PDP 에 '예약하기'가 없다?" → 코드 버그가 아니라 **데이터 노후화**. `ProductCard` 는 오늘 이후 출발편이 없으면 배지를 띄운다. 시드는 상대일(`addDays(today, N)`)이라 적재 후 시간이 지나면 전부 과거가 된다(출발일 범위 ~4개월 → 다음 노후화 예상 2027-02 전후).
+  - 해결: `scripts/ops/shift-departures.ts` — 전 Departure 를 같은 일수만큼 이동(간격·좌석·가격·상태 불변), **기본 DRY-RUN**, `--apply` 단일 Tx, 멱등, `--days=-N --apply` 로 원복. 재시드는 비-시드 상품·예약·임베딩을 지우므로 쓰지 말 것.
+  - 운영 실행 절차(2026-10-15 실적: 41건 +163일): (1) `vercel env pull /tmp/nextour-prod.env --environment=production --yes` (2) **`DATABASE_URL` 은 Vercel Sensitive 라 빈 값으로 내려온다** → Supabase 대시보드 Connect → URI → **Session pooler** 주소를 파일에 직접 기입(채팅에 붙여넣기 금지, **DB 비밀번호 Reset 금지** — 운영 접속 즉시 끊김) (3) dry-run 으로 `DB host` 가 `*.pooler.supabase.com` 인지 확인 (4) `--apply` (5) `rm /tmp/nextour-prod.env`. 반영: 홈 ≤5분, PDP ≤1시간(use cache), 체크아웃 즉시.
+  - 에이전트는 운영 env pull/운영 DB 접근이 권한 분류기에 막힐 수 있다 — 우회하지 말고 사용자가 `!` 프리픽스로 직접 실행하도록 안내.
 - **다음 작업자의 혼란 방지 노트 (GA4 + GTM, 2026-10-14, [ADR-0062])**:
   - "결제 완료인데 dataLayer 에 `purchase` 가 없다?" → **정상**. purchase·refund 는 서버 전용 경로다(광고차단·즉시 redirect 유실 + 부분환불은 브라우저 관여 0). `transitionStatusTx`(PAID)·refund settle Tx 가 `AnalyticsJob` 을 아웃박스로 적재 → dispatcher cron 의 `processAnalyticsJobBatch` 가 Measurement Protocol 로 발송. 클라이언트는 `add_payment_info` 까지만. **클라이언트 purchase 를 추가하지 말 것**(이중 집계 — E2E 가 "클라이언트 purchase 0" 단언).
   - "GA4 실시간 보고서에 매출이 하루 늦게 뜬다?" → dispatcher cron 이 일 1회(Vercel Hobby). 이벤트 일시는 `timestamp_micros=occurredAt` 이라 날짜 귀속은 정확. 단 72h 넘게 cron 이 멈추면 MP 가 거부 → `SKIPPED`(DB 에는 남음).
