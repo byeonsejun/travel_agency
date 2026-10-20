@@ -44,7 +44,7 @@ await tx.departure.createMany({ data: plan.map(toRow), skipDuplicates: true });
 - 과거 출발편은 계속 쌓인다(데모 데이터 규모라 무시 가능).
 - 폴백 가격은 아동=성인 동일가(할인율을 지어내지 않음). 실제 운영 상품이라면 관리자가 Departure CMS 에서 조정해야 한다.
 - 여전히 수동 실행이다. 다음 노후화 시점(마지막 보충일 + 간격×건수 ≈ 2개월)에 재실행 필요.
-- `DRAFT`·`CLOSED` 상품은 사이트 미노출이라 의도적으로 제외 — 이들의 "미래 출발편 0건" 수치는 0이 되지 않는 것이 정상.
+- 기본 대상은 사이트 노출분인 `PUBLISHED` 뿐이다. `DRAFT`·`CLOSED` 까지 채우려면 `--statuses=PUBLISHED,DRAFT,CLOSED` 로 명시 opt-in(로컬 실적: 추가 2건 — DRAFT 폴백 1, CLOSED 템플릿 1 → 전 상품 22건 기준 미래 출발편 0건 상품 **0**). 운영에서 CLOSED(판매 종료) 상품에 일정을 여는 것은 상품 결정이므로 기본값에 넣지 않았다.
 
 ## Alternatives Considered (대안 — 가장 중요한 섹션)
 

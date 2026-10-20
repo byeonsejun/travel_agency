@@ -5,8 +5,21 @@ import {
   FALLBACK_CAPACITY,
   FALLBACK_MIN_PAX,
   hasBookableFuture,
+  parseStatuses,
   planTopUp,
 } from "../ops/topup-departures";
+
+describe("parseStatuses — --statuses 옵션 파싱 (기본 PUBLISHED)", () => {
+  it("미지정이면 PUBLISHED 만", () => {
+    expect(parseStatuses(undefined)).toEqual(["PUBLISHED"]);
+  });
+  it("콤마 목록 + 중복 제거", () => {
+    expect(parseStatuses("PUBLISHED,DRAFT,CLOSED,DRAFT")).toEqual(["PUBLISHED", "DRAFT", "CLOSED"]);
+  });
+  it("알 수 없는 상태는 거부", () => {
+    expect(() => parseStatuses("PUBLISHED,ARCHIVED")).toThrow(RangeError);
+  });
+});
 
 const NOW = new Date("2026-10-20T06:00:00Z");
 const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
