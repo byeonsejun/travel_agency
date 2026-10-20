@@ -4,10 +4,51 @@ import {
   type TemplateDeparture,
   FALLBACK_CAPACITY,
   FALLBACK_MIN_PAX,
+  buildRollbackSql,
   hasBookableFuture,
   parseStatuses,
   planTopUp,
+  rollbackFileName,
 } from "../ops/topup-departures";
+
+describe("rollbackFileName — --apply 롤백 파일명 (UTC 타임스탬프, 정렬 가능)", () => {
+  it("topup-departures-YYYYMMDDTHHMMSSZ.sql", () => {
+    expect(rollbackFileName(new Date("2026-10-20T06:44:55.123Z"))).toBe("topup-departures-20261020T064455Z.sql");
+  });
+});
+
+describe("buildRollbackSql — 생성 출발편 ID 목록 + 가드된 DELETE", () => {
+  const META = { ids: ["cmq1abc", "cmq2def"], createdAt: new Date("2026-10-20T06:44:55Z"), host: "localhost" };
+
+  it("헤더에 생성 시각·DB host·ID 목록을 남긴다", () => {
+    const sql = buildRollbackSql(META);
+    expect(sql).toContain("2026-10-20T06:44:55.000Z");
+    expect(sql).toContain("localhost");
+    expect(sql).toContain("--   cmq1abc");
+    expect(sql).toContain("--   cmq2def");
+  });
+
+  it("생성한 ID 만 대상으로 한 트랜잭션 DELETE", () => {
+    const sql = buildRollbackSql(META);
+    expect(sql).toMatch(/BEGIN;[\s\S]*DELETE FROM "Departure"[\s\S]*COMMIT;/);
+    expect(sql).toContain(`d.id IN ('cmq1abc', 'cmq2def')`);
+  });
+
+  it("예약·좌석·취소 배치가 붙은 출발편은 지우지 않는 가드 포함", () => {
+    const sql = buildRollbackSql(META);
+    expect(sql).toContain(`d."bookedSeats" = 0`);
+    expect(sql).toContain(`NOT EXISTS (SELECT 1 FROM "Booking" b WHERE b."departureId" = d.id)`);
+    expect(sql).toContain(`NOT EXISTS (SELECT 1 FROM "DepartureCancellation" c WHERE c."departureId" = d.id)`);
+  });
+
+  it("빈 목록은 거부 (생성 0건이면 파일을 만들지 않는다)", () => {
+    expect(() => buildRollbackSql({ ...META, ids: [] })).toThrow(RangeError);
+  });
+
+  it("cuid 형식이 아닌 ID 는 거부 (SQL 인젝션 차단)", () => {
+    expect(() => buildRollbackSql({ ...META, ids: ["x'); DROP TABLE \"Departure\";--"] })).toThrow(RangeError);
+  });
+});
 
 describe("parseStatuses — --statuses 옵션 파싱 (기본 PUBLISHED)", () => {
   it("미지정이면 PUBLISHED 만", () => {

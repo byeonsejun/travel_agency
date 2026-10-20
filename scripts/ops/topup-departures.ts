@@ -17,9 +17,12 @@
  *
  * 안전장치:
  *  - 기본은 DRY-RUN(조회만). `--apply` 를 줘야 INSERT 한다.
- *  - 단일 트랜잭션 안에서 재조회 → 재계획 → createMany(skipDuplicates). 부분 적용 없음.
+ *  - 단일 트랜잭션 안에서 재조회 → 재계획 → createManyAndReturn(skipDuplicates). 부분 적용 없음.
  *  - 멱등: 미래 출발편이 생긴 상품은 계획 대상에서 빠지므로 재실행 시 0건.
- *  - 되돌리기: 출력된 생성 id 목록을 삭제(bookedSeats=0 이고 예약이 붙기 전이라면 안전).
+ *  - 되돌리기: --apply 커밋 후 scripts/ops/rollback/topup-departures-<UTC 타임스탬프>.sql 에
+ *    생성 id 목록 + 롤백 SQL 저장. 롤백 DELETE 는 좌석 0·Booking 0·DepartureCancellation 0 인
+ *    행만 지운다(예약이 붙은 출발편은 남김 — 그 경우 출발 취소 cascade [ADR-0028] 경로).
+ *    파일 쓰기가 실패해도 같은 내용을 콘솔에 출력한다.
  *
  * 실행:
  *   npx tsx --env-file=<env 파일> scripts/ops/topup-departures.ts            # dry-run
@@ -31,6 +34,9 @@
  * DATABASE_URL 하나만 있으면 동작하도록(shift-departures.ts 와 동일 방침).
  * 반영: 홈 ≤5분, PDP ≤1시간(use cache), 체크아웃 즉시.
  */
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { type DepartureStatus, PrismaClient, type ProductStatus } from "@prisma/client";
 
 const DAY_MS = 86_400_000;
@@ -165,6 +171,41 @@ export function parseStatuses(raw: string | undefined): ProductStatus[] {
   return out;
 }
 
+/** 롤백 파일명. UTC 타임스탬프라 사전순 = 시간순. */
+export function rollbackFileName(now: Date): string {
+  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  return `topup-departures-${stamp}.sql`;
+}
+
+// Prisma cuid() 형식. 롤백 SQL 에 리터럴로 들어가므로 이 형식만 허용(인젝션 차단).
+const CUID_RE = /^[a-z0-9]+$/;
+
+/** --apply 로 생성한 출발편 id 목록 + 이를 지우는 가드된 롤백 SQL. */
+export function buildRollbackSql(meta: { ids: readonly string[]; createdAt: Date; host: string }): string {
+  if (meta.ids.length === 0) throw new RangeError("롤백할 id 가 없습니다");
+  const bad = meta.ids.find((id) => !CUID_RE.test(id));
+  if (bad !== undefined) throw new RangeError(`cuid 형식이 아닌 id: ${bad}`);
+
+  const list = meta.ids.map((id) => `'${id}'`).join(", ");
+  return [
+    `-- topup-departures rollback [ADR-0063]`,
+    `-- 생성 시각 : ${meta.createdAt.toISOString()}`,
+    `-- DB host   : ${meta.host}`,
+    `-- 생성 출발편 ${meta.ids.length}건:`,
+    ...meta.ids.map((id) => `--   ${id}`),
+    `--`,
+    `-- 가드: 좌석이 팔렸거나 예약/취소 배치가 붙은 출발편은 지우지 않는다(남은 건수는 DELETE 결과로 확인).`,
+    `BEGIN;`,
+    `DELETE FROM "Departure" d`,
+    ` WHERE d.id IN (${list})`,
+    `   AND d."bookedSeats" = 0`,
+    `   AND NOT EXISTS (SELECT 1 FROM "Booking" b WHERE b."departureId" = d.id)`,
+    `   AND NOT EXISTS (SELECT 1 FROM "DepartureCancellation" c WHERE c."departureId" = d.id);`,
+    `COMMIT;`,
+    ``,
+  ].join("\n");
+}
+
 function argNumber(name: string, fallback: number): number {
   const raw = process.argv.find((a) => a.startsWith(`--${name}=`))?.split("=")[1];
   return raw === undefined ? fallback : Number(raw);
@@ -242,16 +283,32 @@ async function main(): Promise<void> {
     }
 
     // Tx 안에서 재조회·재계획 — dry-run 출력과 실행 사이의 변경(관리자 등록 등)에도 멱등.
+    // createManyAndReturn 은 skipDuplicates 로 건너뛴 행을 빼고 실제 INSERT 된 행만 돌려준다.
     const created = await db.$transaction(async (tx) => {
       const fresh = planTopUp(await loadProducts(tx, statuses), now, opts);
-      const res = await tx.departure.createMany({
+      return tx.departure.createManyAndReturn({
         data: fresh.map(({ source: _source, ...row }) => ({ ...row, status: "SCHEDULED" as const })),
         skipDuplicates: true,
+        select: { id: true },
       });
-      return res.count;
     });
     const remaining = (await loadProducts(db, statuses)).filter((p) => !hasBookableFuture(p.departures, new Date())).length;
-    console.log(`✅ Departure ${created}건 생성 → 오늘 이후 예약가능 출발편 0건 상품: ${remaining}건`);
+    console.log(`✅ Departure ${created.length}건 생성 → 오늘 이후 예약가능 출발편 0건 상품: ${remaining}건`);
+
+    if (created.length > 0) {
+      // 커밋 이후에 쓴다 — 롤백된 Tx 의 id 를 파일로 남기지 않도록.
+      const sql = buildRollbackSql({ ids: created.map((r) => r.id), createdAt: now, host });
+      const dir = join(dirname(fileURLToPath(import.meta.url)), "rollback");
+      const file = join(dir, rollbackFileName(now));
+      try {
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(file, sql, { flag: "wx" }); // 같은 이름이 있으면 덮어쓰지 않고 실패
+        console.log(`   롤백 파일: ${file}`);
+      } catch (e) {
+        console.error(`⚠️ 롤백 파일 저장 실패(${e instanceof Error ? e.message : e}) — 아래 SQL 을 직접 보관하세요:`);
+        console.log(sql);
+      }
+    }
   } finally {
     await db.$disconnect();
   }
