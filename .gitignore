@@ -28,3 +28,6 @@ coverage
 
 # Local image assets served from Supabase bucket — not committed to repo
 /public/images/
+
+# topup-departures --apply rollback files (contain departure ids + DB host) — keep local, not committed
+/scripts/ops/rollback/
