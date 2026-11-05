@@ -11,6 +11,9 @@ export function SiteFooter() {
           <p className="mt-1">고객센터 1234-5678</p>
         </div>
       </div>
+      <div className="mx-auto mt-8 max-w-7xl px-6">
+        <p className="border-t border-border pt-6 text-xs">Copyright © 2026 BYUN SEJUN. All Rights Reserved.</p>
+      </div>
     </footer>
   );
 }
