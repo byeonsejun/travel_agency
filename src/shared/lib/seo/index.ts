@@ -8,3 +8,4 @@ export {
   isPreviewDeployment,
 } from "./site";
 export { buildRootMetadata, buildPageMetadata, NOINDEX_METADATA } from "./metadata";
+export { buildLlmsTxt } from "./llmsTxt";
