@@ -22,22 +22,6 @@ export function buildProductJsonLd(
 ): Record<string, unknown>[] {
   const url = absoluteUrl(`/products/${product.id}`);
 
-  // 판매종료 상품은 화면에 출발일이 비어 나오므로 가격 · 재고를 내보내지 않는다.
-  const offers =
-    product.status !== "CLOSED" && departures.length > 0
-      ? buildOffers(departures)
-      : null;
-
-  const productLd: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    description: buildProductDescription(product),
-    url,
-    ...(product.heroImageUrl ? { image: [product.heroImageUrl] } : {}),
-    ...(offers ? { offers } : {}),
-  };
-
   const breadcrumbLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -46,6 +30,22 @@ export function buildProductJsonLd(
       { "@type": "ListItem", position: 2, name: "여행 상품", item: absoluteUrl("/products") },
       { "@type": "ListItem", position: 3, name: product.title, item: url },
     ],
+  };
+
+  // 판매종료 상품이거나 출발일이 없으면 화면에 가격 · 재고가 없다. 구글은 offers · review ·
+  // aggregateRating 이 모두 빠진 Product 를 잘못된 상품 스니펫으로 보고하므로 Product 자체를 내지 않는다.
+  if (product.status === "CLOSED" || departures.length === 0) {
+    return [breadcrumbLd];
+  }
+
+  const productLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: buildProductDescription(product),
+    url,
+    ...(product.heroImageUrl ? { image: [product.heroImageUrl] } : {}),
+    offers: buildOffers(departures),
   };
 
   return [productLd, breadcrumbLd];

@@ -122,14 +122,16 @@ describe("buildProductJsonLd — Product", () => {
     );
   });
 
-  it("상품이 CLOSED 이면 offers 가 없다", () => {
-    const [item] = buildProductJsonLd(makeProduct({ status: "CLOSED" }), departures);
-    expect("offers" in item).toBe(false);
+  it("상품이 CLOSED 이면 Product 없이 BreadcrumbList 만 낸다", () => {
+    const result = buildProductJsonLd(makeProduct({ status: "CLOSED" }), departures);
+    expect(result).toHaveLength(1);
+    expect(result[0]["@type"]).toBe("BreadcrumbList");
   });
 
-  it("출발일이 0개이면 offers 가 없다", () => {
-    const [item] = buildProductJsonLd(makeProduct(), []);
-    expect("offers" in item).toBe(false);
+  it("출발일이 0개이면 Product 없이 BreadcrumbList 만 낸다", () => {
+    const result = buildProductJsonLd(makeProduct(), []);
+    expect(result).toHaveLength(1);
+    expect(result[0]["@type"]).toBe("BreadcrumbList");
   });
 
   it("입력 출발일 배열을 변이하지 않는다", () => {

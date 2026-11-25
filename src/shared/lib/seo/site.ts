@@ -1,3 +1,4 @@
+// 이 모듈은 env 를 import 하므로 @/shared/lib/seo 는 서버 전용이다. 'use client' 파일에서 import 하지 않는다.
 import { env } from "@/shared/lib/env";
 
 // 정본(운영) 주소. env 로 받지 않고 상수로 둔다 — 미리보기 배포에서도 canonical 이
