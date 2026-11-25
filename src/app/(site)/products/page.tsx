@@ -18,12 +18,20 @@ import { CompassLoader } from "@/shared/ui/CompassLoader";
 import { TrackEvent } from "@/shared/ui/TrackEvent";
 import { buildViewItemList } from "@/shared/lib/analytics";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/shared/lib/seo";
 import { auth } from "@/features/auth/server";
 import { getMyWishlistProductIds } from "@/entities/wishlist";
 import {
   parseCompareIds,
   FloatingCompareCart,
 } from "@/features/product-compare";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "여행 상품",
+  description: "목적지별 패키지 여행 상품을 최신순 · 최저가 · 출발임박 순으로 볼 수 있습니다.",
+  path: "/products",
+});
 
 // searchParams 사용 페이지 — Next 15가 자동으로 dynamic으로 분류. force-dynamic을
 // 명시할 필요 없음(향후 sub-fetch 캐시 옵트인을 막지 않도록 제거).

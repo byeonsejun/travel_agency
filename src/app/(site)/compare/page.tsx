@@ -1,9 +1,21 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/shared/lib/seo";
 import { getProductsByIds } from "@/entities/product";
 import { parseCompareIds } from "@/features/product-compare";
 import { ProductCompareTable } from "@/widgets/product-compare-table";
 import { EmptyState } from "@/shared/ui/EmptyState";
+
+// 담아 둔 상품 id(?compareIds=)가 있어야 내용이 생기는 화면이라 색인에서 뺀다. 링크는 따라간다.
+export const metadata: Metadata = {
+  ...buildPageMetadata({
+    title: "상품 비교",
+    description: "상품 목록에서 담은 여행 상품을 최대 3개까지 나란히 비교합니다.",
+    path: "/compare",
+  }),
+  robots: { index: false, follow: true },
+};
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

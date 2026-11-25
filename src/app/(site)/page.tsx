@@ -1,8 +1,12 @@
 import { getFeaturedProducts, ProductCard } from "@/entities/product";
 import { TabsContent } from "@/shared/ui/tabs";
+import { JsonLd } from "@/shared/ui/JsonLd";
+import { HOME_DESCRIPTION, SITE_NAME, absoluteUrl, buildPageMetadata } from "@/shared/lib/seo";
 import { HomeHero } from "@/widgets/home-hero";
 import { HomeRegionDeals, buildRegionTabs, filterByRegion } from "@/widgets/home-region-deals";
 import { HomeThemeBento } from "@/widgets/home-theme-bento";
+
+export const metadata = buildPageMetadata({ description: HOME_DESCRIPTION, path: "/" });
 
 // Cache Components(PPR): 추천 상품은 변동 빈도가 낮아 5분 캐시. getFeaturedProducts 가
 // `use cache`(cacheLife revalidate:300)라 페이지가 정적 셸로 prerender + 데이터는 캐시 hit.
@@ -17,6 +21,15 @@ export default async function HomePage() {
   // children 으로 주입 → entities/product 서버 그래프가 client 번들에 누출되지 않음.
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: absoluteUrl("/"),
+          inLanguage: "ko-KR",
+        }}
+      />
       <HomeHero />
       <HomeRegionDeals tabs={tabs}>
         {tabs.map((region) => (
