@@ -3,7 +3,7 @@
 - **상태**: Accepted
 - **결정일**: 2026-11-25
 - **영향 범위**: `src/shared/lib/seo/*`, `src/shared/ui/JsonLd.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts`, `src/app/llms.txt/route.ts`, `src/widgets/product-detail/model/productSeo.ts`, `src/entities/product`(`getPublishedProductIndex`), `src/app/(site)/{bookings,login,mypage,reviews,products/[id]/checkout}/layout.tsx`, `src/app/(admin)/admin/layout.tsx` (결제 · 예약 도메인과 기존 `page.tsx` 는 무변경)
-- **관련 commit**: `4986bf0`, `5b509cf`, `96559d6`, `6699201`
+- **관련 commit**: `4986bf0`, `5b509cf`, `96559d6`, `6699201`, `017efea`
 
 ## Context (배경)
 
@@ -24,13 +24,13 @@
 noindex 대상
 - `/login/**`, `/mypage`, `/bookings/**`, `/products/[id]/checkout`, `/reviews/**`, `/admin/**`: 색인도 링크 따라가기도 막는다(`index: false, follow: false`).
 - `/compare`: 색인은 막고 링크는 따라가게 둔다(`index: false, follow: true`). 사이트맵에도 넣지 않는다.
-- 위 비공개 화면의 noindex 는 기존 `page.tsx` 가 아니라, 메타데이터만 내보내는 `layout.tsx` 로 단다. 로그인 · 예약 · 결제 · 마이페이지 · 후기는 새 layout 파일 다섯 개를 만들었고, 관리자는 이미 있던 layout 에 `metadata` export 3줄만 더했다.
+- 위 비공개 화면의 noindex 는 기존 `page.tsx` 가 아니라, 메타데이터만 내보내는 `layout.tsx` 로 단다. 로그인 · 예약 · 결제 · 마이페이지 · 후기는 새 layout 파일 다섯 개를 만들었고, 관리자는 이미 있던 layout 에 import 한 줄과 `metadata` export 한 줄만 더했다.
 
 그 밖의 규칙
 - `robots.txt` 는 운영에서 `/api/` 만 막고 사이트맵 주소를 알린다. 비공개 화면은 여기서 막지 않는다. AI 검색 로봇도 따로 막지 않는다.
 - 미리보기 배포(`VERCEL_ENV === "preview"`)는 `robots.txt` 로 전체 차단하고 루트 메타데이터에도 `noindex` 를 건다. 로컬과 운영은 색인을 허용한다.
 - canonical 의 기준 주소는 상수 `SITE_URL` 이다. 미리보기에서 열어도 canonical 은 운영 주소를 가리킨다.
-- 상품 상세 구조화 데이터는 화면에 보이는 값만 쓴다. `Product`(이름 · 설명 · 대표 사진 · `AggregateOffer`)와 `BreadcrumbList`. 가격은 출발일 성인가의 최저 · 최고, 통화는 `KRW`, 출발일 수는 `offerCount`. 판매종료 상품이거나 출발일이 없으면 `offers` 를 넣지 않고, 출발일이 모두 마감이면 `availability` 는 `SoldOut`. 홈에는 `WebSite`(`name`, `url`, `inLanguage`)만 넣는다.
+- 상품 상세 구조화 데이터는 화면에 보이는 값만 쓴다. `Product`(이름 · 설명 · `url` · 대표 사진 · `AggregateOffer`)와 `BreadcrumbList`. 가격은 출발일 성인가의 최저 · 최고, 통화는 `KRW`, 출발일 수는 `offerCount`. `Product` 는 가격을 매길 출발일이 있을 때만 내보낸다. 판매종료 상품이거나 출발일이 없으면 `offers` · `review` · `aggregateRating` 이 모두 빠진 `Product` 가 되고, 구글은 이를 Search Console 에서 잘못된 상품 스니펫으로 보고하므로 이때는 `BreadcrumbList` 만 낸다. 출발일이 모두 마감이면 `availability` 는 `SoldOut`. 홈에는 `WebSite`(`name`, `url`, `inLanguage`)만 넣는다.
 - JSON-LD 는 서버 컴포넌트가 HTML 에 직접 넣는다(`JsonLd`, `<` 를 이스케이프해 상품 이름에 `</script>` 가 들어가도 스크립트가 깨지지 않게 한다). 새 클라이언트 JS 는 없다.
 
 ```ts
@@ -45,8 +45,8 @@ export const metadata = NOINDEX_METADATA;
 
 **얻은 것:**
 - 상품마다 고유한 제목 · 설명 · canonical 이 나가고, 사이트맵과 `llms.txt` 가 같은 목록에서 만들어져 상품이 추가 · 판매종료돼도 따로 손볼 곳이 없다.
-- 비공개 화면은 크롤러가 페이지를 열어 `noindex` 를 직접 읽게 되므로, 주소만 색인에 남는 경우가 없다.
-- 결제 · 예약 도메인 코드와 기존 `page.tsx` 를 한 줄도 수정하지 않았다. 새 layout 파일 다섯 개를 추가하고, 기존 관리자 layout 에는 `metadata` export 만 더했다.
+- 비공개 화면은 크롤러가 페이지를 열어 `noindex` 를 직접 읽게 되므로, 주소만 색인에 남는 경우는 거의 없다. 로그인하지 않은 크롤러가 `/mypage` · `/admin` · `/bookings` 를 열면 307 로 `/login` 에 가고, 거기서 `noindex` 를 읽는다.
+- 결제 · 예약 도메인 코드와 기존 `page.tsx` 를 한 줄도 수정하지 않았다. 새 layout 파일 다섯 개를 추가하고, 기존 관리자 layout 에는 import 한 줄과 `metadata` export 한 줄만 더했다.
 - 가격과 재고 표시가 화면의 "성인 기준 ~원부터" 와 같은 필드에서 나와, 구조화 데이터와 화면이 서로 다른 말을 하지 않는다.
 - 빌드 결과도 그대로다. 홈은 `○`, `/products/[id]` 는 `◐`(PPR)를 유지하고, `/robots.txt` · `/sitemap.xml` · `/llms.txt` 는 정적(`○`)으로 만들어진다.
 
@@ -55,6 +55,8 @@ export const metadata = NOINDEX_METADATA;
 - 구글 리치 결과 테스트로 구조화 데이터가 실제로 인식되는지는 확인하지 않았다(자동화할 수 없는 도구다). 출력 JSON 은 단위 테스트로만 검증했고, 검색 결과에 가격이 나오는지는 배포 후 Search Console 에서 봐야 안다.
 - 개별 출발일의 재고와 가격은 구조화 데이터에 내보내지 않는다. 대신 최저 · 최고가와 출발일 수만 알린다.
 - 상품 상세는 PPR 이라 HTML 에 들어가는 구조화 데이터가 캐시 주기(`use cache`, 최대 약 1시간)만큼 지연될 수 있다.
+- **상품 상세 Lighthouse SEO 는 100 에서 91 로 내려갔고, 받아들였다.** `/` 는 두 번 모두 100, 상품 상세는 두 번 모두 91 이며 실패한 감사는 `meta-description` 하나다. 원인은 Next 16 이 자기 봇 목록에 없는 사용자 에이전트에게는 상품별 메타데이터를 `</head>` 뒤로 늦게 흘려 보내 첫 화면이 메타데이터 조회에 붙잡히지 않게 하는 데 있다. Lighthouse 13 의 모바일 사용자 에이전트는 그 목록에 없다. 실제 크롤러는 다르게 받는다. Googlebot, `facebookexternalhit` 가 들어 있는 카카오톡 미리보기, 네이버 Yeti 는 설명을 `<head>` 안에서 받는다. AI 크롤러는 `</head>` 뒤이긴 해도 같은 HTML 문서 안에서 h1 · JSON-LD 와 함께 받고, `/llms.txt` 에는 모든 상품이 나열된다. 그래서 `next.config` 로 봇 판정을 건드리지 않았다.
+- **상품마다 정적 셸을 만드는 근본 해결은 미뤘다.** 비어 있지 않은 `generateStaticParams` 로 상품 상세마다 정적 셸을 두면 메타데이터가 head 에 들어가지만, 상품 상세가 그려지고 캐시되는 방식(ADR-0053 영역)이 바뀌고, 빌드 때 DB 에 접근하다 커넥션 풀을 다 쓴 전례가 있다. 필요해지면 별도 PR 과 ADR 로 다룬다.
 - 미리보기 배포는 `robots.txt` 가 전체를 막기 때문에 거기 달린 `noindex` 는 크롤러가 읽지 못한다. 미리보기 주소는 어디에도 링크되지 않으므로 받아들였다. 비공개 화면에 robots 차단을 쓰지 않는 이유(아래 A)와 같은 한계지만, 이 경우는 주소 노출 자체가 거의 없어서 문제가 되지 않는다.
 
 ## Alternatives Considered (대안 — 가장 중요한 섹션)
@@ -73,7 +75,7 @@ export const metadata = NOINDEX_METADATA;
 
 ### 옵션 D: 홈에 `WebSite` + `SearchAction`(사이트 링크 검색창)
 - 검색 결과에서 사이트 안 검색을 바로 하게 하는 마크업.
-- 거부: 구글이 2024-11 에 이 검색창 표시를 종료했다. 효과 없이 마크업만 늘어난다. FAQ 구조화 데이터를 뺀 것과 같은 이유다. 검색 결과의 사이트 이름에 쓰이는 `WebSite` 의 `name` · `url` · `inLanguage` 만 남겼다.
+- 거부: 구글이 2024-11 에 이 검색창 표시를 종료했다. 효과 없이 마크업만 늘어난다. FAQ 구조화 데이터를 뺀 것과 같은 이유다. 검색 결과의 사이트 이름에 쓰이는 `WebSite` 의 `name` · `url` 과, 언어를 알리는 `inLanguage` 만 남겼다.
 
 ### 옵션 E: `/compare` 도 색인하기
 - 공개 화면이니 색인 대상에 포함.
@@ -81,7 +83,7 @@ export const metadata = NOINDEX_METADATA;
 
 ### 옵션 F: 비공개 화면의 noindex 를 기존 `page.tsx` 에서 export
 - 각 페이지 파일에 `export const metadata` 를 추가.
-- 거부: 결제 · 예약 · 마이페이지 `page.tsx` 를 수정하게 된다. 이 영역은 돈과 좌석이 걸려 있어 검색 노출 같은 부수 작업으로 diff 를 만들고 싶지 않았다. 폴더에 메타데이터만 내보내는 `layout.tsx` 를 새로 두면(관리자는 기존 layout 에 export 만 추가) 결제 · 예약 `page.tsx` 는 그대로고, 하위 경로 전체에 적용된다.
+- 거부: 결제 · 예약 · 마이페이지 `page.tsx` 를 수정하게 된다. 이 영역은 돈과 좌석이 걸려 있어 검색 노출 같은 부수 작업으로 diff 를 만들고 싶지 않았다. 폴더에 메타데이터만 내보내는 `layout.tsx` 를 새로 두면(관리자는 기존 layout 에 import 와 export 만 추가) 결제 · 예약 `page.tsx` 는 그대로고, 하위 경로 전체에 적용된다.
 
 ### 옵션 G: 미들웨어에서 `X-Robots-Tag` 헤더로 차단
 - `src/middleware.ts` 에서 비공개 경로 응답에 헤더를 붙인다.
@@ -96,4 +98,5 @@ export const metadata = NOINDEX_METADATA;
 - **없는 상품 주소의 상태 코드.** 존재하지 않는 상품 id 로 들어가면 화면은 not-found 본문이고 메타데이터에는 `noindex` 가 붙지만, HTTP 상태는 404 가 아니라 200 으로 나간다. PPR 에서 정적 셸이 먼저 스트리밍돼 상태 코드가 이미 정해진 뒤에 not-found 가 판정되기 때문이다(소프트 404). 이 작업 이전의 운영에서도 똑같았고, 이 작업의 범위가 아니라 고치지 않았다. 사이트맵에는 `PUBLISHED` 상품만 들어가므로 검색엔진이 없는 상품 주소를 먼저 발견할 일은 드물다.
 - **비공개 화면을 새로 만들 때.** 새 로그인 · 결제 · 관리자 성격의 경로를 추가하면 그 폴더에 `NOINDEX_METADATA` 를 내보내는 `layout.tsx` 를 같이 둬야 한다. 목록을 한곳에서 관리하지 않으므로 빠뜨려도 빌드가 알려 주지 않는다.
 - `@/shared/lib/seo` 는 `env` 를 import 하므로 서버 전용이다. `'use client'` 파일에서 import 하면 안 된다(`CLAUDE.md` §8 의 `photoMime.ts` 사고와 같은 이유). `JsonLd` 는 `env` 를 import 하지 않는다.
+- `robots.txt` 와 루트 메타데이터는 빌드 시점에 `VERCEL_ENV` 로 정해진다. 그래서 미리보기로 빌드한 결과물을 그대로 운영으로 옮길 수 없고, 운영으로 쓰려면 운영 환경에서 다시 빌드해야 한다.
 - 배포 후 할 일: Search Console 에 사이트맵을 제출하고, 상품 상세 URL 검사에서 구조화 데이터가 읽히는지 본다. 가격이 검색 결과에 나오는지는 색인이 된 뒤에야 알 수 있다.
