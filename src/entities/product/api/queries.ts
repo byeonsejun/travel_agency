@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/shared/lib/db";
 import { pickLowestPrice } from "./mapping";
-import type { ProductCard, ProductDetail } from "../model/types";
+import type { ProductCard, ProductDetail, PublishedProductIndexItem } from "../model/types";
 
 export const PAGE_SIZE = 12;
 
@@ -325,4 +325,26 @@ export async function getAllPublishedProductIds(): Promise<string[]> {
     select: { id: true },
   });
   return rows.map((r) => r.id);
+}
+
+// 사이트맵 · llms.txt 가 함께 쓰는 공개 상품 목록. 두 곳이 같은 조회를 쓰니 서로 어긋나지 않는다.
+// 상품 status 변경 · 등록은 admin 액션이 TAG_PRODUCTS_LIST 를 이미 무효화하므로 같은 태그를 쓴다.
+export async function getPublishedProductIndex(): Promise<PublishedProductIndexItem[]> {
+  "use cache";
+  cacheTag(TAG_PRODUCTS_LIST);
+  cacheLife({ revalidate: 3600 });
+
+  return db.product.findMany({
+    where: { status: "PUBLISHED" },
+    select: {
+      id: true,
+      title: true,
+      destination: true,
+      durationNights: true,
+      durationDays: true,
+      basePriceAdult: true,
+      updatedAt: true,
+    },
+    orderBy: { createdAt: "asc" },
+  });
 }

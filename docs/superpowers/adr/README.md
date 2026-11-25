@@ -111,6 +111,7 @@
 | 0061  | [FSD R2(배럴 공개 API)를 lint로 강제 — 예외 목록 대신 두 번째 공개 API 설계: `features/auth/server.ts`를 `entities/booking/client.ts`와 대칭 승격, 깊은 경로 import 50→0 후 `no-restricted-imports` 적용](./0061-fsd-barrel-enforcement-and-second-public-api.md) | Accepted | 2026-08-25   |
 | 0062  | [GA4 분석은 GTM 단일 설치 + 클라이언트 퍼널/서버 매출 하이브리드 — purchase·refund는 트랜잭셔널 아웃박스 → Measurement Protocol(광고차단·이탈 유실 0), 클라이언트 purchase·confirm 동기 호출·sGTM 거부, 동의 배너 보류](./0062-ga4-gtm-hybrid-analytics-outbox.md) | Accepted | 2026-10-14   |
 | 0063  | [데모 출발일 노후화는 보충(INSERT-only)으로 복구 — 기존 출발편 0건 수정, 미래 예약가능 출발편 없는 PUBLISHED 상품에만 신규 Departure, 전체 이동·재시드·런타임 자동 롤링·배지 완화 거부](./0063-departure-topup-insert-only.md) | Accepted | 2026-10-20   |
+| 0064  | [검색에는 공개 화면 4곳만 내보내고 비공개 화면은 noindex 로 막는다 — robots.txt 는 `/api/` 만, 상품 상세는 Product + AggregateOffer 구조화 데이터, 비공개 robots 차단·env 기반 canonical·출발일별 Offer·SearchAction·정적 llms.txt 거부](./0064-search-exposure-noindex-and-structured-data.md) | Accepted | 2026-11-25   |
 
 ## 향후 후보 (작성 대기)
 

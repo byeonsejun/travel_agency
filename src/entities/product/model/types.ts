@@ -26,6 +26,18 @@ export type ProductCard = Pick<
   lowestPrice?: number; // 가장 가까운 출발일 기준 실제가 (Departure에서 조인)
 };
 
+// 사이트맵 · llms.txt 용 공개 상품 목록 항목
+export type PublishedProductIndexItem = Pick<
+  Product,
+  | "id"
+  | "title"
+  | "destination"
+  | "durationNights"
+  | "durationDays"
+  | "basePriceAdult"
+  | "updatedAt"
+>;
+
 // 상품 상세 페이지 — 전체 데이터
 export type ProductDetail = Product & {
   tags: ProductTag[];

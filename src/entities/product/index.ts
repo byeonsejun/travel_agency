@@ -1,5 +1,6 @@
 export type {
   ProductCard as ProductCardType,
+  PublishedProductIndexItem,
   ProductDetail,
   SearchResultCard,
   ProductStatus,
@@ -31,6 +32,7 @@ export type { ProductListParams } from "./api/parseListParams";
  * | ---------------------------- | ------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------- |
  * | `TAG_PRODUCTS_FEATURED`      | 추천 상품 변경(admin pick)                         | 5min | createProductAction / updateProductAction / publishProductAction / archiveProductAction              |
  * | `TAG_PRODUCTS_LIST`          | 신규 상품 등록 / status 변경 / 정렬 영향 필드 변경  | 5min | 동일 4종                                                                                             |
+ * | `TAG_PRODUCTS_LIST`          | (`getPublishedProductIndex` — 사이트맵 · llms.txt 공용 조회도 이 태그를 쓴다) | 1h   | 위와 동일 — 별도 발신 없음                                                                           |
  * | `TAG_DESTINATIONS_LIST`      | 신규 destinationCode 도입 / 상품 status 변경        | 1h   | 동일 4종                                                                                             |
  * | `tagProductDetail(id)`       | 단건 상품 update (title/desc/hero/price 등)         | 1h   | admin-booking-cancel + 동일 4종                                                                      |
  * | `tagDeparturesByProduct(id)` | 좌석/일정 변경 (booking 확정/취소가 자동 wiring)    | 1h   | checkout / booking-cancel / admin-booking-cancel                                                    |
@@ -48,6 +50,7 @@ export {
   getFeaturedProducts,
   getDistinctDestinations,
   getAllPublishedProductIds,
+  getPublishedProductIndex,
   tagProductDetail,
   TAG_PRODUCTS_FEATURED,
   TAG_PRODUCTS_LIST,

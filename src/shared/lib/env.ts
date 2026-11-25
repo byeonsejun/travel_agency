@@ -59,6 +59,9 @@ export const envSchema = z
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+    // Vercel 이 빌드 · 런타임에 주입한다(로컬에는 없음). SEO 에서 미리보기 배포를
+    // noindex 로 돌리는 판정에만 쓴다. 로컬 · 운영은 색인 허용이라 optional.
+    VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),

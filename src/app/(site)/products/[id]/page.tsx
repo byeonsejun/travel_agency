@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getProductById, toGa4ItemInput } from "@/entities/product";
 import { getDeparturesByProduct } from "@/entities/departure";
 import {
@@ -7,6 +8,8 @@ import {
   ProductReviewsSection,
   ReviewsSkeleton,
   PdpScrollReset,
+  buildProductDescription,
+  buildProductJsonLd,
 } from "@/widgets/product-detail";
 import {
   CompareToggleButton,
@@ -14,6 +17,8 @@ import {
 } from "@/features/product-compare";
 import { buildViewItem } from "@/shared/lib/analytics";
 import { TrackEvent } from "@/shared/ui/TrackEvent";
+import { JsonLd } from "@/shared/ui/JsonLd";
+import { buildPageMetadata } from "@/shared/lib/seo";
 
 // PDP Cache Components(PPR): getProductById/getDeparturesByProduct 가 `use cache`
 // (cacheLife revalidate:3600)라 1시간 TTL이 데이터 레이어로 이전됨. 사용자/쿠키 의존 0 →
@@ -31,6 +36,19 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+// getProductById 가 `use cache` 라 본문과 같은 캐시 키를 쓴다(추가 쿼리 0).
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const product = await getProductById(id);
+  if (product === null) return {};
+  return buildPageMetadata({
+    title: product.title,
+    description: buildProductDescription(product),
+    path: `/products/${id}`,
+    image: product.heroImageUrl ? { url: product.heroImageUrl, alt: product.title } : null,
+  });
+}
+
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
 
@@ -47,6 +65,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   return (
     <>
       <PdpScrollReset productId={id} />
+      <JsonLd data={buildProductJsonLd(product, departures)} />
       {/* GA4 view_item — 캐시된 상품 데이터로 payload 생성(추가 쿼리 0), client island 가 발화. */}
       <TrackEvent payload={buildViewItem(toGa4ItemInput(product))} dedupeKey={id} />
       <ProductDetail

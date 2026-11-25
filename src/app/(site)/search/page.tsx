@@ -1,10 +1,20 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/shared/lib/seo";
 import { ProductCard, toGa4ItemInput } from "@/entities/product";
 import { searchProducts, SearchBox, SearchChips, ClarifyingChips } from "@/features/search";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { CompassLoader } from "@/shared/ui/CompassLoader";
 import { TrackEvent } from "@/shared/ui/TrackEvent";
 import { buildSearch, buildViewItemList } from "@/shared/lib/analytics";
+
+// searchParams 를 읽지 않는 정적 메타. 검색어별 주소는 canonical 로 /search 에 모인다.
+export const metadata: Metadata = buildPageMetadata({
+  title: "여행 검색",
+  description:
+    "어떤 여행을 원하세요? (예: 부모님 모시고 온천 3박) 조건에 딱 맞는 여행을 AI가 찾아드립니다.",
+  path: "/search",
+});
 
 // searchParams로 분기되므로 Next 15가 자동으로 dynamic으로 분류. searchProducts
 // 자체는 Upstash Redis 캐시(M-CACHE)로 동일 q에 대한 반복 비용을 흡수한다.
