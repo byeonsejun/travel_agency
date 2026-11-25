@@ -24,13 +24,13 @@
 noindex 대상
 - `/login/**`, `/mypage`, `/bookings/**`, `/products/[id]/checkout`, `/reviews/**`, `/admin/**`: 색인도 링크 따라가기도 막는다(`index: false, follow: false`).
 - `/compare`: 색인은 막고 링크는 따라가게 둔다(`index: false, follow: true`). 사이트맵에도 넣지 않는다.
-- 위 비공개 화면의 noindex 는 기존 `page.tsx` 가 아니라, 메타데이터만 내보내는 새 `layout.tsx` 로 단다.
+- 위 비공개 화면의 noindex 는 기존 `page.tsx` 가 아니라, 메타데이터만 내보내는 `layout.tsx` 로 단다. 로그인 · 예약 · 결제 · 마이페이지 · 후기는 새 layout 파일 다섯 개를 만들었고, 관리자는 이미 있던 layout 에 `metadata` export 3줄만 더했다.
 
 그 밖의 규칙
 - `robots.txt` 는 운영에서 `/api/` 만 막고 사이트맵 주소를 알린다. 비공개 화면은 여기서 막지 않는다. AI 검색 로봇도 따로 막지 않는다.
 - 미리보기 배포(`VERCEL_ENV === "preview"`)는 `robots.txt` 로 전체 차단하고 루트 메타데이터에도 `noindex` 를 건다. 로컬과 운영은 색인을 허용한다.
 - canonical 의 기준 주소는 상수 `SITE_URL` 이다. 미리보기에서 열어도 canonical 은 운영 주소를 가리킨다.
-- 상품 상세 구조화 데이터는 화면에 보이는 값만 쓴다. `Product`(이름 · 설명 · 대표 사진 · `AggregateOffer`)와 `BreadcrumbList`. 가격은 출발일 성인가의 최저 · 최고, 통화는 `KRW`, 출발일 수는 `offerCount`. 판매종료 상품이거나 출발일이 없으면 `offers` 를 넣지 않고, 출발일이 모두 마감이면 `availability` 는 `SoldOut`. 홈에는 `WebSite`(`name`, `url`)만 넣는다.
+- 상품 상세 구조화 데이터는 화면에 보이는 값만 쓴다. `Product`(이름 · 설명 · 대표 사진 · `AggregateOffer`)와 `BreadcrumbList`. 가격은 출발일 성인가의 최저 · 최고, 통화는 `KRW`, 출발일 수는 `offerCount`. 판매종료 상품이거나 출발일이 없으면 `offers` 를 넣지 않고, 출발일이 모두 마감이면 `availability` 는 `SoldOut`. 홈에는 `WebSite`(`name`, `url`, `inLanguage`)만 넣는다.
 - JSON-LD 는 서버 컴포넌트가 HTML 에 직접 넣는다(`JsonLd`, `<` 를 이스케이프해 상품 이름에 `</script>` 가 들어가도 스크립트가 깨지지 않게 한다). 새 클라이언트 JS 는 없다.
 
 ```ts
@@ -46,7 +46,7 @@ export const metadata = NOINDEX_METADATA;
 **얻은 것:**
 - 상품마다 고유한 제목 · 설명 · canonical 이 나가고, 사이트맵과 `llms.txt` 가 같은 목록에서 만들어져 상품이 추가 · 판매종료돼도 따로 손볼 곳이 없다.
 - 비공개 화면은 크롤러가 페이지를 열어 `noindex` 를 직접 읽게 되므로, 주소만 색인에 남는 경우가 없다.
-- 결제 · 예약 도메인 코드와 기존 `page.tsx` 를 한 줄도 수정하지 않았다. 새 layout 파일만 추가했다.
+- 결제 · 예약 도메인 코드와 기존 `page.tsx` 를 한 줄도 수정하지 않았다. 새 layout 파일 다섯 개를 추가하고, 기존 관리자 layout 에는 `metadata` export 만 더했다.
 - 가격과 재고 표시가 화면의 "성인 기준 ~원부터" 와 같은 필드에서 나와, 구조화 데이터와 화면이 서로 다른 말을 하지 않는다.
 - 빌드 결과도 그대로다. 홈은 `○`, `/products/[id]` 는 `◐`(PPR)를 유지하고, `/robots.txt` · `/sitemap.xml` · `/llms.txt` 는 정적(`○`)으로 만들어진다.
 
@@ -73,7 +73,7 @@ export const metadata = NOINDEX_METADATA;
 
 ### 옵션 D: 홈에 `WebSite` + `SearchAction`(사이트 링크 검색창)
 - 검색 결과에서 사이트 안 검색을 바로 하게 하는 마크업.
-- 거부: 구글이 2024-11 에 이 검색창 표시를 종료했다. 효과 없이 마크업만 늘어난다. FAQ 구조화 데이터를 뺀 것과 같은 이유다. 검색 결과의 사이트 이름에 쓰이는 `WebSite` 의 `name` · `url` 만 남겼다.
+- 거부: 구글이 2024-11 에 이 검색창 표시를 종료했다. 효과 없이 마크업만 늘어난다. FAQ 구조화 데이터를 뺀 것과 같은 이유다. 검색 결과의 사이트 이름에 쓰이는 `WebSite` 의 `name` · `url` · `inLanguage` 만 남겼다.
 
 ### 옵션 E: `/compare` 도 색인하기
 - 공개 화면이니 색인 대상에 포함.
@@ -81,7 +81,7 @@ export const metadata = NOINDEX_METADATA;
 
 ### 옵션 F: 비공개 화면의 noindex 를 기존 `page.tsx` 에서 export
 - 각 페이지 파일에 `export const metadata` 를 추가.
-- 거부: 결제 · 예약 · 마이페이지 `page.tsx` 를 수정하게 된다. 이 영역은 돈과 좌석이 걸려 있어 검색 노출 같은 부수 작업으로 diff 를 만들고 싶지 않았다. 폴더에 메타데이터만 내보내는 `layout.tsx` 를 새로 두면 기존 파일은 그대로고, 하위 경로 전체에 적용된다.
+- 거부: 결제 · 예약 · 마이페이지 `page.tsx` 를 수정하게 된다. 이 영역은 돈과 좌석이 걸려 있어 검색 노출 같은 부수 작업으로 diff 를 만들고 싶지 않았다. 폴더에 메타데이터만 내보내는 `layout.tsx` 를 새로 두면(관리자는 기존 layout 에 export 만 추가) 결제 · 예약 `page.tsx` 는 그대로고, 하위 경로 전체에 적용된다.
 
 ### 옵션 G: 미들웨어에서 `X-Robots-Tag` 헤더로 차단
 - `src/middleware.ts` 에서 비공개 경로 응답에 헤더를 붙인다.
