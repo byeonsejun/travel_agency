@@ -12,6 +12,7 @@ import { AdminCancelBookingButton } from "@/features/admin-booking-cancel";
 import { TravelerCancelPanel, DiscretionaryRefundPanel } from "@/widgets/booking-detail";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
+import { requireAdmin } from "@/features/auth/server";
 
 
 type PageProps = {
@@ -29,6 +30,7 @@ function formatDateTime(d: Date): string {
 }
 
 export default async function AdminBookingDetailPage({ params }: PageProps) {
+  await requireAdmin();
   const { id } = await params;
 
   // layout이 ADMIN role 가드 통과 → 권한 검증 추가 불필요(belt-and-suspenders는 layout이 1차).

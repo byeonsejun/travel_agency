@@ -11,6 +11,7 @@ import {
 import { REPORT_REASON_LABELS } from "@/features/review-feed";
 import { Badge } from "@/shared/ui/badge";
 import { Card } from "@/shared/ui/card";
+import { requireAdmin } from "@/features/auth/server";
 
 const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
   OPEN: "대기",
@@ -22,6 +23,7 @@ const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function AdminReviewDetailPage({ params }: PageProps) {
+  await requireAdmin();
   const { id } = await params;
   const [review, reports] = await Promise.all([
     getReviewForAdmin(id),

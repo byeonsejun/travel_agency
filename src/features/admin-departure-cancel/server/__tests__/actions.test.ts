@@ -30,11 +30,23 @@ vi.mock("@/entities/departure", () => ({
   tagDeparturesByProduct: (pid: string) => `product:${pid}:departures`,
 }));
 
-import { startDepartureCancellation } from "../actions";
+import { startDepartureCancellation } from "../startDepartureCancellation";
+import * as serverActions from "../actions";
 import {
   DepartureNotCancelableError,
   RefundablePaymentMissingError,
 } from "../errors";
+
+describe('"use server" 모듈 경계', () => {
+  it("actions.ts 는 인증 없는 startDepartureCancellation 을 export 하지 않는다", () => {
+    // "use server" 파일의 export 는 전부 따로 호출 가능한 Server Action 이 된다.
+    // ADMIN 확인은 forceCancelDepartureAction 에만 있으므로 오케스트레이션 함수는 여기 있으면 안 된다.
+    expect(Object.keys(serverActions).sort()).toEqual([
+      "forceCancelDepartureAction",
+      "retryBatchRefundAction",
+    ]);
+  });
+});
 
 beforeEach(() => {
   vi.clearAllMocks();

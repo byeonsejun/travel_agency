@@ -12,6 +12,7 @@ import {
   TableHead,
   TableCell,
 } from "@/shared/ui/table";
+import { requireAdmin } from "@/features/auth/server";
 
 
 const STATUS_LABELS: Record<string, string> = {
@@ -171,6 +172,7 @@ type PageProps = {
 };
 
 export default async function AdminRefundJobsPage({ searchParams }: PageProps) {
+  await requireAdmin();
   const { status: rawStatus } = await searchParams;
   const statusFilter = rawStatus && isValidStatus(rawStatus) ? rawStatus : undefined;
 

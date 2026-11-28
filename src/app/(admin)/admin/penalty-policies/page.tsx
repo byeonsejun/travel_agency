@@ -10,6 +10,7 @@ import {
   TableCell,
 } from "@/shared/ui/table";
 import { Badge } from "@/shared/ui/badge";
+import { requireAdmin } from "@/features/auth/server";
 
 // admin 도메인 — 캐시 비활성(§6 안전 도메인). 정책 변경 즉시 반영.
 
@@ -30,6 +31,7 @@ function summarizeTiers(raw: unknown): string {
 }
 
 export default async function PenaltyPoliciesPage() {
+  await requireAdmin();
   const policies = await getActivePenaltyPolicies();
 
   return (

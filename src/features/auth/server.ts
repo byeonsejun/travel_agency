@@ -12,3 +12,4 @@
 // 여기서 re-export 하는 것은 모두 server 전용(NextAuth 인스턴스)이어야 한다.
 
 export { auth, handlers, signIn, signOut } from "./server/auth";
+export { requireAdmin } from "./server/requireAdmin";

@@ -158,8 +158,17 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // CSP nonce 는 모든 HTML 응답에 박혀야 함.
   // _next/static, _next/image, favicon, /api/csp-report (재귀 방지) 만 제외.
-  // missing 조건은 Next 의 RSC prefetch 호출에서 middleware 가 nonce 를 다시 생성하지 않도록 함.
   matcher: [
+    // 인증 가드·요청 제한이 걸린 경로는 헤더와 상관없이 항상 middleware 를 탄다.
+    // prefetch 헤더(`purpose: prefetch`, `next-router-prefetch`)는 클라이언트가 마음대로
+    // 붙일 수 있어서, 이 경로들까지 아래 `missing` 예외에 맡기면 헤더 하나로 /admin 권한
+    // 확인과 /api 요청 제한을 통째로 건너뛸 수 있었다.
+    "/admin/:path*",
+    "/mypage/:path*",
+    "/booking/:path*",
+    "/bookings/:path*",
+    "/api/((?!csp-report).*)",
+    // 그 밖의 공개 페이지는 Next 의 RSC prefetch 에서 nonce 를 다시 만들지 않도록 건너뛴다.
     {
       source: "/((?!_next/static|_next/image|favicon.ico|api/csp-report).*)",
       missing: [

@@ -16,10 +16,8 @@ import { createDeparture } from "@/entities/departure";
 import { reserveSeats, InsufficientCapacityError } from "@/entities/booking";
 import { retryRefundJob } from "@/entities/payment";
 import { recomputeBatchStatus } from "@/entities/departure-cancellation";
-import {
-  startDepartureCancellation,
-  DepartureNotCancelableError,
-} from "@/features/admin-departure-cancel";
+import { DepartureNotCancelableError } from "@/features/admin-departure-cancel";
+import { startDepartureCancellation } from "@/features/admin-departure-cancel/server/startDepartureCancellation";
 
 const db = new PrismaClient();
 

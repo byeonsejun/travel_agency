@@ -13,6 +13,7 @@ import {
   getWebVitalTrend,
 } from "@/entities/analytics";
 import { AdminDashboard } from "@/widgets/admin-dashboard";
+import { requireAdmin } from "@/features/auth/server";
 
 // admin route 는 항상 신선(권한 검증 + 운영 즉시성). 집계 SQL 은 내부 60s 캐시로 흡수.
 
@@ -26,6 +27,7 @@ export default async function AdminDashboardPage({
     range?: string; // 레거시 북마크 호환
   }>;
 }) {
+  await requireAdmin();
   const sp = await searchParams;
   const filter = parseFilter(sp);
 

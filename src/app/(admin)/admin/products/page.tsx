@@ -15,6 +15,7 @@ import {
   TableHead,
   TableCell,
 } from "@/shared/ui/table";
+import { requireAdmin } from "@/features/auth/server";
 
 
 // ── 상수 ────────────────────────────────────────────────────────────
@@ -155,6 +156,7 @@ type PageProps = {
 };
 
 export default async function AdminProductsPage({ searchParams }: PageProps) {
+  await requireAdmin();
   const params = await searchParams;
   const statusFilter =
     params.status && isValidStatus(params.status) ? params.status : undefined;

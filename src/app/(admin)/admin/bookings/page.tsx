@@ -12,6 +12,7 @@ import {
   TableCell,
 } from "@/shared/ui/table";
 import { Button } from "@/shared/ui/button";
+import { requireAdmin } from "@/features/auth/server";
 
 // admin route는 항상 신선 (session·권한 검증 + 운영 즉시성)
 
@@ -24,6 +25,7 @@ function formatDate(d: Date): string {
 }
 
 export default async function AdminBookingsPage() {
+  await requireAdmin();
   // layout이 ADMIN role 가드 이미 통과
   const { items, total } = await listAllBookings({ limit: 50 });
 
