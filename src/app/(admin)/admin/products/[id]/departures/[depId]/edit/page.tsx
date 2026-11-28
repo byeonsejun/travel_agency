@@ -17,6 +17,7 @@ import {
 import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { Badge } from "@/shared/ui/badge";
 import type { DepartureStatus } from "@prisma/client";
+import { requireAdmin } from "@/features/auth/server";
 
 
 type PageProps = {
@@ -49,6 +50,7 @@ const DEPARTURE_STATUS_TONE: Record<DepartureStatus, "info" | "success" | "neutr
 };
 
 export default async function EditDeparturePage({ params, searchParams }: PageProps) {
+  await requireAdmin();
   const { id: productId, depId } = await params;
   const { error } = await searchParams;
   const [dep, policies] = await Promise.all([

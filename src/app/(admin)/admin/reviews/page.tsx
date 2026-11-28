@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
+import { requireAdmin } from "@/features/auth/server";
 
 
 const STATUS_LABELS: Record<ReviewStatus, string> = {
@@ -55,6 +56,7 @@ type PageProps = {
 };
 
 export default async function AdminReviewsPage({ searchParams }: PageProps) {
+  await requireAdmin();
   const { status } = await searchParams;
   const filter = status && isStatus(status) ? status : undefined;
   const isReportedView = filter === "REPORTED";

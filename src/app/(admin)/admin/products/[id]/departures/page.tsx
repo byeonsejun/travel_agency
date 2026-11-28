@@ -11,6 +11,7 @@ import {
   TableHead,
   TableCell,
 } from "@/shared/ui/table";
+import { requireAdmin } from "@/features/auth/server";
 
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -32,6 +33,7 @@ function fmt(d: Date) {
 }
 
 export default async function AdminDeparturesPage({ params }: PageProps) {
+  await requireAdmin();
   const { id: productId } = await params;
   const rows = await listAdminDepartures(productId);
 

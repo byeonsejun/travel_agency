@@ -17,6 +17,7 @@ import {
 } from "@/shared/ui/table";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { requireAdmin } from "@/features/auth/server";
 
 
 type Tone = "success" | "warning" | "info" | "destructive" | "neutral";
@@ -174,6 +175,7 @@ type PageProps = {
 export default async function AdminEmbeddingJobsPage({
   searchParams,
 }: PageProps) {
+  await requireAdmin();
   const { status: rawStatus } = await searchParams;
   const statusFilter =
     rawStatus && isValidStatus(rawStatus) ? rawStatus : undefined;

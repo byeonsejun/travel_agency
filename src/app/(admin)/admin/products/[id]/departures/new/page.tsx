@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { DepartureForm, createDepartureAction } from "@/features/admin-departure";
+import { requireAdmin } from "@/features/auth/server";
 
 
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function NewDeparturePage({ params }: PageProps) {
+  await requireAdmin();
   const { id: productId } = await params;
   // productId를 신뢰된 route param에서 bind — 사용자 입력 본문에 두지 않음.
   const action = createDepartureAction.bind(null, productId);

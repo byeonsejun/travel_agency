@@ -10,6 +10,7 @@ import {
   TableCell,
 } from "@/shared/ui/table";
 import { Badge } from "@/shared/ui/badge";
+import { requireAdmin } from "@/features/auth/server";
 
 
 type Tone = "success" | "warning" | "info" | "destructive" | "neutral";
@@ -28,6 +29,7 @@ const LABEL: Record<DepartureCancellationStatus, string> = {
 };
 
 export default async function CancellationBatchesPage() {
+  await requireAdmin();
   const rows = await listCancellationBatches();
 
   return (

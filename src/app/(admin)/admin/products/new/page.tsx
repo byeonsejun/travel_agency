@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { getActivePenaltyPolicies } from "@/entities/penalty-policy";
 import { ProductForm } from "@/features/admin-product";
+import { requireAdmin } from "@/features/auth/server";
 
 
 export default async function AdminProductNewPage() {
+  await requireAdmin();
   const policies = await getActivePenaltyPolicies();
   const policyOptions = policies.map((p) => ({ key: p.key, name: p.name }));
 

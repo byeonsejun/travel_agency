@@ -13,6 +13,7 @@ import {
 } from "@/shared/ui/table";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { requireAdmin } from "@/features/auth/server";
 
 
 type Tone = "success" | "warning" | "info" | "destructive" | "neutral";
@@ -35,6 +36,7 @@ const JOB_LABEL: Record<RefundJobStatus, string> = {
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function BatchDetailPage({ params }: PageProps) {
+  await requireAdmin();
   const { id } = await params;
   const batch = await getCancellationBatchDetail(id);
   if (!batch) notFound();

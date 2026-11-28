@@ -7,6 +7,7 @@ import { ProductForm } from "@/features/admin-product";
 import type { EmbeddingJobStatus } from "@prisma/client";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { requireAdmin } from "@/features/auth/server";
 
 
 // ── 임베딩 상태 사이드바 ───────────────────────────────────────────
@@ -149,6 +150,7 @@ type PageProps = {
 };
 
 export default async function AdminProductEditPage({ params }: PageProps) {
+  await requireAdmin();
   const { id } = await params;
   const [result, policies] = await Promise.all([
     getAdminProductById(id),
